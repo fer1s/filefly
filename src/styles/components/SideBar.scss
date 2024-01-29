@@ -1,0 +1,161 @@
+.SideBar {
+    height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    background-color: rgba(18, 18, 18, 0.3);
+
+    section {
+        width: 100%;
+
+        margin-bottom: 30px;
+
+        &:last-child {
+            margin-bottom: 0;
+        }
+        
+        h2 {
+            margin-bottom: 10px;
+            font-size: 0.8rem;
+            font-weight: 500;
+
+            user-select: none;
+        }
+
+        .section_content {
+            width: 100%;
+
+            .folder_item {
+                width: 100%;
+                height: 35px;
+                cursor: pointer;
+
+                border-radius: 5px;
+                border: 1px solid transparent;
+
+                display: flex;
+                align-items: center;
+                justify-content: flex-start;
+                gap: 10px;
+                padding: 10px;
+
+                svg {
+                    font-size: 0.8rem;
+                    color: rgba(255, 255, 255, 0.5);
+
+                    transition: all 0.2s ease-in-out;
+                }
+
+                p {
+                    font-size: 0.8rem;
+                    font-weight: 400;
+                    color: rgba(255, 255, 255, 0.5);
+
+                    user-select: none;
+
+                    transition: all 0.2s ease-in-out;
+                }
+
+                transition: all 0.2s ease-in-out;
+
+                &:hover {
+                    background-color: rgba(255, 255, 255, 0.1);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+
+                    svg {
+                        color: #fff;
+                    }
+
+                    p {
+                        color: #fff;
+                    }
+                }
+            }
+
+            .drive_item {
+                width: 100%;
+                height: 40px;
+                cursor: pointer;
+
+                border-radius: 5px;
+                border: 1px solid transparent;
+
+                display: flex;
+                align-items: center;
+                justify-content: flex-start;
+                gap: 10px;
+                padding: 10px;
+
+                svg {
+                    font-size: 0.8rem;
+                    color: rgba(255, 255, 255, 0.5);
+
+                    transition: all 0.2s ease-in-out;
+                }
+
+                .details {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: flex-start;
+                    justify-content: center;
+                    gap: 5px;
+
+                    width: calc(100% - 40px);
+
+                    p {
+                        font-size: 0.7rem;
+                        font-weight: 400;
+                        color: rgba(255, 255, 255, 0.5);
+
+                        user-select: none;
+
+                        transition: all 0.2s ease-in-out;
+
+                        span {
+                            font-weight: 600;
+                        }
+                    }
+
+                    .usage {
+                        width: 90%;
+                        height: 3px;
+                        border-radius: 5px;
+                        background-color: rgba(255, 255, 255, 0.1);
+                        overflow: hidden;
+
+                        .usage_bar {
+                            height: 100%;
+                            border-radius: 0 5px 5px 0;
+                            background-color: rgba(255, 255, 255, 0.5);
+                        }
+                    }
+                }
+
+                transition: all 0.2s ease-in-out;
+
+                &:hover {
+                    background-color: rgba(255, 255, 255, 0.1);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+
+                    svg {
+                        color: #fff;
+                    }
+
+                    .details {
+                        p {
+                            color: #fff;
+                        }
+                    }
+                }
+            }
+
+            .folder_item, .drive_item {
+                margin-bottom: 8px;
+
+                &:last-child {
+                    margin-bottom: 0;
+                }
+            }
+        }
+    }
+}

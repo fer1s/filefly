@@ -1,0 +1,75 @@
+.directory_page .dir_entry_item {
+    width: 77px;
+    height: 77px;
+
+    cursor: pointer;
+
+    background-color: transparent;
+    border-radius: 5px;
+    border: 1px solid transparent;
+
+    position: relative;
+
+    transition: all 0.1s ease-in-out;
+
+    .extension {
+        position: absolute;
+        top: 0;
+        right: 0;
+
+        font-size: 0.6rem;
+        font-weight: 400;
+
+        margin: 5px;
+        background-color: rgb(0, 0, 0);
+        padding: 2px 5px;
+        border-radius: 5px;
+        
+    }
+
+    svg {
+        position: absolute;
+        top: 40%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+
+        font-size: 1.4rem;
+
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    .dir_entry_info {
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+
+        width: 100%;
+        height: 30px;
+
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        h3 {
+            font-size: 0.7rem;
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.6);
+        }
+    }
+
+    &:hover {
+        background-color: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+
+        svg {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .dir_entry_info {
+            h3 {
+                color: rgba(255, 255, 255, 0.8);
+            }
+        }
+    }
+}

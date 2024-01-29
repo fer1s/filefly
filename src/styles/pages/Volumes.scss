@@ -1,0 +1,77 @@
+.volumes_page .volume_item {
+    width: 226.33px;
+    height: 60px;
+
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 5px;
+    padding: 13px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+
+    cursor: pointer;
+
+    transition: all 0.2s ease-in-out;
+
+    svg {
+        font-size: 1.2rem;
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    .volume_info {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: flex-start;
+        gap: 5px;
+
+        width: 100%;
+        
+        h3 {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #fff;
+
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 8px;
+
+            span {
+                font-weight: 400;
+                color: rgba(255, 255, 255, 0.5);
+            }
+        }
+
+        .usage {
+            width: 100%;
+            height: 5px;
+            border-radius: 5px;
+            background-color: rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+
+            .usage_bar {
+                height: 100%;
+                border-radius: 0 5px 5px 0;
+                background-color: rgba(255, 255, 255, 0.5);
+            }
+        }
+
+        p {
+            font-size: 0.6rem;
+            font-weight: 300;
+            color: rgba(255, 255, 255, 0.5);
+        
+        }
+    }
+
+    &:hover {
+        background-color: rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+}

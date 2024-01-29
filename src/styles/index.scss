@@ -1,0 +1,85 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
+
+* {
+   margin: 0;
+   padding: 0;
+   box-sizing: border-box;
+
+   font-family: 'Inter', sans-serif;
+}
+
+body {
+   width: 100vw;
+   height: 100vh;
+
+   background-color: rgba(0, 0, 0, 0.25);
+   color: #fff;
+
+   overflow: hidden;
+}
+
+::-webkit-scrollbar {
+   width: 10px;
+}
+
+::-webkit-scrollbar-track {
+   background-color: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+   background-color: #494949;
+   border-radius: 20px;
+   border: 3px solid transparent;
+   background-clip: content-box;
+}
+
+.App {
+   width: 100%;
+   height: 100vh;
+
+   position: absolute;
+   top: 0;
+   left: 0;
+   z-index: 1;
+
+   display: grid;
+   grid-template-columns: 220px 1fr;
+   grid-template-rows: 1fr;
+
+   > .SideBar, > .AppContent {
+      height: 100vh;
+      overflow-x: hidden;
+      
+      padding-top: 40px;
+      padding-left: 15px;
+      padding-right: 15px;
+      padding-bottom: 15px;
+   }
+}
+
+.AppContent {
+   background-color: rgb(18, 18, 18);
+   overflow: hidden;
+
+   .Page {
+      width: 100%;
+      height: 93.3%;
+      overflow-y: auto;
+      overflow-x: hidden;
+
+      h1 {
+         font-size: 1.6rem;
+         font-weight: 700;
+         margin-bottom: 20px;
+      }
+   }
+}
+
+.grid {
+   width: 100%;
+   display: flex;
+   flex-wrap: wrap;
+   justify-content: flex-start;
+   align-items: flex-start;
+   gap: 10px;
+}
