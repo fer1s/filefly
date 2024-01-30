@@ -19,6 +19,7 @@ const App = () => {
    const [path, setPath] = useState<string>('')
    const [sidebarScrolled, setSidebarScrolled] = useState<boolean>(false)
    const [dirContent, setDirContent] = useState<DirEntry[]>([])
+   const [view, setView] = useState<'list' | 'grid'>('grid')
 
    const fetchVolumes = async () => {
       let volumes = await getVolumes()
@@ -112,6 +113,8 @@ const App = () => {
             setSidebarScrolled,
             dirContent,
             setDirContent,
+            view,
+            setView,
          }}
       >
          <AppBar />

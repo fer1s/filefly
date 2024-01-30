@@ -1,3 +1,8 @@
+export type TimeSince = {
+    nanos_since_epoch: number;
+    secs_since_epoch: number;
+}
+
 export type DiskUsage = {
     used: number;
     percentage: number;
@@ -15,9 +20,9 @@ export type Volume = {
 export type DirMetadata = {
     isDir: boolean;
     isFile: boolean;
-    modified: number;
-    accessed: number;
-    created: number;
+    modified: TimeSince;
+    accessed: TimeSince;
+    created: TimeSince;
 }
 
 export type DirEntry = {

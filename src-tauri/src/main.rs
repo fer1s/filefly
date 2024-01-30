@@ -4,6 +4,7 @@
 mod tray;
 mod utils;
 mod filesystem;
+mod functions;
 
 use tauri::Manager;
 use window_shadows::set_shadow;
@@ -34,7 +35,8 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             hide_window,
             filesystem::volumes::get_volumes,
-            filesystem::fs::read_directory
+            filesystem::fs::read_directory,
+            functions::terminal::open_in_terminal,
         ])
         .system_tray(tray)
         .on_system_tray_event(|app, event| match event {

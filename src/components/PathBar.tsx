@@ -4,12 +4,13 @@ import { useStateContext } from '../context/StateContext'
 
 import { RiHomeFill } from "react-icons/ri";
 import { FaArrowLeft, FaArrowRight  } from "react-icons/fa";
+import { HiViewList, HiViewGrid } from "react-icons/hi";
 
 import '../styles/components/PathBar.scss'
 
 const PathBar = () => {
 
-   const { path, setPath } = useStateContext()
+   const { path, setPath, view, setView } = useStateContext()
 
    const [oldPath, setOldPath] = useState<string>('')
 
@@ -40,6 +41,14 @@ const PathBar = () => {
       setOldPath('')
    }
 
+   const switchView = () => {
+      if(view === 'grid') {
+         setView('list')
+      } else {
+         setView('grid')
+      }
+   }
+
    return (
       <div className="PathBar">
          <button onClick={goHome} className='shadow'>
@@ -67,6 +76,10 @@ const PathBar = () => {
             placeholder="Directory path"
             className="shadow"
          />
+
+         <button className='shadow' onClick={switchView}>
+            {view === 'grid' ? <HiViewList /> : <HiViewGrid />}
+         </button>
       </div>
    )
 }

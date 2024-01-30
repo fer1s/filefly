@@ -11,6 +11,8 @@ type State = {
    setSidebarScrolled: (sidebarScrolled: boolean) => void
    dirContent: DirEntry[]
    setDirContent: (dirContent: DirEntry[]) => void
+   view: 'list' | 'grid'
+   setView: (view: 'list' | 'grid') => void
 }
 
 export const initialState: State = {
@@ -22,6 +24,8 @@ export const initialState: State = {
    setSidebarScrolled: () => {},
    dirContent: [],
    setDirContent: () => {},
+   view: 'grid',
+   setView: () => {},
 }
 
 const StateContext = createContext<State>(initialState)
