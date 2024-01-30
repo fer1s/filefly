@@ -42,11 +42,11 @@ const PathBar = () => {
 
    return (
       <div className="PathBar">
-         <button onClick={goHome}>
+         <button onClick={goHome} className='shadow'>
             <RiHomeFill />
          </button>
 
-         <div className="controls">
+         <div className="controls shadow">
             <button
                onClick={goBack}
                disabled={path === ''}
@@ -65,6 +65,7 @@ const PathBar = () => {
             value={path}
             onChange={handleChange}
             placeholder="Directory path"
+            className="shadow"
          />
       </div>
    )
