@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { useStateContext } from '../context/StateContext'
 import { DirEntry } from '../types'
@@ -15,6 +15,9 @@ import '../styles/pages/Directory.scss'
 
 const Directory = () => {
    const { dirContent, setPath } = useStateContext()
+   
+   const [contextMenuElementID, setContextMenuElementID] = useState('')
+   const [contextMenuElementType, setContextMenuElementType] = useState<'file' | 'dir' | 'none'>('none')
 
    const contextMenuRef = useRef<HTMLDivElement>(null)
    useEffect(() => {
@@ -35,19 +38,37 @@ const Directory = () => {
       <div className="directory_page">
          <div className="grid">
             {dirContent.map((entry) => (
-               <DirEntryItem key={`${entry.name}#${entry.path}`} entry={entry} setPath={setPath} contextMenuRef={contextMenuRef} />
+               <DirEntryItem key={`${entry.name}#${entry.path}`} entry={entry} setPath={setPath} contextMenuRef={contextMenuRef} id={entry.path} setContextMenuElementID={setContextMenuElementID} setContextMenuElementType={setContextMenuElementType} />
             ))}
          </div>
 
          <ContextMenu ref={contextMenuRef}>
-            <ContextMenuItem text="Open" icon={<IoOpenOutline />} />
-            <ContextMenuItem text="Open in Terminal" icon={<CgTerminal />} />
-            <ContextMenuItem text="Copy" icon={<IoCopyOutline />} />
-            <ContextMenuItem text="Cut" icon={<MdOutlineContentCut />} />
-            <ContextMenuItem text="Rename" icon={<MdOutlineDriveFileRenameOutline />} />
-            <ContextMenuItem text="Delete" icon={<MdDeleteOutline />} />
-            <ContextMenuItem isSeparator />
-            <ContextMenuItem text="Properties" icon={<IoInformation />} />
+
+            {contextMenuElementType === 'dir' && (
+               <>
+                  <ContextMenuItem text="Open" icon={<IoOpenOutline />} onClick={() => { console.log('open', contextMenuElementID, contextMenuElementType)}} />
+                  <ContextMenuItem text="Open in Terminal" icon={<CgTerminal />} />
+                  <ContextMenuItem text="Copy" icon={<IoCopyOutline />} />
+                  <ContextMenuItem text="Cut" icon={<MdOutlineContentCut />} />
+                  <ContextMenuItem text="Rename" icon={<MdOutlineDriveFileRenameOutline />} />
+                  <ContextMenuItem text="Delete" icon={<MdDeleteOutline />} />
+                  <ContextMenuItem isSeparator />
+                  <ContextMenuItem text="Properties" icon={<IoInformation />} />
+               </>
+            )}
+
+            {contextMenuElementType === 'file' && (
+               <>
+                  <ContextMenuItem text="Execute" icon={<IoOpenOutline />} onClick={() => { console.log('open', contextMenuElementID, contextMenuElementType)}} />
+                  <ContextMenuItem text="Copy" icon={<IoCopyOutline />} />
+                  <ContextMenuItem text="Cut" icon={<MdOutlineContentCut />} />
+                  <ContextMenuItem text="Rename" icon={<MdOutlineDriveFileRenameOutline />} />
+                  <ContextMenuItem text="Delete" icon={<MdDeleteOutline />} />
+                  <ContextMenuItem isSeparator />
+                  <ContextMenuItem text="Properties" icon={<IoInformation />} />
+               </>
+            )}
+
             {/* <ContextMenuItem isSeparator />
             <ContextMenuItem text="DevTools" icon={<CgToolbox />} /> */}
          </ContextMenu>
@@ -60,11 +81,14 @@ export default Directory
 type DirEntryItemProps = {
    entry: DirEntry
    setPath: (path: string) => void
+   setContextMenuElementID: (id: string) => void
    contextMenuRef: React.RefObject<HTMLDivElement>
+   setContextMenuElementType: (type: 'file' | 'dir' | 'none') => void
+   id: string
 }
 
 // forwards ref to ContextMenu
-const DirEntryItem = ({ entry, setPath, contextMenuRef }: DirEntryItemProps) => {
+const DirEntryItem = ({ entry, setPath, contextMenuRef, id, setContextMenuElementID, setContextMenuElementType }: DirEntryItemProps) => {
    const itemRef = useRef<HTMLDivElement>(null)
 
    useEffect(() => {
@@ -76,6 +100,16 @@ const DirEntryItem = ({ entry, setPath, contextMenuRef }: DirEntryItemProps) => 
                contextMenuRef.current.classList.remove('hidden')
                contextMenuRef.current.style.left = `${e.clientX}px`
                contextMenuRef.current.style.top = `${e.clientY}px`
+
+               // set the id of the element that was clicked
+               setContextMenuElementID(itemRef.current.id)
+               if(entry.metadata.isDir) {
+                  setContextMenuElementType('dir')
+               } else if(entry.metadata.isFile) {
+                  setContextMenuElementType('file')
+               } else {
+                  setContextMenuElementType('none')
+               }
             } else {
                contextMenuRef.current.classList.add('hidden')
             }
@@ -106,7 +140,7 @@ const DirEntryItem = ({ entry, setPath, contextMenuRef }: DirEntryItemProps) => 
    }
 
    return (
-      <div className="dir_entry_item" onDoubleClick={navigateToPath} ref={itemRef}>
+      <div className="dir_entry_item" id={id} onDoubleClick={navigateToPath} ref={itemRef}>
          {extension && name && <div className="extension">{extension}</div>}
          {entry.metadata.isDir ? <FaFolder /> : <FaFile />}
          <div className="dir_entry_info">

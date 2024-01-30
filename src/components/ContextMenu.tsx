@@ -10,7 +10,7 @@ interface ContextMenuProps {
 
 export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(({ children }, ref) => {
   return (
-    <div className="context_menu " ref={ref}>
+    <div className="context_menu hidden" ref={ref}>
       {children}
     </div>
   )
