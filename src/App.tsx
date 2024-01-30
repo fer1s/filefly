@@ -50,7 +50,7 @@ const App = () => {
 
    const fetchDirectory = async (path: string) => {
       let files = await readDirectory(path)
-      
+
       // sort files by name alphabetically
       files.sort((a, b) => {
          if (a.name < b.name) {
@@ -81,7 +81,7 @@ const App = () => {
    }, [])
 
    useEffect(() => {
-      if(path === '') {
+      if (path === '') {
          setDirContent([])
          navigate('/')
          return
@@ -94,6 +94,12 @@ const App = () => {
          }
       })
    }, [path])
+
+   useEffect(() => {
+      document.addEventListener('contextmenu', (event) => {
+         event.preventDefault()
+      })
+   }, [])
 
    return (
       <StateProvider
@@ -108,11 +114,11 @@ const App = () => {
             setDirContent,
          }}
       >
-            <AppBar />
-            <div className="App">
-               <SideBar />
-               <AppContent />
-            </div>
+         <AppBar />
+         <div className="App">
+            <SideBar />
+            <AppContent />
+         </div>
       </StateProvider>
    )
 }

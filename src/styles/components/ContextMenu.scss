@@ -1,0 +1,74 @@
+.context_menu {
+    position: absolute;
+    z-index: 1000;
+
+    max-height: 250px;
+    max-width: 170px;
+
+    overflow-y: auto;
+
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(25px);
+    border-radius: 5px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.5); // make it better
+
+    padding: 5px;
+    margin: 0;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+    gap: 1px;
+
+    &.hidden {
+        display: none;
+    }
+
+    .context_menu_item.separator {
+        width: 100%;
+        height: 1px;
+        min-height: 1px;
+        background-color: rgba(255, 255, 255, 0.1);
+        margin: 5px 0;
+    }
+
+    .context_menu_item.ctx_button {
+        width: 100%;
+        min-width: 100%;
+        max-width: 100%;
+
+        max-height: 20px;
+        height: 20px;
+        min-height: 20px;
+
+        padding: 0 10px;
+        margin: 0;
+        border: none;
+        border-radius: 3px;
+        background-color: transparent;
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.75rem;
+        font-weight: 400;
+        cursor: pointer;
+
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-start;
+        align-items: center;
+        gap: 3px;
+
+        transition: all 0.2s ease-in-out;
+
+        &:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        svg {
+            width: 12.5px;
+            height: 12.5px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+    }
+}
