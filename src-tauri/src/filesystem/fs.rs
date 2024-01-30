@@ -23,6 +23,7 @@ pub struct DirEntry {
 
 #[tauri::command]
 pub fn read_directory(path: &str) -> Vec<DirEntry> {
+    // ..
     let mut result: Vec<DirEntry> = Vec::new();
 
     // Use jwalk to walk through the dir
