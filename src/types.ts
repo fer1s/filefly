@@ -1,9 +1,14 @@
-export type DiskUsage = {
+type TimeSince = {
+    nanos_since_epoch: number;
+    secs_since_epoch: number;
+}
+
+type DiskUsage = {
     used: number;
     percentage: number;
 }
 
-export type Volume = {
+type Volume = {
     name: string;
     mountPoint: string;
     availableSpace: number;
@@ -12,17 +17,25 @@ export type Volume = {
     isRemovable: boolean;
 }
 
-export type DirMetadata = {
+type DirMetadata = {
     isDir: boolean;
     isFile: boolean;
-    modified: number;
-    accessed: number;
-    created: number;
+    modified: TimeSince;
+    accessed: TimeSince;
+    created: TimeSince;
 }
 
-export type DirEntry = {
+type DirEntry = {
     name: string;
     path: string;
     size: number;
     metadata: DirMetadata;
+}
+
+export type {
+    TimeSince,
+    DirEntry,
+    DirMetadata,
+    DiskUsage,
+    Volume,
 }
