@@ -1,9 +1,7 @@
 use serde::Serialize;
-use std::{fs, path};
+use std::{fs};
 use std::path::PathBuf;
 use std::time::SystemTime;
-
-use image_base64;
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
