@@ -1,5 +1,7 @@
 # filefly
 
+[![](https://dcbadge.vercel.app/api/server/jnXEtWQwdA)](https://discord.gg/jnXEtWQwdA)
+
 filefly is an faster file explorer alternative.
 
 ![preview](preview.png)
