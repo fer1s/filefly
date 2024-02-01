@@ -6,10 +6,10 @@ import { useStateContext } from '../context/StateContext'
 
 import SearchBar from './SearchBar'
 
-import '../styles/components/SideBar.scss'
-
 import { FaFolder, FaHardDrive } from 'react-icons/fa6'
 import { AiFillUsb } from 'react-icons/ai'
+
+import '../styles/components/SideBar.scss'
 
 const animatedListVariants = {
    visible: (i: number) => ({
@@ -33,19 +33,15 @@ const SideBar = () => {
    useEffect(() => {
         const sidebar = document.querySelector('.SideBar')
         const handleScroll = () => {
-            if (sidebar) {
-                setSidebarScrolled(sidebar.scrollTop > 10)
-            }
+            if (!sidebar) return;
+            setSidebarScrolled(sidebar.scrollTop > 10)
         }
 
-        if (sidebar) {
-            sidebar.addEventListener('scroll', handleScroll)
-        }
+        if (sidebar) sidebar.addEventListener('scroll', handleScroll)
 
         return () => {
-            if (sidebar) {
-                sidebar.removeEventListener('scroll', handleScroll)
-            }
+            if (!sidebar) return;
+            sidebar.removeEventListener('scroll', handleScroll)
         }
    }, [])
 
@@ -85,8 +81,11 @@ const VolumeItem = ({ volume, setPath, index }: VolumeItemProps) => {
    return (
       <motion.div
          className="drive_item"
+
          onClick={() => setPath(volume.mountPoint)}
+
          variants={animatedListVariants}
+
          initial="hidden"
          animate="visible"
          custom={index}

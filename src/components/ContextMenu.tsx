@@ -22,38 +22,40 @@ interface ContextMenuProps {
 }
 
 export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(({ children, contextMenuVisible }, ref) => {
-  return (
-    <motion.div
-      className="context_menu"
-      ref={ref}
-      variants={contextMenuVariants}
-      animate={contextMenuVisible ? 'visible' : 'hidden'}
-      initial="hidden"
-      exit="hidden"
-      transition={{ duration: 0.2 }}
-    >
-      {children}
-    </motion.div>
-  )
+    return (
+        <motion.div
+            className="context_menu"
+            ref={ref}
+
+            variants={contextMenuVariants}
+            animate={contextMenuVisible ? 'visible' : 'hidden'}
+
+            initial="hidden"
+            exit="hidden"
+
+            transition={{ duration: 0.2 }}
+        >
+            {children}
+        </motion.div>
+    )
 })
 
 // ContextMenuItem
 interface ContextMenuItemProps {
-    isSeparator?: boolean
-    onClick?: () => void
-    icon?: ReactNode
-    text?: string
+    isSeparator ?: boolean
+    onClick     ?: () => void
+    icon        ?: ReactNode
+    text        ?: string
 }
 
 export const ContextMenuItem = ({ isSeparator, onClick, text, icon }: ContextMenuItemProps) => {
     isSeparator = isSeparator || false
 
-    return isSeparator ? (
+    return isSeparator ? 
         <div className="context_menu_item separator"></div>
-    ) : (
+    :
         <button className="context_menu_item ctx_button" onClick={onClick}>
             {icon}
             {text}
         </button>
-    )
 }

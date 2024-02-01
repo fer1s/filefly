@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation, NavigateFunction, Location } from 'react-router-dom'
 
 import { StateProvider } from './context/StateContext'
 
@@ -12,95 +12,57 @@ import { getVolumes, readDirectory } from './api'
 import { Volume, DirEntry } from './types'
 
 const App = () => {
-   const navigate = useNavigate()
-   const location = useLocation()
+   const navigate: NavigateFunction = useNavigate()
+   const location: Location = useLocation()
 
-   const [volumes, setVolumes] = useState<Volume[]>([])
-   const [path, setPath] = useState<string>('')
+   const [volumes, setVolumes                ] = useState<Volume[]>([])
+   const [path   , setPath                   ] = useState<string>('')
    const [sidebarScrolled, setSidebarScrolled] = useState<boolean>(false)
-   const [dirContent, setDirContent] = useState<DirEntry[]>([])
-   const [view, setView] = useState<'list' | 'grid'>('grid')
+   const [dirContent, setDirContent          ] = useState<DirEntry[]>([])
+   const [view      , setView                ] = useState<'list' | 'grid'>('grid')
 
    const fetchVolumes = async () => {
-      let volumes = await getVolumes()
+        let volumes = await getVolumes()
 
-      // sort volumes by mount point alphabetically
-      volumes.sort((a, b) => {
-         if (a.mountPoint < b.mountPoint) {
-            return -1
-         }
-         if (a.mountPoint > b.mountPoint) {
-            return 1
-         }
-         return 0
-      })
+        // sort volumes by mount point alphabetically
+        volumes.sort((a, b) => a.mountPoint < b.mountPoint ? -1 : a.mountPoint > b.mountPoint ? 1 : 0);
+        // sort volumes by type (removable last)
+        volumes.sort((a, b) => a.isRemovable && !b.isRemovable ? 1 : !a.isRemovable && b.isRemovable ? -1 : 0);
 
-      // sort volumes by type (removable last)
-      volumes.sort((a, b) => {
-         if (a.isRemovable && !b.isRemovable) {
-            return 1
-         }
-         if (!a.isRemovable && b.isRemovable) {
-            return -1
-         }
-         return 0
-      })
-
-      setVolumes(volumes)
+        setVolumes(volumes)
    }
 
    const fetchDirectory = async (path: string) => {
-      let files = await readDirectory(path)
+        let files = await readDirectory(path)
 
-      // sort files by name alphabetically
-      files.sort((a, b) => {
-         if (a.name < b.name) {
-            return -1
-         }
-         if (a.name > b.name) {
-            return 1
-         }
-         return 0
-      })
+        files.sort((a: DirEntry, b: DirEntry) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0);
+        files.sort((a, b) => a.metadata.isDir && !b.metadata.isDir ? -1 : !a.metadata.isDir && b.metadata.isDir ? 1 : 0);
 
-      // sort files by type (directories first)
-      files.sort((a, b) => {
-         if (a.metadata.isDir && !b.metadata.isDir) {
-            return -1
-         }
-         if (!a.metadata.isDir && b.metadata.isDir) {
-            return 1
-         }
-         return 0
-      })
-
-      return files
+        return files
    }
 
-   useEffect(() => {
-      fetchVolumes()
-   }, [])
+    useEffect(() => {
+        fetchVolumes()
+    }, [])
 
-   useEffect(() => {
-      if (path === '') {
-         setDirContent([])
-         navigate('/')
-         return
-      }
-      fetchDirectory(path).then((files) => {
-         setDirContent(files)
+    useEffect(() => {
+        if (path === '') {
+            setDirContent([])
+            navigate('/')
+            return
+        }
 
-         if (location.pathname !== '/directory' && path !== '') {
-            navigate('/directory')
-         }
-      })
-   }, [path])
+        fetchDirectory(path).then((files) => {
+            setDirContent(files)
+            if (location.pathname !== '/directory' && path !== '') navigate('/directory')
+        })
+    }, [path])
 
-   useEffect(() => {
-      document.addEventListener('contextmenu', (event) => {
-         event.preventDefault()
-      })
-   }, [])
+    useEffect(() => {
+        document.addEventListener('contextmenu', (event) => {
+            event.preventDefault()
+        })
+    }, [])
 
    return (
       <StateProvider

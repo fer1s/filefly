@@ -2,6 +2,7 @@ use serde::Serialize;
 use std::{fs};
 use std::path::PathBuf;
 use std::time::SystemTime;
+use std::process::Command;
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -52,4 +53,20 @@ pub fn read_directory(path: &str) -> Vec<DirEntry> {
     };
 
     result
+}
+
+#[tauri::command]
+pub fn open_file(path: &str) {
+    if cfg!(target_os = "windows") {
+        Command::new("cmd")
+            .args(["/C", path])
+            .spawn()
+            .expect("failed to execute process")
+    } else {
+        Command::new("sh")
+            .arg("-c")
+            .arg(path)
+            .spawn()
+            .expect("failed to execute process")
+    };
 }

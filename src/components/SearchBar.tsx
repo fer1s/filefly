@@ -1,5 +1,3 @@
-import { useState } from "react"
-
 import '../styles/components/SearchBar.scss'
 
 const SearchBar = () => {

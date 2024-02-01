@@ -36,6 +36,7 @@ fn main() {
             hide_window,
             filesystem::volumes::get_volumes,
             filesystem::fs::read_directory,
+            filesystem::fs::open_file,
             functions::terminal::open_in_terminal,
         ])
         .system_tray(tray)

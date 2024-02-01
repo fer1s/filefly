@@ -14,13 +14,8 @@ const PathBar = () => {
 
    const [oldPath, setOldPath] = useState<string>('')
 
-   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      setPath(e.target.value)
-   }
-
-   const goHome = () => {
-      setPath('')
-   }
+   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => setPath(e.target.value)
+   const goHome = () => setPath('')
    
    const goBack = () => {
       if(path === '') return
@@ -41,13 +36,10 @@ const PathBar = () => {
       setOldPath('')
    }
 
-   const switchView = () => {
-      if(view === 'grid') {
-         setView('list')
-      } else {
-         setView('grid')
-      }
-   }
+   const switchView = ( ) => {
+        if ( view == 'grid' ) return setView('list');
+        return setView('grid');
+   };
 
    return (
       <div className="PathBar">
@@ -78,7 +70,7 @@ const PathBar = () => {
          />
 
          <button className='shadow' onClick={switchView}>
-            {view === 'grid' ? <HiViewList /> : <HiViewGrid />}
+            { view === 'grid' ? <HiViewList /> : <HiViewGrid /> }
          </button>
       </div>
    )
