@@ -9,8 +9,19 @@ filefly is an faster file explorer alternative.
 
 ## TODO
 
--  [ ] most functions
+-  [ ] main functions
+   - [x] open
+   - [x] open in terminal
+   - [ ] copy
+   - [ ] cut
+   - [ ] delete
+   - [ ] rename
 -  [ ] make it work offline (font, icons, etc.)
 -  [x] custom context menu (make it functionable!)
 -  [ ] cleaner code
 -  [x] fix files names (like .gitignore, etc.)
+-  [ ] audio file preview
+-  [ ] video file preview
+-  [ ] images file preview
+-  [ ] markdown file preview
+-  [ ] manage favourite folders on sidebar and make them functionable 

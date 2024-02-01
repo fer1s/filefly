@@ -45,23 +45,19 @@ const { dirContent, setPath, view } = useStateContext()
       setContextMenuVisible(false);
    }
 
+   const handleOpenFile = () => {
+        if (contextMenuElementType === 'file') openFile(contextMenuElementID)
+        else if (contextMenuElementType === 'dir') setPath(contextMenuElementID)
+        else console.error('An error occured while handling the Open_File event, See the defenition of the function "handleOpenFile()" for more information in Directory.tsx')
+    
+        setContextMenuVisible(false);
+   }
+
    // useEffect(() => {
    //    if(contextMenuVisible) {
    //       console.log(contextMenuElementID, contextMenuElementType)
    //    }
    // }, [contextMenuVisible, contextMenuElementID, contextMenuElementType])
-
-   const handleOpenInTerminal = () => {
-      if (contextMenuElementType === 'dir') {
-         openInTerminal(contextMenuElementID)
-      } else if (contextMenuElementType === 'file') {
-         openInTerminal(contextMenuElementID.split('/').slice(0, -1).join('/'))
-      } else {
-         console.log('error')
-      }
-
-      setContextMenuVisible(false)
-   }
 
    return (
 <div className="directory_page">
@@ -90,9 +86,7 @@ const { dirContent, setPath, view } = useStateContext()
                     <ContextMenuItem
                         text="Open"
                         icon={<IoOpenOutline />}
-                        onClick={() => {
-                            console.log('open', contextMenuElementID, contextMenuElementType)
-                        }}
+                        onClick={handleOpenFile}
                     />
                     <ContextMenuItem text="Open in Terminal" icon={<CgTerminal />} onClick={handleOpenInTerminal} />
                     <ContextMenuItem text="Copy" icon={<IoCopyOutline />} />
@@ -105,11 +99,9 @@ const { dirContent, setPath, view } = useStateContext()
             {contextMenuElementType === 'file' && (
                 <>
                     <ContextMenuItem
-                        text="Execute"
+                        text="Open"
                         icon={<IoOpenOutline />}
-                        onClick={() => {
-                            (async ( ) => await openFile(contextMenuElementID))();
-                        }}
+                        onClick={handleOpenFile}
                     />
                     <ContextMenuItem text="Copy" icon={<IoCopyOutline />} />
                     <ContextMenuItem text="Cut" icon={<MdOutlineContentCut />} />

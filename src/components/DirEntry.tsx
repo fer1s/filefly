@@ -46,38 +46,38 @@ const DirEntryItem = ({
 
    // handle context menu
    useEffect(() => {
-const handleContextMenu = (e: MouseEvent) => {
-            e.preventDefault()
+      const handleContextMenu = (e: MouseEvent) => {
+         e.preventDefault()
 
-            if (itemRef.current && contextMenuRef.current) {
-                if (!itemRef.current.contains(e.target as Node)) return setContextMenuVisible(false);
-                
-                setContextMenuElementID(itemRef.current.id)
+         if (itemRef.current && contextMenuRef.current) {
+            if (!itemRef.current.contains(e.target as Node)) return setContextMenuVisible(false)
 
-                if (entry.metadata.isDir) setContextMenuElementType('dir')
-                else if (entry.metadata.isFile) setContextMenuElementType('file')
-                else setContextMenuElementType('none')
+            setContextMenuElementID(itemRef.current.id)
 
-                contextMenuRef.current.style.left = `${e.clientX}px`
-                contextMenuRef.current.style.top = `${e.clientY}px`
+            if (entry.metadata.isDir) setContextMenuElementType('dir')
+            else if (entry.metadata.isFile) setContextMenuElementType('file')
+            else setContextMenuElementType('none')
 
-                setContextMenuVisible(true)
-            }
-        }
+            contextMenuRef.current.style.left = `${e.clientX}px`
+            contextMenuRef.current.style.top = `${e.clientY}px`
 
-        // Attach the event listener to the individual item
-        itemRef.current?.addEventListener('contextmenu', handleContextMenu)
-        // Remove the event listener from the individual item
-        return () => itemRef.current?.removeEventListener('contextmenu', handleContextMenu)
+            setContextMenuVisible(true)
+         }
+      }
+
+      // Attach the event listener to the individual item
+      itemRef.current?.addEventListener('contextmenu', handleContextMenu)
+      // Remove the event listener from the individual item
+      return () => itemRef.current?.removeEventListener('contextmenu', handleContextMenu)
    }, [contextMenuRef])
 
    // handle details popup
    useEffect(() => {
-let timer: number | null = null
+      let timer: number | null = null
 
       const handleMouseEnter = () => {
          timer = setTimeout(() => {
-            if (!itemRef.current) return;
+            if (!itemRef.current) return
 
             setHighlitedElementID(itemRef.current.id)
             if (entry.metadata.isDir) setHighlitedElementType('dir')
@@ -85,15 +85,15 @@ let timer: number | null = null
             else setHighlitedElementType('none')
 
             setTimeout(() => {
-               if (!itemRef.current) return;
-               setDetailsPopupVisible(true);
+               if (!itemRef.current) return
+               setDetailsPopupVisible(true)
             }, 1000)
          }, 1000)
       }
 
       const handleMouseLeave = () => {
-        setDetailsPopupVisible(false)
-        if (timer) clearTimeout(timer)
+         setDetailsPopupVisible(false)
+         if (timer) clearTimeout(timer)
       }
 
       itemRef.current?.addEventListener('mouseenter', handleMouseEnter)
@@ -106,7 +106,7 @@ let timer: number | null = null
    }, [])
 
    // Split extension from the file name
-   let name = entry.metadata.isFile ? entry.name.split('.')[0] : entry.name;
+   let name = entry.metadata.isFile ? entry.name.split('.')[0] : entry.name
    let extension = entry.metadata.isFile ? entry.name.split('.')[entry.name.split('.').length - 1] : ''
 
    // useEffect(() => {
@@ -120,59 +120,31 @@ let timer: number | null = null
    //    }
    // }, [entry])
 
-   const ImageFormats = ['png', 'jpg', 'jpeg', 'webp'];
+   const ImageFormats = ['png', 'jpg', 'jpeg', 'webp']
    return (
-      <div
-         className="dir_entry_item"
-         id={id}
-         onDoubleClick={() => entry.metadata.isDir ? navigateToPath(entry, setPath) : openFile(entry.path)}
-         ref={itemRef}
-      >
-         {view === 'grid' ? 
-            (
-                <>
-                    {
-                        extension && name && <div className="extension">{extension}</div>
-                    }
-                    
-                    { ImageFormats.includes(extension.toLowerCase().trim()) 
-                        ? <img src={convertFileSrc(entry.path)} /> 
-                        
-                        : entry.metadata.isDir ? <FaFolder /> 
-                        : <FaFile />
-                    }
+      <div className="dir_entry_item" id={id} onDoubleClick={() => (entry.metadata.isDir ? navigateToPath(entry, setPath) : openFile(entry.path))} ref={itemRef}>
+         {view === 'grid' ? (
+            <>
+               {extension && name && <div className="extension">{extension}</div>}
 
-                    <div className="dir_entry_info">
-                        <h3>{name ? (name.length > 9 ? name.substring(0, 9) + '...' : name) : extension}</h3>
-                    </div>
-                </>
-            )
-          : 
-            (
-                <>
-                    <div className="icon">
-                            { ImageFormats.includes(extension.toLowerCase().trim()) 
-                                ? <img src={convertFileSrc(entry.path)} /> 
-                                : entry.metadata.isDir 
+               {ImageFormats.includes(extension.toLowerCase().trim()) ? <img src={convertFileSrc(entry.path)} /> : entry.metadata.isDir ? <FaFolder /> : <FaFile />}
 
-                                ? <FaFolder /> 
-                                : <FaFile />
-                            }
-                    </div>
-                    <div className='name'>
-                        <h3>{name ? (name.length > 25 ? name.substring(0, 25) + '...' : name) : extension}</h3>
-                    </div>
-                    <div className="size">
-                        {entry.size > 0 && <h3>{formatBytes(entry.size)}</h3>}
-                    </div>
-                    <div className="extension">{extension && name && <h3>{extension}</h3>}</div>
-                </>
-            )
-         }
+               <div className="dir_entry_info">
+                  <h3>{name ? (name.length > 9 ? name.substring(0, 9) + '...' : name) : extension}</h3>
+               </div>
+            </>
+         ) : (
+            <>
+               <div className="icon">{ImageFormats.includes(extension.toLowerCase().trim()) ? <img src={convertFileSrc(entry.path)} /> : entry.metadata.isDir ? <FaFolder /> : <FaFile />}</div>
+               <div className="name">
+                  <h3>{name ? (name.length > 25 ? name.substring(0, 25) + '...' : name) : extension}</h3>
+               </div>
+               <div className="size">{entry.size > 0 && <h3>{formatBytes(entry.size)}</h3>}</div>
+               <div className="extension">{extension && name && <h3>{extension}</h3>}</div>
+            </>
+         )}
       </div>
    )
 }
 
-export {
-    DirEntryItem
-}
+export { DirEntryItem }
