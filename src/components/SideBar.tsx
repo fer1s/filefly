@@ -88,7 +88,6 @@ const VolumeItem = ({ volume, setPath, index }: VolumeItemProps) => {
 
          initial="hidden"
          animate="visible"
-
          custom={index}
       >
          {volume.isRemovable ? <AiFillUsb /> : <FaHardDrive />}

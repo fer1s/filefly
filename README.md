@@ -1,12 +1,16 @@
 # filefly
 
+[![](https://dcbadge.vercel.app/api/server/jnXEtWQwdA)](https://discord.gg/jnXEtWQwdA)
+
 filefly is an faster file explorer alternative.
 
 ![preview](preview.png)
+![preview2](preview2.png)
 
 ## TODO
 
-- [ ] most functions
-- [ ] make it work offline (font, icons, etc.)
-- [ ] custom context menu (make it functionable!)
-- [ ] cleaner code
+-  [ ] most functions
+-  [ ] make it work offline (font, icons, etc.)
+-  [x] custom context menu (make it functionable!)
+-  [ ] cleaner code
+-  [x] fix files names (like .gitignore, etc.)

@@ -41,7 +41,6 @@ const PathBar = () => {
         return setView('grid');
    };
 
-
    return (
       <div className="PathBar">
          <button onClick={goHome} className='shadow'>

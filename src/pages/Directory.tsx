@@ -13,7 +13,7 @@ import { MdOutlineDriveFileRenameOutline, MdDeleteOutline, MdOutlineContentCut }
 import '../styles/pages/Directory.scss'
 
 const Directory = () => {
-    const { dirContent, setPath, view } = useStateContext()
+const { dirContent, setPath, view } = useStateContext()
 
     const [detailsPopupVisible, setDetailsPopupVisible] = useState<boolean>(false)
     const [highlitedElementID, setHighlitedElementID] = useState('')
@@ -45,8 +45,26 @@ const Directory = () => {
       setContextMenuVisible(false);
    }
 
+   // useEffect(() => {
+   //    if(contextMenuVisible) {
+   //       console.log(contextMenuElementID, contextMenuElementType)
+   //    }
+   // }, [contextMenuVisible, contextMenuElementID, contextMenuElementType])
+
+   const handleOpenInTerminal = () => {
+      if (contextMenuElementType === 'dir') {
+         openInTerminal(contextMenuElementID)
+      } else if (contextMenuElementType === 'file') {
+         openInTerminal(contextMenuElementID.split('/').slice(0, -1).join('/'))
+      } else {
+         console.log('error')
+      }
+
+      setContextMenuVisible(false)
+   }
+
    return (
-        <div className="directory_page">
+<div className="directory_page">
             <div className={view == 'list' ? 'list' : 'grid'}>
             {dirContent.map((entry) => (
                 <DirEntryItem

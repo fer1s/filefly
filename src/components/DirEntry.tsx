@@ -46,7 +46,7 @@ const DirEntryItem = ({
 
    // handle context menu
    useEffect(() => {
-        const handleContextMenu = (e: MouseEvent) => {
+const handleContextMenu = (e: MouseEvent) => {
             e.preventDefault()
 
             if (itemRef.current && contextMenuRef.current) {
@@ -73,7 +73,7 @@ const DirEntryItem = ({
 
    // handle details popup
    useEffect(() => {
-      let timer: number | null = null
+let timer: number | null = null
 
       const handleMouseEnter = () => {
          timer = setTimeout(() => {
@@ -121,7 +121,6 @@ const DirEntryItem = ({
    // }, [entry])
 
    const ImageFormats = ['png', 'jpg', 'jpeg', 'webp'];
-
    return (
       <div
          className="dir_entry_item"
