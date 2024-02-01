@@ -38,6 +38,7 @@ fn main() {
             filesystem::fs::read_directory,
             filesystem::fs::open_file,
             functions::terminal::open_in_terminal,
+            functions::markdown::md_to_html,
         ])
         .system_tray(tray)
         .on_system_tray_event(|app, event| match event {

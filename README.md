@@ -1,27 +1,38 @@
 # filefly
 
-[![](https://dcbadge.vercel.app/api/server/jnXEtWQwdA)](https://discord.gg/jnXEtWQwdA)
+[![Discord Badge](https://dcbadge.vercel.app/api/server/jnXEtWQwdA)](https://discord.gg/jnXEtWQwdA)
 
-filefly is an faster file explorer alternative.
+FileFly is a faster file explorer alternative.
 
-![preview](preview.png)
-![preview2](preview2.png)
+![Preview](preview.png)
+![Preview2](preview2.png)
 
-## TODO
+## To-Do List
 
--  [ ] main functions
-   - [x] open
-   - [x] open in terminal
-   - [ ] copy
-   - [ ] cut
-   - [ ] delete
-   - [ ] rename
--  [ ] make it work offline (font, icons, etc.)
--  [x] custom context menu (make it functionable!)
--  [ ] cleaner code
--  [x] fix files names (like .gitignore, etc.)
--  [ ] audio file preview
--  [ ] video file preview
--  [ ] images file preview
--  [ ] markdown file preview
--  [ ] manage favourite folders on sidebar and make them functionable 
+- [x] Implement main functions
+  - [x] Open
+  - [x] Open in terminal
+  - [ ] Copy
+  - [ ] Cut
+  - [ ] Delete
+  - [ ] Rename
+
+- [ ] Make it work offline (font, icons, etc.)
+
+- [x] Create a custom context menu (ensure functionality!)
+
+- [ ] Refactor code for cleaner structure
+
+- [x] Fix file names (e.g., .gitignore)
+
+- [ ] Add audio file preview
+
+- [ ] Add video file preview
+
+- [x] Add image file preview
+
+- [x] Add markdown file preview
+
+- [ ] Manage favorite folders on the sidebar and make them functional
+
+- [ ] Ensure the context bar is always visible (if there's not enough space)
