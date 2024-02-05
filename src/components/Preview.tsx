@@ -3,7 +3,9 @@ import { motion } from 'framer-motion'
 import { convertFileSrc } from '@tauri-apps/api/tauri'
 
 import { generateMarkdownPreview } from '../api'
-import { ImageFormats } from '../constants'
+import { ImageFormats, AudioFormats } from '../constants'
+
+import AudioPreview from './AudioPreview'
 import Spinner from './Spinner'
 
 import '../styles/components/Preview.scss'
@@ -47,18 +49,6 @@ const Preview = ({ fileType, filePath, previewVisible, setPreviewVisible }: Prev
    useEffect(() => {
       if (!previewVisible) return
 
-      // switch (fileType) {
-      //    case 'md':
-      //       generateMarkdownPreview(filePath).then((data) => {
-      //          setPreviewContent(data)
-      //          setIsReady(true)
-      //       })
-      //       break
-      //    default:
-      //       setIsReady(true)
-      //       break
-      // }
-
       if (fileType === 'md') {
          generateMarkdownPreview(filePath).then((data) => {
             setPreviewContent(data)
@@ -67,7 +57,10 @@ const Preview = ({ fileType, filePath, previewVisible, setPreviewVisible }: Prev
       }
 
       if (ImageFormats.includes(fileType)) {
-         setPreviewContent(`<img src="${filePath}" alt="${filePath}"/>`)
+         setIsReady(true)
+      }
+
+      if (AudioFormats.includes(fileType)) {
          setIsReady(true)
       }
    }, [previewVisible, filePath])
@@ -81,40 +74,45 @@ const Preview = ({ fileType, filePath, previewVisible, setPreviewVisible }: Prev
             className="preview_backdrop"
             onClick={() => setPreviewVisible(false)}
          ></motion.div>
-         <motion.div
-            variants={previewVariants}
-            initial="hidden"
-            animate={previewVisible ? 'visible' : 'hidden'}
-            transition={{ type: 'spring', bounce: 0, duration: 0.3 }}
-            className={`preview_container shadow
-               ${ImageFormats.includes(fileType) ? 'image' : ''}`}
-         >
-            <div className="preview_header">
-               <h4>Preview</h4>
-               <button onClick={() => setPreviewVisible(false)}>Close</button>
-            </div>
-            <div
-               className={`preview_content
+         {AudioFormats.includes(fileType) ? (
+            <AudioPreview isVisible={previewVisible} filePath={filePath} />
+         ) : (
+            <motion.div
+               variants={previewVariants}
+               initial="hidden"
+               animate={previewVisible ? 'visible' : 'hidden'}
+               transition={{ type: 'spring', bounce: 0, duration: 0.3 }}
+               className={`preview_container shadow
+               ${ImageFormats.includes(fileType) ? 'image' : ''}
+               `}
+            >
+               <div className="preview_header">
+                  <h4>Preview</h4>
+                  <button onClick={() => setPreviewVisible(false)}>Close</button>
+               </div>
+               <div
+                  className={`preview_content
                             ${isReady ? '' : 'loading'}
                             ${fileType === 'md' ? 'markdown' : ''}
                             ${ImageFormats.includes(fileType) ? 'image' : ''}
                             `}
-            >
-               {isReady ? (
-                  fileType === 'md' ? (
-                     <div dangerouslySetInnerHTML={{ __html: previewContent }}></div>
-                  ) : ImageFormats.includes(fileType) ? (
-                     <img src={convertFileSrc(filePath)} alt={filePath} />
+               >
+                  {isReady ? (
+                     fileType === 'md' ? (
+                        <div dangerouslySetInnerHTML={{ __html: previewContent }}></div>
+                     ) : ImageFormats.includes(fileType) ? (
+                        <img src={convertFileSrc(filePath)} alt={filePath} />
+                     ) : (
+                        <div className="preview_file_not_supported">
+                           <h3>File type not supported</h3>
+                        </div>
+                     )
                   ) : (
-                     <div className="preview_file_not_supported">
-                        <h3>File type not supported</h3>
-                     </div>
-                  )
-               ) : (
-                  <Spinner />
-               )}
-            </div>
-         </motion.div>
+                     <Spinner />
+                  )}
+               </div>
+            </motion.div>
+         )}
       </>
    )
 }
