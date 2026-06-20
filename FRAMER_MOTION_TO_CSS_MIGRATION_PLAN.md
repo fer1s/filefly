@@ -178,7 +178,7 @@ Donde probar:
 
 ## Fase 5. Reduced Motion
 
-Estado: implementada y pendiente de validacion.
+Estado: completada y validada.
 
 Agregar una regla `prefers-reduced-motion` para desactivar o reducir transiciones y keyframes cuando el sistema lo solicite.
 
@@ -188,6 +188,8 @@ Donde probar:
 - Si es posible, activar reducir movimiento en el sistema y reiniciar la app.
 
 ## Fase 6. Limpieza de dependencia
+
+Estado: completada.
 
 ### Comprobaciones previas
 
@@ -209,6 +211,8 @@ npm uninstall framer-motion
 - Ejecutar Tauri y completar smoke test.
 
 ## Fase 7. Smoke Test Final
+
+Estado: completada y validada.
 
 Recorrido:
 

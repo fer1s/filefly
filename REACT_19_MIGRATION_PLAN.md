@@ -24,7 +24,7 @@ React 19 es viable en este proyecto, pero no debe instalarse de forma aislada.
 | `react-dom` | 18.2.0 | Requiere actualizacion | Mantener la misma version que React |
 | `@types/react` | 18.2.15 | No corresponde a React 19 | Subir a 19.x |
 | `@types/react-dom` | 18.2.7 | No corresponde a React 19 | Subir a 19.x |
-| `framer-motion` | 11.0.3 | Bloquea React 19 por peer dependency `^18` | Sustituir por animaciones CSS |
+| `framer-motion` | Eliminado | Bloqueo resuelto | Animaciones migradas a CSS y validadas |
 | `react-router-dom` | 6.21.3 | Compatible: acepta React `>=16.8` | Mantener inicialmente |
 | `react-icons` | 4.11.0 | Compatible, pero se retirara antes | Migrar a Font Awesome |
 | `@vitejs/plugin-react` | 4.0.3 | Sin restriccion directa sobre React | Mantener inicialmente |
@@ -124,7 +124,7 @@ El icono comentado `CgToolbox` se mapearia a `faToolbox` si vuelve a activarse.
 
 ## Fase 1. Eliminar Framer Motion con CSS
 
-Estado: planificada en `FRAMER_MOTION_TO_CSS_MIGRATION_PLAN.md`.
+Estado: completada. Las animaciones se migraron a CSS, se agrego `prefers-reduced-motion`, se desinstalo `framer-motion` y se validaron build y smoke test Tauri.
 
 ### Motivo
 
@@ -151,6 +151,8 @@ Estado: planificada en `FRAMER_MOTION_TO_CSS_MIGRATION_PLAN.md`.
 
 ## Fase 2. Puente React 18.3
 
+Estado: completada y validada. Build, smoke test Tauri y consola correctos.
+
 La guia oficial de React recomienda actualizar primero a React 18.3. Esta version se comporta como React 18.2, pero muestra avisos sobre APIs que deben corregirse antes de React 19.
 
 ### Cambios
@@ -166,6 +168,8 @@ La guia oficial de React recomienda actualizar primero a React 18.3. Esta versio
 - Aplicacion Tauri funcional.
 
 ## Fase 3. Migrar a React 19
+
+Estado: pendiente de instalar React 19 y sus tipos.
 
 ### Cambios
 
