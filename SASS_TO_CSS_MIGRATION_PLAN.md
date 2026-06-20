@@ -157,13 +157,13 @@ La implementacion y la validacion visual se completaron el 20 de junio de 2026. 
 - Estado `loading`
 - Variante `.image`
 
-## Paso 10. Preview de audio - pendiente de validacion visual
+## Paso 10. Preview de audio - completado
 
 ### Archivos
 
 - `src/styles/components/AudioPreview.scss`
 
-La implementacion se completo el 20 de junio de 2026. Falta confirmar visualmente el reproductor y sus sliders antes de cerrar el paso.
+La implementacion y la validacion visual se completaron el 20 de junio de 2026. El reproductor mantiene layout, controles, sliders y animaciones.
 
 ### Donde probar
 
@@ -173,11 +173,13 @@ La implementacion se completo el 20 de junio de 2026. Falta confirmar visualment
 - Control de volumen y su popup
 - Hover del thumb del slider
 
-## Paso 11. Estilos globales
+## Paso 11. Estilos globales - pendiente de validacion visual
 
 ### Archivos
 
 - `src/styles/index.scss`
+
+La implementacion se completo el 20 de junio de 2026. Falta confirmar visualmente el layout global antes de cerrar el paso.
 
 ### Donde probar
 
