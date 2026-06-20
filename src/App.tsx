@@ -1,14 +1,16 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation, NavigateFunction, Location } from 'react-router-dom'
 
 import { StateProvider } from './context/StateContext'
 
 import AppBar from './components/AppBar'
 import SideBar from './components/SideBar'
+import Toasts, { ToastData } from './components/Toast'
 
 import AppContent from './AppContent'
 
 import { getVolumes, readDirectory } from './api'
+import { setNotifier, ToastType } from './toast'
 import { Volume, DirEntry } from './types'
 
 const App = () => {
@@ -23,10 +25,25 @@ const App = () => {
    const [search    , setSearch              ] = useState<string>('')
    const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => localStorage.getItem('sidebarCollapsed') === 'true')
 
+   const [toasts, setToasts] = useState<ToastData[]>([])
+   const toastId = useRef(0)
+
    // Persist the collapsed state across sessions.
    useEffect(() => {
         localStorage.setItem('sidebarCollapsed', String(sidebarCollapsed))
    }, [sidebarCollapsed])
+
+   // Register the global notifier so any module can push a toast; auto-dismiss after a few seconds.
+   useEffect(() => {
+        const addToast = (message: string, type: ToastType) => {
+            const id = ++toastId.current
+            setToasts((prev) => [...prev, { id, message, type }])
+            setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 4000)
+        }
+
+        setNotifier(addToast)
+        return () => setNotifier(null)
+   }, [])
 
    const fetchVolumes = async () => {
         let volumes = await getVolumes()
@@ -107,6 +124,7 @@ const App = () => {
             <SideBar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed((c) => !c)} />
             <AppContent />
          </div>
+         <Toasts toasts={toasts} onDismiss={(id) => setToasts((prev) => prev.filter((t) => t.id !== id))} />
       </StateProvider>
    )
 }

@@ -77,11 +77,11 @@ Regla: no invertir en tareas `(Tauri 2)` sobre v1. Hacerlas con las APIs nuevas.
 
 ### Tareas detectadas
 
-- [ ] (Tauri 2) Consultar el estado maximizado real de la ventana Tauri. En v2 se usa `getCurrentWindow()` de `@tauri-apps/api/window`.
-- [ ] (Tauri 2) Escuchar cambios de tamano o estado de la ventana. Los eventos cambian en v2.
-- [ ] (Tauri 2) Alternar entre `faWindowMaximize` y `faWindowRestore`. Depende del estado real anterior.
-- [ ] (Tauri 2) Definir si minimizar necesita algun estado visual adicional.
-- [ ] (Tauri 2) Validar maximizar, restaurar, minimizar y reapertura desde la bandeja.
+- [x] (Tauri 2) Consultar el estado maximizado real de la ventana Tauri. `getCurrentWindow().isMaximized()` en `AppBar.tsx`.
+- [x] (Tauri 2) Escuchar cambios de tamano o estado de la ventana. Suscripcion a `onResized` que resincroniza el estado.
+- [x] (Tauri 2) Alternar entre `faWindowMaximize` y `faWindowRestore`. Icono segun `isMaximized`.
+- [x] (Tauri 2) Definir si minimizar necesita algun estado visual adicional. Decision: no; minimizar no tiene estado persistente que reflejar.
+- [ ] (Tauri 2) Validar maximizar, restaurar, minimizar y reapertura desde la bandeja. (pendiente de smoke test)
 
 ## Path Bar
 
@@ -135,7 +135,7 @@ Casos observados:
 - [x] (Tauri 2) Sustituir la apertura por una implementacion nativa multiplataforma. Comando Rust `open_file` reescrito con `tauri_plugin_opener::open_path` (loguea la ruta a la terminal y devuelve Result); ya no usa shell.
 - [x] (Tauri 2) Tratar las rutas como argumentos, sin interpretarlas mediante shell. `open_path` recibe la ruta como argumento unico.
 - [ ] (Tauri 2) Validar archivos con espacios, imagenes, PDF, audio y documentos. (pendiente de smoke test)
-- [ ] (Tauri 2) Devolver errores del backend a la interfaz en vez de dejarlos solo en consola. Ligado a la reescritura de `invoke` en v2.
+- [x] (Tauri 2) Devolver errores del backend a la interfaz en vez de dejarlos solo en consola. Sistema de toasts (`toast.ts` + `Toast.tsx`); comandos devuelven `Result` y los errores de open/copy/move/rename/delete se muestran como toast.
 
 ## Preview
 
@@ -166,7 +166,7 @@ Casos observados:
 - [x] (Tauri 2) Implementar `Cut`. Comando Rust `move_entry` (rename + fallback copy/delete entre volumenes); menu y atajo ⌘X; Paste mueve.
 - [x] (Tauri 2) Implementar `Rename`. Comando Rust `rename_entry`; input inline en `DirEntry.tsx` (Enter confirma, Escape cancela).
 - [x] (Tauri 2) Implementar `Delete` con confirmacion. Comando Rust `delete_entry` a Papelera (crate `trash`); confirmacion con `plugin-dialog`; menu y atajo ⌘Backspace.
-- [ ] (Tauri 2) Implementar `Properties` o retirarlo temporalmente. Leer metadata depende de plugin-fs; retirarlo de forma temporal si se necesita antes de v2.
+- [x] (Tauri 2) Implementar `Properties` o retirarlo temporalmente. Modal `Properties.tsx` con nombre/tipo/ruta/tamano/fechas (datos de `DirEntry.metadata`).
 
 ## Priorizacion propuesta
 

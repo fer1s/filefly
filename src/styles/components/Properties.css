@@ -1,0 +1,101 @@
+.properties_backdrop {
+   position: fixed;
+   inset: 0;
+   z-index: 1500;
+   background-color: rgba(0, 0, 0, 0.4);
+   opacity: 0;
+   visibility: hidden;
+   pointer-events: none;
+   transition:
+      opacity 0.2s ease-in-out,
+      visibility 0s linear 0.2s;
+}
+
+.properties_backdrop.visible {
+   opacity: 1;
+   visibility: visible;
+   pointer-events: auto;
+   transition-delay: 0s;
+}
+
+.properties_modal {
+   position: fixed;
+   z-index: 1501;
+   top: 50%;
+   left: 50%;
+   width: 400px;
+   max-width: calc(100% - 40px);
+   transform: translate(-50%, -50%) scale(0.9);
+   background-color: rgba(20, 20, 20, 0.85);
+   backdrop-filter: blur(20px);
+   border-radius: 8px;
+   border: 1px solid rgba(255, 255, 255, 0.1);
+   opacity: 0;
+   visibility: hidden;
+   pointer-events: none;
+   transition:
+      opacity 0.2s ease-in-out,
+      transform 0.2s ease-in-out,
+      visibility 0s linear 0.2s;
+}
+
+.properties_modal.visible {
+   transform: translate(-50%, -50%) scale(1);
+   opacity: 1;
+   visibility: visible;
+   pointer-events: auto;
+   transition-delay: 0s;
+}
+
+.properties_modal .properties_header {
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+   padding: 12px 16px;
+   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.properties_modal .properties_header h4 {
+   margin: 0;
+   font-size: 1rem;
+   font-weight: 600;
+   color: #fff;
+   user-select: none;
+}
+
+.properties_modal .properties_header button {
+   background-color: transparent;
+   border: none;
+   outline: none;
+   color: rgba(255, 255, 255, 0.6);
+   font-size: 0.8rem;
+   cursor: pointer;
+   transition: color 0.2s ease-in-out;
+}
+
+.properties_modal .properties_header button:hover {
+   color: #fff;
+}
+
+.properties_modal .properties_content {
+   padding: 16px;
+   display: flex;
+   flex-direction: column;
+   gap: 10px;
+}
+
+.properties_modal .properties_content h3 {
+   font-size: 0.78rem;
+   font-weight: 500;
+   color: rgba(255, 255, 255, 0.85);
+   display: flex;
+   gap: 10px;
+   word-break: break-word;
+}
+
+.properties_modal .properties_content h3 span {
+   font-weight: 400;
+   color: rgba(255, 255, 255, 0.55);
+   text-align: right;
+   margin-left: auto;
+}

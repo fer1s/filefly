@@ -4,6 +4,7 @@ import { useStateContext } from '../context/StateContext'
 import { ContextMenu, ContextMenuItem } from '../components/ContextMenu'
 import DetailsPopup from '../components/DetailsPopup'
 import { openFile, openInTerminal, deleteEntry, copyEntry, moveEntry, renameEntry } from '../api'
+import { notify } from '../toast'
 import { ask } from '@tauri-apps/plugin-dialog'
 import { AcceptedPreviewFormats } from '../constants'
 import { DirEntryItem } from '../components/DirEntry'
@@ -13,6 +14,8 @@ import { faArrowUpRightFromSquare, faCircleInfo, faCopy, faEye, faFilePen, faPas
 
 import '../styles/pages/Directory.css'
 import Preview from '../components/Preview'
+import Properties from '../components/Properties'
+import { DirEntry } from '../types'
 
 const Directory = () => {
    const { dirContent, path, setPath, view, search, refreshDir } = useStateContext()
@@ -22,6 +25,10 @@ const Directory = () => {
 
    // Path of the entry currently being renamed inline (empty when none).
    const [renamingID, setRenamingID] = useState('')
+
+   // Properties modal.
+   const [propertiesEntry, setPropertiesEntry] = useState<DirEntry | null>(null)
+   const [propertiesVisible, setPropertiesVisible] = useState(false)
 
    // Entries visible after applying the sidebar search filter.
    const filtered = useMemo(() => (search ? dirContent.filter((e) => e.name.toLowerCase().includes(search.toLowerCase())) : dirContent), [dirContent, search])
@@ -241,7 +248,7 @@ const Directory = () => {
          try {
             await deleteEntry(target)
          } catch (err) {
-            console.error('Could not delete ' + target + ':\n' + err)
+            notify('Could not delete ' + (target.split('/').pop() || target) + ': ' + err, 'error')
          }
       }
 
@@ -257,7 +264,7 @@ const Directory = () => {
             if (clipboard.mode === 'copy') await copyEntry(source, path)
             else await moveEntry(source, path)
          } catch (err) {
-            console.error('Could not paste ' + source + ':\n' + err)
+            notify('Could not paste ' + (source.split('/').pop() || source) + ': ' + err, 'error')
          }
       }
 
@@ -294,12 +301,18 @@ const Directory = () => {
       setContextMenuVisible(false)
    }
 
+   const handleProperties = () => {
+      setPropertiesEntry(dirContent.find((e) => e.path === contextMenuElementID) || null)
+      setPropertiesVisible(true)
+      setContextMenuVisible(false)
+   }
+
    const handleRenameSubmit = async (targetPath: string, newName: string) => {
       setRenamingID('')
       try {
          await renameEntry(targetPath, newName)
       } catch (err) {
-         console.error('Could not rename ' + targetPath + ':\n' + err)
+         notify('Could not rename: ' + err, 'error')
       }
       refreshDir()
    }
@@ -418,7 +431,7 @@ const Directory = () => {
             {contextMenuElementType !== 'none' && (
                <>
                   <ContextMenuItem isSeparator />
-                  <ContextMenuItem text="Properties" icon={<FontAwesomeIcon icon={faCircleInfo} />} />
+                  <ContextMenuItem text="Properties" icon={<FontAwesomeIcon icon={faCircleInfo} />} onClick={handleProperties} />
                </>
             )}
          </ContextMenu>
@@ -447,6 +460,8 @@ const Directory = () => {
             hasPrev={previewIndex > 0}
             hasNext={previewIndex < previewables.length - 1}
          />
+
+         <Properties entry={propertiesEntry} visible={propertiesVisible} onClose={() => setPropertiesVisible(false)} />
       </div>
    )
 }
