@@ -158,9 +158,9 @@ Casos observados:
 
 ### Tareas detectadas
 
-- [ ] (ahora) Aumentar ligeramente el espacio horizontal entre cada icono y su texto.
-- [ ] (ahora) Definir un ancho consistente para la columna de iconos y alinear todas las etiquetas.
-- [ ] (ahora) Definir estados disabled para acciones todavia no disponibles.
+- [x] (ahora) Aumentar ligeramente el espacio horizontal entre cada icono y su texto. `gap` 3px -> 9px en `.ctx_button`.
+- [x] (ahora) Definir un ancho consistente para la columna de iconos y alinear todas las etiquetas. Icono envuelto en `.ctx_icon` (ancho fijo 14px), texto en `.ctx_text`.
+- [x] (ahora) Definir estados disabled para acciones todavia no disponibles. `ContextMenuItem` deriva disabled de la ausencia de `onClick` (override con prop `disabled`) + estilo; Copy/Cut/Rename/Delete/Properties quedan disabled solos hasta tener handler (Tauri 2).
 - [ ] (Tauri 2) Corregir `Open` en macOS. Misma causa que "Apertura de archivos".
 - [ ] (Tauri 2) Implementar `Copy`. Requiere `@tauri-apps/plugin-fs` de v2.
 - [ ] (Tauri 2) Implementar `Cut`. Requiere plugin-fs.
