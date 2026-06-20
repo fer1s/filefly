@@ -5,16 +5,16 @@ import PathBar from './components/PathBar'
 import Volumes from './views/Volumes'
 import Directory from './views/Directory'
 
+import { ROUTES } from './lib/routes'
+
 function AppContent() {
    return (
       <div className="AppContent">
          <PathBar />
          <div className="Page">
             <Routes>
-               <Route path="/">
-                  <Route index element={<Volumes />} />
-                  <Route path="directory" element={<Directory />} />
-               </Route>
+               <Route path={ROUTES.volumes} element={<Volumes />} />
+               <Route path={ROUTES.directory} element={<Directory />} />
             </Routes>
          </div>
       </div>
