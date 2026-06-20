@@ -6,7 +6,8 @@ import { useStateContext } from '../context/StateContext'
 
 import '../styles/components/AppBar.css'
 
-import { VscChromeMinimize, VscChromeMaximize, VscChromeClose } from 'react-icons/vsc'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faMinus, faWindowMaximize, faXmark } from '@fortawesome/free-solid-svg-icons'
 
 const AppBar = () => {
    const { sidebarScrolled } = useStateContext()
@@ -30,13 +31,13 @@ const AppBar = () => {
 
          <div className="window_buttons">
             <button onClick={handleMinimize}>
-               <VscChromeMinimize />
+               <FontAwesomeIcon icon={faMinus} />
             </button>
             <button onClick={handleToggleMaximize}>
-               <VscChromeMaximize />
+               <FontAwesomeIcon icon={faWindowMaximize} />
             </button>
             <button onClick={handleClose}>
-               <VscChromeClose />
+               <FontAwesomeIcon icon={faXmark} />
             </button>
          </div>
       </div>

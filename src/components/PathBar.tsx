@@ -2,9 +2,8 @@ import { useState } from 'react'
 
 import { useStateContext } from '../context/StateContext'
 
-import { RiHomeFill } from 'react-icons/ri'
-import { FaArrowLeft, FaArrowRight } from 'react-icons/fa'
-import { HiViewList, HiViewGrid } from 'react-icons/hi'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faArrowLeft, faArrowRight, faHouse, faList, faTableCellsLarge } from '@fortawesome/free-solid-svg-icons'
 
 import '../styles/components/PathBar.css'
 
@@ -43,22 +42,22 @@ const PathBar = () => {
    return (
       <div className="PathBar">
          <button onClick={goHome} className="shadow">
-            <RiHomeFill />
+            <FontAwesomeIcon icon={faHouse} />
          </button>
 
          <div className="controls shadow">
             <button onClick={goBack} disabled={path === ''}>
-               <FaArrowLeft />
+               <FontAwesomeIcon icon={faArrowLeft} />
             </button>
             <button onClick={goForward} disabled={oldPath === ''}>
-               <FaArrowRight />
+               <FontAwesomeIcon icon={faArrowRight} />
             </button>
          </div>
 
          <input type="text" value={path} onChange={handleChange} placeholder="Directory path" className="shadow" />
 
          <button className="shadow" onClick={switchView}>
-            {view === 'grid' ? <HiViewList /> : <HiViewGrid />}
+            <FontAwesomeIcon icon={view === 'grid' ? faList : faTableCellsLarge} />
          </button>
       </div>
    )

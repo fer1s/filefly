@@ -44,6 +44,8 @@ Fuentes:
 
 Esta fase debe completarse antes de tocar Motion o React.
 
+Estado: en progreso. `AppBar` y `PathBar` estan migrados y pendientes de validacion visual.
+
 ### Compatibilidad y decision de Node
 
 La version moderna `@fortawesome/react-fontawesome` 3.x soporta React 18 o superior y Font Awesome 6/7, pero exige Node 20 o superior.

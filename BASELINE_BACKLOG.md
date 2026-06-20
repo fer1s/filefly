@@ -58,6 +58,22 @@ Baseline validado el 20 de junio de 2026.
 - [ ] Mantener accesibles las acciones mediante labels o tooltips.
 - [ ] Decidir si el estado colapsado debe persistirse entre sesiones.
 
+## Controles de ventana
+
+### Bug funcional
+
+- Los controles de maximizar y minimizar mantienen siempre el mismo icono y no reflejan visualmente el estado actual de la ventana.
+- Al maximizar, el boton deberia cambiar a un icono de restaurar ventana.
+- Al restaurar, deberia volver al icono de maximizar.
+
+### Tareas detectadas
+
+- [ ] Consultar el estado maximizado real de la ventana Tauri.
+- [ ] Escuchar cambios de tamano o estado de la ventana.
+- [ ] Alternar entre `faWindowMaximize` y `faWindowRestore`.
+- [ ] Definir si minimizar necesita algun estado visual adicional.
+- [ ] Validar maximizar, restaurar, minimizar y reapertura desde la bandeja.
+
 ## Path Bar
 
 ### Comportamiento correcto
