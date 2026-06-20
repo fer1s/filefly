@@ -24,7 +24,7 @@ React 19 es viable en este proyecto, pero no debe instalarse de forma aislada.
 | `react-dom` | 18.2.0 | Requiere actualizacion | Mantener la misma version que React |
 | `@types/react` | 18.2.15 | No corresponde a React 19 | Subir a 19.x |
 | `@types/react-dom` | 18.2.7 | No corresponde a React 19 | Subir a 19.x |
-| `framer-motion` | 11.0.3 | Bloquea React 19 por peer dependency `^18` | Migrar a Motion 12 |
+| `framer-motion` | 11.0.3 | Bloquea React 19 por peer dependency `^18` | Sustituir por animaciones CSS |
 | `react-router-dom` | 6.21.3 | Compatible: acepta React `>=16.8` | Mantener inicialmente |
 | `react-icons` | 4.11.0 | Compatible, pero se retirara antes | Migrar a Font Awesome |
 | `@vitejs/plugin-react` | 4.0.3 | Sin restriccion directa sobre React | Mantener inicialmente |
@@ -44,7 +44,7 @@ Fuentes:
 
 Esta fase debe completarse antes de tocar Motion o React.
 
-Estado: en progreso. `AppBar` y `PathBar` estan validados. `SideBar`, `Volumes` y `DirEntry` estan migrados y pendientes de validacion visual.
+Estado: completada. Todos los componentes usan Font Awesome, `react-icons` fue desinstalado y build y smoke test Tauri fueron validados.
 
 ### Compatibilidad y decision de Node
 
@@ -122,24 +122,24 @@ El icono comentado `CgToolbox` se mapearia a `faToolbox` si vuelve a activarse.
 - Los iconos de carpetas, archivos, discos y USB mantienen jerarquia visual.
 - El bundle no incluye packs completos de Font Awesome.
 
-## Fase 1. Migrar Framer Motion 11 a Motion 12
+## Fase 1. Eliminar Framer Motion con CSS
+
+Estado: planificada en `FRAMER_MOTION_TO_CSS_MIGRATION_PLAN.md`.
 
 ### Motivo
 
-`framer-motion` 11.0.3 declara peers `react: ^18.0.0` y `react-dom: ^18.0.0`. No es compatible formalmente con React 19.
-
-Motion 12 declara compatibilidad con React 18 y 19. La guia oficial indica que Motion for React 12 no introduce breaking changes para la API React.
+`framer-motion` 11.0.3 declara peers `react: ^18.0.0` y `react-dom: ^18.0.0`. No es compatible formalmente con React 19. Los usos actuales son transiciones simples que pueden reproducirse con CSS sin instalar otra libreria de animacion.
 
 ### Cambios
 
-- Desinstalar `framer-motion`.
-- Instalar `motion` 12.
-- Cambiar cinco imports de `framer-motion` a `motion/react`:
+- Migrar a CSS los cinco componentes que importan `framer-motion`:
   - `src/components/AudioPreview.tsx`
   - `src/components/ContextMenu.tsx`
   - `src/components/DetailsPopup.tsx`
   - `src/components/SideBar.tsx`
   - `src/components/Preview.tsx`
+- Agregar soporte `prefers-reduced-motion`.
+- Desinstalar `framer-motion` cuando no queden referencias.
 
 ### Donde probar
 
@@ -215,7 +215,7 @@ Validaciones finales:
 4. Cambio `grid/list`.
 5. Menu contextual.
 6. Preview de imagen, Markdown y audio.
-7. Botones de ventana y animaciones Motion.
+7. Botones de ventana y animaciones CSS.
 8. Revision de consola para warnings React 19.
 
 ## Criterio de exito
@@ -224,8 +224,7 @@ La migracion se considera completa cuando:
 
 - React y React DOM estan alineados en 19.x.
 - Los tipos React estan alineados en 19.x.
-- Motion declara compatibilidad con React 19.
-- `react-icons` y `framer-motion` ya no estan instalados.
+- `react-icons`, `framer-motion` y `motion` no estan instalados.
 - No hay errores de TypeScript ni peer dependencies.
 - Build y smoke test Tauri funcionan.
 - La interfaz mantiene su aspecto y comportamiento previo.

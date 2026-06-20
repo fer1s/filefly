@@ -2,7 +2,8 @@ import { useRef, useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { convertFileSrc } from '@tauri-apps/api/tauri'
 
-import { IoPlay, IoPause, IoVolumeMedium } from 'react-icons/io5'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faPause, faPlay, faVolumeHigh } from '@fortawesome/free-solid-svg-icons'
 
 import '../styles/components/AudioPreview.css'
 
@@ -120,7 +121,7 @@ const AudioPreview = ({ isVisible, filePath }: AudioPreviewProps) => {
          animate={isVisible ? 'visible' : 'hidden'}
       >
          <audio controls src={convertFileSrc(filePath)} ref={audioRef} />
-         <button onClick={togglePlay}>{isPlaying ? <IoPause /> : <IoPlay />}</button>
+         <button onClick={togglePlay}><FontAwesomeIcon icon={isPlaying ? faPause : faPlay} /></button>
          <div className="progress">
             <span className="currentTime">{formatTime(progress)}</span>
             <input type="range" min={0} max={duration} value={progress} onChange={handleProgress} />
@@ -130,7 +131,7 @@ const AudioPreview = ({ isVisible, filePath }: AudioPreviewProps) => {
             <button
                onClick={handleVolumeButtonClick}
             >
-               <IoVolumeMedium />
+               <FontAwesomeIcon icon={faVolumeHigh} />
             </button>
             <motion.div className="volume_extension"
                variants={volumeControlVariants}

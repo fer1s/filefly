@@ -149,6 +149,8 @@ Casos observados:
 
 ### Tareas detectadas
 
+- [ ] Aumentar ligeramente el espacio horizontal entre cada icono y su texto.
+- [ ] Definir un ancho consistente para la columna de iconos y alinear todas las etiquetas.
 - [ ] Corregir `Open` en macOS.
 - [ ] Implementar `Copy`.
 - [ ] Implementar `Cut`.

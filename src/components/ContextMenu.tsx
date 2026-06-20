@@ -1,18 +1,5 @@
 import { RefObject, ReactNode, forwardRef } from 'react'
-import { motion } from 'framer-motion'
 import '../styles/components/ContextMenu.css'
-
-const contextMenuVariants = {
-  hidden: {
-    opacity: 0,
-    scale: 0.8,
-  },
-  visible: {
-    opacity: 1,
-    scale: 1,
-  },
-
-}
 
 // ContextMenu
 interface ContextMenuProps {
@@ -23,20 +10,12 @@ interface ContextMenuProps {
 
 export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(({ children, contextMenuVisible }, ref) => {
     return (
-        <motion.div
-            className="context_menu"
+        <div
+            className={`context_menu${contextMenuVisible ? ' visible' : ''}`}
             ref={ref}
-
-            variants={contextMenuVariants}
-            animate={contextMenuVisible ? 'visible' : 'hidden'}
-
-            initial="hidden"
-            exit="hidden"
-
-            transition={{ duration: 0.2 }}
         >
             {children}
-        </motion.div>
+        </div>
     )
 })
 

@@ -7,9 +7,8 @@ import { openFile, openInTerminal } from '../api'
 import { AcceptedPreviewFormats } from '../constants'
 import { DirEntryItem } from '../components/DirEntry'
 
-import { IoOpenOutline, IoCopyOutline, IoInformation } from 'react-icons/io5'
-import { CgTerminal } from 'react-icons/cg'
-import { MdOutlineDriveFileRenameOutline, MdDeleteOutline, MdOutlineContentCut, MdOutlinePreview } from 'react-icons/md'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faArrowUpRightFromSquare, faCircleInfo, faCopy, faEye, faFilePen, faScissors, faTerminal, faTrash } from '@fortawesome/free-solid-svg-icons'
 
 import '../styles/pages/Directory.css'
 import Preview from '../components/Preview'
@@ -106,28 +105,28 @@ const Directory = () => {
          <ContextMenu contextMenuVisible={contextMenuVisible} ref={contextMenuRef}>
             {contextMenuElementType === 'dir' && (
                <>
-                  <ContextMenuItem text="Open" icon={<IoOpenOutline />} onClick={handleOpenFile} />
-                  <ContextMenuItem text="Open in Terminal" icon={<CgTerminal />} onClick={handleOpenInTerminal} />
-                  <ContextMenuItem text="Copy" icon={<IoCopyOutline />} />
-                  <ContextMenuItem text="Cut" icon={<MdOutlineContentCut />} />
-                  <ContextMenuItem text="Rename" icon={<MdOutlineDriveFileRenameOutline />} />
-                  <ContextMenuItem text="Delete" icon={<MdDeleteOutline />} />
+                  <ContextMenuItem text="Open" icon={<FontAwesomeIcon icon={faArrowUpRightFromSquare} />} onClick={handleOpenFile} />
+                  <ContextMenuItem text="Open in Terminal" icon={<FontAwesomeIcon icon={faTerminal} />} onClick={handleOpenInTerminal} />
+                  <ContextMenuItem text="Copy" icon={<FontAwesomeIcon icon={faCopy} />} />
+                  <ContextMenuItem text="Cut" icon={<FontAwesomeIcon icon={faScissors} />} />
+                  <ContextMenuItem text="Rename" icon={<FontAwesomeIcon icon={faFilePen} />} />
+                  <ContextMenuItem text="Delete" icon={<FontAwesomeIcon icon={faTrash} />} />
                </>
             )}
 
             {contextMenuElementType === 'file' && (
                <>
-                  <ContextMenuItem text="Open" icon={<IoOpenOutline />} onClick={handleOpenFile} />
-                  {AcceptedPreviewFormats.includes(contextMenuElementID.split('.').pop() || '') && <ContextMenuItem text="Preview" icon={<MdOutlinePreview />} onClick={handlePreviewFile} />}
-                  <ContextMenuItem text="Copy" icon={<IoCopyOutline />} />
-                  <ContextMenuItem text="Cut" icon={<MdOutlineContentCut />} />
-                  <ContextMenuItem text="Rename" icon={<MdOutlineDriveFileRenameOutline />} />
-                  <ContextMenuItem text="Delete" icon={<MdDeleteOutline />} />
+                  <ContextMenuItem text="Open" icon={<FontAwesomeIcon icon={faArrowUpRightFromSquare} />} onClick={handleOpenFile} />
+                  {AcceptedPreviewFormats.includes(contextMenuElementID.split('.').pop() || '') && <ContextMenuItem text="Preview" icon={<FontAwesomeIcon icon={faEye} />} onClick={handlePreviewFile} />}
+                  <ContextMenuItem text="Copy" icon={<FontAwesomeIcon icon={faCopy} />} />
+                  <ContextMenuItem text="Cut" icon={<FontAwesomeIcon icon={faScissors} />} />
+                  <ContextMenuItem text="Rename" icon={<FontAwesomeIcon icon={faFilePen} />} />
+                  <ContextMenuItem text="Delete" icon={<FontAwesomeIcon icon={faTrash} />} />
                </>
             )}
 
             <ContextMenuItem isSeparator />
-            <ContextMenuItem text="Properties" icon={<IoInformation />} />
+            <ContextMenuItem text="Properties" icon={<FontAwesomeIcon icon={faCircleInfo} />} />
 
             {/* <ContextMenuItem isSeparator />
             <ContextMenuItem text="DevTools" icon={<CgToolbox />} /> */}
