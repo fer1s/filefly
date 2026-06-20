@@ -38,6 +38,10 @@ const Directory = () => {
 
    const contextMenuRef = useRef<HTMLDivElement>(null)
 
+   // Type-to-find buffer and its reset timer.
+   const searchBufferRef = useRef('')
+   const searchTimerRef = useRef<number | null>(null)
+
    useEffect(() => {
       const handleCloseContextMenu = (e: MouseEvent) => {
          if (contextMenuRef.current && !contextMenuRef.current.contains(e.target as Node)) setContextMenuVisible(false)
@@ -88,8 +92,35 @@ const Directory = () => {
             return prev
          })
 
+      // Type-to-find: append the typed char to a buffer and select the first matching entry.
+      // A single-char buffer starts the search after the current item so repeated presses cycle matches.
+      const typeahead = (char: string) => {
+         if (searchTimerRef.current) clearTimeout(searchTimerRef.current)
+         searchBufferRef.current += char.toLowerCase()
+         searchTimerRef.current = window.setTimeout(() => (searchBufferRef.current = ''), 700)
+
+         const buf = searchBufferRef.current
+         setSelectedIDs((prev) => {
+            if (!dirContent.length) return prev
+            const current = prev.length ? dirContent.findIndex((e) => e.path === prev[prev.length - 1]) : -1
+            const start = buf.length === 1 ? current + 1 : 0
+            for (let i = 0; i < dirContent.length; i++) {
+               const entry = dirContent[(start + i) % dirContent.length]
+               if (entry.name.toLowerCase().startsWith(buf)) return [entry.path]
+            }
+            return prev
+         })
+      }
+
       const handleKeyDown = (e: KeyboardEvent) => {
          if (isTypingTarget(e.target)) return
+
+         // Printable single characters drive the type-to-find search.
+         if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+            e.preventDefault()
+            typeahead(e.key)
+            return
+         }
 
          switch (e.key) {
             case 'Escape':
@@ -119,7 +150,10 @@ const Directory = () => {
       }
 
       document.addEventListener('keydown', handleKeyDown)
-      return () => document.removeEventListener('keydown', handleKeyDown)
+      return () => {
+         document.removeEventListener('keydown', handleKeyDown)
+         if (searchTimerRef.current) clearTimeout(searchTimerRef.current)
+      }
    }, [dirContent, view])
 
    const handleOpenInTerminal = () => {
