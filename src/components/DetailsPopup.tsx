@@ -1,7 +1,7 @@
 import { ReactNode } from 'react'
 import { motion } from 'framer-motion'
 
-import '../styles/components/DetailsPopup.scss'
+import '../styles/components/DetailsPopup.css'
 
 interface DetailsPopupProps {
    visible  : boolean
