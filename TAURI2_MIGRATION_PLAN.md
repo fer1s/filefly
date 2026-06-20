@@ -38,7 +38,7 @@ Usos de la API JS:
 
 ## Fase 1. Dependencias
 
-Estado: edits aplicados; pendiente de instalar y compilar.
+Estado: completada y validada (Tauri 2 compila y corre).
 
 Cambios:
 
@@ -53,7 +53,7 @@ Donde probar: solo que `cargo`/`npm` resuelvan dependencias (aun no compila del 
 
 ## Fase 2. Configuracion (`tauri.conf.json` + capabilities)
 
-Estado: edits aplicados; pendiente de instalar y compilar.
+Estado: completada y validada (Tauri 2 compila y corre).
 
 Cambios:
 
@@ -75,7 +75,7 @@ Donde probar: validacion del schema al arrancar; warnings de capabilities en con
 
 ## Fase 3. Backend Rust
 
-Estado: edits aplicados; pendiente de instalar y compilar.
+Estado: completada y validada (Tauri 2 compila y corre).
 
 Cambios:
 
@@ -91,7 +91,7 @@ Donde probar: `cargo build` limpio; la app arranca, ventana visible, tray funcio
 
 ## Fase 4. Frontend (API JS)
 
-Estado: edits aplicados; pendiente de instalar y compilar.
+Estado: completada y validada (Tauri 2 compila y corre).
 
 Cambios:
 
@@ -104,7 +104,7 @@ Donde probar: arranque, volumenes, navegacion, previews de imagen/markdown/audio
 
 ## Fase 5. Smoke test de paridad
 
-Estado: pendiente.
+Estado: completada y validada. Paridad funcional confirmada en macOS.
 
 Checklist (debe igualar a v1):
 
