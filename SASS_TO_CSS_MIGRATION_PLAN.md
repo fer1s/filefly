@@ -79,13 +79,13 @@ La implementacion y la validacion visual se completaron el 20 de junio de 2026. 
 - Hover en minimizar, maximizar y cerrar
 - Scroll de sidebar para ver si el titulo se oculta igual
 
-## Paso 5. Pantalla de volumenes - pendiente de validacion visual
+## Paso 5. Pantalla de volumenes - completado
 
 ### Archivos
 
 - `src/styles/pages/Volumes.scss`
 
-La implementacion se completo el 20 de junio de 2026. Falta confirmar visualmente las tarjetas antes de cerrar el paso.
+La implementacion y la validacion visual se completaron el 20 de junio de 2026. Las tarjetas mantienen dimensiones, contenido, barra de uso y hover.
 
 ### Donde probar
 
@@ -93,11 +93,13 @@ La implementacion se completo el 20 de junio de 2026. Falta confirmar visualment
 - Hover de cada volumen
 - Doble click en un volumen para entrar
 
-## Paso 6. Barra de ruta
+## Paso 6. Barra de ruta - pendiente de validacion visual
 
 ### Archivos
 
 - `src/styles/components/PathBar.scss`
+
+La implementacion se completo el 20 de junio de 2026. Falta confirmar visualmente la barra y sus estados antes de cerrar el paso.
 
 ### Donde probar
 

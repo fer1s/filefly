@@ -6,7 +6,7 @@ import { RiHomeFill } from 'react-icons/ri'
 import { FaArrowLeft, FaArrowRight } from 'react-icons/fa'
 import { HiViewList, HiViewGrid } from 'react-icons/hi'
 
-import '../styles/components/PathBar.scss'
+import '../styles/components/PathBar.css'
 
 const PathBar = () => {
    const { path, setPath, view, setView } = useStateContext()
