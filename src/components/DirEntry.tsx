@@ -1,5 +1,4 @@
 import { useEffect, useRef } from 'react'
-// import moment from 'moment'
 import { convertFileSrc } from '@tauri-apps/api/tauri'
 
 import { DirEntry } from '../types'
@@ -42,8 +41,6 @@ const DirEntryItem = ({
    setContextMenuElementType,
 }: DirEntryItemProps) => {
    const itemRef = useRef<HTMLDivElement>(null)
-
-   // const [modified, setModified] = useState<string>('')
 
    // handle context menu
    useEffect(() => {
@@ -109,17 +106,6 @@ const DirEntryItem = ({
    // Split extension from the file name
    let name = entry.metadata.isFile ? entry.name.split('.')[0] : entry.name
    let extension = entry.metadata.isFile ? entry.name.split('.')[entry.name.split('.').length - 1] : ''
-
-   // useEffect(() => {
-   //    if (entry.metadata.modified.secs_since_epoch) {
-   //       let formatted = formatDate(entry.metadata.modified.secs_since_epoch)
-   //       formatted = moment(modified).fromNow()
-
-   //       if (formatted === 'Invalid date') return
-
-   //       setModified(formatted)
-   //    }
-   // }, [entry])
 
    const ImageFormats = ['png', 'jpg', 'jpeg', 'webp']
    return (

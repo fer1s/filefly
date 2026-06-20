@@ -3,7 +3,6 @@ import { DirEntry } from './types'
 export const navigateToPath = (entry: DirEntry, setPath: (path: string) => void) => 
     entry.metadata.isDir ? setPath(entry.path) : ''
 
-export const formatDate = (seconds: number) => new Date(0).setUTCSeconds(seconds).toLocaleString();
 export const formatBytes = (bytes: number, decimals: number = 2) => {
     if (!+bytes) return '0 Bytes'
 
