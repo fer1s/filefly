@@ -16,6 +16,14 @@ import Preview from '../components/Preview'
 const Directory = () => {
    const { dirContent, setPath, view } = useStateContext()
 
+   const [selectedIDs, setSelectedIDs] = useState<string[]>([])
+
+   // Single click replaces the selection; Ctrl (or Cmd on macOS) + click toggles the item in the selection.
+   const handleSelect = (id: string, e: React.MouseEvent) => {
+      const additive = e.ctrlKey || e.metaKey
+      setSelectedIDs((prev) => (additive ? (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]) : [id]))
+   }
+
    const [detailsPopupVisible, setDetailsPopupVisible] = useState<boolean>(false)
    const [highlitedElementID, setHighlitedElementID] = useState('')
    const [highlitedElementType, setHighlitedElementType] = useState<'file' | 'dir' | 'none'>('none')
@@ -41,6 +49,16 @@ const Directory = () => {
          document.removeEventListener('click', handleCloseContextMenu)
       }
    }, [contextMenuRef])
+
+   // Clear the selection with Escape.
+   useEffect(() => {
+      const handleKeyDown = (e: KeyboardEvent) => {
+         if (e.key === 'Escape') setSelectedIDs([])
+      }
+
+      document.addEventListener('keydown', handleKeyDown)
+      return () => document.removeEventListener('keydown', handleKeyDown)
+   }, [])
 
    const handleOpenInTerminal = () => {
       if (contextMenuElementType === 'dir') openInTerminal(contextMenuElementID)
@@ -82,7 +100,7 @@ const Directory = () => {
    // }, [contextMenuVisible, contextMenuElementID, contextMenuElementType])
 
    return (
-      <div className="directory_page">
+      <div className="directory_page" onClick={(e) => !(e.target as HTMLElement).closest('.dir_entry_item') && setSelectedIDs([])}>
          <div className={view == 'list' ? 'list' : 'grid'}>
             {dirContent.map((entry) => (
                <DirEntryItem
@@ -92,6 +110,8 @@ const Directory = () => {
                   contextMenuRef={contextMenuRef}
                   id={entry.path}
                   view={view == 'list' ? 'list' : 'grid'}
+                  selected={selectedIDs.includes(entry.path)}
+                  onSelect={(e) => handleSelect(entry.path, e)}
                   setHighlitedElementID={setHighlitedElementID}
                   setHighlitedElementType={setHighlitedElementType}
                   setDetailsPopupVisible={setDetailsPopupVisible}

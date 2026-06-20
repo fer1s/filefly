@@ -13,6 +13,9 @@ type DirEntryItemProps = {
    setPath: (path: string) => void
    view: 'grid' | 'list'
 
+   selected: boolean
+   onSelect: (e: React.MouseEvent) => void
+
    setHighlitedElementID: (id: string) => void
    setHighlitedElementType: (type: 'file' | 'dir' | 'none') => void
    setDetailsPopupVisible: (visible: boolean) => void
@@ -31,6 +34,9 @@ const DirEntryItem = ({
    contextMenuRef,
    id,
    view,
+
+   selected,
+   onSelect,
 
    setHighlitedElementID,
    setHighlitedElementType,
@@ -103,13 +109,25 @@ const DirEntryItem = ({
       }
    }, [])
 
+   // Move keyboard focus to the entry when it becomes the selected one.
+   useEffect(() => {
+      if (selected) itemRef.current?.focus()
+   }, [selected])
+
    // Split extension from the file name
    let name = entry.metadata.isFile ? entry.name.split('.')[0] : entry.name
    let extension = entry.metadata.isFile ? entry.name.split('.')[entry.name.split('.').length - 1] : ''
 
    const ImageFormats = ['png', 'jpg', 'jpeg', 'webp']
    return (
-      <div className="dir_entry_item" id={id} onDoubleClick={() => (entry.metadata.isDir ? navigateToPath(entry, setPath) : openFile(entry.path))} ref={itemRef}>
+      <div
+         className={selected ? 'dir_entry_item selected' : 'dir_entry_item'}
+         id={id}
+         tabIndex={0}
+         onClick={onSelect}
+         onDoubleClick={() => (entry.metadata.isDir ? navigateToPath(entry, setPath) : openFile(entry.path))}
+         ref={itemRef}
+      >
          {view === 'grid' ? (
             <>
                {extension && name && <div className="extension">{extension}</div>}

@@ -1,3 +1,7 @@
+.directory_page {
+   min-height: 100%;
+}
+
 .directory_page .grid .dir_entry_item {
    width: 77px;
    height: 77px;
@@ -70,6 +74,20 @@
 .directory_page .grid .dir_entry_item:hover svg,
 .directory_page .grid .dir_entry_item:hover .dir_entry_info h3 {
    color: rgba(255, 255, 255, 0.8);
+}
+
+.directory_page .dir_entry_item:focus {
+   outline: none;
+}
+
+.directory_page .grid .dir_entry_item.selected {
+   background-color: rgba(94, 154, 255, 0.18);
+   border: 1px solid rgba(94, 154, 255, 0.6);
+}
+
+.directory_page .grid .dir_entry_item.selected svg,
+.directory_page .grid .dir_entry_item.selected .dir_entry_info h3 {
+   color: #fff;
 }
 
 .directory_page .list {
@@ -169,6 +187,18 @@
 .directory_page .list .dir_entry_item:hover .size h3,
 .directory_page .list .dir_entry_item:hover .extension h3 {
    color: rgba(255, 255, 255, 0.8);
+}
+
+.directory_page .list .dir_entry_item.selected {
+   background-color: rgba(94, 154, 255, 0.18);
+   box-shadow: inset 2px 0 0 rgba(94, 154, 255, 0.9);
+}
+
+.directory_page .list .dir_entry_item.selected .icon svg,
+.directory_page .list .dir_entry_item.selected .name h3,
+.directory_page .list .dir_entry_item.selected .size h3,
+.directory_page .list .dir_entry_item.selected .extension h3 {
+   color: #fff;
 }
 
 .directory_page .list .dir_entry_item:first-child {
