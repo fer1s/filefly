@@ -191,7 +191,7 @@ La implementacion y la validacion visual se completaron el 20 de junio de 2026. 
 - Tipografia
 - `App` y `AppContent`
 
-## Paso 12. Limpieza final - pendiente de comandos de validacion
+## Paso 12. Limpieza final - completado
 
 ### Que hacer
 
@@ -203,8 +203,11 @@ Estado actual:
 
 - No quedan archivos `.scss` en `src`.
 - No quedan imports `.scss` en `src`.
-- Falta retirar `sass` de `package.json` y sincronizar `package-lock.json`.
-- Falta ejecutar build y validacion final por parte del usuario.
+- `sass` ya no esta declarado en `package.json` ni instalado directamente.
+- `npm run build` fue validado correctamente por el usuario.
+- `npm run tauri dev` y el smoke test final fueron validados correctamente por el usuario.
+
+La migracion completa se cerro el 20 de junio de 2026.
 
 ### Donde probar
 

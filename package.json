@@ -1,5 +1,5 @@
 {
-  "name": "filefly",
+  "name": "sito-file-browser",
   "private": true,
   "version": "0.0.1",
   "type": "module",
@@ -10,6 +10,9 @@
     "tauri": "tauri"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "7.2.0",
+    "@fortawesome/free-solid-svg-icons": "7.2.0",
+    "@fortawesome/react-fontawesome": "3.3.1",
     "@tauri-apps/api": "1.5.0",
     "framer-motion": "11.0.3",
     "moment": "2.30.1",
