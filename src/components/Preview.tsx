@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { motion } from 'framer-motion'
 import { convertFileSrc } from '@tauri-apps/api/tauri'
 
 import { generateMarkdownPreview } from '../api'
@@ -16,30 +15,6 @@ interface PreviewProps {
 
    previewVisible: boolean
    setPreviewVisible: (visible: boolean) => void
-}
-
-const previewBackdropVariants = {
-   hidden: {
-      opacity: 0,
-      display: 'none',
-   },
-   visible: {
-      opacity: 1,
-      display: 'flex',
-   },
-}
-
-const previewVariants = {
-   hidden: {
-      opacity: 0,
-      scale: 0.6,
-      y: '100%',
-   },
-   visible: {
-      opacity: 1,
-      scale: 1,
-      y: 0,
-   },
 }
 
 const Preview = ({ fileType, filePath, previewVisible, setPreviewVisible }: PreviewProps) => {
@@ -67,24 +42,15 @@ const Preview = ({ fileType, filePath, previewVisible, setPreviewVisible }: Prev
 
    return (
       <>
-         <motion.div
-            variants={previewBackdropVariants}
-            initial="hidden"
-            animate={previewVisible ? 'visible' : 'hidden'}
-            className="preview_backdrop"
+         <div
+            className={`preview_backdrop${previewVisible ? ' visible' : ''}`}
             onClick={() => setPreviewVisible(false)}
-         ></motion.div>
+         ></div>
          {AudioFormats.includes(fileType) ? (
             <AudioPreview isVisible={previewVisible} filePath={filePath} />
          ) : (
-            <motion.div
-               variants={previewVariants}
-               initial="hidden"
-               animate={previewVisible ? 'visible' : 'hidden'}
-               transition={{ type: 'spring', bounce: 0, duration: 0.3 }}
-               className={`preview_container shadow
-               ${ImageFormats.includes(fileType) ? 'image' : ''}
-               `}
+            <div
+               className={`preview_container shadow${ImageFormats.includes(fileType) ? ' image' : ''}${previewVisible ? ' visible' : ''}`}
             >
                <div className="preview_header">
                   <h4>Preview</h4>
@@ -111,7 +77,7 @@ const Preview = ({ fileType, filePath, previewVisible, setPreviewVisible }: Prev
                      <Spinner />
                   )}
                </div>
-            </motion.div>
+            </div>
          )}
       </>
    )

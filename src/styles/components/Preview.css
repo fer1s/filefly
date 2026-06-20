@@ -5,6 +5,19 @@
    right: 0;
    width: 100%;
    height: 100%;
+   opacity: 0;
+   visibility: hidden;
+   pointer-events: none;
+   transition:
+      opacity 0.2s ease-in-out,
+      visibility 0s linear 0.2s;
+}
+
+.preview_backdrop.visible {
+   opacity: 1;
+   visibility: visible;
+   pointer-events: auto;
+   transition-delay: 0s;
 }
 
 .preview_container {
@@ -24,6 +37,22 @@
    justify-content: flex-start;
    align-items: flex-start;
    overflow: hidden;
+   opacity: 0;
+   transform: translateY(100%) scale(0.6);
+   visibility: hidden;
+   pointer-events: none;
+   transition:
+      opacity 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+      visibility 0s linear 0.3s;
+}
+
+.preview_container.visible {
+   opacity: 1;
+   transform: translateY(0) scale(1);
+   visibility: visible;
+   pointer-events: auto;
+   transition-delay: 0s;
 }
 
 .preview_container .preview_header,

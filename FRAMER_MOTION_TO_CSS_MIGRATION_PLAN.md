@@ -53,7 +53,7 @@ Estado: completada.
 
 ## Fase 1. Context Menu y Details Popup
 
-Estado: implementada y pendiente de validacion visual.
+Estado: completada y validada.
 
 Son los dos casos de menor riesgo.
 
@@ -93,6 +93,8 @@ Donde probar:
 - Confirmar posicion centrada y contenido de metadata.
 
 ## Fase 2. Preview y Backdrop
+
+Estado: implementada y pendiente de validacion visual.
 
 ### Backdrop
 
