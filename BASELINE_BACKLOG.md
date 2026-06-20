@@ -145,9 +145,9 @@ Casos observados:
 
 ### Tareas detectadas
 
-- [ ] (ahora) Anadir navegacion anterior/siguiente dentro del preview.
-- [ ] (ahora) Anadir soporte de teclado mediante flechas y Escape.
-- [ ] (ahora) Decidir si el doble click debe abrir la aplicacion del sistema o el preview interno. Nota: la opcion "abrir app del sistema" depende de la apertura nativa (Tauri 2); la decision se puede tomar ahora.
+- [x] (ahora) Anadir navegacion anterior/siguiente dentro del preview. `previewIndex` sobre lista `previewables` en `Directory.tsx`; botones prev/next en el header del Preview.
+- [x] (ahora) Anadir soporte de teclado mediante flechas y Escape. Listener en `Preview.tsx` (Left/Right navegan, Escape cierra); el grid ignora teclado mientras el preview esta abierto.
+- [x] (ahora) Decidir si el doble click debe abrir la aplicacion del sistema o el preview interno. Decision: doble click abre la app del sistema (apertura nativa pendiente de Tauri 2); el preview interno se mantiene en el menu contextual.
 
 ## Context Menu
 

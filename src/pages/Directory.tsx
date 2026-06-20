@@ -36,8 +36,20 @@ const Directory = () => {
    const [contextMenuElementType, setContextMenuElementType] = useState<'file' | 'dir' | 'none'>('none')
 
    const [previewVisible, setPreviewVisible] = useState<boolean>(false)
-   const [previewFileType, setPreviewFileType] = useState<string>('')
-   const [previewFilePath, setPreviewFilePath] = useState<string>('')
+   const [previewIndex, setPreviewIndex] = useState<number>(-1)
+
+   // Files in the current (filtered) view that can be previewed, used for prev/next navigation.
+   const previewables = useMemo(
+      () => filtered.filter((e) => e.metadata.isFile && AcceptedPreviewFormats.includes((e.name.split('.').pop() || '').toLowerCase())),
+      [filtered]
+   )
+
+   const previewEntry = previewIndex >= 0 ? previewables[previewIndex] : undefined
+   const previewFilePath = previewEntry?.path ?? ''
+   const previewFileType = previewEntry ? (previewEntry.name.split('.').pop() || '').toLowerCase() : ''
+
+   const previewPrev = () => setPreviewIndex((i) => (i > 0 ? i - 1 : i))
+   const previewNext = () => setPreviewIndex((i) => (i < previewables.length - 1 ? i + 1 : i))
 
    const contextMenuRef = useRef<HTMLDivElement>(null)
 
@@ -118,6 +130,9 @@ const Directory = () => {
       const handleKeyDown = (e: KeyboardEvent) => {
          if (isTypingTarget(e.target)) return
 
+         // While the preview is open it owns the keyboard (arrows navigate, Escape closes).
+         if (previewVisible) return
+
          // Printable single characters drive the type-to-find search.
          if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
             e.preventDefault()
@@ -157,7 +172,7 @@ const Directory = () => {
          document.removeEventListener('keydown', handleKeyDown)
          if (searchTimerRef.current) clearTimeout(searchTimerRef.current)
       }
-   }, [filtered, view])
+   }, [filtered, view, previewVisible])
 
    const handleOpenInTerminal = () => {
       if (contextMenuElementType === 'dir') openInTerminal(contextMenuElementID)
@@ -185,8 +200,11 @@ const Directory = () => {
       // Check if the file extension is accepted
       if (!AcceptedPreviewFormats.includes(fileExtension)) return
 
-      setPreviewFileType(fileExtension)
-      setPreviewFilePath(contextMenuElementID)
+      // Locate the file among the previewable entries so prev/next can navigate from here.
+      const index = previewables.findIndex((e) => e.path === contextMenuElementID)
+      if (index < 0) return
+
+      setPreviewIndex(index)
       setPreviewVisible(true)
 
       setContextMenuVisible(false)
@@ -267,7 +285,16 @@ const Directory = () => {
             )}
          </DetailsPopup>
 
-         <Preview fileType={previewFileType} filePath={previewFilePath} previewVisible={previewVisible} setPreviewVisible={setPreviewVisible} />
+         <Preview
+            fileType={previewFileType}
+            filePath={previewFilePath}
+            previewVisible={previewVisible}
+            setPreviewVisible={setPreviewVisible}
+            onPrev={previewPrev}
+            onNext={previewNext}
+            hasPrev={previewIndex > 0}
+            hasNext={previewIndex < previewables.length - 1}
+         />
       </div>
    )
 }

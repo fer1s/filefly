@@ -7,6 +7,9 @@ import { ImageFormats, AudioFormats } from '../constants'
 import AudioPreview from './AudioPreview'
 import Spinner from './Spinner'
 
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons'
+
 import '../styles/components/Preview.css'
 
 interface PreviewProps {
@@ -15,9 +18,14 @@ interface PreviewProps {
 
    previewVisible: boolean
    setPreviewVisible: (visible: boolean) => void
+
+   onPrev: () => void
+   onNext: () => void
+   hasPrev: boolean
+   hasNext: boolean
 }
 
-const Preview = ({ fileType, filePath, previewVisible, setPreviewVisible }: PreviewProps) => {
+const Preview = ({ fileType, filePath, previewVisible, setPreviewVisible, onPrev, onNext, hasPrev, hasNext }: PreviewProps) => {
    const [isReady, setIsReady] = useState<boolean>(false)
    const [previewContent, setPreviewContent] = useState<string>('')
 
@@ -25,6 +33,7 @@ const Preview = ({ fileType, filePath, previewVisible, setPreviewVisible }: Prev
       if (!previewVisible) return
 
       if (fileType === 'md') {
+         setIsReady(false)
          generateMarkdownPreview(filePath).then((data) => {
             setPreviewContent(data)
             setIsReady(true)
@@ -40,6 +49,20 @@ const Preview = ({ fileType, filePath, previewVisible, setPreviewVisible }: Prev
       }
    }, [previewVisible, filePath])
 
+   // Keyboard control while the preview is open: arrows navigate, Escape closes.
+   useEffect(() => {
+      if (!previewVisible) return
+
+      const handleKeyDown = (e: KeyboardEvent) => {
+         if (e.key === 'ArrowLeft') onPrev()
+         else if (e.key === 'ArrowRight') onNext()
+         else if (e.key === 'Escape') setPreviewVisible(false)
+      }
+
+      document.addEventListener('keydown', handleKeyDown)
+      return () => document.removeEventListener('keydown', handleKeyDown)
+   }, [previewVisible, onPrev, onNext])
+
    return (
       <>
          <div
@@ -53,6 +76,14 @@ const Preview = ({ fileType, filePath, previewVisible, setPreviewVisible }: Prev
                className={`preview_container shadow${ImageFormats.includes(fileType) ? ' image' : ''}${previewVisible ? ' visible' : ''}`}
             >
                <div className="preview_header">
+                  <div className="preview_nav">
+                     <button className="nav_btn" onClick={onPrev} disabled={!hasPrev} aria-label="Previous">
+                        <FontAwesomeIcon icon={faChevronLeft} />
+                     </button>
+                     <button className="nav_btn" onClick={onNext} disabled={!hasNext} aria-label="Next">
+                        <FontAwesomeIcon icon={faChevronRight} />
+                     </button>
+                  </div>
                   <h4>Preview</h4>
                   <button onClick={() => setPreviewVisible(false)}>Close</button>
                </div>
