@@ -173,13 +173,13 @@ La implementacion y la validacion visual se completaron el 20 de junio de 2026. 
 - Control de volumen y su popup
 - Hover del thumb del slider
 
-## Paso 11. Estilos globales - pendiente de validacion visual
+## Paso 11. Estilos globales - completado
 
 ### Archivos
 
 - `src/styles/index.scss`
 
-La implementacion se completo el 20 de junio de 2026. Falta confirmar visualmente el layout global antes de cerrar el paso.
+La implementacion y la validacion visual se completaron el 20 de junio de 2026. El layout global mantiene tipografia, dimensiones, sombras, scrollbars y espaciados.
 
 ### Donde probar
 
@@ -191,13 +191,20 @@ La implementacion se completo el 20 de junio de 2026. Falta confirmar visualment
 - Tipografia
 - `App` y `AppContent`
 
-## Paso 12. Limpieza final
+## Paso 12. Limpieza final - pendiente de comandos de validacion
 
 ### Que hacer
 
 - Confirmar que no quedan imports `.scss`
 - Eliminar `sass` de `package.json`
 - Confirmar que no quedan archivos `.scss` en `src/styles`
+
+Estado actual:
+
+- No quedan archivos `.scss` en `src`.
+- No quedan imports `.scss` en `src`.
+- Falta retirar `sass` de `package.json` y sincronizar `package-lock.json`.
+- Falta ejecutar build y validacion final por parte del usuario.
 
 ### Donde probar
 
