@@ -81,7 +81,7 @@ Regla: no invertir en tareas `(Tauri 2)` sobre v1. Hacerlas con las APIs nuevas.
 - [x] (Tauri 2) Escuchar cambios de tamano o estado de la ventana. Suscripcion a `onResized` que resincroniza el estado.
 - [x] (Tauri 2) Alternar entre `faWindowMaximize` y `faWindowRestore`. Icono segun `isMaximized`.
 - [x] (Tauri 2) Definir si minimizar necesita algun estado visual adicional. Decision: no; minimizar no tiene estado persistente que reflejar.
-- [ ] (Tauri 2) Validar maximizar, restaurar, minimizar y reapertura desde la bandeja. (pendiente de smoke test)
+- [x] (Tauri 2) Validar maximizar, restaurar, minimizar y reapertura desde la bandeja. Smoke test OK.
 
 ## Path Bar
 
@@ -134,7 +134,7 @@ Casos observados:
 
 - [x] (Tauri 2) Sustituir la apertura por una implementacion nativa multiplataforma. Comando Rust `open_file` reescrito con `tauri_plugin_opener::open_path` (loguea la ruta a la terminal y devuelve Result); ya no usa shell.
 - [x] (Tauri 2) Tratar las rutas como argumentos, sin interpretarlas mediante shell. `open_path` recibe la ruta como argumento unico.
-- [ ] (Tauri 2) Validar archivos con espacios, imagenes, PDF, audio y documentos. (pendiente de smoke test)
+- [x] (Tauri 2) Validar archivos con espacios, imagenes, PDF, audio y documentos. Smoke test OK.
 - [x] (Tauri 2) Devolver errores del backend a la interfaz en vez de dejarlos solo en consola. Sistema de toasts (`toast.ts` + `Toast.tsx`); comandos devuelven `Result` y los errores de open/copy/move/rename/delete se muestran como toast.
 
 ## Preview

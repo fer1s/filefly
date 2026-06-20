@@ -122,7 +122,7 @@ Checkpoint: commit "migrate to Tauri 2 (parity)".
 
 ## Fase 6+. Bucket Tauri 2 (features nuevas)
 
-Estado: pendiente. Una feature por checkpoint, tras la paridad.
+Estado: completada. Apertura nativa, Copy/Cut/Rename/Delete (+Paste y atajos), estado real de ventana, Properties y errores backend -> UI implementados y validados por smoke test.
 
 - Apertura nativa de archivos: reemplazar `open_file` (shell) por `tauri-plugin-opener` (open por extension/asociacion del SO); tratar rutas como argumento. Corrige `Open` del menu y doble click.
 - Acciones filesystem del menu contextual: `Copy`, `Cut`, `Rename`, `Delete` (con confirmacion via `plugin-dialog`), `Properties` -> con `tauri-plugin-fs`. Al cablear el `onClick`, el item se habilita solo (ya implementado el disabled derivado).
