@@ -24,6 +24,7 @@ window-vibrancy = "0.5"
 sysinfo = "0.30.5"
 jwalk = "0.8.1"
 markdown = "0.3.0"
+trash = "5"
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem

@@ -3,7 +3,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useStateContext } from '../context/StateContext'
 import { ContextMenu, ContextMenuItem } from '../components/ContextMenu'
 import DetailsPopup from '../components/DetailsPopup'
-import { openFile, openInTerminal } from '../api'
+import { openFile, openInTerminal, deleteEntry } from '../api'
+import { ask } from '@tauri-apps/plugin-dialog'
 import { AcceptedPreviewFormats } from '../constants'
 import { DirEntryItem } from '../components/DirEntry'
 
@@ -14,7 +15,7 @@ import '../styles/pages/Directory.css'
 import Preview from '../components/Preview'
 
 const Directory = () => {
-   const { dirContent, setPath, view, search } = useStateContext()
+   const { dirContent, setPath, view, search, refreshDir } = useStateContext()
 
    // Entries visible after applying the sidebar search filter.
    const filtered = useMemo(() => (search ? dirContent.filter((e) => e.name.toLowerCase().includes(search.toLowerCase())) : dirContent), [dirContent, search])
@@ -210,6 +211,31 @@ const Directory = () => {
       setContextMenuVisible(false)
    }
 
+   // The entries a context-menu action applies to: the whole selection if the clicked item is part of it,
+   // otherwise just the clicked item.
+   const actionTargets = () => (selectedIDs.includes(contextMenuElementID) ? selectedIDs : [contextMenuElementID])
+
+   const handleDelete = async () => {
+      const targets = actionTargets()
+      setContextMenuVisible(false)
+      if (!targets.length || !targets[0]) return
+
+      const label = targets.length === 1 ? `"${targets[0].split('/').pop()}"` : `${targets.length} items`
+      const confirmed = await ask(`Move ${label} to the Trash?`, { title: 'Delete', kind: 'warning' })
+      if (!confirmed) return
+
+      for (const path of targets) {
+         try {
+            await deleteEntry(path)
+         } catch (err) {
+            console.error('Could not delete ' + path + ':\n' + err)
+         }
+      }
+
+      setSelectedIDs([])
+      refreshDir()
+   }
+
    // useEffect(() => {
    //    if(contextMenuVisible) {
    //       console.log(contextMenuElementID, contextMenuElementType)
@@ -249,7 +275,7 @@ const Directory = () => {
                   <ContextMenuItem text="Copy" icon={<FontAwesomeIcon icon={faCopy} />} />
                   <ContextMenuItem text="Cut" icon={<FontAwesomeIcon icon={faScissors} />} />
                   <ContextMenuItem text="Rename" icon={<FontAwesomeIcon icon={faFilePen} />} />
-                  <ContextMenuItem text="Delete" icon={<FontAwesomeIcon icon={faTrash} />} />
+                  <ContextMenuItem text="Delete" icon={<FontAwesomeIcon icon={faTrash} />} onClick={handleDelete} />
                </>
             )}
 
@@ -260,7 +286,7 @@ const Directory = () => {
                   <ContextMenuItem text="Copy" icon={<FontAwesomeIcon icon={faCopy} />} />
                   <ContextMenuItem text="Cut" icon={<FontAwesomeIcon icon={faScissors} />} />
                   <ContextMenuItem text="Rename" icon={<FontAwesomeIcon icon={faFilePen} />} />
-                  <ContextMenuItem text="Delete" icon={<FontAwesomeIcon icon={faTrash} />} />
+                  <ContextMenuItem text="Delete" icon={<FontAwesomeIcon icon={faTrash} />} onClick={handleDelete} />
                </>
             )}
 

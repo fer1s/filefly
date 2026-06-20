@@ -2,7 +2,7 @@
     height: 100vh;
     overflow-y: auto;
     overflow-x: hidden;
-    background-color: rgba(18, 18, 18, 0.3);
+    background-color: rgba(18, 18, 18, 0.8);
 }
 
 .SideBar .collapse_toggle {

@@ -39,6 +39,10 @@ fn main() {
             filesystem::volumes::get_volumes,
             filesystem::fs::read_directory,
             filesystem::fs::open_file,
+            filesystem::fs::copy_entry,
+            filesystem::fs::move_entry,
+            filesystem::fs::rename_entry,
+            filesystem::fs::delete_entry,
             functions::terminal::open_in_terminal,
             functions::markdown::md_to_html,
         ])

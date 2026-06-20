@@ -132,8 +132,8 @@ Casos observados:
 
 ### Tareas detectadas
 
-- [x] (Tauri 2) Sustituir la apertura por una implementacion nativa multiplataforma. `openFile` usa `openPath` de `@tauri-apps/plugin-opener`; comando Rust `open_file` (shell) eliminado.
-- [x] (Tauri 2) Tratar las rutas como argumentos, sin interpretarlas mediante shell. `openPath` recibe la ruta como argumento unico.
+- [x] (Tauri 2) Sustituir la apertura por una implementacion nativa multiplataforma. Comando Rust `open_file` reescrito con `tauri_plugin_opener::open_path` (loguea la ruta a la terminal y devuelve Result); ya no usa shell.
+- [x] (Tauri 2) Tratar las rutas como argumentos, sin interpretarlas mediante shell. `open_path` recibe la ruta como argumento unico.
 - [ ] (Tauri 2) Validar archivos con espacios, imagenes, PDF, audio y documentos. (pendiente de smoke test)
 - [ ] (Tauri 2) Devolver errores del backend a la interfaz en vez de dejarlos solo en consola. Ligado a la reescritura de `invoke` en v2.
 

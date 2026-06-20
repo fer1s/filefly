@@ -15,6 +15,7 @@ type State = {
    setView: (view: 'list' | 'grid') => void
    search: string
    setSearch: (search: string) => void
+   refreshDir: () => void
 }
 
 export const initialState: State = {
@@ -30,6 +31,7 @@ export const initialState: State = {
    setView: () => {},
    search: '',
    setSearch: () => {},
+   refreshDir: () => {},
 }
 
 const StateContext = createContext<State>(initialState)

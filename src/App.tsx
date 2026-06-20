@@ -52,6 +52,12 @@ const App = () => {
         return files
    }
 
+   // Reload the current view (used after filesystem operations like copy/move/rename/delete).
+   const refreshDir = () => {
+        if (path === '') return fetchVolumes()
+        fetchDirectory(path).then(setDirContent)
+   }
+
     useEffect(() => {
         fetchVolumes()
     }, [])
@@ -93,6 +99,7 @@ const App = () => {
             setView,
             search,
             setSearch,
+            refreshDir,
          }}
       >
          <AppBar />

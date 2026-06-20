@@ -24,6 +24,12 @@ export const openInTerminal = async (path: string): Promise<void> => (await invo
 // Generate markdown preview invokement method
 export const generateMarkdownPreview = async (path: string): Promise<string> => (await invokeWithPathArg('md_to_html', path)) as string
 
+// Filesystem operations. These throw on error (the Rust command returns a Result) so callers can surface it.
+export const copyEntry = async (source: string, destDir: string): Promise<void> => await invoke('copy_entry', { source, destDir })
+export const moveEntry = async (source: string, destDir: string): Promise<void> => await invoke('move_entry', { source, destDir })
+export const renameEntry = async (path: string, newName: string): Promise<void> => await invoke('rename_entry', { path, newName })
+export const deleteEntry = async (path: string): Promise<void> => await invoke('delete_entry', { path })
+
 
 
 // Helper function to invoke methods with a path argument
