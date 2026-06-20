@@ -8,7 +8,7 @@ import { ImageFormats, AudioFormats } from '../constants'
 import AudioPreview from './AudioPreview'
 import Spinner from './Spinner'
 
-import '../styles/components/Preview.scss'
+import '../styles/components/Preview.css'
 
 interface PreviewProps {
    fileType: string

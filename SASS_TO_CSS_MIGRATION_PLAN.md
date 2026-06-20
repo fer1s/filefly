@@ -124,13 +124,13 @@ La implementacion y la validacion visual se completaron el 20 de junio de 2026. 
 - Hover de drives
 - Barras de uso y espaciados
 
-## Paso 8. Directorio principal - pendiente de validacion visual
+## Paso 8. Directorio principal - completado
 
 ### Archivos
 
 - `src/styles/pages/Directory.scss`
 
-La implementacion se completo el 20 de junio de 2026. Falta confirmar visualmente las vistas grid y list antes de cerrar el paso.
+La implementacion y la validacion visual se completaron el 20 de junio de 2026. Las vistas grid y list mantienen layout, filas, thumbnails y hover.
 
 ### Donde probar
 
@@ -141,11 +141,13 @@ La implementacion se completo el 20 de junio de 2026. Falta confirmar visualment
 - Iconos y thumbnails
 - Bordes del primer y ultimo item en `list`
 
-## Paso 9. Preview general
+## Paso 9. Preview general - pendiente de validacion visual
 
 ### Archivos
 
 - `src/styles/components/Preview.scss`
+
+La implementacion se completo el 20 de junio de 2026. Falta confirmar visualmente los previews de imagen y Markdown antes de cerrar el paso.
 
 ### Donde probar
 
