@@ -94,7 +94,7 @@ Donde probar:
 
 ## Fase 2. Preview y Backdrop
 
-Estado: implementada y pendiente de validacion visual.
+Estado: completada y validada.
 
 ### Backdrop
 
@@ -124,6 +124,8 @@ Donde probar:
 - Comprobar tamanos, scroll y spinner.
 
 ## Fase 3. Audio Preview
+
+Estado: completada y validada.
 
 ### Reproductor
 
@@ -155,6 +157,8 @@ Donde probar:
 - Cierre mediante backdrop.
 
 ## Fase 4. Stagger de Sidebar
+
+Estado: implementada y pendiente de validacion visual.
 
 Cambios previstos:
 

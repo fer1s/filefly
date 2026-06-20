@@ -1,41 +1,10 @@
 import { useRef, useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
 import { convertFileSrc } from '@tauri-apps/api/tauri'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPause, faPlay, faVolumeHigh } from '@fortawesome/free-solid-svg-icons'
 
 import '../styles/components/AudioPreview.css'
-
-const audioPreviewVariants = {
-   hidden: {
-      opacity: 0,
-      scale: 0.6,
-      y: '100%',
-      translateX: '-50%',
-   },
-   visible: {
-      opacity: 1,
-      scale: 1,
-      y: 0,
-      translateX: '-50%',
-   },
-}
-
-const volumeControlVariants = {
-   hidden: {
-      opacity: 0,
-      scale: 0.6,
-      x: '100%',
-      translateX: '-50%',
-   },
-   visible: {
-      opacity: 1,
-      scale: 1,
-      x: 0,
-      translateX: '-50%',
-   },
-}
 
 interface AudioPreviewProps {
    isVisible: boolean
@@ -115,11 +84,7 @@ const AudioPreview = ({ isVisible, filePath }: AudioPreviewProps) => {
    }, [isVisible])
 
    return (
-      <motion.div className="audio_preview"
-         variants={audioPreviewVariants}
-         initial="hidden"
-         animate={isVisible ? 'visible' : 'hidden'}
-      >
+      <div className={`audio_preview${isVisible ? ' visible' : ''}`}>
          <audio controls src={convertFileSrc(filePath)} ref={audioRef} />
          <button onClick={togglePlay}><FontAwesomeIcon icon={isPlaying ? faPause : faPlay} /></button>
          <div className="progress">
@@ -133,16 +98,11 @@ const AudioPreview = ({ isVisible, filePath }: AudioPreviewProps) => {
             >
                <FontAwesomeIcon icon={faVolumeHigh} />
             </button>
-            <motion.div className="volume_extension"
-               variants={volumeControlVariants}
-               initial="hidden"
-               animate={isVolumeVisible ? 'visible' : 'hidden'}
-               transition={{ type: 'spring', bounce: 0, duration: 0.3 }}
-            >
+            <div className={`volume_extension${isVolumeVisible ? ' visible' : ''}`}>
                <input type="range" min={0} max={100} value={volume} onChange={(e) => setVolume(Number(e.target.value))} />
-            </motion.div>
+            </div>
          </div>
-      </motion.div>
+      </div>
    )
 }
 

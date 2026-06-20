@@ -1,5 +1,4 @@
 import { useEffect } from 'react'
-import { motion } from 'framer-motion'
 
 import { Volume } from '../types'
 import { useStateContext } from '../context/StateContext'
@@ -11,22 +10,6 @@ import { faFolder, faHardDrive } from '@fortawesome/free-solid-svg-icons'
 import { faUsb } from '@fortawesome/free-brands-svg-icons'
 
 import '../styles/components/SideBar.css'
-
-const animatedListVariants = {
-   visible: (i: number) => ({
-      opacity: 1,
-      x: 0,
-      scale: 1,
-      transition: {
-         delay: i * 0.04,
-      },
-   }),
-   hidden: {
-      opacity: 0,
-      x: "-100%",
-      scale: 0.7,
-   },
-}
 
 const SideBar = () => {
    const { volumes, setSidebarScrolled, setPath } = useStateContext()
@@ -80,16 +63,10 @@ type VolumeItemProps = {
 
 const VolumeItem = ({ volume, setPath, index }: VolumeItemProps) => {
    return (
-      <motion.div
+      <div
          className="drive_item"
-
          onClick={() => setPath(volume.mountPoint)}
-
-         variants={animatedListVariants}
-
-         initial="hidden"
-         animate="visible"
-         custom={index}
+         style={{ animationDelay: `${index * 40}ms` }}
       >
          <FontAwesomeIcon icon={volume.isRemovable ? faUsb : faHardDrive} />
          <div className="details">
@@ -100,7 +77,7 @@ const VolumeItem = ({ volume, setPath, index }: VolumeItemProps) => {
                <div className="usage_bar" style={{ width: `${volume.diskUsage.percentage}%` }}></div>
             </div>
          </div>
-      </motion.div>
+      </div>
    )
 }
 
