@@ -109,13 +109,13 @@ La implementacion y la validacion visual se completaron el 20 de junio de 2026. 
 - Focus del input
 - Cambio entre `grid` y `list`
 
-## Paso 7. Sidebar - pendiente de validacion visual
+## Paso 7. Sidebar - completado
 
 ### Archivos
 
 - `src/styles/components/SideBar.scss`
 
-La implementacion se completo el 20 de junio de 2026. Falta confirmar visualmente la sidebar antes de cerrar el paso.
+La implementacion y la validacion visual se completaron el 20 de junio de 2026. La sidebar mantiene layout, animacion, barras de uso y hover.
 
 ### Donde probar
 
@@ -124,11 +124,13 @@ La implementacion se completo el 20 de junio de 2026. Falta confirmar visualment
 - Hover de drives
 - Barras de uso y espaciados
 
-## Paso 8. Directorio principal
+## Paso 8. Directorio principal - pendiente de validacion visual
 
 ### Archivos
 
 - `src/styles/pages/Directory.scss`
+
+La implementacion se completo el 20 de junio de 2026. Falta confirmar visualmente las vistas grid y list antes de cerrar el paso.
 
 ### Donde probar
 

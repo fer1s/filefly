@@ -11,7 +11,7 @@ import { IoOpenOutline, IoCopyOutline, IoInformation } from 'react-icons/io5'
 import { CgTerminal } from 'react-icons/cg'
 import { MdOutlineDriveFileRenameOutline, MdDeleteOutline, MdOutlineContentCut, MdOutlinePreview } from 'react-icons/md'
 
-import '../styles/pages/Directory.scss'
+import '../styles/pages/Directory.css'
 import Preview from '../components/Preview'
 
 const Directory = () => {

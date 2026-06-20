@@ -34,6 +34,30 @@ Baseline validado el 20 de junio de 2026.
 - [ ] Implementar busqueda incremental por letra para localizar archivos o directorios.
 - [ ] Definir un estilo claro para el elemento seleccionado.
 
+## Sidebar
+
+### Bugs funcionales
+
+- Los items visuales de la sidebar no ofrecen todas las acciones esperadas al hacer click.
+- El item fijado `Downloads` es solo visual y no navega a la carpeta.
+- El campo `Search` es solo visual: no mantiene una consulta ni filtra el directorio actual.
+
+### Tareas detectadas
+
+- [ ] Conectar los items fijados con rutas reales y permitir navegar al hacer click.
+- [ ] Revisar y validar el click de todos los items de la sidebar.
+- [ ] Implementar la busqueda sobre el contenido del directorio actual.
+- [ ] Definir el comportamiento cuando no hay resultados.
+- [ ] Permitir limpiar la busqueda y recuperar el listado completo.
+
+### Mejora propuesta: sidebar colapsable
+
+- [ ] Anadir un control para colapsar y expandir la sidebar.
+- [ ] Definir una vista colapsada basada en iconos.
+- [ ] Ajustar el area principal para aprovechar el espacio liberado.
+- [ ] Mantener accesibles las acciones mediante labels o tooltips.
+- [ ] Decidir si el estado colapsado debe persistirse entre sesiones.
+
 ## Path Bar
 
 ### Comportamiento correcto
@@ -123,9 +147,11 @@ Casos observados:
 2. Corregir atras y adelante del Path Bar en macOS.
 3. Implementar seleccion y foco de elementos.
 4. Implementar navegacion por teclado y busqueda por letra.
-5. Completar las acciones del menu contextual.
-6. Anadir navegacion entre previews.
-7. Revisar presentacion de volumenes APFS.
+5. Activar items y busqueda de la sidebar.
+6. Completar las acciones del menu contextual.
+7. Anadir navegacion entre previews.
+8. Anadir el modo colapsable de la sidebar.
+9. Revisar presentacion de volumenes APFS.
 
 ## Regla para la migracion Sass a CSS
 
