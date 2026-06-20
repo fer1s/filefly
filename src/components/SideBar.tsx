@@ -8,14 +8,19 @@ import SearchBar from './SearchBar'
 
 import { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faDesktop, faDownload, faFileLines, faHardDrive, faHouse, faImage } from '@fortawesome/free-solid-svg-icons'
+import { faAnglesLeft, faAnglesRight, faDesktop, faDownload, faFileLines, faHardDrive, faHouse, faImage } from '@fortawesome/free-solid-svg-icons'
 import { faUsb } from '@fortawesome/free-brands-svg-icons'
 
 import '../styles/components/SideBar.css'
 
 type Pinned = { name: string; path: string; icon: IconDefinition }
 
-const SideBar = () => {
+type SideBarProps = {
+   collapsed: boolean
+   onToggle: () => void
+}
+
+const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
    const { volumes, setSidebarScrolled, setPath } = useStateContext()
 
    const [pinned, setPinned] = useState<Pinned[]>([])
@@ -59,24 +64,28 @@ const SideBar = () => {
    }, [])
 
    return (
-      <div className="SideBar">
+      <div className={collapsed ? 'SideBar collapsed' : 'SideBar'}>
 
-         <SearchBar />
+         <button className="collapse_toggle" onClick={onToggle} title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'} aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}>
+            <FontAwesomeIcon icon={collapsed ? faAnglesRight : faAnglesLeft} />
+         </button>
+
+         {!collapsed && <SearchBar />}
 
          <section>
-            <h2>Pinned</h2>
+            {!collapsed && <h2>Pinned</h2>}
             <div className="section_content">
                {pinned.map((item) => (
-                  <FolderItem key={item.path} item={item} setPath={setPath} />
+                  <FolderItem key={item.path} item={item} setPath={setPath} collapsed={collapsed} />
                ))}
             </div>
          </section>
 
          <section>
-            <h2>Drives</h2>
+            {!collapsed && <h2>Drives</h2>}
             <div className="section_content">
                {volumes.map((volume, i) => (
-                  <VolumeItem key={`${volume.name}#${volume.mountPoint}`} volume={volume} setPath={setPath} index={i} />
+                  <VolumeItem key={`${volume.name}#${volume.mountPoint}`} volume={volume} setPath={setPath} index={i} collapsed={collapsed} />
                ))}
             </div>
          </section>
@@ -90,14 +99,16 @@ type VolumeItemProps = {
    volume: Volume
    setPath: (path: string) => void
    index: number
+   collapsed: boolean
 }
 
-const VolumeItem = ({ volume, setPath, index }: VolumeItemProps) => {
+const VolumeItem = ({ volume, setPath, index, collapsed }: VolumeItemProps) => {
    return (
       <div
          className="drive_item"
          onClick={() => setPath(volume.mountPoint)}
          style={{ animationDelay: `${index * 40}ms` }}
+         title={collapsed ? `${volume.mountPoint} ${volume.name}` : undefined}
       >
          <FontAwesomeIcon icon={volume.isRemovable ? faUsb : faHardDrive} />
          <div className="details">
@@ -115,11 +126,12 @@ const VolumeItem = ({ volume, setPath, index }: VolumeItemProps) => {
 type FolderItemProps = {
    item: Pinned
    setPath: (path: string) => void
+   collapsed: boolean
 }
 
-const FolderItem = ({ item, setPath }: FolderItemProps) => {
+const FolderItem = ({ item, setPath, collapsed }: FolderItemProps) => {
    return (
-      <div className="folder_item" onClick={() => setPath(item.path)}>
+      <div className="folder_item" onClick={() => setPath(item.path)} title={collapsed ? item.name : undefined}>
          <FontAwesomeIcon icon={item.icon} />
          <p>{item.name}</p>
       </div>

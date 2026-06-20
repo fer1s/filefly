@@ -5,6 +5,53 @@
     background-color: rgba(18, 18, 18, 0.3);
 }
 
+.SideBar .collapse_toggle {
+    width: 28px;
+    min-width: 28px;
+    height: 28px;
+    margin-bottom: 15px;
+    margin-left: auto;
+    padding: 0;
+    background-color: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 5px;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+.SideBar .collapse_toggle:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.SideBar .collapse_toggle svg {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.SideBar .collapse_toggle:hover svg {
+    color: #fff;
+}
+
+/* Collapsed: icon-only rail. Center icons and hide text. */
+.SideBar.collapsed .collapse_toggle {
+    margin-left: 0;
+}
+
+.SideBar.collapsed section .section_content .folder_item,
+.SideBar.collapsed section .section_content .drive_item {
+    justify-content: center;
+    padding: 10px 0;
+    height: 35px;
+}
+
+.SideBar.collapsed section .section_content .folder_item p,
+.SideBar.collapsed section .section_content .drive_item .details {
+    display: none;
+}
+
 .SideBar section {
     width: 100%;
     margin-bottom: 30px;

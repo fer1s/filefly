@@ -61,11 +61,11 @@ Regla: no invertir en tareas `(Tauri 2)` sobre v1. Hacerlas con las APIs nuevas.
 
 ### Mejora propuesta: sidebar colapsable
 
-- [ ] (ahora) Anadir un control para colapsar y expandir la sidebar.
-- [ ] (ahora) Definir una vista colapsada basada en iconos.
-- [ ] (ahora) Ajustar el area principal para aprovechar el espacio liberado.
-- [ ] (ahora) Mantener accesibles las acciones mediante labels o tooltips.
-- [ ] (ahora) Decidir si el estado colapsado debe persistirse entre sesiones.
+- [x] (ahora) Anadir un control para colapsar y expandir la sidebar. Boton `.collapse_toggle` (chevrons) en `SideBar.tsx`.
+- [x] (ahora) Definir una vista colapsada basada en iconos. Clase `.SideBar.collapsed`: oculta texto/titulos/search, centra iconos.
+- [x] (ahora) Ajustar el area principal para aprovechar el espacio liberado. `.App.collapsed` pasa la columna de 220px a 70px.
+- [x] (ahora) Mantener accesibles las acciones mediante labels o tooltips. `title` en items y `aria-label` en el toggle cuando esta colapsada.
+- [x] (ahora) Decidir si el estado colapsado debe persistirse entre sesiones. Si: persiste en `localStorage` (`sidebarCollapsed`).
 
 ## Controles de ventana
 

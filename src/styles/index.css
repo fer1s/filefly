@@ -45,6 +45,11 @@ body {
    display: grid;
    grid-template-columns: 220px 1fr;
    grid-template-rows: 1fr;
+   transition: grid-template-columns 0.2s ease-in-out;
+}
+
+.App.collapsed {
+   grid-template-columns: 70px 1fr;
 }
 
 .App > .SideBar,

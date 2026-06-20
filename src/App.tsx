@@ -21,6 +21,12 @@ const App = () => {
    const [dirContent, setDirContent          ] = useState<DirEntry[]>([])
    const [view      , setView                ] = useState<'list' | 'grid'>('grid')
    const [search    , setSearch              ] = useState<string>('')
+   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => localStorage.getItem('sidebarCollapsed') === 'true')
+
+   // Persist the collapsed state across sessions.
+   useEffect(() => {
+        localStorage.setItem('sidebarCollapsed', String(sidebarCollapsed))
+   }, [sidebarCollapsed])
 
    const fetchVolumes = async () => {
         let volumes = await getVolumes()
@@ -86,8 +92,8 @@ const App = () => {
          }}
       >
          <AppBar />
-         <div className="App">
-            <SideBar />
+         <div className={sidebarCollapsed ? 'App collapsed' : 'App'}>
+            <SideBar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed((c) => !c)} />
             <AppContent />
          </div>
       </StateProvider>
