@@ -4,7 +4,7 @@ import { invoke } from '@tauri-apps/api'
 
 import { useStateContext } from '../context/StateContext'
 
-import '../styles/components/AppBar.scss'
+import '../styles/components/AppBar.css'
 
 import { VscChromeMinimize, VscChromeMaximize, VscChromeClose } from 'react-icons/vsc'
 

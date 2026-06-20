@@ -51,13 +51,13 @@ La implementacion y la validacion visual se completaron el 20 de junio de 2026. 
 - `DetailsPopup`: dejar el raton quieto sobre un archivo unos 2 segundos
 - `Spinner`: abrir un preview y comprobar el estado de carga
 
-## Paso 3. Menu contextual - pendiente de validacion visual
+## Paso 3. Menu contextual - completado
 
 ### Archivos
 
 - `src/styles/components/ContextMenu.scss`
 
-La implementacion se completo el 20 de junio de 2026. Falta confirmar visualmente el menu antes de cerrar el paso.
+La implementacion y la validacion visual se completaron el 20 de junio de 2026. El menu mantiene su aspecto, hover, separador y cierre exterior.
 
 ### Donde probar
 
@@ -66,11 +66,13 @@ La implementacion se completo el 20 de junio de 2026. Falta confirmar visualment
 - Hover sobre opciones
 - Cerrar el menu haciendo click fuera
 
-## Paso 4. Barra superior
+## Paso 4. Barra superior - pendiente de validacion visual
 
 ### Archivos
 
 - `src/styles/components/AppBar.scss`
+
+La implementacion se completo el 20 de junio de 2026. Falta confirmar visualmente la barra antes de cerrar el paso.
 
 ### Donde probar
 
