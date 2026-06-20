@@ -9,7 +9,7 @@ import SearchBar from './SearchBar'
 import { FaFolder, FaHardDrive } from 'react-icons/fa6'
 import { AiFillUsb } from 'react-icons/ai'
 
-import '../styles/components/SideBar.scss'
+import '../styles/components/SideBar.css'
 
 const animatedListVariants = {
    visible: (i: number) => ({

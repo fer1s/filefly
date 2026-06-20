@@ -93,13 +93,13 @@ La implementacion y la validacion visual se completaron el 20 de junio de 2026. 
 - Hover de cada volumen
 - Doble click en un volumen para entrar
 
-## Paso 6. Barra de ruta - pendiente de validacion visual
+## Paso 6. Barra de ruta - completado
 
 ### Archivos
 
 - `src/styles/components/PathBar.scss`
 
-La implementacion se completo el 20 de junio de 2026. Falta confirmar visualmente la barra y sus estados antes de cerrar el paso.
+La implementacion y la validacion visual se completaron el 20 de junio de 2026. La barra mantiene su aspecto y estados. El bug funcional de atras en macOS se documento por separado.
 
 ### Donde probar
 
@@ -109,11 +109,13 @@ La implementacion se completo el 20 de junio de 2026. Falta confirmar visualment
 - Focus del input
 - Cambio entre `grid` y `list`
 
-## Paso 7. Sidebar
+## Paso 7. Sidebar - pendiente de validacion visual
 
 ### Archivos
 
 - `src/styles/components/SideBar.scss`
+
+La implementacion se completo el 20 de junio de 2026. Falta confirmar visualmente la sidebar antes de cerrar el paso.
 
 ### Donde probar
 

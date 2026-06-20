@@ -38,12 +38,36 @@ Baseline validado el 20 de junio de 2026.
 
 ### Comportamiento correcto
 
-- La navegacion actual de la barra funciona.
+- El boton home, el campo de ruta y el cambio de vista funcionan.
+
+### Bug confirmado en macOS
+
+Pasos para reproducir:
+
+1. Entrar en un volumen desde `Volumes`.
+2. Navegar varios niveles dentro de carpetas.
+3. Pulsar el boton atras.
+
+Resultado actual:
+
+- La aplicacion vuelve directamente a `Volumes` en lugar de regresar a la carpeta anterior.
+
+Resultado esperado:
+
+- La aplicacion debe volver un nivel o recuperar la ruta anterior del historial.
+
+Causa identificada:
+
+- `PathBar.tsx` divide la ruta usando `\\`, que es el separador de Windows.
+- En macOS las rutas usan `/`, por lo que el calculo produce una ruta vacia.
+- Una ruta vacia ejecuta `setPath('')` y envia la aplicacion a `Volumes`.
 
 ### Tareas detectadas
 
 - [ ] Anadir una accion explicita para subir al directorio padre.
-- [ ] Revisar el historial atras/adelante para que soporte mas de una ruta.
+- [ ] Corregir atras y adelante para usar rutas multiplataforma.
+- [ ] Sustituir `oldPath` por un historial que soporte mas de una ruta.
+- [ ] Validar navegacion en la raiz, un nivel y varios niveles de profundidad.
 
 ## Apertura de archivos en macOS
 
@@ -96,10 +120,10 @@ Casos observados:
 ## Priorizacion propuesta
 
 1. Corregir apertura nativa de archivos y rutas con espacios.
-2. Implementar seleccion y foco de elementos.
-3. Implementar navegacion por teclado y busqueda por letra.
-4. Completar las acciones del menu contextual.
-5. Mejorar navegacion del Path Bar.
+2. Corregir atras y adelante del Path Bar en macOS.
+3. Implementar seleccion y foco de elementos.
+4. Implementar navegacion por teclado y busqueda por letra.
+5. Completar las acciones del menu contextual.
 6. Anadir navegacion entre previews.
 7. Revisar presentacion de volumenes APFS.
 
