@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation, NavigateFunction, Location } from 'react-router-dom'
 
-import { StateProvider } from './context/StateContext'
+import { StateProvider } from './providers/StateProvider'
 
 import AppBar from './components/AppBar'
 import SideBar from './components/SideBar'

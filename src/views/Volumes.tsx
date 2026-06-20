@@ -1,13 +1,13 @@
 import { useState } from 'react'
 
-import { useStateContext } from '../context/StateContext'
+import { useStateContext } from '../providers/StateProvider'
 import { Volume } from '../lib/models'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faHardDrive } from '@fortawesome/free-solid-svg-icons'
 import { faUsb } from '@fortawesome/free-brands-svg-icons'
 
-import '../styles/pages/Volumes.css'
+import '../styles/views/Volumes.css'
 
 const Volumes = () => {
    const { volumes, setPath } = useStateContext()

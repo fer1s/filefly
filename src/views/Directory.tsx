@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 
-import { useStateContext } from '../context/StateContext'
+import { useStateContext } from '../providers/StateProvider'
 import { ContextMenu, ContextMenuItem } from '../components/ContextMenu'
 import DetailsPopup from '../components/DetailsPopup'
 import { openFile, openInTerminal, deleteEntry, copyEntry, moveEntry, renameEntry } from '../lib/services/api'
@@ -12,7 +12,7 @@ import { DirEntryItem } from '../components/DirEntry'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowUpRightFromSquare, faCircleInfo, faCopy, faEye, faFilePen, faPaste, faScissors, faTerminal, faTrash } from '@fortawesome/free-solid-svg-icons'
 
-import '../styles/pages/Directory.css'
+import '../styles/views/Directory.css'
 import Preview from '../components/Preview'
 import Properties from '../components/Properties'
 import { DirEntry } from '../lib/models'

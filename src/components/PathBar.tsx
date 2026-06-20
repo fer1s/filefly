@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 
-import { useStateContext } from '../context/StateContext'
+import { useStateContext } from '../providers/StateProvider'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowLeft, faArrowRight, faArrowUp, faHouse, faList, faTableCellsLarge } from '@fortawesome/free-solid-svg-icons'
