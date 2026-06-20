@@ -3,19 +3,22 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useStateContext } from '../context/StateContext'
 import { ContextMenu, ContextMenuItem } from '../components/ContextMenu'
 import DetailsPopup from '../components/DetailsPopup'
-import { openFile, openInTerminal, deleteEntry } from '../api'
+import { openFile, openInTerminal, deleteEntry, copyEntry, moveEntry } from '../api'
 import { ask } from '@tauri-apps/plugin-dialog'
 import { AcceptedPreviewFormats } from '../constants'
 import { DirEntryItem } from '../components/DirEntry'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faArrowUpRightFromSquare, faCircleInfo, faCopy, faEye, faFilePen, faScissors, faTerminal, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faArrowUpRightFromSquare, faCircleInfo, faCopy, faEye, faFilePen, faPaste, faScissors, faTerminal, faTrash } from '@fortawesome/free-solid-svg-icons'
 
 import '../styles/pages/Directory.css'
 import Preview from '../components/Preview'
 
 const Directory = () => {
-   const { dirContent, setPath, view, search, refreshDir } = useStateContext()
+   const { dirContent, path, setPath, view, search, refreshDir } = useStateContext()
+
+   // Internal clipboard for copy/cut, pasted via the empty-area context menu.
+   const [clipboard, setClipboard] = useState<{ paths: string[]; mode: 'copy' | 'cut' } | null>(null)
 
    // Entries visible after applying the sidebar search filter.
    const filtered = useMemo(() => (search ? dirContent.filter((e) => e.name.toLowerCase().includes(search.toLowerCase())) : dirContent), [dirContent, search])
@@ -215,25 +218,121 @@ const Directory = () => {
    // otherwise just the clicked item.
    const actionTargets = () => (selectedIDs.includes(contextMenuElementID) ? selectedIDs : [contextMenuElementID])
 
-   const handleDelete = async () => {
-      const targets = actionTargets()
-      setContextMenuVisible(false)
+   // Core operations on a list of paths, shared by the context menu and the keyboard shortcuts.
+   const copyTargets = (targets: string[]) => {
+      if (targets.length && targets[0]) setClipboard({ paths: targets, mode: 'copy' })
+   }
+
+   const cutTargets = (targets: string[]) => {
+      if (targets.length && targets[0]) setClipboard({ paths: targets, mode: 'cut' })
+   }
+
+   const deleteTargets = async (targets: string[]) => {
       if (!targets.length || !targets[0]) return
 
       const label = targets.length === 1 ? `"${targets[0].split('/').pop()}"` : `${targets.length} items`
       const confirmed = await ask(`Move ${label} to the Trash?`, { title: 'Delete', kind: 'warning' })
       if (!confirmed) return
 
-      for (const path of targets) {
+      for (const target of targets) {
          try {
-            await deleteEntry(path)
+            await deleteEntry(target)
          } catch (err) {
-            console.error('Could not delete ' + path + ':\n' + err)
+            console.error('Could not delete ' + target + ':\n' + err)
          }
       }
 
       setSelectedIDs([])
       refreshDir()
+   }
+
+   const pasteIntoCurrent = async () => {
+      if (!clipboard || path === '') return
+
+      for (const source of clipboard.paths) {
+         try {
+            if (clipboard.mode === 'copy') await copyEntry(source, path)
+            else await moveEntry(source, path)
+         } catch (err) {
+            console.error('Could not paste ' + source + ':\n' + err)
+         }
+      }
+
+      if (clipboard.mode === 'cut') setClipboard(null)
+      setSelectedIDs([])
+      refreshDir()
+   }
+
+   // Context-menu wrappers: act on the clicked item/selection, then close the menu.
+   const handleCopy = () => {
+      copyTargets(actionTargets())
+      setContextMenuVisible(false)
+   }
+
+   const handleCut = () => {
+      cutTargets(actionTargets())
+      setContextMenuVisible(false)
+   }
+
+   const handleDelete = async () => {
+      const targets = actionTargets()
+      setContextMenuVisible(false)
+      await deleteTargets(targets)
+   }
+
+   const handlePaste = async () => {
+      setContextMenuVisible(false)
+      await pasteIntoCurrent()
+   }
+
+   // Keyboard shortcuts for clipboard actions (Cmd/Ctrl + C/X/V, Cmd/Ctrl + Backspace/Delete).
+   // They act on the current selection. Modifier combos are ignored by type-to-find, so no conflict.
+   useEffect(() => {
+      const handleShortcut = (e: KeyboardEvent) => {
+         const target = e.target as HTMLElement | null
+         if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) return
+         if (previewVisible) return
+
+         const mod = e.metaKey || e.ctrlKey
+         if (!mod) return
+
+         switch (e.key) {
+            case 'c':
+               e.preventDefault()
+               copyTargets(selectedIDs)
+               break
+            case 'x':
+               e.preventDefault()
+               cutTargets(selectedIDs)
+               break
+            case 'v':
+               e.preventDefault()
+               pasteIntoCurrent()
+               break
+            case 'Backspace':
+            case 'Delete':
+               e.preventDefault()
+               deleteTargets(selectedIDs)
+               break
+         }
+      }
+
+      document.addEventListener('keydown', handleShortcut)
+      return () => document.removeEventListener('keydown', handleShortcut)
+   }, [selectedIDs, clipboard, path, previewVisible])
+
+   // Right-click on empty space opens a menu with Paste (item clicks are handled by each entry).
+   const handleEmptyContextMenu = (e: React.MouseEvent) => {
+      if ((e.target as HTMLElement).closest('.dir_entry_item')) return
+      e.preventDefault()
+
+      setContextMenuElementID('')
+      setContextMenuElementType('none')
+      if (contextMenuRef.current) {
+         contextMenuRef.current.style.left = `${e.clientX}px`
+         contextMenuRef.current.style.top = `${e.clientY}px`
+      }
+      setContextMenuVisible(true)
    }
 
    // useEffect(() => {
@@ -243,7 +342,7 @@ const Directory = () => {
    // }, [contextMenuVisible, contextMenuElementID, contextMenuElementType])
 
    return (
-      <div className="directory_page" onClick={(e) => !(e.target as HTMLElement).closest('.dir_entry_item') && setSelectedIDs([])}>
+      <div className="directory_page" onClick={(e) => !(e.target as HTMLElement).closest('.dir_entry_item') && setSelectedIDs([])} onContextMenu={handleEmptyContextMenu}>
          <div className={view == 'list' ? 'list' : 'grid'}>
             {filtered.map((entry) => (
                <DirEntryItem
@@ -268,12 +367,16 @@ const Directory = () => {
          {search && filtered.length === 0 && <p className="no_results">No results for "{search}"</p>}
 
          <ContextMenu contextMenuVisible={contextMenuVisible} ref={contextMenuRef}>
+            {contextMenuElementType === 'none' && (
+               <ContextMenuItem text="Paste" icon={<FontAwesomeIcon icon={faPaste} />} onClick={clipboard ? handlePaste : undefined} />
+            )}
+
             {contextMenuElementType === 'dir' && (
                <>
                   <ContextMenuItem text="Open" icon={<FontAwesomeIcon icon={faArrowUpRightFromSquare} />} onClick={handleOpenFile} />
                   <ContextMenuItem text="Open in Terminal" icon={<FontAwesomeIcon icon={faTerminal} />} onClick={handleOpenInTerminal} />
-                  <ContextMenuItem text="Copy" icon={<FontAwesomeIcon icon={faCopy} />} />
-                  <ContextMenuItem text="Cut" icon={<FontAwesomeIcon icon={faScissors} />} />
+                  <ContextMenuItem text="Copy" icon={<FontAwesomeIcon icon={faCopy} />} onClick={handleCopy} />
+                  <ContextMenuItem text="Cut" icon={<FontAwesomeIcon icon={faScissors} />} onClick={handleCut} />
                   <ContextMenuItem text="Rename" icon={<FontAwesomeIcon icon={faFilePen} />} />
                   <ContextMenuItem text="Delete" icon={<FontAwesomeIcon icon={faTrash} />} onClick={handleDelete} />
                </>
@@ -283,18 +386,19 @@ const Directory = () => {
                <>
                   <ContextMenuItem text="Open" icon={<FontAwesomeIcon icon={faArrowUpRightFromSquare} />} onClick={handleOpenFile} />
                   {AcceptedPreviewFormats.includes(contextMenuElementID.split('.').pop() || '') && <ContextMenuItem text="Preview" icon={<FontAwesomeIcon icon={faEye} />} onClick={handlePreviewFile} />}
-                  <ContextMenuItem text="Copy" icon={<FontAwesomeIcon icon={faCopy} />} />
-                  <ContextMenuItem text="Cut" icon={<FontAwesomeIcon icon={faScissors} />} />
+                  <ContextMenuItem text="Copy" icon={<FontAwesomeIcon icon={faCopy} />} onClick={handleCopy} />
+                  <ContextMenuItem text="Cut" icon={<FontAwesomeIcon icon={faScissors} />} onClick={handleCut} />
                   <ContextMenuItem text="Rename" icon={<FontAwesomeIcon icon={faFilePen} />} />
                   <ContextMenuItem text="Delete" icon={<FontAwesomeIcon icon={faTrash} />} onClick={handleDelete} />
                </>
             )}
 
-            <ContextMenuItem isSeparator />
-            <ContextMenuItem text="Properties" icon={<FontAwesomeIcon icon={faCircleInfo} />} />
-
-            {/* <ContextMenuItem isSeparator />
-            <ContextMenuItem text="DevTools" icon={<CgToolbox />} /> */}
+            {contextMenuElementType !== 'none' && (
+               <>
+                  <ContextMenuItem isSeparator />
+                  <ContextMenuItem text="Properties" icon={<FontAwesomeIcon icon={faCircleInfo} />} />
+               </>
+            )}
          </ContextMenu>
 
          <DetailsPopup visible={detailsPopupVisible} title="Metadata">
