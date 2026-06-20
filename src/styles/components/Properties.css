@@ -84,18 +84,25 @@
    gap: 10px;
 }
 
-.properties_modal .properties_content h3 {
-   font-size: 0.78rem;
-   font-weight: 500;
-   color: rgba(255, 255, 255, 0.85);
+.properties_modal .properties_content .row {
    display: flex;
-   gap: 10px;
-   word-break: break-word;
+   gap: 16px;
+   align-items: baseline;
 }
 
-.properties_modal .properties_content h3 span {
+.properties_modal .properties_content .row .label {
+   flex: 0 0 80px;
+   font-size: 0.78rem;
+   font-weight: 600;
+   color: rgba(255, 255, 255, 0.85);
+   white-space: nowrap;
+}
+
+.properties_modal .properties_content .row .value {
+   flex: 1;
+   font-size: 0.78rem;
    font-weight: 400;
    color: rgba(255, 255, 255, 0.55);
    text-align: right;
-   margin-left: auto;
+   word-break: break-word;
 }

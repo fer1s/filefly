@@ -22,29 +22,36 @@ const Properties = ({ entry, visible, onClose }: PropertiesProps) => {
             </div>
             {entry && (
                <div className="properties_content">
-                  <h3>
-                     Name <span>{entry.name}</span>
-                  </h3>
-                  <h3>
-                     Type <span>{entry.metadata.isDir ? 'Directory' : 'File'}</span>
-                  </h3>
-                  <h3>
-                     Path <span>{entry.path}</span>
-                  </h3>
+                  <div className="row">
+                     <span className="label">Name</span>
+                     <span className="value">{entry.name}</span>
+                  </div>
+                  <div className="row">
+                     <span className="label">Type</span>
+                     <span className="value">{entry.metadata.isDir ? 'Directory' : 'File'}</span>
+                  </div>
+                  <div className="row">
+                     <span className="label">Path</span>
+                     <span className="value">{entry.path}</span>
+                  </div>
                   {entry.metadata.isFile && (
-                     <h3>
-                        Size <span>{formatBytes(entry.size)}</span>
-                     </h3>
+                     <div className="row">
+                        <span className="label">Size</span>
+                        <span className="value">{formatBytes(entry.size)}</span>
+                     </div>
                   )}
-                  <h3>
-                     Created <span>{formatDate(entry.metadata.created.secs_since_epoch)}</span>
-                  </h3>
-                  <h3>
-                     Modified <span>{formatDate(entry.metadata.modified.secs_since_epoch)}</span>
-                  </h3>
-                  <h3>
-                     Accessed <span>{formatDate(entry.metadata.accessed.secs_since_epoch)}</span>
-                  </h3>
+                  <div className="row">
+                     <span className="label">Created</span>
+                     <span className="value">{formatDate(entry.metadata.created.secs_since_epoch)}</span>
+                  </div>
+                  <div className="row">
+                     <span className="label">Modified</span>
+                     <span className="value">{formatDate(entry.metadata.modified.secs_since_epoch)}</span>
+                  </div>
+                  <div className="row">
+                     <span className="label">Accessed</span>
+                     <span className="value">{formatDate(entry.metadata.accessed.secs_since_epoch)}</span>
+                  </div>
                </div>
             )}
          </div>
