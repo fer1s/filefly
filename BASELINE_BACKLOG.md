@@ -55,9 +55,9 @@ Regla: no invertir en tareas `(Tauri 2)` sobre v1. Hacerlas con las APIs nuevas.
 
 - [x] (ahora) Conectar los items fijados con rutas reales y permitir navegar al hacer click. `SideBar.tsx` resuelve Home/Desktop/Documents/Downloads/Pictures con `@tauri-apps/api/path` y navega al click.
 - [x] (ahora) Revisar y validar el click de todos los items de la sidebar. Volumenes y pinned ahora navegan via `setPath`.
-- [ ] (ahora) Implementar la busqueda sobre el contenido del directorio actual.
-- [ ] (ahora) Definir el comportamiento cuando no hay resultados.
-- [ ] (ahora) Permitir limpiar la busqueda y recuperar el listado completo.
+- [x] (ahora) Implementar la busqueda sobre el contenido del directorio actual. `search` en contexto; `SearchBar` filtra `dirContent` por nombre en `Directory.tsx`. Se resetea al navegar.
+- [x] (ahora) Definir el comportamiento cuando no hay resultados. Mensaje `No results for "..."` (`.no_results`).
+- [x] (ahora) Permitir limpiar la busqueda y recuperar el listado completo. Boton X en `SearchBar` y reset automatico al cambiar de ruta.
 
 ### Mejora propuesta: sidebar colapsable
 

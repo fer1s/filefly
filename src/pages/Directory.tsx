@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { useStateContext } from '../context/StateContext'
 import { ContextMenu, ContextMenuItem } from '../components/ContextMenu'
@@ -14,7 +14,10 @@ import '../styles/pages/Directory.css'
 import Preview from '../components/Preview'
 
 const Directory = () => {
-   const { dirContent, setPath, view } = useStateContext()
+   const { dirContent, setPath, view, search } = useStateContext()
+
+   // Entries visible after applying the sidebar search filter.
+   const filtered = useMemo(() => (search ? dirContent.filter((e) => e.name.toLowerCase().includes(search.toLowerCase())) : dirContent), [dirContent, search])
 
    const [selectedIDs, setSelectedIDs] = useState<string[]>([])
 
@@ -78,16 +81,16 @@ const Directory = () => {
       // Move the cursor by delta relative to the last selected entry and select that single entry.
       const move = (delta: number) =>
          setSelectedIDs((prev) => {
-            if (!dirContent.length) return prev
-            const current = prev.length ? dirContent.findIndex((e) => e.path === prev[prev.length - 1]) : -1
-            const next = Math.max(0, Math.min(dirContent.length - 1, current < 0 ? 0 : current + delta))
-            return [dirContent[next].path]
+            if (!filtered.length) return prev
+            const current = prev.length ? filtered.findIndex((e) => e.path === prev[prev.length - 1]) : -1
+            const next = Math.max(0, Math.min(filtered.length - 1, current < 0 ? 0 : current + delta))
+            return [filtered[next].path]
          })
 
       // Open the last selected entry (folder navigates, file opens).
       const open = () =>
          setSelectedIDs((prev) => {
-            const entry = prev.length ? dirContent.find((e) => e.path === prev[prev.length - 1]) : undefined
+            const entry = prev.length ? filtered.find((e) => e.path === prev[prev.length - 1]) : undefined
             if (entry) entry.metadata.isDir ? setPath(entry.path) : openFile(entry.path)
             return prev
          })
@@ -101,11 +104,11 @@ const Directory = () => {
 
          const buf = searchBufferRef.current
          setSelectedIDs((prev) => {
-            if (!dirContent.length) return prev
-            const current = prev.length ? dirContent.findIndex((e) => e.path === prev[prev.length - 1]) : -1
+            if (!filtered.length) return prev
+            const current = prev.length ? filtered.findIndex((e) => e.path === prev[prev.length - 1]) : -1
             const start = buf.length === 1 ? current + 1 : 0
-            for (let i = 0; i < dirContent.length; i++) {
-               const entry = dirContent[(start + i) % dirContent.length]
+            for (let i = 0; i < filtered.length; i++) {
+               const entry = filtered[(start + i) % filtered.length]
                if (entry.name.toLowerCase().startsWith(buf)) return [entry.path]
             }
             return prev
@@ -154,7 +157,7 @@ const Directory = () => {
          document.removeEventListener('keydown', handleKeyDown)
          if (searchTimerRef.current) clearTimeout(searchTimerRef.current)
       }
-   }, [dirContent, view])
+   }, [filtered, view])
 
    const handleOpenInTerminal = () => {
       if (contextMenuElementType === 'dir') openInTerminal(contextMenuElementID)
@@ -198,7 +201,7 @@ const Directory = () => {
    return (
       <div className="directory_page" onClick={(e) => !(e.target as HTMLElement).closest('.dir_entry_item') && setSelectedIDs([])}>
          <div className={view == 'list' ? 'list' : 'grid'}>
-            {dirContent.map((entry) => (
+            {filtered.map((entry) => (
                <DirEntryItem
                   key={`${entry.name}#${entry.path}`}
                   entry={entry}
@@ -217,6 +220,8 @@ const Directory = () => {
                />
             ))}
          </div>
+
+         {search && filtered.length === 0 && <p className="no_results">No results for "{search}"</p>}
 
          <ContextMenu contextMenuVisible={contextMenuVisible} ref={contextMenuRef}>
             {contextMenuElementType === 'dir' && (

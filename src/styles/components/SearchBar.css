@@ -4,12 +4,13 @@
    display: flex;
    justify-content: center;
    align-items: center;
+   position: relative;
 }
 
 .SearchBar input {
    width: 100%;
    height: 30px;
-   padding: 6px 10px;
+   padding: 6px 30px 6px 10px;
    background-color: rgba(0, 0, 0, 0.06);
    border: 1px solid rgba(255, 255, 255, 0.1);
    color: #fff;
@@ -29,4 +30,34 @@
 .SearchBar input:hover {
    background-color: rgba(0, 0, 0, 0.1);
    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.SearchBar .clear {
+   position: absolute;
+   right: 6px;
+   top: 50%;
+   transform: translateY(-50%);
+   width: 20px;
+   height: 20px;
+   padding: 0;
+   background-color: transparent;
+   border: none;
+   border-radius: 4px;
+   display: grid;
+   place-items: center;
+   cursor: pointer;
+   transition: all 0.2s ease-in-out;
+}
+
+.SearchBar .clear svg {
+   font-size: 0.8rem;
+   color: rgba(255, 255, 255, 0.5);
+}
+
+.SearchBar .clear:hover {
+   background-color: rgba(255, 255, 255, 0.1);
+}
+
+.SearchBar .clear:hover svg {
+   color: #fff;
 }

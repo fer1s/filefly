@@ -2,6 +2,14 @@
    min-height: 100%;
 }
 
+.directory_page .no_results {
+   margin-top: 20px;
+   font-size: 0.85rem;
+   font-weight: 400;
+   color: rgba(255, 255, 255, 0.5);
+   user-select: none;
+}
+
 .directory_page .grid .dir_entry_item {
    width: 77px;
    height: 77px;

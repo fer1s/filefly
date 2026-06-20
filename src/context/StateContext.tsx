@@ -13,6 +13,8 @@ type State = {
    setDirContent: (dirContent: DirEntry[]) => void
    view: 'list' | 'grid'
    setView: (view: 'list' | 'grid') => void
+   search: string
+   setSearch: (search: string) => void
 }
 
 export const initialState: State = {
@@ -26,6 +28,8 @@ export const initialState: State = {
    setDirContent: () => {},
    view: 'grid',
    setView: () => {},
+   search: '',
+   setSearch: () => {},
 }
 
 const StateContext = createContext<State>(initialState)

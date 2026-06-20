@@ -20,6 +20,7 @@ const App = () => {
    const [sidebarScrolled, setSidebarScrolled] = useState<boolean>(false)
    const [dirContent, setDirContent          ] = useState<DirEntry[]>([])
    const [view      , setView                ] = useState<'list' | 'grid'>('grid')
+   const [search    , setSearch              ] = useState<string>('')
 
    const fetchVolumes = async () => {
         let volumes = await getVolumes()
@@ -46,6 +47,9 @@ const App = () => {
     }, [])
 
     useEffect(() => {
+        // Reset the filter whenever we navigate so the new directory shows in full.
+        setSearch('')
+
         if (path === '') {
             setDirContent([])
             navigate('/')
@@ -77,6 +81,8 @@ const App = () => {
             setDirContent,
             view,
             setView,
+            search,
+            setSearch,
          }}
       >
          <AppBar />
