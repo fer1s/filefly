@@ -1,4 +1,4 @@
-import { DirEntry } from './types'
+import { DirEntry } from '../models'
 
 export const navigateToPath = (entry: DirEntry, setPath: (path: string) => void) => 
     entry.metadata.isDir ? setPath(entry.path) : ''

@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react'
 
-import { Volume, DirEntry } from '../types'
+import { Volume, DirEntry } from '../lib/models'
 
 type State = {
    volumes: Volume[]

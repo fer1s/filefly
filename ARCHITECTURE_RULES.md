@@ -1,11 +1,12 @@
 # Architecture Rules For Agents (CLAUDE/CODEX)
 
-This rule set applies to every project under `apps/` except `period-calendar-svelte`.
+This rule set applies to the `sito-file-browser` project: a Tauri + React (TypeScript) desktop app.
 
 ## Scope
 
-- Included projects: `notes`, `wallet`, `period-calendar`, and future sibling projects.
-- Excluded project: `inventory`.
+- Frontend: React 19 + TypeScript under `src/`.
+- Backend: Tauri 2 (Rust) under `src-tauri/` — these rules target the React frontend; Rust follows its own module conventions.
+- Styling: plain CSS (see section 5). Tailwind is intentionally not used here.
 
 # ARCHITECTURE_RULES
 
@@ -50,12 +51,13 @@ All coding agents (Codex, Claude, or any automated contributor) **must read this
 
 ---
 
-## 5) Styling Rules (Tailwind + Global Theme)
+## 5) Styling Rules (Plain CSS + Global Theme)
 
-- Use **Tailwind CSS** for component styling (`className` utilities in components).
-- Define theme tokens/variables in `global.css`.
-- Global CSS should be minimal and design-token oriented (colors, spacing tokens, typography scales, etc.).
-- Do not replace Tailwind utility usage with large component-level custom CSS unless there is a strong reason.
+- Use **plain CSS** for component styling. This project does **not** use Tailwind.
+- One CSS file per component/view, mirroring the component tree under `src/styles/` (e.g. `src/styles/components/PathBar.css`, `src/styles/pages/Directory.css`). Each component imports its own stylesheet.
+- Define theme tokens/variables and shared globals in `src/styles/index.css` (colors, spacing, typography, reusable utility classes like `.shadow`).
+- Keep selectors scoped by the component's root class (e.g. `.PathBar ...`) to avoid leakage between components.
+- Global CSS should stay minimal and design-token oriented; avoid duplicating tokens in component files.
 
 ---
 

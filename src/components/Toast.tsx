@@ -1,4 +1,4 @@
-import { ToastType } from '../toast'
+import { ToastType } from '../lib/toast'
 
 import '../styles/components/Toast.css'
 

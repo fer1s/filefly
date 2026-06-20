@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { convertFileSrc } from '@tauri-apps/api/core'
 
-import { generateMarkdownPreview } from '../api'
-import { ImageFormats, AudioFormats } from '../constants'
+import { generateMarkdownPreview } from '../lib/services/api'
+import { ImageFormats, AudioFormats } from '../lib/constants'
 
 import AudioPreview from './AudioPreview'
 import Spinner from './Spinner'

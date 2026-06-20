@@ -9,9 +9,9 @@ import Toasts, { ToastData } from './components/Toast'
 
 import AppContent from './AppContent'
 
-import { getVolumes, readDirectory } from './api'
-import { setNotifier, ToastType } from './toast'
-import { Volume, DirEntry } from './types'
+import { getVolumes, readDirectory } from './lib/services/api'
+import { setNotifier, ToastType } from './lib/toast'
+import { Volume, DirEntry } from './lib/models'
 
 const App = () => {
    const navigate: NavigateFunction = useNavigate()

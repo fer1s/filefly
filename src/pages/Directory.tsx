@@ -3,10 +3,10 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useStateContext } from '../context/StateContext'
 import { ContextMenu, ContextMenuItem } from '../components/ContextMenu'
 import DetailsPopup from '../components/DetailsPopup'
-import { openFile, openInTerminal, deleteEntry, copyEntry, moveEntry, renameEntry } from '../api'
-import { notify } from '../toast'
+import { openFile, openInTerminal, deleteEntry, copyEntry, moveEntry, renameEntry } from '../lib/services/api'
+import { notify } from '../lib/toast'
 import { ask } from '@tauri-apps/plugin-dialog'
-import { AcceptedPreviewFormats } from '../constants'
+import { AcceptedPreviewFormats } from '../lib/constants'
 import { DirEntryItem } from '../components/DirEntry'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -15,7 +15,7 @@ import { faArrowUpRightFromSquare, faCircleInfo, faCopy, faEye, faFilePen, faPas
 import '../styles/pages/Directory.css'
 import Preview from '../components/Preview'
 import Properties from '../components/Properties'
-import { DirEntry } from '../types'
+import { DirEntry } from '../lib/models'
 
 const Directory = () => {
    const { dirContent, path, setPath, view, search, refreshDir } = useStateContext()

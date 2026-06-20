@@ -1,12 +1,12 @@
 import { useEffect, useRef } from 'react'
 import { convertFileSrc } from '@tauri-apps/api/core'
 
-import { DirEntry } from '../types'
-import { navigateToPath, formatBytes } from '../utils'
+import { DirEntry } from '../lib/models'
+import { navigateToPath, formatBytes } from '../lib/utils'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFile, faFolder } from '@fortawesome/free-solid-svg-icons'
-import { openFile } from '../api'
+import { openFile } from '../lib/services/api'
 
 type DirEntryItemProps = {
    entry: DirEntry

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { desktopDir, documentDir, downloadDir, homeDir, pictureDir } from '@tauri-apps/api/path'
 
-import { Volume } from '../types'
+import { Volume } from '../lib/models'
 import { useStateContext } from '../context/StateContext'
 
 import SearchBar from './SearchBar'
