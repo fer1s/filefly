@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { convertFileSrc } from '@tauri-apps/api/core'
 
-import { generateMarkdownPreview } from '../lib/services/api'
+import { useStateContext } from '../providers/StateProvider'
 import { ImageFormats, AudioFormats } from '../lib/constants'
 
 import AudioPreview from './AudioPreview'
@@ -26,6 +26,8 @@ interface PreviewProps {
 }
 
 const Preview = ({ fileType, filePath, previewVisible, setPreviewVisible, onPrev, onNext, hasPrev, hasNext }: PreviewProps) => {
+   const { fs } = useStateContext()
+
    const [isReady, setIsReady] = useState<boolean>(false)
    const [previewContent, setPreviewContent] = useState<string>('')
 
@@ -34,7 +36,7 @@ const Preview = ({ fileType, filePath, previewVisible, setPreviewVisible, onPrev
 
       if (fileType === 'md') {
          setIsReady(false)
-         generateMarkdownPreview(filePath).then((data) => {
+         fs.markdownPreview(filePath).then((data) => {
             setPreviewContent(data)
             setIsReady(true)
          })

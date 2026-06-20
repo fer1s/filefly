@@ -1,8 +1,10 @@
 import { createContext, useContext } from 'react'
 
 import { Volume, DirEntry } from '../lib/models'
+import { FileSystemManager } from '../lib/managers/FileSystemManager'
 
 type State = {
+   fs: FileSystemManager
    volumes: Volume[]
    setVolumes: (volumes: Volume[]) => void
    path: string
@@ -19,6 +21,7 @@ type State = {
 }
 
 export const initialState: State = {
+   fs: new FileSystemManager(),
    volumes: [],
    setVolumes: () => {},
    path: '',

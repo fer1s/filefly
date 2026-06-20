@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useNavigate, useLocation, NavigateFunction, Location } from 'react-router-dom'
 
 import { StateProvider } from './providers/StateProvider'
@@ -9,8 +9,9 @@ import Toasts, { ToastData } from './components/Toast'
 
 import AppContent from './AppContent'
 
-import { getVolumes, readDirectory } from './lib/services/api'
 import { setNotifier, ToastType } from './lib/toast'
+import { ROUTES } from './lib/routes'
+import { FileSystemManager } from './lib/managers/FileSystemManager'
 import { Volume, DirEntry } from './lib/models'
 
 const App = () => {
@@ -45,29 +46,12 @@ const App = () => {
         return () => setNotifier(null)
    }, [])
 
-   const fetchVolumes = async () => {
-        let volumes = await getVolumes()
+   // Single domain manager instance for the whole app, provided through context.
+   const fs = useMemo(() => new FileSystemManager(), [])
 
-        // macOS APFS exposes the data volume (/System/Volumes/Data) and other synthetic system
-        // volumes as duplicates of Macintosh HD (/). Hide them; navigating / shows the merged tree.
-        volumes = volumes.filter((v) => !v.mountPoint.startsWith('/System/Volumes/'))
+   const fetchVolumes = async () => setVolumes(await fs.listVolumes())
 
-        // sort volumes by mount point alphabetically
-        volumes.sort((a, b) => a.mountPoint < b.mountPoint ? -1 : a.mountPoint > b.mountPoint ? 1 : 0);
-        // sort volumes by type (removable last)
-        volumes.sort((a, b) => a.isRemovable && !b.isRemovable ? 1 : !a.isRemovable && b.isRemovable ? -1 : 0);
-
-        setVolumes(volumes)
-   }
-
-   const fetchDirectory = async (path: string) => {
-        let files = await readDirectory(path)
-
-        files.sort((a: DirEntry, b: DirEntry) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0);
-        files.sort((a, b) => a.metadata.isDir && !b.metadata.isDir ? -1 : !a.metadata.isDir && b.metadata.isDir ? 1 : 0);
-
-        return files
-   }
+   const fetchDirectory = (path: string) => fs.readDirectory(path)
 
    // Reload the current view (used after filesystem operations like copy/move/rename/delete).
    const refreshDir = () => {
@@ -85,13 +69,13 @@ const App = () => {
 
         if (path === '') {
             setDirContent([])
-            navigate('/')
+            navigate(ROUTES.volumes)
             return
         }
 
         fetchDirectory(path).then((files) => {
             setDirContent(files)
-            if (location.pathname !== '/directory' && path !== '') navigate('/directory')
+            if (location.pathname !== ROUTES.directory && path !== '') navigate(ROUTES.directory)
         })
     }, [path])
 
@@ -104,6 +88,7 @@ const App = () => {
    return (
       <StateProvider
          value={{
+            fs,
             volumes,
             setVolumes,
             path,

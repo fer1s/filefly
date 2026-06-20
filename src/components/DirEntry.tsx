@@ -3,10 +3,10 @@ import { convertFileSrc } from '@tauri-apps/api/core'
 
 import { DirEntry } from '../lib/models'
 import { navigateToPath, formatBytes } from '../lib/utils'
+import { useStateContext } from '../providers/StateProvider'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFile, faFolder } from '@fortawesome/free-solid-svg-icons'
-import { openFile } from '../lib/services/api'
 
 type DirEntryItemProps = {
    entry: DirEntry
@@ -54,6 +54,8 @@ const DirEntryItem = ({
    setContextMenuElementID,
    setContextMenuElementType,
 }: DirEntryItemProps) => {
+   const { fs } = useStateContext()
+
    const itemRef = useRef<HTMLDivElement>(null)
 
    // handle context menu
@@ -178,7 +180,7 @@ const DirEntryItem = ({
          id={id}
          tabIndex={0}
          onClick={onSelect}
-         onDoubleClick={() => (entry.metadata.isDir ? navigateToPath(entry, setPath) : openFile(entry.path))}
+         onDoubleClick={() => (entry.metadata.isDir ? navigateToPath(entry, setPath) : fs.open(entry.path))}
          ref={itemRef}
       >
          {view === 'grid' ? (

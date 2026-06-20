@@ -3,7 +3,6 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useStateContext } from '../providers/StateProvider'
 import { ContextMenu, ContextMenuItem } from '../components/ContextMenu'
 import DetailsPopup from '../components/DetailsPopup'
-import { openFile, openInTerminal, deleteEntry, copyEntry, moveEntry, renameEntry } from '../lib/services/api'
 import { notify } from '../lib/toast'
 import { ask } from '@tauri-apps/plugin-dialog'
 import { AcceptedPreviewFormats } from '../lib/constants'
@@ -18,7 +17,7 @@ import Properties from '../components/Properties'
 import { DirEntry } from '../lib/models'
 
 const Directory = () => {
-   const { dirContent, path, setPath, view, search, refreshDir } = useStateContext()
+   const { fs, dirContent, path, setPath, view, search, refreshDir } = useStateContext()
 
    // Internal clipboard for copy/cut, pasted via the empty-area context menu.
    const [clipboard, setClipboard] = useState<{ paths: string[]; mode: 'copy' | 'cut' } | null>(null)
@@ -117,7 +116,7 @@ const Directory = () => {
       const open = () =>
          setSelectedIDs((prev) => {
             const entry = prev.length ? filtered.find((e) => e.path === prev[prev.length - 1]) : undefined
-            if (entry) entry.metadata.isDir ? setPath(entry.path) : openFile(entry.path)
+            if (entry) entry.metadata.isDir ? setPath(entry.path) : fs.open(entry.path)
             return prev
          })
 
@@ -189,15 +188,15 @@ const Directory = () => {
    }, [filtered, view, previewVisible])
 
    const handleOpenInTerminal = () => {
-      if (contextMenuElementType === 'dir') openInTerminal(contextMenuElementID)
-      else if (contextMenuElementType === 'file') openInTerminal(contextMenuElementID.split('/').slice(0, -1).join('/'))
+      if (contextMenuElementType === 'dir') fs.openInTerminal(contextMenuElementID)
+      else if (contextMenuElementType === 'file') fs.openInTerminal(contextMenuElementID.split('/').slice(0, -1).join('/'))
       else console.error('An error occured while handling the Open_In_Terminal event, See the defenition of the function "handleOpenInTerminal()" for more information in Directory.tsx')
 
       setContextMenuVisible(false)
    }
 
    const handleOpenFile = () => {
-      if (contextMenuElementType === 'file') openFile(contextMenuElementID)
+      if (contextMenuElementType === 'file') fs.open(contextMenuElementID)
       else if (contextMenuElementType === 'dir') setPath(contextMenuElementID)
       else console.error('An error occured while handling the Open_File event, See the defenition of the function "handleOpenFile()" for more information in Directory.tsx')
 
@@ -246,7 +245,7 @@ const Directory = () => {
 
       for (const target of targets) {
          try {
-            await deleteEntry(target)
+            await fs.trash(target)
          } catch (err) {
             notify('Could not delete ' + (target.split('/').pop() || target) + ': ' + err, 'error')
          }
@@ -261,8 +260,8 @@ const Directory = () => {
 
       for (const source of clipboard.paths) {
          try {
-            if (clipboard.mode === 'copy') await copyEntry(source, path)
-            else await moveEntry(source, path)
+            if (clipboard.mode === 'copy') await fs.copy(source, path)
+            else await fs.move(source, path)
          } catch (err) {
             notify('Could not paste ' + (source.split('/').pop() || source) + ': ' + err, 'error')
          }
@@ -310,7 +309,7 @@ const Directory = () => {
    const handleRenameSubmit = async (targetPath: string, newName: string) => {
       setRenamingID('')
       try {
-         await renameEntry(targetPath, newName)
+         await fs.rename(targetPath, newName)
       } catch (err) {
          notify('Could not rename: ' + err, 'error')
       }
