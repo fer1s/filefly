@@ -141,13 +141,13 @@ La implementacion y la validacion visual se completaron el 20 de junio de 2026. 
 - Iconos y thumbnails
 - Bordes del primer y ultimo item en `list`
 
-## Paso 9. Preview general - pendiente de validacion visual
+## Paso 9. Preview general - completado
 
 ### Archivos
 
 - `src/styles/components/Preview.scss`
 
-La implementacion se completo el 20 de junio de 2026. Falta confirmar visualmente los previews de imagen y Markdown antes de cerrar el paso.
+La implementacion y la validacion visual se completaron el 20 de junio de 2026. Los previews de imagen y Markdown mantienen layout, contenido y animacion.
 
 ### Donde probar
 
@@ -157,11 +157,13 @@ La implementacion se completo el 20 de junio de 2026. Falta confirmar visualment
 - Estado `loading`
 - Variante `.image`
 
-## Paso 10. Preview de audio
+## Paso 10. Preview de audio - pendiente de validacion visual
 
 ### Archivos
 
 - `src/styles/components/AudioPreview.scss`
+
+La implementacion se completo el 20 de junio de 2026. Falta confirmar visualmente el reproductor y sus sliders antes de cerrar el paso.
 
 ### Donde probar
 

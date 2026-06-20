@@ -4,7 +4,7 @@ import { convertFileSrc } from '@tauri-apps/api/tauri'
 
 import { IoPlay, IoPause, IoVolumeMedium } from 'react-icons/io5'
 
-import '../styles/components/AudioPreview.scss'
+import '../styles/components/AudioPreview.css'
 
 const audioPreviewVariants = {
    hidden: {
