@@ -53,8 +53,8 @@ Regla: no invertir en tareas `(Tauri 2)` sobre v1. Hacerlas con las APIs nuevas.
 
 ### Tareas detectadas
 
-- [ ] (ahora) Conectar los items fijados con rutas reales y permitir navegar al hacer click. Nota: si requiere resolver directorios estandar (home, downloads) usar `@tauri-apps/api/path`, que sigue en core en v2.
-- [ ] (ahora) Revisar y validar el click de todos los items de la sidebar.
+- [x] (ahora) Conectar los items fijados con rutas reales y permitir navegar al hacer click. `SideBar.tsx` resuelve Home/Desktop/Documents/Downloads/Pictures con `@tauri-apps/api/path` y navega al click.
+- [x] (ahora) Revisar y validar el click de todos los items de la sidebar. Volumenes y pinned ahora navegan via `setPath`.
 - [ ] (ahora) Implementar la busqueda sobre el contenido del directorio actual.
 - [ ] (ahora) Definir el comportamiento cuando no hay resultados.
 - [ ] (ahora) Permitir limpiar la busqueda y recuperar el listado completo.

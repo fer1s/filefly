@@ -1,18 +1,47 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import { desktopDir, documentDir, downloadDir, homeDir, pictureDir } from '@tauri-apps/api/path'
 
 import { Volume } from '../types'
 import { useStateContext } from '../context/StateContext'
 
 import SearchBar from './SearchBar'
 
+import { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faFolder, faHardDrive } from '@fortawesome/free-solid-svg-icons'
+import { faDesktop, faDownload, faFileLines, faHardDrive, faHouse, faImage } from '@fortawesome/free-solid-svg-icons'
 import { faUsb } from '@fortawesome/free-brands-svg-icons'
 
 import '../styles/components/SideBar.css'
 
+type Pinned = { name: string; path: string; icon: IconDefinition }
+
 const SideBar = () => {
    const { volumes, setSidebarScrolled, setPath } = useStateContext()
+
+   const [pinned, setPinned] = useState<Pinned[]>([])
+
+   // Resolve the standard user directories once and keep only the ones the OS reports.
+   useEffect(() => {
+      const resolvers: { name: string; icon: IconDefinition; resolve: () => Promise<string> }[] = [
+         { name: 'Home', icon: faHouse, resolve: homeDir },
+         { name: 'Desktop', icon: faDesktop, resolve: desktopDir },
+         { name: 'Documents', icon: faFileLines, resolve: documentDir },
+         { name: 'Downloads', icon: faDownload, resolve: downloadDir },
+         { name: 'Pictures', icon: faImage, resolve: pictureDir },
+      ]
+
+      Promise.all(
+         resolvers.map(async ({ name, icon, resolve }) => {
+            try {
+               // Tauri returns these with a trailing slash; drop it so it matches the rest of the app's paths.
+               const path = (await resolve()).replace(/\/+$/, '')
+               return path ? { name, path, icon } : null
+            } catch {
+               return null
+            }
+         })
+      ).then((items) => setPinned(items.filter((item): item is Pinned => item !== null)))
+   }, [])
 
    useEffect(() => {
         const sidebar = document.querySelector('.SideBar')
@@ -31,13 +60,15 @@ const SideBar = () => {
 
    return (
       <div className="SideBar">
-        
+
          <SearchBar />
 
          <section>
             <h2>Pinned</h2>
             <div className="section_content">
-               <FolderItem />
+               {pinned.map((item) => (
+                  <FolderItem key={item.path} item={item} setPath={setPath} />
+               ))}
             </div>
          </section>
 
@@ -81,11 +112,16 @@ const VolumeItem = ({ volume, setPath, index }: VolumeItemProps) => {
    )
 }
 
-const FolderItem = () => {
+type FolderItemProps = {
+   item: Pinned
+   setPath: (path: string) => void
+}
+
+const FolderItem = ({ item, setPath }: FolderItemProps) => {
    return (
-      <div className="folder_item">
-         <FontAwesomeIcon icon={faFolder} />
-         <p>Downloads</p>
+      <div className="folder_item" onClick={() => setPath(item.path)}>
+         <FontAwesomeIcon icon={item.icon} />
+         <p>{item.name}</p>
       </div>
    )
 }
