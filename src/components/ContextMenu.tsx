@@ -1,6 +1,6 @@
 import { RefObject, ReactNode, forwardRef } from 'react'
 import { motion } from 'framer-motion'
-import '../styles/components/ContextMenu.scss'
+import '../styles/components/ContextMenu.css'
 
 const contextMenuVariants = {
   hidden: {

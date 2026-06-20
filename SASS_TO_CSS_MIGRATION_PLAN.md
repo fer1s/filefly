@@ -31,7 +31,7 @@ La validacion se completo el 20 de junio de 2026. Los problemas encontrados ya e
 - Click derecho sobre archivo y carpeta
 - Abrir preview de imagen, markdown y audio
 
-## Paso 2. Componentes de bajo riesgo - pendiente de validacion visual
+## Paso 2. Componentes de bajo riesgo - completado
 
 ### Archivos
 
@@ -43,7 +43,7 @@ La validacion se completo el 20 de junio de 2026. Los problemas encontrados ya e
 
 Renombrar a `.css`, aplanar nesting si hace falta y cambiar imports.
 
-La implementacion se completo el 20 de junio de 2026. Falta confirmar visualmente los tres componentes antes de cerrar el paso.
+La implementacion y la validacion visual se completaron el 20 de junio de 2026. `Spinner`, `SearchBar` y `DetailsPopup` mantienen el aspecto anterior.
 
 ### Donde probar
 
@@ -51,11 +51,13 @@ La implementacion se completo el 20 de junio de 2026. Falta confirmar visualment
 - `DetailsPopup`: dejar el raton quieto sobre un archivo unos 2 segundos
 - `Spinner`: abrir un preview y comprobar el estado de carga
 
-## Paso 3. Menu contextual
+## Paso 3. Menu contextual - pendiente de validacion visual
 
 ### Archivos
 
 - `src/styles/components/ContextMenu.scss`
+
+La implementacion se completo el 20 de junio de 2026. Falta confirmar visualmente el menu antes de cerrar el paso.
 
 ### Donde probar
 
