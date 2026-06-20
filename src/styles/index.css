@@ -91,3 +91,16 @@ body {
    justify-content: flex-start;
    align-items: flex-start;
 }
+
+@media (prefers-reduced-motion: reduce) {
+   .context_menu,
+   .details_popup,
+   .preview_backdrop,
+   .preview_container,
+   .audio_preview,
+   .audio_preview .volume_control .volume_extension,
+   .SideBar section .section_content .drive_item {
+      animation: none !important;
+      transition: none !important;
+   }
+}

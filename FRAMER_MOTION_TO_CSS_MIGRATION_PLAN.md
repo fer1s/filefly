@@ -158,7 +158,7 @@ Donde probar:
 
 ## Fase 4. Stagger de Sidebar
 
-Estado: implementada y pendiente de validacion visual.
+Estado: completada y validada.
 
 Cambios previstos:
 
@@ -177,6 +177,8 @@ Donde probar:
 - Conectar un volumen removible si esta disponible.
 
 ## Fase 5. Reduced Motion
+
+Estado: implementada y pendiente de validacion.
 
 Agregar una regla `prefers-reduced-motion` para desactivar o reducir transiciones y keyframes cuando el sistema lo solicite.
 
