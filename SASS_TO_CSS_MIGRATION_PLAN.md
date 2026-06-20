@@ -66,24 +66,26 @@ La implementacion y la validacion visual se completaron el 20 de junio de 2026. 
 - Hover sobre opciones
 - Cerrar el menu haciendo click fuera
 
-## Paso 4. Barra superior - pendiente de validacion visual
+## Paso 4. Barra superior - completado
 
 ### Archivos
 
 - `src/styles/components/AppBar.scss`
 
-La implementacion se completo el 20 de junio de 2026. Falta confirmar visualmente la barra antes de cerrar el paso.
+La implementacion y la validacion visual se completaron el 20 de junio de 2026. La barra mantiene titulo, botones, hover y ocultacion al hacer scroll.
 
 ### Donde probar
 
 - Hover en minimizar, maximizar y cerrar
 - Scroll de sidebar para ver si el titulo se oculta igual
 
-## Paso 5. Pantalla de volumenes
+## Paso 5. Pantalla de volumenes - pendiente de validacion visual
 
 ### Archivos
 
 - `src/styles/pages/Volumes.scss`
+
+La implementacion se completo el 20 de junio de 2026. Falta confirmar visualmente las tarjetas antes de cerrar el paso.
 
 ### Donde probar
 

@@ -4,7 +4,7 @@ import { Volume } from '../types'
 import { FaHardDrive } from 'react-icons/fa6'
 import { AiFillUsb } from 'react-icons/ai'
 
-import '../styles/pages/Volumes.scss'
+import '../styles/pages/Volumes.css'
 
 const Volumes = () => {
    const { volumes, setPath } = useStateContext()
