@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useStateContext } from '../context/StateContext'
 import { ContextMenu, ContextMenuItem } from '../components/ContextMenu'
 import DetailsPopup from '../components/DetailsPopup'
-import { openFile, openInTerminal, deleteEntry, copyEntry, moveEntry } from '../api'
+import { openFile, openInTerminal, deleteEntry, copyEntry, moveEntry, renameEntry } from '../api'
 import { ask } from '@tauri-apps/plugin-dialog'
 import { AcceptedPreviewFormats } from '../constants'
 import { DirEntryItem } from '../components/DirEntry'
@@ -19,6 +19,9 @@ const Directory = () => {
 
    // Internal clipboard for copy/cut, pasted via the empty-area context menu.
    const [clipboard, setClipboard] = useState<{ paths: string[]; mode: 'copy' | 'cut' } | null>(null)
+
+   // Path of the entry currently being renamed inline (empty when none).
+   const [renamingID, setRenamingID] = useState('')
 
    // Entries visible after applying the sidebar search filter.
    const filtered = useMemo(() => (search ? dirContent.filter((e) => e.name.toLowerCase().includes(search.toLowerCase())) : dirContent), [dirContent, search])
@@ -285,6 +288,22 @@ const Directory = () => {
       await pasteIntoCurrent()
    }
 
+   // Start inline rename on the clicked entry.
+   const handleRename = () => {
+      setRenamingID(contextMenuElementID)
+      setContextMenuVisible(false)
+   }
+
+   const handleRenameSubmit = async (targetPath: string, newName: string) => {
+      setRenamingID('')
+      try {
+         await renameEntry(targetPath, newName)
+      } catch (err) {
+         console.error('Could not rename ' + targetPath + ':\n' + err)
+      }
+      refreshDir()
+   }
+
    // Keyboard shortcuts for clipboard actions (Cmd/Ctrl + C/X/V, Cmd/Ctrl + Backspace/Delete).
    // They act on the current selection. Modifier combos are ignored by type-to-find, so no conflict.
    useEffect(() => {
@@ -354,6 +373,9 @@ const Directory = () => {
                   view={view == 'list' ? 'list' : 'grid'}
                   selected={selectedIDs.includes(entry.path)}
                   onSelect={(e) => handleSelect(entry.path, e)}
+                  renaming={renamingID === entry.path}
+                  onRename={(newName) => handleRenameSubmit(entry.path, newName)}
+                  onCancelRename={() => setRenamingID('')}
                   setHighlitedElementID={setHighlitedElementID}
                   setHighlitedElementType={setHighlitedElementType}
                   setDetailsPopupVisible={setDetailsPopupVisible}
@@ -377,7 +399,7 @@ const Directory = () => {
                   <ContextMenuItem text="Open in Terminal" icon={<FontAwesomeIcon icon={faTerminal} />} onClick={handleOpenInTerminal} />
                   <ContextMenuItem text="Copy" icon={<FontAwesomeIcon icon={faCopy} />} onClick={handleCopy} />
                   <ContextMenuItem text="Cut" icon={<FontAwesomeIcon icon={faScissors} />} onClick={handleCut} />
-                  <ContextMenuItem text="Rename" icon={<FontAwesomeIcon icon={faFilePen} />} />
+                  <ContextMenuItem text="Rename" icon={<FontAwesomeIcon icon={faFilePen} />} onClick={handleRename} />
                   <ContextMenuItem text="Delete" icon={<FontAwesomeIcon icon={faTrash} />} onClick={handleDelete} />
                </>
             )}
@@ -388,7 +410,7 @@ const Directory = () => {
                   {AcceptedPreviewFormats.includes(contextMenuElementID.split('.').pop() || '') && <ContextMenuItem text="Preview" icon={<FontAwesomeIcon icon={faEye} />} onClick={handlePreviewFile} />}
                   <ContextMenuItem text="Copy" icon={<FontAwesomeIcon icon={faCopy} />} onClick={handleCopy} />
                   <ContextMenuItem text="Cut" icon={<FontAwesomeIcon icon={faScissors} />} onClick={handleCut} />
-                  <ContextMenuItem text="Rename" icon={<FontAwesomeIcon icon={faFilePen} />} />
+                  <ContextMenuItem text="Rename" icon={<FontAwesomeIcon icon={faFilePen} />} onClick={handleRename} />
                   <ContextMenuItem text="Delete" icon={<FontAwesomeIcon icon={faTrash} />} onClick={handleDelete} />
                </>
             )}

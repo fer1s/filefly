@@ -2,6 +2,26 @@
    min-height: 100%;
 }
 
+.directory_page .rename_input {
+   width: 100%;
+   min-width: 0;
+   padding: 2px 4px;
+   background-color: rgba(0, 0, 0, 0.4);
+   border: 1px solid rgba(94, 154, 255, 0.7);
+   border-radius: 3px;
+   color: #fff;
+   font-family: 'Inter', sans-serif;
+   font-size: 0.7rem;
+   font-weight: 400;
+   text-align: center;
+   outline: none;
+}
+
+.directory_page .list .dir_entry_item .name .rename_input {
+   font-size: 0.8rem;
+   text-align: left;
+}
+
 .directory_page .no_results {
    margin-top: 20px;
    font-size: 0.85rem;

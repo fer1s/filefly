@@ -16,6 +16,10 @@ type DirEntryItemProps = {
    selected: boolean
    onSelect: (e: React.MouseEvent) => void
 
+   renaming: boolean
+   onRename: (newName: string) => void
+   onCancelRename: () => void
+
    setHighlitedElementID: (id: string) => void
    setHighlitedElementType: (type: 'file' | 'dir' | 'none') => void
    setDetailsPopupVisible: (visible: boolean) => void
@@ -37,6 +41,10 @@ const DirEntryItem = ({
 
    selected,
    onSelect,
+
+   renaming,
+   onRename,
+   onCancelRename,
 
    setHighlitedElementID,
    setHighlitedElementType,
@@ -114,6 +122,51 @@ const DirEntryItem = ({
       if (selected) itemRef.current?.focus()
    }, [selected])
 
+   // Inline rename: focus the input and preselect the base name (without extension) when editing starts.
+   const renameInputRef = useRef<HTMLInputElement>(null)
+   const renameDoneRef = useRef(false)
+
+   useEffect(() => {
+      if (!renaming || !renameInputRef.current) return
+      renameDoneRef.current = false
+      const el = renameInputRef.current
+      el.focus()
+      const dot = entry.name.lastIndexOf('.')
+      el.setSelectionRange(0, dot > 0 ? dot : entry.name.length)
+   }, [renaming])
+
+   const submitRename = () => {
+      if (renameDoneRef.current) return
+      renameDoneRef.current = true
+      const value = renameInputRef.current?.value.trim()
+      if (value && value !== entry.name) onRename(value)
+      else onCancelRename()
+   }
+
+   const cancelRename = () => {
+      if (renameDoneRef.current) return
+      renameDoneRef.current = true
+      onCancelRename()
+   }
+
+   const handleRenameKeyDown = (e: React.KeyboardEvent) => {
+      e.stopPropagation()
+      if (e.key === 'Enter') submitRename()
+      else if (e.key === 'Escape') cancelRename()
+   }
+
+   const renameInput = (
+      <input
+         ref={renameInputRef}
+         className="rename_input"
+         defaultValue={entry.name}
+         onKeyDown={handleRenameKeyDown}
+         onBlur={submitRename}
+         onClick={(e) => e.stopPropagation()}
+         onDoubleClick={(e) => e.stopPropagation()}
+      />
+   )
+
    // Split extension from the file name
    let name = entry.metadata.isFile ? entry.name.split('.')[0] : entry.name
    let extension = entry.metadata.isFile ? entry.name.split('.')[entry.name.split('.').length - 1] : ''
@@ -135,14 +188,14 @@ const DirEntryItem = ({
                {ImageFormats.includes(extension.toLowerCase().trim()) ? <img src={convertFileSrc(entry.path)} /> : <FontAwesomeIcon icon={entry.metadata.isDir ? faFolder : faFile} />}
 
                <div className="dir_entry_info">
-                  <h3>{name ? (name.length > 9 ? name.substring(0, 9) + '...' : name) : extension}</h3>
+                  {renaming ? renameInput : <h3>{name ? (name.length > 9 ? name.substring(0, 9) + '...' : name) : extension}</h3>}
                </div>
             </>
          ) : (
             <>
                <div className="icon">{ImageFormats.includes(extension.toLowerCase().trim()) ? <img src={convertFileSrc(entry.path)} /> : <FontAwesomeIcon icon={entry.metadata.isDir ? faFolder : faFile} />}</div>
                <div className="name">
-                  <h3>{name ? (name.length > 25 ? name.substring(0, 25) + '...' : name) : extension}</h3>
+                  {renaming ? renameInput : <h3>{name ? (name.length > 25 ? name.substring(0, 25) + '...' : name) : extension}</h3>}
                </div>
                <div className="size">{entry.size > 0 && <h3>{formatBytes(entry.size)}</h3>}</div>
                <div className="extension">{extension && name && <h3>{extension}</h3>}</div>

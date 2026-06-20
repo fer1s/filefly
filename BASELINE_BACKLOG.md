@@ -162,10 +162,10 @@ Casos observados:
 - [x] (ahora) Definir un ancho consistente para la columna de iconos y alinear todas las etiquetas. Icono envuelto en `.ctx_icon` (ancho fijo 14px), texto en `.ctx_text`.
 - [x] (ahora) Definir estados disabled para acciones todavia no disponibles. `ContextMenuItem` deriva disabled de la ausencia de `onClick` (override con prop `disabled`) + estilo; Copy/Cut/Rename/Delete/Properties quedan disabled solos hasta tener handler (Tauri 2).
 - [x] (Tauri 2) Corregir `Open` en macOS. Resuelto via `openPath` (plugin opener); aplica a menu contextual y doble click.
-- [ ] (Tauri 2) Implementar `Copy`. Requiere `@tauri-apps/plugin-fs` de v2.
-- [ ] (Tauri 2) Implementar `Cut`. Requiere plugin-fs.
-- [ ] (Tauri 2) Implementar `Rename`. Requiere plugin-fs.
-- [ ] (Tauri 2) Implementar `Delete` con confirmacion. Requiere plugin-fs y `plugin-dialog` para confirmar.
+- [x] (Tauri 2) Implementar `Copy`. Comando Rust `copy_entry` (std::fs, recursivo) + portapapeles interno; menu y atajo ⌘C; Paste en zona vacia.
+- [x] (Tauri 2) Implementar `Cut`. Comando Rust `move_entry` (rename + fallback copy/delete entre volumenes); menu y atajo ⌘X; Paste mueve.
+- [x] (Tauri 2) Implementar `Rename`. Comando Rust `rename_entry`; input inline en `DirEntry.tsx` (Enter confirma, Escape cancela).
+- [x] (Tauri 2) Implementar `Delete` con confirmacion. Comando Rust `delete_entry` a Papelera (crate `trash`); confirmacion con `plugin-dialog`; menu y atajo ⌘Backspace.
 - [ ] (Tauri 2) Implementar `Properties` o retirarlo temporalmente. Leer metadata depende de plugin-fs; retirarlo de forma temporal si se necesita antes de v2.
 
 ## Priorizacion propuesta
