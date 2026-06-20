@@ -50,15 +50,77 @@ const Directory = () => {
       }
    }, [contextMenuRef])
 
-   // Clear the selection with Escape.
+   // Keyboard navigation: arrows move a cursor through the entries (and select it), Enter opens, Escape clears.
    useEffect(() => {
+      // Skip when typing in the path bar or any other text field.
+      const isTypingTarget = (el: EventTarget | null) => {
+         const t = el as HTMLElement | null
+         return !!t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')
+      }
+
+      // Number of items in the first grid row, used as the vertical step.
+      const columns = () => {
+         const items = Array.from(document.querySelectorAll<HTMLElement>('.directory_page .grid .dir_entry_item'))
+         if (!items.length) return 1
+         const top = items[0].offsetTop
+         let cols = 0
+         for (const it of items) {
+            if (it.offsetTop === top) cols++
+            else break
+         }
+         return cols || 1
+      }
+
+      // Move the cursor by delta relative to the last selected entry and select that single entry.
+      const move = (delta: number) =>
+         setSelectedIDs((prev) => {
+            if (!dirContent.length) return prev
+            const current = prev.length ? dirContent.findIndex((e) => e.path === prev[prev.length - 1]) : -1
+            const next = Math.max(0, Math.min(dirContent.length - 1, current < 0 ? 0 : current + delta))
+            return [dirContent[next].path]
+         })
+
+      // Open the last selected entry (folder navigates, file opens).
+      const open = () =>
+         setSelectedIDs((prev) => {
+            const entry = prev.length ? dirContent.find((e) => e.path === prev[prev.length - 1]) : undefined
+            if (entry) entry.metadata.isDir ? setPath(entry.path) : openFile(entry.path)
+            return prev
+         })
+
       const handleKeyDown = (e: KeyboardEvent) => {
-         if (e.key === 'Escape') setSelectedIDs([])
+         if (isTypingTarget(e.target)) return
+
+         switch (e.key) {
+            case 'Escape':
+               setSelectedIDs([])
+               break
+            case 'ArrowRight':
+               e.preventDefault()
+               move(1)
+               break
+            case 'ArrowLeft':
+               e.preventDefault()
+               move(-1)
+               break
+            case 'ArrowDown':
+               e.preventDefault()
+               move(view === 'grid' ? columns() : 1)
+               break
+            case 'ArrowUp':
+               e.preventDefault()
+               move(view === 'grid' ? -columns() : -1)
+               break
+            case 'Enter':
+               e.preventDefault()
+               open()
+               break
+         }
       }
 
       document.addEventListener('keydown', handleKeyDown)
       return () => document.removeEventListener('keydown', handleKeyDown)
-   }, [])
+   }, [dirContent, view])
 
    const handleOpenInTerminal = () => {
       if (contextMenuElementType === 'dir') openInTerminal(contextMenuElementID)

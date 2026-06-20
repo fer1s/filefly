@@ -39,7 +39,7 @@ Regla: no invertir en tareas `(Tauri 2)` sobre v1. Hacerlas con las APIs nuevas.
 ### Tareas detectadas
 
 - [x] (ahora) Implementar seleccion y foco con click simple. `selectedIDs` en `Directory.tsx`; click selecciona y enfoca, Ctrl/Cmd+click multiselecciona, click en vacio o Escape deselecciona.
-- [ ] (ahora) Implementar navegacion por teclado entre elementos.
+- [x] (ahora) Implementar navegacion por teclado entre elementos. Flechas mueven cursor (grid: salto por columnas; list: +-1), Enter abre, Escape limpia, en `Directory.tsx`.
 - [ ] (ahora) Implementar busqueda incremental por letra para localizar archivos o directorios.
 - [x] (ahora) Definir un estilo claro para el elemento seleccionado. Clase `.selected` (grid y list) en `Directory.css`.
 
