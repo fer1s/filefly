@@ -14,13 +14,16 @@
     "@fortawesome/free-brands-svg-icons": "7.2.0",
     "@fortawesome/free-solid-svg-icons": "7.2.0",
     "@fortawesome/react-fontawesome": "3.3.1",
-    "@tauri-apps/api": "1.5.0",
+    "@tauri-apps/api": "^2",
+    "@tauri-apps/plugin-dialog": "^2",
+    "@tauri-apps/plugin-fs": "^2",
+    "@tauri-apps/plugin-opener": "^2",
     "react": "19.2.7",
     "react-dom": "19.2.7",
     "react-router-dom": "6.21.3"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "1.5.0",
+    "@tauri-apps/cli": "^2",
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
     "@vitejs/plugin-react": "6.0.2",

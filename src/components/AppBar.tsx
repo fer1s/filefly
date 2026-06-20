@@ -1,6 +1,5 @@
-import { appWindow } from '@tauri-apps/api/window'
-import { getCurrent } from '@tauri-apps/api/window'
-import { invoke } from '@tauri-apps/api'
+import { getCurrentWindow } from '@tauri-apps/api/window'
+import { invoke } from '@tauri-apps/api/core'
 
 import { useStateContext } from '../context/StateContext'
 
@@ -13,16 +12,15 @@ const AppBar = () => {
    const { sidebarScrolled } = useStateContext()
 
    const handleMinimize = () => {
-      appWindow.minimize()
+      getCurrentWindow().minimize()
    }
 
    const handleToggleMaximize = () => {
-      appWindow.toggleMaximize()
+      getCurrentWindow().toggleMaximize()
    }
 
    const handleClose = async () => {
-      const window = getCurrent()
-      await invoke('hide_window', { window })
+      await invoke('hide_window')
    }
 
    return (

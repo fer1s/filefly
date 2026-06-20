@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from 'react'
-import { convertFileSrc } from '@tauri-apps/api/tauri'
+import { convertFileSrc } from '@tauri-apps/api/core'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPause, faPlay, faVolumeHigh } from '@fortawesome/free-solid-svg-icons'

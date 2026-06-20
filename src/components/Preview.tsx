@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { convertFileSrc } from '@tauri-apps/api/tauri'
+import { convertFileSrc } from '@tauri-apps/api/core'
 
 import { generateMarkdownPreview } from '../api'
 import { ImageFormats, AudioFormats } from '../constants'

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { convertFileSrc } from '@tauri-apps/api/tauri'
+import { convertFileSrc } from '@tauri-apps/api/core'
 
 import { DirEntry } from '../types'
 import { navigateToPath, formatBytes } from '../utils'
