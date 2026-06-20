@@ -5,7 +5,8 @@ import { convertFileSrc } from '@tauri-apps/api/tauri'
 import { DirEntry } from '../types'
 import { navigateToPath, formatBytes } from '../utils'
 
-import { FaFile, FaFolder } from 'react-icons/fa'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faFile, faFolder } from '@fortawesome/free-solid-svg-icons'
 import { openFile } from '../api'
 
 type DirEntryItemProps = {
@@ -127,7 +128,7 @@ const DirEntryItem = ({
             <>
                {extension && name && <div className="extension">{extension}</div>}
 
-               {ImageFormats.includes(extension.toLowerCase().trim()) ? <img src={convertFileSrc(entry.path)} /> : entry.metadata.isDir ? <FaFolder /> : <FaFile />}
+               {ImageFormats.includes(extension.toLowerCase().trim()) ? <img src={convertFileSrc(entry.path)} /> : <FontAwesomeIcon icon={entry.metadata.isDir ? faFolder : faFile} />}
 
                <div className="dir_entry_info">
                   <h3>{name ? (name.length > 9 ? name.substring(0, 9) + '...' : name) : extension}</h3>
@@ -135,7 +136,7 @@ const DirEntryItem = ({
             </>
          ) : (
             <>
-               <div className="icon">{ImageFormats.includes(extension.toLowerCase().trim()) ? <img src={convertFileSrc(entry.path)} /> : entry.metadata.isDir ? <FaFolder /> : <FaFile />}</div>
+               <div className="icon">{ImageFormats.includes(extension.toLowerCase().trim()) ? <img src={convertFileSrc(entry.path)} /> : <FontAwesomeIcon icon={entry.metadata.isDir ? faFolder : faFile} />}</div>
                <div className="name">
                   <h3>{name ? (name.length > 25 ? name.substring(0, 25) + '...' : name) : extension}</h3>
                </div>

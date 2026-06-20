@@ -44,7 +44,7 @@ Fuentes:
 
 Esta fase debe completarse antes de tocar Motion o React.
 
-Estado: en progreso. `AppBar` y `PathBar` estan migrados y pendientes de validacion visual.
+Estado: en progreso. `AppBar` y `PathBar` estan validados. `SideBar`, `Volumes` y `DirEntry` estan migrados y pendientes de validacion visual.
 
 ### Compatibilidad y decision de Node
 
@@ -63,6 +63,7 @@ Fuentes:
 ### Dependencias propuestas
 
 - `@fortawesome/fontawesome-svg-core`
+- `@fortawesome/free-brands-svg-icons`
 - `@fortawesome/free-solid-svg-icons`
 - `@fortawesome/react-fontawesome`
 
@@ -81,7 +82,7 @@ Se importaran iconos individuales. No se importara el pack completo `fas`, para 
 | `src/pages/Directory.tsx` | `MdOutlineContentCut` | `faScissors` |
 | `src/pages/Directory.tsx` | `MdOutlinePreview` | `faEye` |
 | `src/pages/Volumes.tsx` | `FaHardDrive` | `faHardDrive` |
-| `src/pages/Volumes.tsx` | `AiFillUsb` | `faUsb` |
+| `src/pages/Volumes.tsx` | `AiFillUsb` | `faUsb` de `free-brands-svg-icons` |
 | `src/components/PathBar.tsx` | `RiHomeFill` | `faHouse` |
 | `src/components/PathBar.tsx` | `FaArrowLeft` | `faArrowLeft` |
 | `src/components/PathBar.tsx` | `FaArrowRight` | `faArrowRight` |
@@ -89,7 +90,7 @@ Se importaran iconos individuales. No se importara el pack completo `fas`, para 
 | `src/components/PathBar.tsx` | `HiViewGrid` | `faTableCellsLarge` |
 | `src/components/SideBar.tsx` | `FaFolder` | `faFolder` |
 | `src/components/SideBar.tsx` | `FaHardDrive` | `faHardDrive` |
-| `src/components/SideBar.tsx` | `AiFillUsb` | `faUsb` |
+| `src/components/SideBar.tsx` | `AiFillUsb` | `faUsb` de `free-brands-svg-icons` |
 | `src/components/DirEntry.tsx` | `FaFile` | `faFile` |
 | `src/components/DirEntry.tsx` | `FaFolder` | `faFolder` |
 | `src/components/AudioPreview.tsx` | `IoPlay` | `faPlay` |

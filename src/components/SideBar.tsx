@@ -6,8 +6,9 @@ import { useStateContext } from '../context/StateContext'
 
 import SearchBar from './SearchBar'
 
-import { FaFolder, FaHardDrive } from 'react-icons/fa6'
-import { AiFillUsb } from 'react-icons/ai'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faFolder, faHardDrive } from '@fortawesome/free-solid-svg-icons'
+import { faUsb } from '@fortawesome/free-brands-svg-icons'
 
 import '../styles/components/SideBar.css'
 
@@ -90,7 +91,7 @@ const VolumeItem = ({ volume, setPath, index }: VolumeItemProps) => {
          animate="visible"
          custom={index}
       >
-         {volume.isRemovable ? <AiFillUsb /> : <FaHardDrive />}
+         <FontAwesomeIcon icon={volume.isRemovable ? faUsb : faHardDrive} />
          <div className="details">
             <p>
                <span>{volume.mountPoint}</span> {volume.name}
@@ -106,7 +107,7 @@ const VolumeItem = ({ volume, setPath, index }: VolumeItemProps) => {
 const FolderItem = () => {
    return (
       <div className="folder_item">
-         <FaFolder />
+         <FontAwesomeIcon icon={faFolder} />
          <p>Downloads</p>
       </div>
    )

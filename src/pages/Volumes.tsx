@@ -1,8 +1,9 @@
 import { useStateContext } from '../context/StateContext'
 import { Volume } from '../types'
 
-import { FaHardDrive } from 'react-icons/fa6'
-import { AiFillUsb } from 'react-icons/ai'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faHardDrive } from '@fortawesome/free-solid-svg-icons'
+import { faUsb } from '@fortawesome/free-brands-svg-icons'
 
 import '../styles/pages/Volumes.css'
 
@@ -30,7 +31,7 @@ type VolumeItemProps = {
 const VolumeItem = ({ volume, setPath }: VolumeItemProps) => {
    return (
       <div className="volume_item" onDoubleClick={() => setPath(volume.mountPoint)}>
-         {volume.isRemovable ? <AiFillUsb /> : <FaHardDrive />}
+         <FontAwesomeIcon icon={volume.isRemovable ? faUsb : faHardDrive} />
          <div className="volume_info">
             <h3>
                <span>{volume.mountPoint}</span> {volume.name}
