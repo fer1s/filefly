@@ -24,9 +24,9 @@ Regla: no invertir en tareas `(Tauri 2)` sobre v1. Hacerlas con las APIs nuevas.
 
 ### Tareas detectadas
 
-- [ ] (ahora) Revisar por que `Macintosh HD` aparece como `/` y `/System/Volumes/Data`, y decidir si la UI debe agrupar o diferenciar mejor ambos volumenes APFS.
-- [ ] (ahora) Definir seleccion visual con un click simple.
-- [ ] (ahora) Decidir si entrar debe mantenerse en doble click o cambiarse a click simple.
+- [x] (ahora) Revisar por que `Macintosh HD` aparece como `/` y `/System/Volumes/Data`, y decidir si la UI debe agrupar o diferenciar mejor ambos volumenes APFS. Causa: sysinfo lista el volumen de datos APFS firmlinkeado por separado. Decision: ocultar volumenes sinteticos `/System/Volumes/*` en `App.fetchVolumes`, dejar solo `/` (como Finder).
+- [x] (ahora) Definir seleccion visual con un click simple. Estado `selected` en `Volumes.tsx`; click marca, clase `.selected`, click en vacio deselecciona.
+- [x] (ahora) Decidir si entrar debe mantenerse en doble click o cambiarse a click simple. Decision: se mantiene el doble click para entrar (consistente con las entradas del directorio); el click simple solo selecciona.
 
 ## Directory
 

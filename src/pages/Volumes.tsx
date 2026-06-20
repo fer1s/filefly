@@ -1,3 +1,5 @@
+import { useState } from 'react'
+
 import { useStateContext } from '../context/StateContext'
 import { Volume } from '../types'
 
@@ -9,12 +11,22 @@ import '../styles/pages/Volumes.css'
 
 const Volumes = () => {
    const { volumes, setPath } = useStateContext()
+
+   // Single click selects (visual); double click enters, like the directory entries.
+   const [selected, setSelected] = useState('')
+
    return (
-      <div className="volumes_page">
+      <div className="volumes_page" onClick={(e) => !(e.target as HTMLElement).closest('.volume_item') && setSelected('')}>
          <h1>Volumes</h1>
          <div className="grid">
             {volumes.map((volume) => (
-                <VolumeItem key={`${volume.name}#${volume.mountPoint}`} volume={volume} setPath={setPath} />
+                <VolumeItem
+                   key={`${volume.name}#${volume.mountPoint}`}
+                   volume={volume}
+                   setPath={setPath}
+                   selected={selected === volume.mountPoint}
+                   onSelect={() => setSelected(volume.mountPoint)}
+                />
             ))}
          </div>
       </div>
@@ -26,11 +38,13 @@ export default Volumes
 type VolumeItemProps = {
     volume: Volume
     setPath: (path: string) => void
+    selected: boolean
+    onSelect: () => void
 }
 
-const VolumeItem = ({ volume, setPath }: VolumeItemProps) => {
+const VolumeItem = ({ volume, setPath, selected, onSelect }: VolumeItemProps) => {
    return (
-      <div className="volume_item" onDoubleClick={() => setPath(volume.mountPoint)}>
+      <div className={selected ? 'volume_item selected' : 'volume_item'} onClick={onSelect} onDoubleClick={() => setPath(volume.mountPoint)}>
          <FontAwesomeIcon icon={volume.isRemovable ? faUsb : faHardDrive} />
          <div className="volume_info">
             <h3>

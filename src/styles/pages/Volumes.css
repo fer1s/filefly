@@ -68,3 +68,8 @@
     background-color: rgba(0, 0, 0, 0.2);
     border: 1px solid rgba(255, 255, 255, 0.2);
 }
+
+.volumes_page .volume_item.selected {
+    background-color: rgba(94, 154, 255, 0.18);
+    border: 1px solid rgba(94, 154, 255, 0.6);
+}

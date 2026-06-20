@@ -31,6 +31,10 @@ const App = () => {
    const fetchVolumes = async () => {
         let volumes = await getVolumes()
 
+        // macOS APFS exposes the data volume (/System/Volumes/Data) and other synthetic system
+        // volumes as duplicates of Macintosh HD (/). Hide them; navigating / shows the merged tree.
+        volumes = volumes.filter((v) => !v.mountPoint.startsWith('/System/Volumes/'))
+
         // sort volumes by mount point alphabetically
         volumes.sort((a, b) => a.mountPoint < b.mountPoint ? -1 : a.mountPoint > b.mountPoint ? 1 : 0);
         // sort volumes by type (removable last)
