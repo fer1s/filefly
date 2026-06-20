@@ -1,9 +1,8 @@
-import { RefObject, ReactNode, forwardRef } from 'react'
+import { ReactNode, forwardRef } from 'react'
 import '../styles/components/ContextMenu.css'
 
 // ContextMenu
 interface ContextMenuProps {
-    ref: RefObject<HTMLDivElement>
     children: ReactNode
     contextMenuVisible: boolean
 }

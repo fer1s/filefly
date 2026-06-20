@@ -22,7 +22,7 @@ type DirEntryItemProps = {
    setContextMenuElementID: (id: string) => void
    setContextMenuElementType: (type: 'file' | 'dir' | 'none') => void
 
-   contextMenuRef: React.RefObject<HTMLDivElement>
+   contextMenuRef: React.RefObject<HTMLDivElement | null>
    id: string
 }
 

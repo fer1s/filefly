@@ -169,7 +169,7 @@ La guia oficial de React recomienda actualizar primero a React 18.3. Esta versio
 
 ## Fase 3. Migrar a React 19
 
-Estado: pendiente de instalar React 19 y sus tipos.
+Estado: completada y validada. React 19.2.7, React DOM 19.2.7 y tipos 19 instalados, con build y smoke test correctos.
 
 ### Cambios
 
@@ -193,6 +193,8 @@ Por tanto, no se espera necesitar el codemod general de React 19.
 
 ## Fase 4. Ajustes de tipos React 19
 
+Estado: completada. Los ajustes previstos compilan correctamente con los tipos React 19.
+
 ### Cambios previstos
 
 - Cambiar `React.RefObject<HTMLDivElement>` a `React.RefObject<HTMLDivElement | null>` en `src/components/DirEntry.tsx`.
@@ -208,6 +210,8 @@ Por tanto, no se espera necesitar el codemod general de React 19.
 - Navegacion entre volumenes y directorios.
 
 ## Fase 5. Validacion final
+
+Estado: completada y validada. Build, smoke test Tauri y revision de consola correctos.
 
 El usuario ejecutara los comandos indicados en cada fase.
 
