@@ -132,9 +132,9 @@ Casos observados:
 
 ### Tareas detectadas
 
-- [ ] (Tauri 2) Sustituir la apertura por una implementacion nativa multiplataforma. En v2 usar el plugin `opener` (o `shell`).
-- [ ] (Tauri 2) Tratar las rutas como argumentos, sin interpretarlas mediante shell.
-- [ ] (Tauri 2) Validar archivos con espacios, imagenes, PDF, audio y documentos.
+- [x] (Tauri 2) Sustituir la apertura por una implementacion nativa multiplataforma. `openFile` usa `openPath` de `@tauri-apps/plugin-opener`; comando Rust `open_file` (shell) eliminado.
+- [x] (Tauri 2) Tratar las rutas como argumentos, sin interpretarlas mediante shell. `openPath` recibe la ruta como argumento unico.
+- [ ] (Tauri 2) Validar archivos con espacios, imagenes, PDF, audio y documentos. (pendiente de smoke test)
 - [ ] (Tauri 2) Devolver errores del backend a la interfaz en vez de dejarlos solo en consola. Ligado a la reescritura de `invoke` en v2.
 
 ## Preview
@@ -161,7 +161,7 @@ Casos observados:
 - [x] (ahora) Aumentar ligeramente el espacio horizontal entre cada icono y su texto. `gap` 3px -> 9px en `.ctx_button`.
 - [x] (ahora) Definir un ancho consistente para la columna de iconos y alinear todas las etiquetas. Icono envuelto en `.ctx_icon` (ancho fijo 14px), texto en `.ctx_text`.
 - [x] (ahora) Definir estados disabled para acciones todavia no disponibles. `ContextMenuItem` deriva disabled de la ausencia de `onClick` (override con prop `disabled`) + estilo; Copy/Cut/Rename/Delete/Properties quedan disabled solos hasta tener handler (Tauri 2).
-- [ ] (Tauri 2) Corregir `Open` en macOS. Misma causa que "Apertura de archivos".
+- [x] (Tauri 2) Corregir `Open` en macOS. Resuelto via `openPath` (plugin opener); aplica a menu contextual y doble click.
 - [ ] (Tauri 2) Implementar `Copy`. Requiere `@tauri-apps/plugin-fs` de v2.
 - [ ] (Tauri 2) Implementar `Cut`. Requiere plugin-fs.
 - [ ] (Tauri 2) Implementar `Rename`. Requiere plugin-fs.

@@ -17,6 +17,7 @@
     "core:path:default",
     "core:event:default",
     "opener:default",
+    "opener:allow-open-path",
     "fs:default",
     "dialog:default"
   ]

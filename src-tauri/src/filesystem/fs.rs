@@ -2,7 +2,6 @@ use serde::Serialize;
 use std::{fs};
 use std::path::PathBuf;
 use std::time::SystemTime;
-use std::process::Command;
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -55,18 +54,14 @@ pub fn read_directory(path: &str) -> Vec<DirEntry> {
     result
 }
 
+// Open a file with the OS default application. Logs the path to the Tauri terminal (stdout)
+// and returns the error to the frontend instead of failing silently.
 #[tauri::command]
-pub fn open_file(path: &str) {
-    if cfg!(target_os = "windows") {
-        Command::new("cmd")
-            .args(["/C", path])
-            .spawn()
-            .expect("failed to execute process")
-    } else {
-        Command::new("sh")
-            .arg("-c")
-            .arg(path)
-            .spawn()
-            .expect("failed to execute process")
-    };
+pub fn open_file(path: String) -> Result<(), String> {
+    println!("[open_file] opening: {}", path);
+
+    tauri_plugin_opener::open_path(path, None::<&str>).map_err(|e| {
+        eprintln!("[open_file] error: {}", e);
+        e.to_string()
+    })
 }
