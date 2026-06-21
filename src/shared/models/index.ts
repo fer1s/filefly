@@ -4,15 +4,15 @@ type TimeSince = {
 }
 
 type DiskUsage = {
-    used: number;
+    used: string;
     percentage: number;
 }
 
 type Volume = {
     name: string;
     mountPoint: string;
-    availableSpace: number;
-    totalSpace: number;
+    availableSpace: string;
+    totalSpace: string;
     diskUsage: DiskUsage;
     isRemovable: boolean;
 }
