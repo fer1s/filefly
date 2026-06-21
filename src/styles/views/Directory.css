@@ -1,5 +1,15 @@
 .directory_page {
+  position: relative;
   min-height: 100%;
+}
+
+.directory_page .marquee_box {
+  position: absolute;
+  z-index: 999;
+  pointer-events: none;
+  background-color: var(--color-selection-background);
+  border: var(--border-width-default) solid var(--color-selection-border);
+  border-radius: var(--radius-xs);
 }
 
 .directory_page .rename_input {

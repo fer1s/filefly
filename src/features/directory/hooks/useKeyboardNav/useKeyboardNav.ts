@@ -1,16 +1,8 @@
 import { useEffect, useRef } from "react";
-import type { Dispatch, SetStateAction } from "react";
 
-import { DirEntry } from "@/shared/models";
-import { VIEW_MODE, type ViewMode } from "@/shared/constants";
-
-type Params = {
-  items: DirEntry[];
-  view: ViewMode;
-  enabled: boolean;
-  setSelectedIDs: Dispatch<SetStateAction<string[]>>;
-  onOpen: (entry: DirEntry) => void;
-};
+import { VIEW_MODE } from "@/shared/constants";
+import { TYPEAHEAD_RESET_MS } from "./constants";
+import type { UseKeyboardNavArgs } from "./types";
 
 // Keyboard navigation over the visible entries: arrows move a cursor (and select it), Enter opens,
 // Escape clears, and printable characters drive type-to-find. Disabled while `enabled` is false.
@@ -20,7 +12,7 @@ export const useKeyboardNav = ({
   enabled,
   setSelectedIDs,
   onOpen,
-}: Params) => {
+}: UseKeyboardNavArgs) => {
   const searchBufferRef = useRef("");
   const searchTimerRef = useRef<number | null>(null);
 
@@ -79,7 +71,7 @@ export const useKeyboardNav = ({
       searchBufferRef.current += char.toLowerCase();
       searchTimerRef.current = window.setTimeout(
         () => (searchBufferRef.current = ""),
-        700,
+        TYPEAHEAD_RESET_MS,
       );
 
       const buf = searchBufferRef.current;

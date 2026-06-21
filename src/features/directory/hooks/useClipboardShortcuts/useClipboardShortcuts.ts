@@ -1,13 +1,6 @@
 import { useEffect } from "react";
 
-type Params = {
-  enabled: boolean;
-  selectedIDs: string[];
-  onCopy: (targets: string[]) => void;
-  onCut: (targets: string[]) => void;
-  onPaste: () => void;
-  onDelete: (targets: string[]) => void;
-};
+import type { UseClipboardShortcutsArgs } from "./types";
 
 // Clipboard keyboard shortcuts acting on the current selection: Cmd/Ctrl + C/X/V and
 // Cmd/Ctrl + Backspace/Delete. Ignored while typing in inputs or when disabled.
@@ -18,7 +11,7 @@ export const useClipboardShortcuts = ({
   onCut,
   onPaste,
   onDelete,
-}: Params) => {
+}: UseClipboardShortcutsArgs) => {
   useEffect(() => {
     const handleShortcut = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;

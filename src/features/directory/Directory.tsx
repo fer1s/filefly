@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 
 import { useStateContext } from "@/shared/providers/StateProvider";
 import { ContextMenu, ContextMenuItem } from "@/shared/components/ContextMenu";
@@ -15,6 +15,7 @@ import {
 } from "@/shared/constants";
 import { DirEntryItem } from "./components/DirEntry";
 import { useSelection } from "./hooks/useSelection";
+import { useMarqueeSelection } from "./hooks/useMarqueeSelection";
 import { useKeyboardNav } from "./hooks/useKeyboardNav";
 import { useClipboardShortcuts } from "./hooks/useClipboardShortcuts";
 import { useContextMenu } from "./hooks/useContextMenu";
@@ -66,6 +67,13 @@ const Directory = () => {
   );
 
   const { selectedIDs, setSelectedIDs, handleSelect } = useSelection();
+
+  // Rubber-band selection over the empty floor of the directory.
+  const directoryRef = useRef<HTMLDivElement>(null);
+  const { marquee, onMouseDown: onMarqueeMouseDown } = useMarqueeSelection({
+    containerRef: directoryRef,
+    setSelectedIDs,
+  });
 
   const [detailsPopupVisible, setDetailsPopupVisible] =
     useState<boolean>(false);
@@ -320,12 +328,26 @@ const Directory = () => {
   return (
     <div
       className="directory_page"
+      ref={directoryRef}
+      onMouseDown={onMarqueeMouseDown}
       onClick={(e) =>
         !(e.target as HTMLElement).closest(".dir_entry_item") &&
         setSelectedIDs([])
       }
       onContextMenu={handleEmptyContextMenu}
     >
+      {marquee && (
+        <div
+          className="marquee_box"
+          style={{
+            left: marquee.left,
+            top: marquee.top,
+            width: marquee.width,
+            height: marquee.height,
+          }}
+        />
+      )}
+
       <div className={view}>
         {filtered.map((entry) => (
           <DirEntryItem
