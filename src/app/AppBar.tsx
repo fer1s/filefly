@@ -48,8 +48,21 @@ const AppBar = () => {
     await invoke("hide_window");
   };
 
+  // Double-click the drag region toggles maximize, like a native title bar.
+  // Ignore double-clicks landing on the window buttons.
+  const handleTitleBarDoubleClick = (
+    event: React.MouseEvent<HTMLDivElement>,
+  ) => {
+    if ((event.target as HTMLElement).closest(".window_buttons")) return;
+    handleToggleMaximize();
+  };
+
   return (
-    <div className="app_bar" data-tauri-drag-region>
+    <div
+      className="app_bar"
+      data-tauri-drag-region
+      onDoubleClick={handleTitleBarDoubleClick}
+    >
       <div className={classNames("title", sidebarScrolled && "hidden")}>
         {t.app.name}
       </div>
