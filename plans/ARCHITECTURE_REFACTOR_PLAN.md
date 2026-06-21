@@ -80,23 +80,23 @@ src/
 
 ## Mapeo actual -> objetivo
 
-| Actual | Objetivo |
-| --- | --- |
-| `lib/models/` | `shared/models/` |
-| `lib/services/api.ts` | `shared/services/api.ts` |
-| `lib/managers/FileSystemManager.ts` | `shared/managers/` |
-| `lib/utils/` | `shared/utils/` |
-| `lib/constants.ts` | `shared/constants.ts` |
-| `lib/toast.ts` | `shared/toast.ts` |
-| `lib/routes.ts` | `app/routes.ts` |
-| `providers/StateProvider.tsx` | `shared/providers/StateProvider.tsx` |
-| `components/{ContextMenu,DetailsPopup,Spinner,Toast}` | `shared/components/` |
-| `components/AppBar` | `app/AppBar.tsx` |
-| `App.tsx, AppContent.tsx, main.tsx` | `app/` |
-| `views/Directory.tsx` + `components/{DirEntry,Preview,AudioPreview,Properties}` + `hooks/*` | `features/directory/` |
-| `views/Volumes.tsx` | `features/volumes/` |
-| `components/SideBar` + `components/SearchBar` | `features/sidebar/` |
-| `components/PathBar` | `features/navigation/` |
+| Actual                                                                                      | Objetivo                             |
+| ------------------------------------------------------------------------------------------- | ------------------------------------ |
+| `lib/models/`                                                                               | `shared/models/`                     |
+| `lib/services/api.ts`                                                                       | `shared/services/api.ts`             |
+| `lib/managers/FileSystemManager.ts`                                                         | `shared/managers/`                   |
+| `lib/utils/`                                                                                | `shared/utils/`                      |
+| `lib/constants.ts`                                                                          | `shared/constants.ts`                |
+| `lib/toast.ts`                                                                              | `shared/toast.ts`                    |
+| `lib/routes.ts`                                                                             | `app/routes.ts`                      |
+| `providers/StateProvider.tsx`                                                               | `shared/providers/StateProvider.tsx` |
+| `components/{ContextMenu,DetailsPopup,Spinner,Toast}`                                       | `shared/components/`                 |
+| `components/AppBar`                                                                         | `app/AppBar.tsx`                     |
+| `App.tsx, AppContent.tsx, main.tsx`                                                         | `app/`                               |
+| `views/Directory.tsx` + `components/{DirEntry,Preview,AudioPreview,Properties}` + `hooks/*` | `features/directory/`                |
+| `views/Volumes.tsx`                                                                         | `features/volumes/`                  |
+| `components/SideBar` + `components/SearchBar`                                               | `features/sidebar/`                  |
+| `components/PathBar`                                                                        | `features/navigation/`               |
 
 ## Fase 1. Andamiaje + `shared/`
 

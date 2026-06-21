@@ -1,140 +1,183 @@
-import { useEffect, useState } from 'react'
-import { desktopDir, documentDir, downloadDir, homeDir, pictureDir } from '@tauri-apps/api/path'
+import { useEffect, useState } from "react";
+import {
+  desktopDir,
+  documentDir,
+  downloadDir,
+  homeDir,
+  pictureDir,
+} from "@tauri-apps/api/path";
 
-import { Volume } from '../../shared/models'
-import { useStateContext } from '../../shared/providers/StateProvider'
-import { t } from '../../lang'
+import { Volume } from "../../shared/models";
+import { useStateContext } from "../../shared/providers/StateProvider";
+import { t } from "../../lang";
 
-import SearchBar from './components/SearchBar'
+import SearchBar from "./components/SearchBar";
 
-import { IconDefinition } from '@fortawesome/fontawesome-svg-core'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faAnglesLeft, faAnglesRight, faDesktop, faDownload, faFileLines, faHardDrive, faHouse, faImage } from '@fortawesome/free-solid-svg-icons'
-import { faUsb } from '@fortawesome/free-brands-svg-icons'
+import { IconDefinition } from "@fortawesome/fontawesome-svg-core";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faAnglesLeft,
+  faAnglesRight,
+  faDesktop,
+  faDownload,
+  faFileLines,
+  faHardDrive,
+  faHouse,
+  faImage,
+} from "@fortawesome/free-solid-svg-icons";
+import { faUsb } from "@fortawesome/free-brands-svg-icons";
 
-import '../../styles/components/SideBar.css'
+import "../../styles/components/SideBar.css";
 
-type Pinned = { name: string; path: string; icon: IconDefinition }
+type Pinned = { name: string; path: string; icon: IconDefinition };
 
 type SideBarProps = {
-   collapsed: boolean
-   onToggle: () => void
-}
+  collapsed: boolean;
+  onToggle: () => void;
+};
 
 const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
-   const { volumes, setSidebarScrolled, setPath } = useStateContext()
+  const { volumes, setSidebarScrolled, setPath } = useStateContext();
 
-   const [pinned, setPinned] = useState<Pinned[]>([])
+  const [pinned, setPinned] = useState<Pinned[]>([]);
 
-   // Resolve the standard user directories once and keep only the ones the OS reports.
-   useEffect(() => {
-      const resolvers: { name: string; icon: IconDefinition; resolve: () => Promise<string> }[] = [
-         { name: t.sidebar.home, icon: faHouse, resolve: homeDir },
-         { name: t.sidebar.desktop, icon: faDesktop, resolve: desktopDir },
-         { name: t.sidebar.documents, icon: faFileLines, resolve: documentDir },
-         { name: t.sidebar.downloads, icon: faDownload, resolve: downloadDir },
-         { name: t.sidebar.pictures, icon: faImage, resolve: pictureDir },
-      ]
+  // Resolve the standard user directories once and keep only the ones the OS reports.
+  useEffect(() => {
+    const resolvers: {
+      name: string;
+      icon: IconDefinition;
+      resolve: () => Promise<string>;
+    }[] = [
+      { name: t.sidebar.home, icon: faHouse, resolve: homeDir },
+      { name: t.sidebar.desktop, icon: faDesktop, resolve: desktopDir },
+      { name: t.sidebar.documents, icon: faFileLines, resolve: documentDir },
+      { name: t.sidebar.downloads, icon: faDownload, resolve: downloadDir },
+      { name: t.sidebar.pictures, icon: faImage, resolve: pictureDir },
+    ];
 
-      Promise.all(
-         resolvers.map(async ({ name, icon, resolve }) => {
-            try {
-               // Tauri returns these with a trailing slash; drop it so it matches the rest of the app's paths.
-               const path = (await resolve()).replace(/\/+$/, '')
-               return path ? { name, path, icon } : null
-            } catch {
-               return null
-            }
-         })
-      ).then((items) => setPinned(items.filter((item): item is Pinned => item !== null)))
-   }, [])
-
-   useEffect(() => {
-        const sidebar = document.querySelector('.SideBar')
-        const handleScroll = () => {
-            if (!sidebar) return;
-            setSidebarScrolled(sidebar.scrollTop > 10)
+    Promise.all(
+      resolvers.map(async ({ name, icon, resolve }) => {
+        try {
+          // Tauri returns these with a trailing slash; drop it so it matches the rest of the app's paths.
+          const path = (await resolve()).replace(/\/+$/, "");
+          return path ? { name, path, icon } : null;
+        } catch {
+          return null;
         }
+      }),
+    ).then((items) =>
+      setPinned(items.filter((item): item is Pinned => item !== null)),
+    );
+  }, []);
 
-        if (sidebar) sidebar.addEventListener('scroll', handleScroll)
+  useEffect(() => {
+    const sidebar = document.querySelector(".SideBar");
+    const handleScroll = () => {
+      if (!sidebar) return;
+      setSidebarScrolled(sidebar.scrollTop > 10);
+    };
 
-        return () => {
-            if (!sidebar) return;
-            sidebar.removeEventListener('scroll', handleScroll)
-        }
-   }, [setSidebarScrolled])
+    if (sidebar) sidebar.addEventListener("scroll", handleScroll);
 
-   return (
-      <div className={collapsed ? 'SideBar collapsed' : 'SideBar'}>
+    return () => {
+      if (!sidebar) return;
+      sidebar.removeEventListener("scroll", handleScroll);
+    };
+  }, [setSidebarScrolled]);
 
-         <button className="collapse_toggle" onClick={onToggle} title={collapsed ? t.sidebar.expand : t.sidebar.collapse} aria-label={collapsed ? t.sidebar.expand : t.sidebar.collapse}>
-            <FontAwesomeIcon icon={collapsed ? faAnglesRight : faAnglesLeft} />
-         </button>
+  return (
+    <div className={collapsed ? "SideBar collapsed" : "SideBar"}>
+      <button
+        className="collapse_toggle"
+        onClick={onToggle}
+        title={collapsed ? t.sidebar.expand : t.sidebar.collapse}
+        aria-label={collapsed ? t.sidebar.expand : t.sidebar.collapse}
+      >
+        <FontAwesomeIcon icon={collapsed ? faAnglesRight : faAnglesLeft} />
+      </button>
 
-         {!collapsed && <SearchBar />}
+      {!collapsed && <SearchBar />}
 
-         <section>
-            {!collapsed && <h2>{t.sidebar.pinned}</h2>}
-            <div className="section_content">
-               {pinned.map((item) => (
-                  <FolderItem key={item.path} item={item} setPath={setPath} collapsed={collapsed} />
-               ))}
-            </div>
-         </section>
+      <section>
+        {!collapsed && <h2>{t.sidebar.pinned}</h2>}
+        <div className="section_content">
+          {pinned.map((item) => (
+            <FolderItem
+              key={item.path}
+              item={item}
+              setPath={setPath}
+              collapsed={collapsed}
+            />
+          ))}
+        </div>
+      </section>
 
-         <section>
-            {!collapsed && <h2>{t.sidebar.drives}</h2>}
-            <div className="section_content">
-               {volumes.map((volume, i) => (
-                  <VolumeItem key={`${volume.name}#${volume.mountPoint}`} volume={volume} setPath={setPath} index={i} collapsed={collapsed} />
-               ))}
-            </div>
-         </section>
-      </div>
-   )
-}
+      <section>
+        {!collapsed && <h2>{t.sidebar.drives}</h2>}
+        <div className="section_content">
+          {volumes.map((volume, i) => (
+            <VolumeItem
+              key={`${volume.name}#${volume.mountPoint}`}
+              volume={volume}
+              setPath={setPath}
+              index={i}
+              collapsed={collapsed}
+            />
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+};
 
-export default SideBar
+export default SideBar;
 
 type VolumeItemProps = {
-   volume: Volume
-   setPath: (path: string) => void
-   index: number
-   collapsed: boolean
-}
+  volume: Volume;
+  setPath: (path: string) => void;
+  index: number;
+  collapsed: boolean;
+};
 
 const VolumeItem = ({ volume, setPath, index, collapsed }: VolumeItemProps) => {
-   return (
-      <div
-         className="drive_item"
-         onClick={() => setPath(volume.mountPoint)}
-         style={{ animationDelay: `${index * 40}ms` }}
-         title={collapsed ? `${volume.mountPoint} ${volume.name}` : undefined}
-      >
-         <FontAwesomeIcon icon={volume.isRemovable ? faUsb : faHardDrive} />
-         <div className="details">
-            <p>
-               <span>{volume.mountPoint}</span> {volume.name}
-            </p>
-            <div className="usage">
-               <div className="usage_bar" style={{ width: `${volume.diskUsage.percentage}%` }}></div>
-            </div>
-         </div>
+  return (
+    <div
+      className="drive_item"
+      onClick={() => setPath(volume.mountPoint)}
+      style={{ animationDelay: `${index * 40}ms` }}
+      title={collapsed ? `${volume.mountPoint} ${volume.name}` : undefined}
+    >
+      <FontAwesomeIcon icon={volume.isRemovable ? faUsb : faHardDrive} />
+      <div className="details">
+        <p>
+          <span>{volume.mountPoint}</span> {volume.name}
+        </p>
+        <div className="usage">
+          <div
+            className="usage_bar"
+            style={{ width: `${volume.diskUsage.percentage}%` }}
+          ></div>
+        </div>
       </div>
-   )
-}
+    </div>
+  );
+};
 
 type FolderItemProps = {
-   item: Pinned
-   setPath: (path: string) => void
-   collapsed: boolean
-}
+  item: Pinned;
+  setPath: (path: string) => void;
+  collapsed: boolean;
+};
 
 const FolderItem = ({ item, setPath, collapsed }: FolderItemProps) => {
-   return (
-      <div className="folder_item" onClick={() => setPath(item.path)} title={collapsed ? item.name : undefined}>
-         <FontAwesomeIcon icon={item.icon} />
-         <p>{item.name}</p>
-      </div>
-   )
-}
+  return (
+    <div
+      className="folder_item"
+      onClick={() => setPath(item.path)}
+      title={collapsed ? item.name : undefined}
+    >
+      <FontAwesomeIcon icon={item.icon} />
+      <p>{item.name}</p>
+    </div>
+  );
+};

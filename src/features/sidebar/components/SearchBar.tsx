@@ -1,24 +1,33 @@
-import { useStateContext } from '../../../shared/providers/StateProvider'
-import { t } from '../../../lang'
+import { useStateContext } from "../../../shared/providers/StateProvider";
+import { t } from "../../../lang";
 
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faXmark } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faXmark } from "@fortawesome/free-solid-svg-icons";
 
-import '../../../styles/components/SearchBar.css'
+import "../../../styles/components/SearchBar.css";
 
 const SearchBar = () => {
-  const { search, setSearch } = useStateContext()
+  const { search, setSearch } = useStateContext();
 
   return (
-    <div className='SearchBar'>
-      <input type='text' placeholder={t.sidebar.searchPlaceholder} value={search} onChange={(e) => setSearch(e.target.value)} />
+    <div className="SearchBar">
+      <input
+        type="text"
+        placeholder={t.sidebar.searchPlaceholder}
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+      />
       {search && (
-        <button className='clear' onClick={() => setSearch('')} aria-label={t.sidebar.clearSearch}>
+        <button
+          className="clear"
+          onClick={() => setSearch("")}
+          aria-label={t.sidebar.clearSearch}
+        >
           <FontAwesomeIcon icon={faXmark} />
         </button>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default SearchBar
+export default SearchBar;

@@ -10,13 +10,13 @@ Plan creado el 20 de junio de 2026.
 
 Framer Motion se usa en cinco componentes y siete grupos de animacion:
 
-| Componente | Animacion |
-| --- | --- |
-| `src/components/SideBar.tsx` | Entrada escalonada de drives |
-| `src/components/ContextMenu.tsx` | Opacidad y escala del menu |
+| Componente                        | Animacion                                  |
+| --------------------------------- | ------------------------------------------ |
+| `src/components/SideBar.tsx`      | Entrada escalonada de drives               |
+| `src/components/ContextMenu.tsx`  | Opacidad y escala del menu                 |
 | `src/components/DetailsPopup.tsx` | Opacidad, desplazamiento vertical y escala |
-| `src/components/Preview.tsx` | Backdrop y panel de imagen/Markdown |
-| `src/components/AudioPreview.tsx` | Reproductor y popup de volumen |
+| `src/components/Preview.tsx`      | Backdrop y panel de imagen/Markdown        |
+| `src/components/AudioPreview.tsx` | Reproductor y popup de volumen             |
 
 El proyecto no usa drag, gestos, layout animations, shared layout, scroll animations ni `AnimatePresence`.
 

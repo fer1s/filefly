@@ -8,20 +8,21 @@ Plan creado el 20 de junio de 2026.
 
 ## Baseline (estado actual)
 
-| Pieza | Version / estado |
-| --- | --- |
-| `@tauri-apps/api` | 1.5.0 |
-| `@tauri-apps/cli` | 1.5.0 |
-| `tauri` (crate) | 1.5 (features `path-all`, `protocol-all`, `system-tray`, `window-all`) |
-| `tauri-build` | 1.5 |
-| `tauri-plugin-window-state` | branch v1 (git) |
-| window-vibrancy | 0.4.2 |
-| window-shadows | 0.2.1 |
-| Config | `tauri.conf.json` con `allowlist` |
+| Pieza                       | Version / estado                                                       |
+| --------------------------- | ---------------------------------------------------------------------- |
+| `@tauri-apps/api`           | 1.5.0                                                                  |
+| `@tauri-apps/cli`           | 1.5.0                                                                  |
+| `tauri` (crate)             | 1.5 (features `path-all`, `protocol-all`, `system-tray`, `window-all`) |
+| `tauri-build`               | 1.5                                                                    |
+| `tauri-plugin-window-state` | branch v1 (git)                                                        |
+| window-vibrancy             | 0.4.2                                                                  |
+| window-shadows              | 0.2.1                                                                  |
+| Config                      | `tauri.conf.json` con `allowlist`                                      |
 
 Comandos Rust existentes: `hide_window`, `get_volumes`, `read_directory`, `open_file`, `open_in_terminal`, `md_to_html`.
 
 Usos de la API JS:
+
 - `invoke` desde `@tauri-apps/api` (api.ts, AppBar.tsx).
 - `convertFileSrc` desde `@tauri-apps/api/tauri` (Preview.tsx, DirEntry.tsx, AudioPreview.tsx).
 - `appWindow` / `getCurrent` desde `@tauri-apps/api/window` (AppBar.tsx).

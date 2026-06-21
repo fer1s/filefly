@@ -8,13 +8,13 @@ Plan creado el 20 de junio de 2026.
 
 ## Baseline
 
-| Dependencia | Version inicial |
-| --- | --- |
-| Node.js | 20.20.0 |
-| TypeScript | 5.0.2 |
-| Vite | 4.4.4 |
-| `@vitejs/plugin-react` | 4.0.3 |
-| React | 19.2.7 |
+| Dependencia            | Version inicial |
+| ---------------------- | --------------- |
+| Node.js                | 20.20.0         |
+| TypeScript             | 5.0.2           |
+| Vite                   | 4.4.4           |
+| `@vitejs/plugin-react` | 4.0.3           |
+| React                  | 19.2.7          |
 
 La configuracion actual ya usa ESM, `moduleResolution: bundler`, `isolatedModules` y `jsx: react-jsx`.
 

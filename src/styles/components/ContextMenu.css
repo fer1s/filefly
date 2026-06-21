@@ -1,103 +1,103 @@
 .context_menu {
-    position: absolute;
-    z-index: 1000;
-    max-height: 250px;
-    max-width: 170px;
-    overflow-y: auto;
-    background-color: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(20px);
-    border-radius: 5px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.5);
-    padding: 5px;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: flex-start;
-    gap: 1px;
-    opacity: 0;
-    transform: scale(0.8);
-    visibility: hidden;
-    pointer-events: none;
-    transition:
-        opacity 0.2s ease-in-out,
-        transform 0.2s ease-in-out,
-        visibility 0s linear 0.2s;
+  position: absolute;
+  z-index: 1000;
+  max-height: 250px;
+  max-width: 170px;
+  overflow-y: auto;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(20px);
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.5);
+  padding: 5px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 1px;
+  opacity: 0;
+  transform: scale(0.8);
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 0.2s ease-in-out,
+    transform 0.2s ease-in-out,
+    visibility 0s linear 0.2s;
 }
 
 .context_menu.visible {
-    opacity: 1;
-    transform: scale(1);
-    visibility: visible;
-    pointer-events: auto;
-    transition-delay: 0s;
+  opacity: 1;
+  transform: scale(1);
+  visibility: visible;
+  pointer-events: auto;
+  transition-delay: 0s;
 }
 
 .context_menu .context_menu_item.separator {
-    width: 100%;
-    height: 1px;
-    min-height: 1px;
-    background-color: rgba(255, 255, 255, 0.1);
-    margin: 5px 0;
+  width: 100%;
+  height: 1px;
+  min-height: 1px;
+  background-color: rgba(255, 255, 255, 0.1);
+  margin: 5px 0;
 }
 
 .context_menu .context_menu_item.ctx_button {
-    width: 100%;
-    min-width: 100%;
-    max-width: 100%;
-    max-height: 22px;
-    height: 22px;
-    min-height: 22px;
-    padding: 0 10px;
-    margin: 0;
-    border: none;
-    border-radius: 3px;
-    background-color: transparent;
-    color: rgba(255, 255, 255, 0.8);
-    font-size: 0.75rem;
-    font-weight: 400;
-    cursor: pointer;
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: center;
-    gap: 9px;
-    transition: all 0.2s ease-in-out;
+  width: 100%;
+  min-width: 100%;
+  max-width: 100%;
+  max-height: 22px;
+  height: 22px;
+  min-height: 22px;
+  padding: 0 10px;
+  margin: 0;
+  border: none;
+  border-radius: 3px;
+  background-color: transparent;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.75rem;
+  font-weight: 400;
+  cursor: pointer;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 9px;
+  transition: all 0.2s ease-in-out;
 }
 
 .context_menu .context_menu_item.ctx_button:hover {
-    background-color: rgba(255, 255, 255, 0.05);
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
 /* Fixed-width icon column so every label starts at the same x. */
 .context_menu .context_menu_item.ctx_button .ctx_icon {
-    width: 14px;
-    min-width: 14px;
-    display: inline-flex;
-    justify-content: center;
-    align-items: center;
+  width: 14px;
+  min-width: 14px;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .context_menu .context_menu_item.ctx_button .ctx_text {
-    flex: 1;
-    text-align: left;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  flex: 1;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .context_menu .context_menu_item.ctx_button svg {
-    width: 12.5px;
-    height: 12.5px;
-    color: rgba(255, 255, 255, 0.8);
+  width: 12.5px;
+  height: 12.5px;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .context_menu .context_menu_item.ctx_button:disabled {
-    cursor: not-allowed;
-    opacity: 0.35;
+  cursor: not-allowed;
+  opacity: 0.35;
 }
 
 .context_menu .context_menu_item.ctx_button:disabled:hover {
-    background-color: transparent;
+  background-color: transparent;
 }

@@ -1,1 +1,1 @@
-export { default } from './PathBar'
+export { default } from "./PathBar";

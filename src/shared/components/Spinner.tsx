@@ -1,9 +1,7 @@
-import '../../styles/components/Spinner.css'
+import "../../styles/components/Spinner.css";
 
 const Spinner = () => {
-  return (
-    <span className="loader"></span>
-  )
-}
+  return <span className="loader"></span>;
+};
 
-export default Spinner
+export default Spinner;

@@ -8,24 +8,25 @@ Plan creado el 20 de junio de 2026. Estado global: pendiente (no implementado; l
 
 ## Inventario actual (hardcodeado)
 
-| Accion | Tecla | Scope | Donde |
-| --- | --- | --- | --- |
-| Mover seleccion derecha | ArrowRight | directory | `Directory.tsx` nav effect |
-| Mover seleccion izquierda | ArrowLeft | directory | `Directory.tsx` nav effect |
-| Mover seleccion abajo | ArrowDown | directory | `Directory.tsx` nav effect |
-| Mover seleccion arriba | ArrowUp | directory | `Directory.tsx` nav effect |
-| Abrir item | Enter | directory | `Directory.tsx` nav effect |
-| Limpiar seleccion | Escape | directory | `Directory.tsx` nav effect |
-| Buscar por letra (type-to-find) | caracteres imprimibles | directory | `Directory.tsx` nav effect |
-| Copiar | Cmd/Ctrl + C | directory | `Directory.tsx` shortcuts effect |
-| Cortar | Cmd/Ctrl + X | directory | `Directory.tsx` shortcuts effect |
-| Pegar | Cmd/Ctrl + V | directory | `Directory.tsx` shortcuts effect |
-| Borrar a Papelera | Cmd/Ctrl + Backspace/Delete | directory | `Directory.tsx` shortcuts effect |
-| Preview anterior | ArrowLeft | preview | `Preview.tsx` |
-| Preview siguiente | ArrowRight | preview | `Preview.tsx` |
-| Cerrar preview | Escape | preview | `Preview.tsx` |
+| Accion                          | Tecla                       | Scope     | Donde                            |
+| ------------------------------- | --------------------------- | --------- | -------------------------------- |
+| Mover seleccion derecha         | ArrowRight                  | directory | `Directory.tsx` nav effect       |
+| Mover seleccion izquierda       | ArrowLeft                   | directory | `Directory.tsx` nav effect       |
+| Mover seleccion abajo           | ArrowDown                   | directory | `Directory.tsx` nav effect       |
+| Mover seleccion arriba          | ArrowUp                     | directory | `Directory.tsx` nav effect       |
+| Abrir item                      | Enter                       | directory | `Directory.tsx` nav effect       |
+| Limpiar seleccion               | Escape                      | directory | `Directory.tsx` nav effect       |
+| Buscar por letra (type-to-find) | caracteres imprimibles      | directory | `Directory.tsx` nav effect       |
+| Copiar                          | Cmd/Ctrl + C                | directory | `Directory.tsx` shortcuts effect |
+| Cortar                          | Cmd/Ctrl + X                | directory | `Directory.tsx` shortcuts effect |
+| Pegar                           | Cmd/Ctrl + V                | directory | `Directory.tsx` shortcuts effect |
+| Borrar a Papelera               | Cmd/Ctrl + Backspace/Delete | directory | `Directory.tsx` shortcuts effect |
+| Preview anterior                | ArrowLeft                   | preview   | `Preview.tsx`                    |
+| Preview siguiente               | ArrowRight                  | preview   | `Preview.tsx`                    |
+| Cerrar preview                  | Escape                      | preview   | `Preview.tsx`                    |
 
 Notas:
+
 - ArrowLeft/Right y Escape se reutilizan en dos scopes (directory vs preview). Hoy se resuelve porque el nav de directory hace `return` cuando el preview esta abierto y el preview maneja las suyas. El keymap debe modelar esto con **scopes**.
 - Los caracteres imprimibles (type-to-find) NO son atajos: no deben entrar al keymap, se quedan como caso aparte y siempre tienen prioridad mas baja que un atajo con modificador.
 
@@ -35,21 +36,30 @@ Notas:
 
 ```ts
 type Shortcut = {
-   key: string            // valor de KeyboardEvent.key normalizado, p.ej. 'c', 'ArrowLeft', 'Backspace'
-   mod?: boolean          // Cmd en macOS / Ctrl en otros (se resuelve por plataforma)
-   shift?: boolean
-   alt?: boolean
-}
+  key: string; // valor de KeyboardEvent.key normalizado, p.ej. 'c', 'ArrowLeft', 'Backspace'
+  mod?: boolean; // Cmd en macOS / Ctrl en otros (se resuelve por plataforma)
+  shift?: boolean;
+  alt?: boolean;
+};
 
 type ActionId =
-   | 'nav.left' | 'nav.right' | 'nav.up' | 'nav.down'
-   | 'item.open' | 'selection.clear'
-   | 'clipboard.copy' | 'clipboard.cut' | 'clipboard.paste' | 'fs.delete'
-   | 'preview.prev' | 'preview.next' | 'preview.close'
+  | "nav.left"
+  | "nav.right"
+  | "nav.up"
+  | "nav.down"
+  | "item.open"
+  | "selection.clear"
+  | "clipboard.copy"
+  | "clipboard.cut"
+  | "clipboard.paste"
+  | "fs.delete"
+  | "preview.prev"
+  | "preview.next"
+  | "preview.close";
 
-type Scope = 'directory' | 'preview'
+type Scope = "directory" | "preview";
 
-type Keymap = Record<ActionId, Shortcut[]>   // varias combinaciones por accion (p.ej. Backspace y Delete)
+type Keymap = Record<ActionId, Shortcut[]>; // varias combinaciones por accion (p.ej. Backspace y Delete)
 ```
 
 ### 2. Keymap por defecto
@@ -80,10 +90,10 @@ Cada componente registra el handler de cada `ActionId` que le compete:
 
 ```ts
 const actions: Partial<Record<ActionId, () => void>> = {
-   'clipboard.copy': () => copyTargets(selectedIDs),
-   'fs.delete':      () => deleteTargets(selectedIDs),
-   // ...
-}
+  "clipboard.copy": () => copyTargets(selectedIDs),
+  "fs.delete": () => deleteTargets(selectedIDs),
+  // ...
+};
 ```
 
 Un solo listener de `keydown` por scope hace: `const a = resolveAction(e, keymap, scope); if (a && actions[a]) { e.preventDefault(); actions[a]() }`. El type-to-find se evalua despues, solo si no hubo accion y la tecla es imprimible sin modificador.

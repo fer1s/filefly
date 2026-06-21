@@ -9,31 +9,31 @@ FileFly is a faster file explorer alternative.
 
 ## To-Do List
 
--  [x] Implement main functions
+- [x] Implement main functions
 
-   -  [x] Open
-   -  [x] Open in terminal
-   -  [ ] Copy
-   -  [ ] Cut
-   -  [ ] Delete
-   -  [ ] Rename
+  - [x] Open
+  - [x] Open in terminal
+  - [ ] Copy
+  - [ ] Cut
+  - [ ] Delete
+  - [ ] Rename
 
--  [ ] Make it work offline (font, icons, etc.)
+- [ ] Make it work offline (font, icons, etc.)
 
--  [x] Create a custom context menu (ensure functionality!)
+- [x] Create a custom context menu (ensure functionality!)
 
--  [ ] Refactor code for cleaner structure
+- [ ] Refactor code for cleaner structure
 
--  [x] Fix file names (e.g., .gitignore)
+- [x] Fix file names (e.g., .gitignore)
 
--  [x] Add audio file preview
+- [x] Add audio file preview
 
--  [ ] Add video file preview
+- [ ] Add video file preview
 
--  [x] Add image file preview
+- [x] Add image file preview
 
--  [x] Add markdown file preview
+- [x] Add markdown file preview
 
--  [ ] Manage favorite folders on the sidebar and make them functional
+- [ ] Manage favorite folders on the sidebar and make them functional
 
--  [ ] Ensure the context bar is always visible (if there's not enough space)
+- [ ] Ensure the context bar is always visible (if there's not enough space)

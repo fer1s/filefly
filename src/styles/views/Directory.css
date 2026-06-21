@@ -1,240 +1,240 @@
 .directory_page {
-   min-height: 100%;
+  min-height: 100%;
 }
 
 .directory_page .rename_input {
-   width: 100%;
-   min-width: 0;
-   padding: 2px 4px;
-   background-color: rgba(0, 0, 0, 0.4);
-   border: 1px solid rgba(94, 154, 255, 0.7);
-   border-radius: 3px;
-   color: #fff;
-   font-family: 'Inter', sans-serif;
-   font-size: 0.7rem;
-   font-weight: 400;
-   text-align: center;
-   outline: none;
+  width: 100%;
+  min-width: 0;
+  padding: 2px 4px;
+  background-color: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(94, 154, 255, 0.7);
+  border-radius: 3px;
+  color: #fff;
+  font-family: "Inter", sans-serif;
+  font-size: 0.7rem;
+  font-weight: 400;
+  text-align: center;
+  outline: none;
 }
 
 .directory_page .list .dir_entry_item .name .rename_input {
-   font-size: 0.8rem;
-   text-align: left;
+  font-size: 0.8rem;
+  text-align: left;
 }
 
 .directory_page .no_results {
-   margin-top: 20px;
-   font-size: 0.85rem;
-   font-weight: 400;
-   color: rgba(255, 255, 255, 0.5);
-   user-select: none;
+  margin-top: 20px;
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.5);
+  user-select: none;
 }
 
 .directory_page .grid .dir_entry_item {
-   width: 77px;
-   height: 77px;
-   cursor: pointer;
-   background-color: transparent;
-   border-radius: 5px;
-   border: 1px solid transparent;
-   position: relative;
-   transition: all 0.1s ease-in-out;
+  width: 77px;
+  height: 77px;
+  cursor: pointer;
+  background-color: transparent;
+  border-radius: 5px;
+  border: 1px solid transparent;
+  position: relative;
+  transition: all 0.1s ease-in-out;
 }
 
 .directory_page .grid .dir_entry_item .extension {
-   position: absolute;
-   top: 0;
-   right: 0;
-   z-index: 998;
-   font-size: 0.6rem;
-   font-weight: 400;
-   user-select: none;
-   margin: 5px;
-   background-color: rgb(0, 0, 0);
-   padding: 2px 5px;
-   border-radius: 5px;
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 998;
+  font-size: 0.6rem;
+  font-weight: 400;
+  user-select: none;
+  margin: 5px;
+  background-color: rgb(0, 0, 0);
+  padding: 2px 5px;
+  border-radius: 5px;
 }
 
 .directory_page .grid .dir_entry_item svg {
-   position: absolute;
-   top: 40%;
-   left: 50%;
-   transform: translate(-50%, -50%);
-   font-size: 1.4rem;
-   color: rgba(255, 255, 255, 0.5);
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.4rem;
+  color: rgba(255, 255, 255, 0.5);
 }
 
 .directory_page .grid .dir_entry_item img {
-   position: absolute;
-   top: 35%;
-   left: 50%;
-   transform: translate(-50%, -50%);
-   width: 50%;
-   height: 60%;
-   object-fit: contain;
-   border-radius: 2px;
+  position: absolute;
+  top: 35%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 50%;
+  height: 60%;
+  object-fit: contain;
+  border-radius: 2px;
 }
 
 .directory_page .grid .dir_entry_item .dir_entry_info {
-   position: absolute;
-   bottom: 0;
-   left: 50%;
-   transform: translateX(-50%);
-   width: 100%;
-   height: 30px;
-   display: flex;
-   justify-content: center;
-   align-items: center;
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  height: 30px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .directory_page .grid .dir_entry_item .dir_entry_info h3 {
-   font-size: 0.7rem;
-   font-weight: 400;
-   color: rgba(255, 255, 255, 0.6);
-   user-select: none;
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.6);
+  user-select: none;
 }
 
 .directory_page .grid .dir_entry_item:hover {
-   background-color: rgba(255, 255, 255, 0.05);
-   border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .directory_page .grid .dir_entry_item:hover svg,
 .directory_page .grid .dir_entry_item:hover .dir_entry_info h3 {
-   color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .directory_page .dir_entry_item:focus {
-   outline: none;
+  outline: none;
 }
 
 .directory_page .grid .dir_entry_item.selected {
-   background-color: rgba(94, 154, 255, 0.18);
-   border: 1px solid rgba(94, 154, 255, 0.6);
+  background-color: rgba(94, 154, 255, 0.18);
+  border: 1px solid rgba(94, 154, 255, 0.6);
 }
 
 .directory_page .grid .dir_entry_item.selected svg,
 .directory_page .grid .dir_entry_item.selected .dir_entry_info h3 {
-   color: #fff;
+  color: #fff;
 }
 
 .directory_page .list {
-   padding-bottom: 10px;
+  padding-bottom: 10px;
 }
 
 .directory_page .list .dir_entry_item {
-   width: 100%;
-   height: 30px;
-   display: flex;
-   justify-content: flex-start;
-   align-items: center;
-   cursor: pointer;
-   transition: all 0.1s ease-in-out;
+  width: 100%;
+  height: 30px;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.1s ease-in-out;
 }
 
 .directory_page .list .dir_entry_item .icon {
-   width: 30px;
-   height: 30px;
-   display: flex;
-   justify-content: center;
-   align-items: center;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .directory_page .list .dir_entry_item .icon svg {
-   font-size: 0.9rem;
-   color: rgba(255, 255, 255, 0.5);
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.5);
 }
 
 .directory_page .list .dir_entry_item .icon img {
-   height: 80%;
-   width: 80%;
-   object-fit: contain;
+  height: 80%;
+  width: 80%;
+  object-fit: contain;
 }
 
 .directory_page .list .dir_entry_item .name {
-   width: 50%;
+  width: 50%;
 }
 
 .directory_page .list .dir_entry_item .name h3 {
-   user-select: none;
-   font-size: 0.8rem;
-   font-weight: 400;
-   color: rgba(255, 255, 255, 0.8);
+  user-select: none;
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .directory_page .list .dir_entry_item .size {
-   width: 20%;
-   display: flex;
-   justify-content: center;
-   align-items: center;
+  width: 20%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .directory_page .list .dir_entry_item .size h3 {
-   font-size: 0.6rem;
-   font-weight: 400;
-   color: rgba(255, 255, 255, 0.7);
-   background-color: rgba(0, 0, 0, 0.5);
-   backdrop-filter: blur(50px);
-   border-radius: 5px;
-   padding: 5px;
-   user-select: none;
+  font-size: 0.6rem;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.7);
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(50px);
+  border-radius: 5px;
+  padding: 5px;
+  user-select: none;
 }
 
 .directory_page .list .dir_entry_item .extension {
-   width: 20%;
-   display: flex;
-   justify-content: center;
-   align-items: center;
+  width: 20%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .directory_page .list .dir_entry_item .extension h3 {
-   font-size: 0.8rem;
-   font-weight: 400;
-   color: rgba(255, 255, 255, 0.7);
-   background-color: rgba(0, 0, 0, 0.5);
-   backdrop-filter: blur(50px);
-   border-radius: 5px;
-   padding: 5px;
-   user-select: none;
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.7);
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(50px);
+  border-radius: 5px;
+  padding: 5px;
+  user-select: none;
 }
 
 .directory_page .list .dir_entry_item:nth-child(odd) {
-   background-color: rgba(255, 255, 255, 0.01);
+  background-color: rgba(255, 255, 255, 0.01);
 }
 
 .directory_page .list .dir_entry_item:nth-child(even) {
-   background-color: rgba(0, 0, 0, 0.1);
+  background-color: rgba(0, 0, 0, 0.1);
 }
 
 .directory_page .list .dir_entry_item:hover {
-   background-color: rgba(255, 255, 255, 0.05);
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
 .directory_page .list .dir_entry_item:hover .icon svg,
 .directory_page .list .dir_entry_item:hover .name h3,
 .directory_page .list .dir_entry_item:hover .size h3,
 .directory_page .list .dir_entry_item:hover .extension h3 {
-   color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .directory_page .list .dir_entry_item.selected {
-   background-color: rgba(94, 154, 255, 0.18);
-   box-shadow: inset 2px 0 0 rgba(94, 154, 255, 0.9);
+  background-color: rgba(94, 154, 255, 0.18);
+  box-shadow: inset 2px 0 0 rgba(94, 154, 255, 0.9);
 }
 
 .directory_page .list .dir_entry_item.selected .icon svg,
 .directory_page .list .dir_entry_item.selected .name h3,
 .directory_page .list .dir_entry_item.selected .size h3,
 .directory_page .list .dir_entry_item.selected .extension h3 {
-   color: #fff;
+  color: #fff;
 }
 
 .directory_page .list .dir_entry_item:first-child {
-   border-top-left-radius: 5px;
-   border-top-right-radius: 5px;
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
 }
 
 .directory_page .list .dir_entry_item:last-child {
-   border-bottom-left-radius: 5px;
-   border-bottom-right-radius: 5px;
+  border-bottom-left-radius: 5px;
+  border-bottom-right-radius: 5px;
 }

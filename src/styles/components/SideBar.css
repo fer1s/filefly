@@ -1,199 +1,199 @@
 .SideBar {
-    height: 100vh;
-    overflow-y: auto;
-    overflow-x: hidden;
-    background-color: rgba(18, 18, 18, 0.8);
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background-color: rgba(18, 18, 18, 0.8);
 }
 
 .SideBar .collapse_toggle {
-    width: 28px;
-    min-width: 28px;
-    height: 28px;
-    margin-bottom: 15px;
-    margin-left: auto;
-    padding: 0;
-    background-color: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 5px;
-    display: grid;
-    place-items: center;
-    cursor: pointer;
-    transition: all 0.2s ease-in-out;
+  width: 28px;
+  min-width: 28px;
+  height: 28px;
+  margin-bottom: 15px;
+  margin-left: auto;
+  padding: 0;
+  background-color: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 5px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
 }
 
 .SideBar .collapse_toggle:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .SideBar .collapse_toggle svg {
-    font-size: 0.8rem;
-    color: rgba(255, 255, 255, 0.5);
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.5);
 }
 
 .SideBar .collapse_toggle:hover svg {
-    color: #fff;
+  color: #fff;
 }
 
 /* Collapsed: icon-only rail. Center icons and hide text. */
 .SideBar.collapsed .collapse_toggle {
-    margin-left: 0;
+  margin-left: 0;
 }
 
 .SideBar.collapsed section .section_content .folder_item,
 .SideBar.collapsed section .section_content .drive_item {
-    justify-content: center;
-    padding: 10px 0;
-    height: 35px;
+  justify-content: center;
+  padding: 10px 0;
+  height: 35px;
 }
 
 .SideBar.collapsed section .section_content .folder_item p,
 .SideBar.collapsed section .section_content .drive_item .details {
-    display: none;
+  display: none;
 }
 
 .SideBar section {
-    width: 100%;
-    margin-bottom: 30px;
+  width: 100%;
+  margin-bottom: 30px;
 }
 
 .SideBar section:last-child {
-    margin-bottom: 0;
+  margin-bottom: 0;
 }
 
 .SideBar section h2 {
-    margin-bottom: 10px;
-    font-size: 0.8rem;
-    font-weight: 500;
-    user-select: none;
+  margin-bottom: 10px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  user-select: none;
 }
 
 .SideBar section .section_content {
-    width: 100%;
+  width: 100%;
 }
 
 .SideBar section .section_content .folder_item {
-    width: 100%;
-    height: 35px;
-    cursor: pointer;
-    border-radius: 5px;
-    border: 1px solid transparent;
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 10px;
-    padding: 10px;
-    transition: all 0.2s ease-in-out;
+  width: 100%;
+  height: 35px;
+  cursor: pointer;
+  border-radius: 5px;
+  border: 1px solid transparent;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 10px;
+  transition: all 0.2s ease-in-out;
 }
 
 .SideBar section .section_content .folder_item svg {
-    font-size: 0.8rem;
-    color: rgba(255, 255, 255, 0.5);
-    transition: all 0.2s ease-in-out;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.5);
+  transition: all 0.2s ease-in-out;
 }
 
 .SideBar section .section_content .folder_item p {
-    font-size: 0.8rem;
-    font-weight: 400;
-    color: rgba(255, 255, 255, 0.5);
-    user-select: none;
-    transition: all 0.2s ease-in-out;
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.5);
+  user-select: none;
+  transition: all 0.2s ease-in-out;
 }
 
 .SideBar section .section_content .folder_item:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .SideBar section .section_content .folder_item:hover svg,
 .SideBar section .section_content .folder_item:hover p {
-    color: #fff;
+  color: #fff;
 }
 
 .SideBar section .section_content .drive_item {
-    width: 100%;
-    height: 40px;
-    cursor: pointer;
-    border-radius: 5px;
-    border: 1px solid transparent;
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 10px;
-    padding: 10px;
-    transition: all 0.2s ease-in-out;
-    animation: drive-item-enter 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+  width: 100%;
+  height: 40px;
+  cursor: pointer;
+  border-radius: 5px;
+  border: 1px solid transparent;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 10px;
+  transition: all 0.2s ease-in-out;
+  animation: drive-item-enter 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 @keyframes drive-item-enter {
-    from {
-        opacity: 0;
-        transform: translateX(-100%) scale(0.7);
-    }
+  from {
+    opacity: 0;
+    transform: translateX(-100%) scale(0.7);
+  }
 
-    to {
-        opacity: 1;
-        transform: translateX(0) scale(1);
-    }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
 }
 
 .SideBar section .section_content .drive_item svg {
-    font-size: 0.8rem;
-    color: rgba(255, 255, 255, 0.5);
-    transition: all 0.2s ease-in-out;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.5);
+  transition: all 0.2s ease-in-out;
 }
 
 .SideBar section .section_content .drive_item .details {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: center;
-    gap: 5px;
-    width: calc(100% - 40px);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 5px;
+  width: calc(100% - 40px);
 }
 
 .SideBar section .section_content .drive_item .details p {
-    font-size: 0.7rem;
-    font-weight: 400;
-    color: rgba(255, 255, 255, 0.5);
-    user-select: none;
-    transition: all 0.2s ease-in-out;
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.5);
+  user-select: none;
+  transition: all 0.2s ease-in-out;
 }
 
 .SideBar section .section_content .drive_item .details p span {
-    font-weight: 600;
+  font-weight: 600;
 }
 
 .SideBar section .section_content .drive_item .details .usage {
-    width: 90%;
-    height: 3px;
-    border-radius: 5px;
-    background-color: rgba(255, 255, 255, 0.1);
-    overflow: hidden;
+  width: 90%;
+  height: 3px;
+  border-radius: 5px;
+  background-color: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
 }
 
 .SideBar section .section_content .drive_item .details .usage .usage_bar {
-    height: 100%;
-    border-radius: 0 5px 5px 0;
-    background-color: rgba(255, 255, 255, 0.5);
+  height: 100%;
+  border-radius: 0 5px 5px 0;
+  background-color: rgba(255, 255, 255, 0.5);
 }
 
 .SideBar section .section_content .drive_item:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .SideBar section .section_content .drive_item:hover svg,
 .SideBar section .section_content .drive_item:hover .details p {
-    color: #fff;
+  color: #fff;
 }
 
 .SideBar section .section_content .folder_item,
 .SideBar section .section_content .drive_item {
-    margin-bottom: 8px;
+  margin-bottom: 8px;
 }
 
 .SideBar section .section_content .folder_item:last-child,
 .SideBar section .section_content .drive_item:last-child {
-    margin-bottom: 0;
+  margin-bottom: 0;
 }

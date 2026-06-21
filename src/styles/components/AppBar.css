@@ -1,67 +1,67 @@
 .app_bar {
-   width: 100%;
-   height: 35px;
-   position: absolute;
-   top: 0;
-   left: 0;
-   z-index: 999;
-   display: flex;
-   align-items: center;
-   justify-content: space-between;
+  width: 100%;
+  height: 35px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .app_bar .title {
-   padding-left: 15px;
-   display: flex;
-   align-items: center;
-   justify-content: center;
-   gap: 10px;
-   user-select: none;
-   pointer-events: none;
-   font-size: 0.8rem;
-   transition: all 0.2s ease-in-out;
+  padding-left: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  user-select: none;
+  pointer-events: none;
+  font-size: 0.8rem;
+  transition: all 0.2s ease-in-out;
 }
 
 .app_bar .title.hidden {
-   opacity: 0;
-   pointer-events: none;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .app_bar .window_buttons {
-   height: 35px;
-   width: calc(35px * 3);
-   display: flex;
-   align-items: center;
-   justify-content: flex-end;
+  height: 35px;
+  width: calc(35px * 3);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
 }
 
 .app_bar .window_buttons button {
-   width: 35px;
-   height: 35px;
-   display: flex;
-   align-items: center;
-   justify-content: center;
-   background-color: transparent;
-   border: none;
-   outline: none;
-   cursor: pointer;
-   transition: all 0.2s ease-in-out;
+  width: 35px;
+  height: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
 }
 
 .app_bar .window_buttons button svg {
-   color: rgba(255, 255, 255, 0.5);
-   transition: all 0.2s ease-in-out;
-   font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+  transition: all 0.2s ease-in-out;
+  font-size: 0.75rem;
 }
 
 .app_bar .window_buttons button:hover {
-   background-color: rgba(255, 255, 255, 0.05);
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
 .app_bar .window_buttons button:hover svg {
-   color: #fff;
+  color: #fff;
 }
 
 .app_bar .window_buttons button:last-child:hover {
-   background-color: rgb(255, 38, 38);
+  background-color: rgb(255, 38, 38);
 }

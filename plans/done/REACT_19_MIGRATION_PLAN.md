@@ -18,18 +18,18 @@ Analisis realizado el 20 de junio de 2026.
 
 React 19 es viable en este proyecto, pero no debe instalarse de forma aislada.
 
-| Dependencia | Version actual | Compatibilidad con React 19 | Accion |
-| --- | --- | --- | --- |
-| `react` | 18.2.0 | Requiere actualizacion | Subir junto con `react-dom` |
-| `react-dom` | 18.2.0 | Requiere actualizacion | Mantener la misma version que React |
-| `@types/react` | 18.2.15 | No corresponde a React 19 | Subir a 19.x |
-| `@types/react-dom` | 18.2.7 | No corresponde a React 19 | Subir a 19.x |
-| `framer-motion` | Eliminado | Bloqueo resuelto | Animaciones migradas a CSS y validadas |
-| `react-router-dom` | 6.21.3 | Compatible: acepta React `>=16.8` | Mantener inicialmente |
-| `react-icons` | 4.11.0 | Compatible, pero se retirara antes | Migrar a Font Awesome |
-| `@vitejs/plugin-react` | 4.0.3 | Sin restriccion directa sobre React | Mantener inicialmente |
-| TypeScript | 5.0.2 | Compatible con los tipos React 19 para TS 5.0 | Mantener inicialmente |
-| Tauri | 1.5.0 | Independiente de React | Sin cambios |
+| Dependencia            | Version actual | Compatibilidad con React 19                   | Accion                                 |
+| ---------------------- | -------------- | --------------------------------------------- | -------------------------------------- |
+| `react`                | 18.2.0         | Requiere actualizacion                        | Subir junto con `react-dom`            |
+| `react-dom`            | 18.2.0         | Requiere actualizacion                        | Mantener la misma version que React    |
+| `@types/react`         | 18.2.15        | No corresponde a React 19                     | Subir a 19.x                           |
+| `@types/react-dom`     | 18.2.7         | No corresponde a React 19                     | Subir a 19.x                           |
+| `framer-motion`        | Eliminado      | Bloqueo resuelto                              | Animaciones migradas a CSS y validadas |
+| `react-router-dom`     | 6.21.3         | Compatible: acepta React `>=16.8`             | Mantener inicialmente                  |
+| `react-icons`          | 4.11.0         | Compatible, pero se retirara antes            | Migrar a Font Awesome                  |
+| `@vitejs/plugin-react` | 4.0.3          | Sin restriccion directa sobre React           | Mantener inicialmente                  |
+| TypeScript             | 5.0.2          | Compatible con los tipos React 19 para TS 5.0 | Mantener inicialmente                  |
+| Tauri                  | 1.5.0          | Independiente de React                        | Sin cambios                            |
 
 El proyecto ya usa el JSX transform moderno mediante `jsx: "react-jsx"`, requisito de React 19.
 
@@ -71,34 +71,34 @@ Se importaran iconos individuales. No se importara el pack completo `fas`, para 
 
 ### Mapeo propuesto
 
-| Archivo | React Icons actual | Font Awesome propuesto |
-| --- | --- | --- |
-| `src/pages/Directory.tsx` | `IoOpenOutline` | `faArrowUpRightFromSquare` |
-| `src/pages/Directory.tsx` | `IoCopyOutline` | `faCopy` |
-| `src/pages/Directory.tsx` | `IoInformation` | `faCircleInfo` |
-| `src/pages/Directory.tsx` | `CgTerminal` | `faTerminal` |
-| `src/pages/Directory.tsx` | `MdOutlineDriveFileRenameOutline` | `faFilePen` |
-| `src/pages/Directory.tsx` | `MdDeleteOutline` | `faTrash` |
-| `src/pages/Directory.tsx` | `MdOutlineContentCut` | `faScissors` |
-| `src/pages/Directory.tsx` | `MdOutlinePreview` | `faEye` |
-| `src/pages/Volumes.tsx` | `FaHardDrive` | `faHardDrive` |
-| `src/pages/Volumes.tsx` | `AiFillUsb` | `faUsb` de `free-brands-svg-icons` |
-| `src/components/PathBar.tsx` | `RiHomeFill` | `faHouse` |
-| `src/components/PathBar.tsx` | `FaArrowLeft` | `faArrowLeft` |
-| `src/components/PathBar.tsx` | `FaArrowRight` | `faArrowRight` |
-| `src/components/PathBar.tsx` | `HiViewList` | `faList` |
-| `src/components/PathBar.tsx` | `HiViewGrid` | `faTableCellsLarge` |
-| `src/components/SideBar.tsx` | `FaFolder` | `faFolder` |
-| `src/components/SideBar.tsx` | `FaHardDrive` | `faHardDrive` |
-| `src/components/SideBar.tsx` | `AiFillUsb` | `faUsb` de `free-brands-svg-icons` |
-| `src/components/DirEntry.tsx` | `FaFile` | `faFile` |
-| `src/components/DirEntry.tsx` | `FaFolder` | `faFolder` |
-| `src/components/AudioPreview.tsx` | `IoPlay` | `faPlay` |
-| `src/components/AudioPreview.tsx` | `IoPause` | `faPause` |
-| `src/components/AudioPreview.tsx` | `IoVolumeMedium` | `faVolumeHigh` |
-| `src/components/AppBar.tsx` | `VscChromeMinimize` | `faMinus` |
-| `src/components/AppBar.tsx` | `VscChromeMaximize` | `faWindowMaximize` |
-| `src/components/AppBar.tsx` | `VscChromeClose` | `faXmark` |
+| Archivo                           | React Icons actual                | Font Awesome propuesto             |
+| --------------------------------- | --------------------------------- | ---------------------------------- |
+| `src/pages/Directory.tsx`         | `IoOpenOutline`                   | `faArrowUpRightFromSquare`         |
+| `src/pages/Directory.tsx`         | `IoCopyOutline`                   | `faCopy`                           |
+| `src/pages/Directory.tsx`         | `IoInformation`                   | `faCircleInfo`                     |
+| `src/pages/Directory.tsx`         | `CgTerminal`                      | `faTerminal`                       |
+| `src/pages/Directory.tsx`         | `MdOutlineDriveFileRenameOutline` | `faFilePen`                        |
+| `src/pages/Directory.tsx`         | `MdDeleteOutline`                 | `faTrash`                          |
+| `src/pages/Directory.tsx`         | `MdOutlineContentCut`             | `faScissors`                       |
+| `src/pages/Directory.tsx`         | `MdOutlinePreview`                | `faEye`                            |
+| `src/pages/Volumes.tsx`           | `FaHardDrive`                     | `faHardDrive`                      |
+| `src/pages/Volumes.tsx`           | `AiFillUsb`                       | `faUsb` de `free-brands-svg-icons` |
+| `src/components/PathBar.tsx`      | `RiHomeFill`                      | `faHouse`                          |
+| `src/components/PathBar.tsx`      | `FaArrowLeft`                     | `faArrowLeft`                      |
+| `src/components/PathBar.tsx`      | `FaArrowRight`                    | `faArrowRight`                     |
+| `src/components/PathBar.tsx`      | `HiViewList`                      | `faList`                           |
+| `src/components/PathBar.tsx`      | `HiViewGrid`                      | `faTableCellsLarge`                |
+| `src/components/SideBar.tsx`      | `FaFolder`                        | `faFolder`                         |
+| `src/components/SideBar.tsx`      | `FaHardDrive`                     | `faHardDrive`                      |
+| `src/components/SideBar.tsx`      | `AiFillUsb`                       | `faUsb` de `free-brands-svg-icons` |
+| `src/components/DirEntry.tsx`     | `FaFile`                          | `faFile`                           |
+| `src/components/DirEntry.tsx`     | `FaFolder`                        | `faFolder`                         |
+| `src/components/AudioPreview.tsx` | `IoPlay`                          | `faPlay`                           |
+| `src/components/AudioPreview.tsx` | `IoPause`                         | `faPause`                          |
+| `src/components/AudioPreview.tsx` | `IoVolumeMedium`                  | `faVolumeHigh`                     |
+| `src/components/AppBar.tsx`       | `VscChromeMinimize`               | `faMinus`                          |
+| `src/components/AppBar.tsx`       | `VscChromeMaximize`               | `faWindowMaximize`                 |
+| `src/components/AppBar.tsx`       | `VscChromeClose`                  | `faXmark`                          |
 
 El icono comentado `CgToolbox` se mapearia a `faToolbox` si vuelve a activarse.
 

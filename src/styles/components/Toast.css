@@ -1,44 +1,44 @@
 .toasts {
-   position: fixed;
-   bottom: 15px;
-   right: 15px;
-   z-index: 2000;
-   display: flex;
-   flex-direction: column;
-   align-items: flex-end;
-   gap: 8px;
-   pointer-events: none;
+  position: fixed;
+  bottom: 15px;
+  right: 15px;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  pointer-events: none;
 }
 
 .toasts .toast {
-   max-width: 320px;
-   padding: 10px 14px;
-   border-radius: 6px;
-   font-size: 0.78rem;
-   font-weight: 400;
-   color: #fff;
-   background-color: rgba(40, 40, 40, 0.95);
-   border: 1px solid rgba(255, 255, 255, 0.12);
-   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
-   backdrop-filter: blur(20px);
-   cursor: pointer;
-   pointer-events: auto;
-   word-break: break-word;
-   animation: toast-enter 0.2s ease-out;
+  max-width: 320px;
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: #fff;
+  background-color: rgba(40, 40, 40, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(20px);
+  cursor: pointer;
+  pointer-events: auto;
+  word-break: break-word;
+  animation: toast-enter 0.2s ease-out;
 }
 
 .toasts .toast.error {
-   background-color: rgba(120, 30, 30, 0.95);
-   border: 1px solid rgba(255, 80, 80, 0.5);
+  background-color: rgba(120, 30, 30, 0.95);
+  border: 1px solid rgba(255, 80, 80, 0.5);
 }
 
 @keyframes toast-enter {
-   from {
-      opacity: 0;
-      transform: translateY(10px);
-   }
-   to {
-      opacity: 1;
-      transform: translateY(0);
-   }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

@@ -1,25 +1,30 @@
-import { ToastType } from '../toast'
-import { t } from '../../lang'
+import { ToastType } from "../toast";
+import { t } from "../../lang";
 
-import '../../styles/components/Toast.css'
+import "../../styles/components/Toast.css";
 
-export type ToastData = { id: number; message: string; type: ToastType }
+export type ToastData = { id: number; message: string; type: ToastType };
 
 type ToastsProps = {
-   toasts: ToastData[]
-   onDismiss: (id: number) => void
-}
+  toasts: ToastData[];
+  onDismiss: (id: number) => void;
+};
 
 const Toasts = ({ toasts, onDismiss }: ToastsProps) => {
-   return (
-      <div className="toasts">
-         {toasts.map((toast) => (
-            <div key={toast.id} className={`toast ${toast.type}`} onClick={() => onDismiss(toast.id)} title={t.common.dismiss}>
-               {toast.message}
-            </div>
-         ))}
-      </div>
-   )
-}
+  return (
+    <div className="toasts">
+      {toasts.map((toast) => (
+        <div
+          key={toast.id}
+          className={`toast ${toast.type}`}
+          onClick={() => onDismiss(toast.id)}
+          title={t.common.dismiss}
+        >
+          {toast.message}
+        </div>
+      ))}
+    </div>
+  );
+};
 
-export default Toasts
+export default Toasts;
