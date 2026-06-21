@@ -30,6 +30,7 @@ fn main() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            filesystem::volumes::get_host_name,
             filesystem::volumes::get_volumes,
             filesystem::fs::read_directory,
             filesystem::fs::open_file,

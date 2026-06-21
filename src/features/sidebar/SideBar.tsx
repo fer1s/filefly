@@ -4,61 +4,81 @@ import { classNames } from "@/shared/utils";
 import { t } from "@/lang";
 
 import { usePinnedFolders } from "./hooks/usePinnedFolders";
-import SearchBar from "./components/SearchBar";
+import { useHostName } from "./hooks/useHostName";
+import { useRecentPaths } from "./hooks/useRecentPaths";
+import SidebarSection from "./components/SidebarSection";
 import VolumeItem from "./components/VolumeItem";
 import FolderItem from "./components/FolderItem";
+import { getPathLabel } from "./utils";
 
-import { faAnglesLeft, faAnglesRight } from "@fortawesome/free-solid-svg-icons";
+import { faBars, faFolder } from "@fortawesome/free-solid-svg-icons";
 
 import "@/styles/components/SideBar.css";
 
 import type { SideBarProps } from "./types";
 
 const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
-  const { volumes, setPath } = useStateContext();
+  const { fs, path, volumes, setPath } = useStateContext();
 
+  const hostName = useHostName(fs);
   const pinned = usePinnedFolders();
+  const recentPaths = useRecentPaths(path);
+  const recent = recentPaths.map((recentPath) => ({
+    name: getPathLabel(recentPath),
+    path: recentPath,
+    icon: faFolder,
+  }));
 
   return (
     <div className={classNames("SideBar", collapsed && "collapsed")}>
-      <IconButton
-        icon={collapsed ? faAnglesRight : faAnglesLeft}
-        className="collapse_toggle"
-        onClick={onToggle}
-        title={collapsed ? t.sidebar.expand : t.sidebar.collapse}
-        aria-label={collapsed ? t.sidebar.expand : t.sidebar.collapse}
-      />
+      <div className="sidebar_header">
+        <IconButton
+          icon={faBars}
+          className="collapse_toggle"
+          onClick={onToggle}
+          title={collapsed ? t.sidebar.expand : t.sidebar.collapse}
+          aria-label={collapsed ? t.sidebar.expand : t.sidebar.collapse}
+        />
+        <span className="host_name">{hostName}</span>
+      </div>
 
-      {!collapsed && <SearchBar />}
+      <SidebarSection title={t.sidebar.recent} hideWhenCollapsed>
+        {recent.map((item) => (
+          <FolderItem
+            key={item.path}
+            item={item}
+            setPath={setPath}
+            collapsed={collapsed}
+          />
+        ))}
+      </SidebarSection>
 
-      <section>
-        {!collapsed && <h2>{t.sidebar.pinned}</h2>}
-        <div className="section_content">
-          {pinned.map((item) => (
-            <FolderItem
-              key={item.path}
-              item={item}
-              setPath={setPath}
-              collapsed={collapsed}
-            />
-          ))}
-        </div>
-      </section>
+      <SidebarSection title={t.sidebar.pinned}>
+        {pinned.map((item) => (
+          <FolderItem
+            key={item.path}
+            item={item}
+            setPath={setPath}
+            collapsed={collapsed}
+          />
+        ))}
+      </SidebarSection>
 
-      <section>
-        {!collapsed && <h2>{t.sidebar.drives}</h2>}
-        <div className="section_content">
-          {volumes.map((volume, i) => (
-            <VolumeItem
-              key={`${volume.name}#${volume.mountPoint}`}
-              volume={volume}
-              setPath={setPath}
-              index={i}
-              collapsed={collapsed}
-            />
-          ))}
-        </div>
-      </section>
+      <SidebarSection title={t.sidebar.volumes}>
+        {volumes.map((volume, i) => (
+          <VolumeItem
+            key={`${volume.name}#${volume.mountPoint}`}
+            volume={volume}
+            setPath={setPath}
+            index={i}
+            collapsed={collapsed}
+          />
+        ))}
+      </SidebarSection>
+
+      <SidebarSection title={t.sidebar.location}>
+        <p className="section_todo">{t.sidebar.todo}</p>
+      </SidebarSection>
     </div>
   );
 };

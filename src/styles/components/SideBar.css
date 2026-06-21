@@ -5,11 +5,28 @@
   background-color: var(--color-background-sidebar);
 }
 
+.SideBar .sidebar_header {
+  width: 100%;
+  margin-bottom: var(--space-4);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2-5);
+}
+
+.SideBar .sidebar_header .host_name {
+  min-width: var(--space-0);
+  overflow: hidden;
+  color: var(--color-text-tertiary);
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .SideBar .collapse_toggle {
   width: var(--size-control-medium);
   min-width: var(--size-control-medium);
   height: var(--size-control-medium);
-  margin-bottom: var(--space-4);
   margin-left: auto;
   padding: var(--space-0);
   background-color: var(--color-overlay-soft);
@@ -37,7 +54,12 @@
 
 /* Collapsed: icon-only rail. Center icons and hide text. */
 .SideBar.collapsed .collapse_toggle {
-  margin-left: var(--space-0);
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.SideBar.collapsed .sidebar_header .host_name {
+  display: none;
 }
 
 .SideBar.collapsed section .section_content .folder_item,
@@ -50,26 +72,6 @@
 .SideBar.collapsed section .section_content .folder_item p,
 .SideBar.collapsed section .section_content .drive_item .details {
   display: none;
-}
-
-.SideBar section {
-  width: 100%;
-  margin-bottom: var(--space-8);
-}
-
-.SideBar section:last-child {
-  margin-bottom: var(--space-0);
-}
-
-.SideBar section h2 {
-  margin-bottom: var(--space-2-5);
-  font-size: 0.8rem;
-  font-weight: 500;
-  user-select: none;
-}
-
-.SideBar section .section_content {
-  width: 100%;
 }
 
 .SideBar section .section_content .folder_item {
@@ -88,14 +90,14 @@
 
 .SideBar section .section_content .folder_item svg {
   font-size: 0.8rem;
-  color: var(--color-text-muted);
+  color: var(--color-text-tertiary);
   transition: all 0.2s ease-in-out;
 }
 
 .SideBar section .section_content .folder_item p {
   font-size: 0.8rem;
   font-weight: 400;
-  color: var(--color-text-muted);
+  color: var(--color-text-tertiary);
   user-select: none;
   transition: all 0.2s ease-in-out;
 }
@@ -139,7 +141,7 @@
 
 .SideBar section .section_content .drive_item svg {
   font-size: 0.8rem;
-  color: var(--color-text-muted);
+  color: var(--color-text-tertiary);
   transition: all 0.2s ease-in-out;
 }
 
@@ -155,7 +157,7 @@
 .SideBar section .section_content .drive_item .details p {
   font-size: 0.7rem;
   font-weight: 400;
-  color: var(--color-text-muted);
+  color: var(--color-text-tertiary);
   user-select: none;
   transition: all 0.2s ease-in-out;
 }

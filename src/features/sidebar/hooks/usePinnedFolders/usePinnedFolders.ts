@@ -18,11 +18,11 @@ import {
   faImage,
 } from "@fortawesome/free-solid-svg-icons";
 
-import type { Pinned } from "../../types";
+import type { SidebarPathItem } from "../../types";
 
 // Resolve the standard user directories once and keep only the ones the OS reports.
 export const usePinnedFolders = () => {
-  const [pinned, setPinned] = useState<Pinned[]>([]);
+  const [pinned, setPinned] = useState<SidebarPathItem[]>([]);
 
   useEffect(() => {
     const resolvers: {
@@ -48,7 +48,9 @@ export const usePinnedFolders = () => {
         }
       }),
     ).then((items) =>
-      setPinned(items.filter((item): item is Pinned => item !== null)),
+      setPinned(
+        items.filter((item): item is SidebarPathItem => item !== null),
+      ),
     );
   }, []);
 

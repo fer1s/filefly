@@ -4,6 +4,9 @@ import { notify, TOAST_TYPE } from "@/shared/toast";
 import { t } from "@/lang";
 import { Volume, DirEntry } from "@/shared/models";
 
+export const getHostName = async (): Promise<string | null> =>
+  await invoke("get_host_name");
+
 // Get the user's disks (volumes)
 export const getVolumes = async (): Promise<Volume[]> =>
   await invoke("get_volumes");

@@ -32,6 +32,11 @@ fn format_disk_usage(available_space: &u64, &total_space: &u64) -> DiskUsage {
 }
 
 #[tauri::command]
+pub fn get_host_name() -> Option<String> {
+    System::host_name()
+}
+
+#[tauri::command]
 pub fn get_volumes() -> Vec<Volume> {
     let mut sys = System::new_all();
     sys.refresh_all();

@@ -4,6 +4,10 @@ import { DirEntry, Volume } from "@/shared/models";
 // Encapsulates all filesystem domain operations. Views/components consume this through the provider
 // instead of calling the Tauri service (`api`) directly. Also owns data shaping (filtering, sorting).
 export class FileSystemManager {
+  getHostName(): Promise<string | null> {
+    return api.getHostName();
+  }
+
   // List real volumes. macOS APFS exposes synthetic system volumes that duplicate Macintosh HD (/),
   // so they are filtered out. Sorted by mount point, with removable drives last.
   async listVolumes(): Promise<Volume[]> {

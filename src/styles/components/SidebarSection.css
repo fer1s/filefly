@@ -1,0 +1,47 @@
+.SideBar .SidebarSection {
+  width: 100%;
+  margin-bottom: var(--space-8);
+}
+
+.SideBar .SidebarSection:last-child {
+  margin-bottom: var(--space-0);
+}
+
+.SideBar .SidebarSection h2 {
+  height: var(--size-control-medium);
+  margin-bottom: var(--space-2-5);
+  padding: var(--space-0) var(--space-2-5);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2-5);
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  user-select: none;
+}
+
+.SideBar.collapsed .SidebarSection {
+  margin-bottom: var(--space-0);
+}
+
+.SideBar.collapsed .SidebarSection.hide_when_collapsed {
+  display: none;
+}
+
+.SideBar.collapsed .SidebarSection h2 {
+  display: none;
+}
+
+.SideBar .SidebarSection .section_content {
+  width: 100%;
+}
+
+.SideBar .SidebarSection .section_todo {
+  padding: var(--space-2-5);
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+}
+
+.SideBar.collapsed .SidebarSection .section_todo {
+  display: none;
+}

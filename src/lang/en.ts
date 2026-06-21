@@ -40,8 +40,11 @@ export const en = {
     extension: "Extension",
   },
   sidebar: {
+    recent: "Recent",
     pinned: "Pinned",
-    drives: "Drives",
+    volumes: "Volumes",
+    location: "Location",
+    todo: "TODO",
     searchPlaceholder: "Search...",
     clearSearch: "Clear search",
     collapse: "Collapse sidebar",

@@ -1,7 +1,7 @@
-import type { Pinned } from "../../types";
+import type { SidebarPathItem } from "../../types";
 
 export type FolderItemProps = {
-  item: Pinned;
+  item: SidebarPathItem;
   setPath: (path: string) => void;
   collapsed: boolean;
 };
