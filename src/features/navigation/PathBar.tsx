@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 
-import { useStateContext } from '../shared/providers/StateProvider'
+import { useStateContext } from '../../shared/providers/StateProvider'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowLeft, faArrowRight, faArrowUp, faHouse, faList, faTableCellsLarge } from '@fortawesome/free-solid-svg-icons'
 
-import '../styles/components/PathBar.css'
+import '../../styles/components/PathBar.css'
 
 const PathBar = () => {
    const { path, setPath, view, setView } = useStateContext()

@@ -1,17 +1,17 @@
 import { useEffect, useState } from 'react'
 import { desktopDir, documentDir, downloadDir, homeDir, pictureDir } from '@tauri-apps/api/path'
 
-import { Volume } from '../shared/models'
-import { useStateContext } from '../shared/providers/StateProvider'
+import { Volume } from '../../shared/models'
+import { useStateContext } from '../../shared/providers/StateProvider'
 
-import SearchBar from './SearchBar'
+import SearchBar from './components/SearchBar'
 
 import { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faAnglesLeft, faAnglesRight, faDesktop, faDownload, faFileLines, faHardDrive, faHouse, faImage } from '@fortawesome/free-solid-svg-icons'
 import { faUsb } from '@fortawesome/free-brands-svg-icons'
 
-import '../styles/components/SideBar.css'
+import '../../styles/components/SideBar.css'
 
 type Pinned = { name: string; path: string; icon: IconDefinition }
 

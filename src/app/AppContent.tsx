@@ -1,8 +1,8 @@
 import { Routes, Route } from 'react-router-dom'
 
-import PathBar from '../components/PathBar'
+import PathBar from '../features/navigation'
 
-import Volumes from '../views/Volumes'
+import Volumes from '../features/volumes'
 import Directory from '../features/directory'
 
 import { ROUTES } from './routes'

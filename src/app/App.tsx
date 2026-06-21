@@ -4,7 +4,7 @@ import { useNavigate, useLocation, NavigateFunction, Location } from 'react-rout
 import { StateProvider } from '../shared/providers/StateProvider'
 
 import AppBar from './AppBar'
-import SideBar from '../components/SideBar'
+import SideBar from '../features/sidebar'
 import Toasts, { ToastData } from '../shared/components/Toast'
 
 import AppContent from './AppContent'
