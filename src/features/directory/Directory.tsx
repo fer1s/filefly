@@ -1,8 +1,11 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 
 import { useStateContext } from "@/shared/providers/StateProvider";
-import { ContextMenu, ContextMenuItem } from "@/shared/components/ContextMenu";
-import DetailsPopup from "@/shared/components/DetailsPopup";
+import {
+  ContextMenu,
+  ContextMenuItem,
+} from "@/shared/components/patterns/ContextMenu";
+import Popup from "@/shared/components/patterns/Popup";
 import { notify, TOAST_TYPE } from "@/shared/toast";
 import { t } from "@/lang";
 import { ask } from "@tauri-apps/plugin-dialog";
@@ -477,7 +480,7 @@ const Directory = () => {
         )}
       </ContextMenu>
 
-      <DetailsPopup visible={detailsPopupVisible} title={t.details.title}>
+      <Popup visible={detailsPopupVisible} title={t.details.title}>
         <h3>
           {t.details.type}{" "}
           <span>
@@ -504,7 +507,7 @@ const Directory = () => {
             </span>
           </h3>
         )}
-      </DetailsPopup>
+      </Popup>
 
       <Preview
         fileType={previewFileType}

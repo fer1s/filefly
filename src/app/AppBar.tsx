@@ -3,12 +3,12 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { invoke } from "@tauri-apps/api/core";
 
 import { useStateContext } from "@/shared/providers/StateProvider";
+import IconButton from "@/shared/components/elements/IconButton";
 import { classNames } from "@/shared/utils";
 import { t } from "@/lang";
 
 import "@/styles/components/AppBar.css";
 
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faMinus,
   faWindowMaximize,
@@ -68,17 +68,12 @@ const AppBar = () => {
       </div>
 
       <div className="window_buttons">
-        <button onClick={handleMinimize}>
-          <FontAwesomeIcon icon={faMinus} />
-        </button>
-        <button onClick={handleToggleMaximize}>
-          <FontAwesomeIcon
-            icon={isMaximized ? faWindowRestore : faWindowMaximize}
-          />
-        </button>
-        <button onClick={handleClose}>
-          <FontAwesomeIcon icon={faXmark} />
-        </button>
+        <IconButton icon={faMinus} onClick={handleMinimize} />
+        <IconButton
+          icon={isMaximized ? faWindowRestore : faWindowMaximize}
+          onClick={handleToggleMaximize}
+        />
+        <IconButton icon={faXmark} onClick={handleClose} />
       </div>
     </div>
   );

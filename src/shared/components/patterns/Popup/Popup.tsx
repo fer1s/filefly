@@ -1,14 +1,14 @@
 import { classNames } from "@/shared/utils";
 
-import "@/styles/components/DetailsPopup.css";
+import "@/styles/components/Popup.css";
 
-import type { DetailsPopupProps } from "./types";
+import type { PopupProps } from "./types";
 
-const DetailsPopup = ({ visible, title, children }: DetailsPopupProps) => (
-  <div className={classNames("details_popup", "shadow", visible && "visible")}>
+const Popup = ({ visible, title, children }: PopupProps) => (
+  <div className={classNames("popup", "shadow", visible && "visible")}>
     <div className="title">{title}</div>
     <div className="content">{children}</div>
   </div>
 );
 
-export default DetailsPopup;
+export default Popup;

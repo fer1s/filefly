@@ -10,7 +10,9 @@ import { StateProvider } from "@/shared/providers/StateProvider";
 
 import AppBar from "./AppBar";
 import SideBar from "@/features/sidebar";
-import Toasts, { ToastData } from "@/shared/components/Toast";
+import ToastStack, {
+  type ToastData,
+} from "@/shared/components/patterns/ToastStack";
 
 import AppContent from "./AppContent";
 
@@ -174,7 +176,7 @@ const App = () => {
         />
         <AppContent />
       </div>
-      <Toasts
+      <ToastStack
         toasts={toasts}
         onDismiss={(id) => setToasts((prev) => prev.filter((t) => t.id !== id))}
       />

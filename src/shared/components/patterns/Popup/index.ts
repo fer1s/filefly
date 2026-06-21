@@ -1,2 +1,2 @@
-export { default } from "./DetailsPopup";
-export type { DetailsPopupProps } from "./types";
+export { default } from "./Popup";
+export type { PopupProps } from "./types";

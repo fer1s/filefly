@@ -77,7 +77,9 @@ src/
     routes.ts           # Centralized routes (as const)
 
   shared/               # Generic / cross-feature building blocks
-    components/          # Reusable UI used by multiple features
+    components/
+      elements/          # Domain-agnostic UI primitives (Button, Spinner, Toast)
+      patterns/          # Reusable compositions of elements (Dialog, Popup, ContextMenu)
     hooks/               # Reusable hooks used by multiple features
     providers/           # App-wide providers and context wiring
     models/              # Shared/generic types
@@ -106,6 +108,11 @@ Rules:
 
 - Put code in a `features/<feature>/` folder when it belongs to one domain feature.
 - Promote code to `shared/` only when it is reused across features or is genuinely generic.
+- Keep `shared/components/elements/` limited to domain-agnostic UI primitives.
+- Put reusable compositions of elements in `shared/components/patterns/`.
+- Keep domain compositions (for example, directory properties or file preview) inside their
+  feature even when they consume shared patterns.
+- Page templates and layout shells belong in `app/layout/`, not in `shared/components/`.
 - A feature must not import the internals of another feature; cross-feature reuse goes through
   `shared/` (or a feature's public `index.ts`).
 - The composition root in `app/` wires providers, routing and layouts; it may depend on features

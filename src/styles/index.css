@@ -97,7 +97,9 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .context_menu,
-  .details_popup,
+  .popup,
+  .dialog_backdrop,
+  .dialog,
   .preview_backdrop,
   .preview_container,
   .audio_preview,

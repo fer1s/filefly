@@ -1,4 +1,4 @@
-import { classNames } from "@/shared/utils";
+import Button from "@/shared/components/elements/Button";
 
 import type { ContextMenuItemProps } from "./types";
 
@@ -17,13 +17,13 @@ export const ContextMenuItem = ({
   return isSeparator ? (
     <div className="context_menu_item separator"></div>
   ) : (
-    <button
+    <Button
       className="context_menu_item ctx_button"
       onClick={onClick}
       disabled={isDisabled}
     >
       <span className="ctx_icon">{icon}</span>
       <span className="ctx_text">{text}</span>
-    </button>
+    </Button>
   );
 };

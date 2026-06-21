@@ -1,6 +1,6 @@
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 
-export interface DetailsPopupProps {
+export interface PopupProps {
   visible: boolean;
   title: string;
   children: ReactNode;

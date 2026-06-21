@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import { convertFileSrc } from "@tauri-apps/api/core";
 
 import { useStateContext } from "@/shared/providers/StateProvider";
+import Button from "@/shared/components/elements/Button";
+import IconButton from "@/shared/components/elements/IconButton";
+import Spinner from "@/shared/components/elements/Spinner";
 import {
   AUDIO_FORMATS,
   IMAGE_FORMATS,
@@ -11,9 +14,7 @@ import { classNames } from "@/shared/utils";
 import { t } from "@/lang";
 
 import AudioPreview from "../AudioPreview";
-import Spinner from "@/shared/components/Spinner";
 
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faChevronLeft,
   faChevronRight,
@@ -95,27 +96,25 @@ const Preview = ({
         >
           <div className="preview_header">
             <div className="preview_nav">
-              <button
+              <IconButton
+                icon={faChevronLeft}
                 className="nav_btn"
                 onClick={onPrev}
                 disabled={!hasPrev}
                 aria-label={t.common.previous}
-              >
-                <FontAwesomeIcon icon={faChevronLeft} />
-              </button>
-              <button
+              />
+              <IconButton
+                icon={faChevronRight}
                 className="nav_btn"
                 onClick={onNext}
                 disabled={!hasNext}
                 aria-label={t.common.next}
-              >
-                <FontAwesomeIcon icon={faChevronRight} />
-              </button>
+              />
             </div>
             <h4>{t.common.preview}</h4>
-            <button onClick={() => setPreviewVisible(false)}>
+            <Button onClick={() => setPreviewVisible(false)}>
               {t.common.close}
-            </button>
+            </Button>
           </div>
           <div
             className={classNames(

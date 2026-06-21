@@ -44,7 +44,9 @@ src/
     layout/              # AppLayout (shell AppBar + Sidebar + contenido)
     routes.ts
   shared/
-    components/           # ContextMenu, DetailsPopup, Spinner, Toast (UI genérica)
+    components/
+      elements/           # Button, IconButton, Spinner, Toast
+      patterns/           # ContextMenu, Dialog, Popup, ToastStack
     providers/            # StateProvider (estado global de la app)
     services/             # api.ts (Tauri invoke)
     managers/             # FileSystemManager

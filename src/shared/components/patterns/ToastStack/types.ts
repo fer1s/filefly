@@ -1,8 +1,6 @@
-import { ToastType } from "@/shared/toast";
+import type { ToastData } from "@/shared/components/elements/Toast";
 
-export type ToastData = { id: number; message: string; type: ToastType };
-
-export type ToastsProps = {
+export type ToastStackProps = {
   toasts: ToastData[];
   onDismiss: (id: number) => void;
 };

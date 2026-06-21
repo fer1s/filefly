@@ -1,4 +1,4 @@
-.details_popup {
+.popup {
   position: absolute;
   z-index: 999;
   bottom: var(--space-0);
@@ -24,7 +24,7 @@
     visibility 0s linear 0.1s;
 }
 
-.details_popup.visible {
+.popup.visible {
   transform: translate(-50%, 0) scale(1);
   opacity: 1;
   visibility: visible;
@@ -32,7 +32,7 @@
   transition-delay: 0s;
 }
 
-.details_popup .title {
+.popup .title {
   background-color: var(--color-surface-popover);
   backdrop-filter: blur(var(--blur-large));
   border-radius: var(--radius-sm);
@@ -43,7 +43,7 @@
   font-size: 0.8rem;
 }
 
-.details_popup .content {
+.popup .content {
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -51,7 +51,7 @@
   gap: var(--space-1);
 }
 
-.details_popup .content h3 {
+.popup .content h3 {
   font-size: 0.9rem;
   font-weight: 500;
   color: var(--color-text-secondary);
@@ -62,7 +62,7 @@
   gap: var(--space-1-5);
 }
 
-.details_popup .content h3 span {
+.popup .content h3 span {
   font-size: 0.7rem;
   font-weight: 400;
   color: var(--color-text-muted);

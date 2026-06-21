@@ -1,10 +1,10 @@
 import { useState } from "react";
 
 import { useStateContext } from "@/shared/providers/StateProvider";
+import IconButton from "@/shared/components/elements/IconButton";
 import { VIEW_MODE } from "@/shared/constants";
 import { t } from "@/lang";
 
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faArrowLeft,
   faArrowRight,
@@ -43,29 +43,25 @@ const PathBar = () => {
 
   return (
     <div className="PathBar">
-      <button onClick={goHome} className="shadow">
-        <FontAwesomeIcon icon={faHouse} />
-      </button>
+      <IconButton icon={faHouse} onClick={goHome} className="shadow" />
 
       <div className="controls shadow">
-        <button onClick={goBack} disabled={!canGoBack}>
-          <FontAwesomeIcon icon={faArrowLeft} />
-        </button>
-        <button onClick={goForward} disabled={!canGoForward}>
-          <FontAwesomeIcon icon={faArrowRight} />
-        </button>
-        <button onClick={goUp} disabled={path === ""}>
-          <FontAwesomeIcon icon={faArrowUp} />
-        </button>
+        <IconButton icon={faArrowLeft} onClick={goBack} disabled={!canGoBack} />
+        <IconButton
+          icon={faArrowRight}
+          onClick={goForward}
+          disabled={!canGoForward}
+        />
+        <IconButton icon={faArrowUp} onClick={goUp} disabled={path === ""} />
       </div>
 
       <PathInput key={path} path={path} onCommit={setPath} />
 
-      <button className="shadow" onClick={switchView}>
-        <FontAwesomeIcon
-          icon={view === VIEW_MODE.GRID ? faList : faTableCellsLarge}
-        />
-      </button>
+      <IconButton
+        icon={view === VIEW_MODE.GRID ? faList : faTableCellsLarge}
+        className="shadow"
+        onClick={switchView}
+      />
     </div>
   );
 };

@@ -1,25 +1,21 @@
-import { classNames } from "@/shared/utils";
-import { t } from "@/lang";
+import Toast from "@/shared/components/elements/Toast";
 
-import "@/styles/components/Toast.css";
+import "@/styles/components/ToastStack.css";
 
-import type { ToastsProps } from "./types";
+import type { ToastStackProps } from "./types";
 
-const Toasts = ({ toasts, onDismiss }: ToastsProps) => {
+const ToastStack = ({ toasts, onDismiss }: ToastStackProps) => {
   return (
     <div className="toasts">
       {toasts.map((toast) => (
-        <div
+        <Toast
           key={toast.id}
-          className={classNames("toast", toast.type)}
-          onClick={() => onDismiss(toast.id)}
-          title={t.common.dismiss}
-        >
-          {toast.message}
-        </div>
+          toast={toast}
+          onDismiss={onDismiss}
+        />
       ))}
     </div>
   );
 };
 
-export default Toasts;
+export default ToastStack;

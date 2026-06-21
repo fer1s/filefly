@@ -1,4 +1,5 @@
 import { useStateContext } from "@/shared/providers/StateProvider";
+import IconButton from "@/shared/components/elements/IconButton";
 import { classNames } from "@/shared/utils";
 import { t } from "@/lang";
 
@@ -8,7 +9,6 @@ import SearchBar from "./components/SearchBar";
 import VolumeItem from "./components/VolumeItem";
 import FolderItem from "./components/FolderItem";
 
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faAnglesLeft, faAnglesRight } from "@fortawesome/free-solid-svg-icons";
 
 import "@/styles/components/SideBar.css";
@@ -23,14 +23,13 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
 
   return (
     <div className={classNames("SideBar", collapsed && "collapsed")}>
-      <button
+      <IconButton
+        icon={collapsed ? faAnglesRight : faAnglesLeft}
         className="collapse_toggle"
         onClick={onToggle}
         title={collapsed ? t.sidebar.expand : t.sidebar.collapse}
         aria-label={collapsed ? t.sidebar.expand : t.sidebar.collapse}
-      >
-        <FontAwesomeIcon icon={collapsed ? faAnglesRight : faAnglesLeft} />
-      </button>
+      />
 
       {!collapsed && <SearchBar />}
 
