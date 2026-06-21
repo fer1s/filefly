@@ -1,6 +1,16 @@
 .directory_page {
   position: relative;
-  min-height: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Scrollable entry area; the status bar stays pinned below it. */
+.directory_page .directory_content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .directory_page .marquee_box {

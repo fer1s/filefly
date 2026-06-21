@@ -1,8 +1,5 @@
 .directory_page .status_bar {
-  position: sticky;
-  bottom: 0;
-  left: 0;
-  z-index: 1000;
+  flex-shrink: 0;
   display: flex;
   gap: var(--space-4);
   padding: var(--space-1-5) var(--space-2);

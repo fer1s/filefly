@@ -331,10 +331,11 @@ const Directory = () => {
       className="directory_page"
       ref={directoryRef}
       onMouseDown={onMarqueeMouseDown}
-      onClick={(e) =>
-        !(e.target as HTMLElement).closest(".dir_entry_item") &&
-        setSelectedIDs([])
-      }
+      onClick={(e) => {
+        const el = e.target as HTMLElement;
+        if (!el.closest(".dir_entry_item") && !el.closest(".status_bar"))
+          setSelectedIDs([]);
+      }}
       onContextMenu={handleEmptyContextMenu}
     >
       {marquee && (
@@ -349,33 +350,35 @@ const Directory = () => {
         />
       )}
 
-      <div className={view}>
-        {filtered.map((entry) => (
-          <DirEntryItem
-            key={`${entry.name}#${entry.path}`}
-            entry={entry}
-            setPath={setPath}
-            contextMenuRef={contextMenuRef}
-            id={entry.path}
-            view={view}
-            selected={selectedIDs.includes(entry.path)}
-            onSelect={(e) => handleSelect(entry.path, e)}
-            renaming={renamingID === entry.path}
-            onRename={(newName) => handleRenameSubmit(entry.path, newName)}
-            onCancelRename={() => setRenamingID("")}
-            setHighlitedElementID={setHighlitedElementID}
-            setHighlitedElementType={setHighlitedElementType}
-            setDetailsPopupVisible={setDetailsPopupVisible}
-            setContextMenuVisible={setContextMenuVisible}
-            setContextMenuElementID={setContextMenuElementID}
-            setContextMenuElementType={setContextMenuElementType}
-          />
-        ))}
-      </div>
+      <div className="directory_content">
+        <div className={view}>
+          {filtered.map((entry) => (
+            <DirEntryItem
+              key={`${entry.name}#${entry.path}`}
+              entry={entry}
+              setPath={setPath}
+              contextMenuRef={contextMenuRef}
+              id={entry.path}
+              view={view}
+              selected={selectedIDs.includes(entry.path)}
+              onSelect={(e) => handleSelect(entry.path, e)}
+              renaming={renamingID === entry.path}
+              onRename={(newName) => handleRenameSubmit(entry.path, newName)}
+              onCancelRename={() => setRenamingID("")}
+              setHighlitedElementID={setHighlitedElementID}
+              setHighlitedElementType={setHighlitedElementType}
+              setDetailsPopupVisible={setDetailsPopupVisible}
+              setContextMenuVisible={setContextMenuVisible}
+              setContextMenuElementID={setContextMenuElementID}
+              setContextMenuElementType={setContextMenuElementType}
+            />
+          ))}
+        </div>
 
-      {search && filtered.length === 0 && (
-        <p className="no_results">{t.directory.noResults(search)}</p>
-      )}
+        {search && filtered.length === 0 && (
+          <p className="no_results">{t.directory.noResults(search)}</p>
+        )}
+      </div>
 
       <StatusBar total={filtered.length} selected={selectedIDs.length} />
 

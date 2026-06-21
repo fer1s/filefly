@@ -16,8 +16,11 @@ export const useMarqueeSelection = ({
   const onMouseDown = useCallback(
     (e: ReactMouseEvent) => {
       if (e.button !== 0) return;
-      // Only start from empty floor; clicks on an entry are handled by the entry.
-      if ((e.target as HTMLElement).closest(".dir_entry_item")) return;
+      // Only start from empty floor; entries handle their own clicks and the
+      // status bar is not a selection surface.
+      const target = e.target as HTMLElement;
+      if (target.closest(".dir_entry_item") || target.closest(".status_bar"))
+        return;
 
       const container = containerRef.current;
       if (!container) return;

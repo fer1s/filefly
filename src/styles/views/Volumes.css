@@ -1,3 +1,9 @@
+.volumes_page {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
 .volumes_page .grid .volume_item {
   width: var(--size-volume-card-width);
   height: var(--size-volume-card-height);
