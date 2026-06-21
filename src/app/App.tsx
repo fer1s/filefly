@@ -168,6 +168,7 @@ const App = () => {
         <SideBar
           collapsed={sidebarCollapsed}
           onToggle={() => setSidebarCollapsed((c) => !c)}
+          visitedPaths={pathHistory.stack}
         />
         <AppContent />
       </div>

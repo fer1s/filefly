@@ -9,4 +9,5 @@ export type SidebarPathItem = {
 export type SideBarProps = {
   collapsed: boolean;
   onToggle: () => void;
+  visitedPaths: readonly string[];
 };

@@ -5,11 +5,10 @@ import { t } from "@/lang";
 
 import { usePinnedFolders } from "./hooks/usePinnedFolders";
 import { useHostName } from "./hooks/useHostName";
-import { useRecentPaths } from "./hooks/useRecentPaths";
 import SidebarSection from "./components/SidebarSection";
 import VolumeItem from "./components/VolumeItem";
 import FolderItem from "./components/FolderItem";
-import { getPathLabel } from "./utils";
+import { getPathLabel, getRecentPaths } from "./utils";
 
 import { faBars, faFolder } from "@fortawesome/free-solid-svg-icons";
 
@@ -17,12 +16,12 @@ import "@/styles/components/SideBar.css";
 
 import type { SideBarProps } from "./types";
 
-const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
+const SideBar = ({ collapsed, onToggle, visitedPaths }: SideBarProps) => {
   const { fs, path, volumes, setPath } = useStateContext();
 
   const hostName = useHostName(fs);
   const pinned = usePinnedFolders();
-  const recentPaths = useRecentPaths(path);
+  const recentPaths = getRecentPaths(path, visitedPaths);
   const recent = recentPaths.map((recentPath) => ({
     name: getPathLabel(recentPath),
     path: recentPath,
