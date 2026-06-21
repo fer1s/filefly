@@ -14,8 +14,6 @@ export const initialState: State = {
   canGoForward: false,
   goBack: () => {},
   goForward: () => {},
-  sidebarScrolled: false,
-  setSidebarScrolled: () => {},
   dirContent: [],
   setDirContent: () => {},
   view: VIEW_MODE.GRID,

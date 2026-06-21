@@ -11,11 +11,6 @@ use tauri::Manager;
 #[cfg(target_os = "windows")]
 use window_vibrancy::apply_acrylic;
 
-#[tauri::command]
-fn hide_window(window: tauri::Window) {
-    window.hide().unwrap();
-}
-
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_window_state::Builder::default().build())
@@ -35,7 +30,6 @@ fn main() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
-            hide_window,
             filesystem::volumes::get_volumes,
             filesystem::fs::read_directory,
             filesystem::fs::open_file,

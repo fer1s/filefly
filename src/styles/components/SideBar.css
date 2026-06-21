@@ -44,7 +44,7 @@
 .SideBar.collapsed section .section_content .drive_item {
   justify-content: center;
   padding: var(--space-2-5) var(--space-0);
-  height: var(--size-app-bar);
+  height: var(--size-sidebar-item);
 }
 
 .SideBar.collapsed section .section_content .folder_item p,
@@ -74,7 +74,7 @@
 
 .SideBar section .section_content .folder_item {
   width: 100%;
-  height: var(--size-app-bar);
+  height: var(--size-sidebar-item);
   cursor: pointer;
   border-radius: var(--radius-sm);
   border: var(--border-width-default) solid transparent;

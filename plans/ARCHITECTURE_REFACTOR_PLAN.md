@@ -40,8 +40,7 @@ src/
 src/
   app/
     App.tsx, AppContent.tsx, main.tsx
-    AppBar.tsx            # chrome de ventana (min/max/close)
-    layout/              # AppLayout (shell AppBar + Sidebar + contenido)
+    layout/              # AppLayout (shell Sidebar + contenido)
     routes.ts
   shared/
     components/
@@ -93,7 +92,7 @@ src/
 | `lib/routes.ts`                                                                             | `app/routes.ts`                      |
 | `providers/StateProvider.tsx`                                                               | `shared/providers/StateProvider.tsx` |
 | `components/{ContextMenu,DetailsPopup,Spinner,Toast}`                                       | `shared/components/`                 |
-| `components/AppBar`                                                                         | `app/AppBar.tsx`                     |
+| `components/AppBar`                                                                         | Eliminado; decoraciones nativas      |
 | `App.tsx, AppContent.tsx, main.tsx`                                                         | `app/`                               |
 | `views/Directory.tsx` + `components/{DirEntry,Preview,AudioPreview,Properties}` + `hooks/*` | `features/directory/`                |
 | `views/Volumes.tsx`                                                                         | `features/volumes/`                  |
@@ -115,7 +114,8 @@ Donde probar: build limpio; arranque.
 
 Estado: completada.
 
-- `git mv` `App.tsx, AppContent.tsx, main.tsx` a `app/`; `components/AppBar` a `app/AppBar.tsx`.
+- `git mv` `App.tsx, AppContent.tsx, main.tsx` a `app/`; posteriormente se eliminó el `AppBar`
+  personalizado en favor de las decoraciones nativas de Tauri.
 - Ajustar `index.html`/entry si referencia `main.tsx`.
 - Actualizar imports.
 

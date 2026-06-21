@@ -12,8 +12,6 @@ export type State = {
   canGoForward: boolean;
   goBack: () => void;
   goForward: () => void;
-  sidebarScrolled: boolean;
-  setSidebarScrolled: (sidebarScrolled: boolean) => void;
   dirContent: DirEntry[];
   setDirContent: (dirContent: DirEntry[]) => void;
   view: ViewMode;

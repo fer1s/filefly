@@ -8,7 +8,6 @@ import {
 
 import { StateProvider } from "@/shared/providers/StateProvider";
 
-import AppBar from "./AppBar";
 import SideBar from "@/features/sidebar";
 import ToastStack, {
   type ToastData,
@@ -32,7 +31,6 @@ const App = () => {
     stack: string[];
     index: number;
   }>({ stack: [""], index: 0 });
-  const [sidebarScrolled, setSidebarScrolled] = useState<boolean>(false);
   const [dirContent, setDirContent] = useState<DirEntry[]>([]);
   const [view, setView] = useState<ViewMode>(VIEW_MODE.GRID);
   const [search, setSearch] = useState<string>("");
@@ -157,8 +155,6 @@ const App = () => {
         canGoForward: pathHistory.index < pathHistory.stack.length - 1,
         goBack,
         goForward,
-        sidebarScrolled,
-        setSidebarScrolled,
         dirContent,
         setDirContent,
         view,
@@ -168,7 +164,6 @@ const App = () => {
         refreshDir,
       }}
     >
-      <AppBar />
       <div className={classNames("App", sidebarCollapsed && "collapsed")}>
         <SideBar
           collapsed={sidebarCollapsed}

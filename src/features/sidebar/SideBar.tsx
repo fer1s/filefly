@@ -4,7 +4,6 @@ import { classNames } from "@/shared/utils";
 import { t } from "@/lang";
 
 import { usePinnedFolders } from "./hooks/usePinnedFolders";
-import { useSidebarScroll } from "./hooks/useSidebarScroll";
 import SearchBar from "./components/SearchBar";
 import VolumeItem from "./components/VolumeItem";
 import FolderItem from "./components/FolderItem";
@@ -19,7 +18,6 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
   const { volumes, setPath } = useStateContext();
 
   const pinned = usePinnedFolders();
-  useSidebarScroll();
 
   return (
     <div className={classNames("SideBar", collapsed && "collapsed")}>
