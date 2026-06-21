@@ -16,10 +16,10 @@
   border-radius: 6px;
   font-size: 0.78rem;
   font-weight: 400;
-  color: #fff;
-  background-color: rgba(40, 40, 40, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  color: var(--color-text-primary);
+  background-color: var(--color-surface-toast);
+  border: 1px solid var(--color-border-toast);
+  box-shadow: var(--shadow-toast);
   backdrop-filter: blur(20px);
   cursor: pointer;
   pointer-events: auto;
@@ -28,8 +28,8 @@
 }
 
 .toasts .toast.error {
-  background-color: rgba(120, 30, 30, 0.95);
-  border: 1px solid rgba(255, 80, 80, 0.5);
+  background-color: var(--color-danger-surface);
+  border: 1px solid var(--color-danger-border);
 }
 
 @keyframes toast-enter {

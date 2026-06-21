@@ -1,10 +1,10 @@
 .volumes_page .volume_item {
   width: 226.33px;
   height: 60px;
-  background-color: rgba(0, 0, 0, 0.1);
+  background-color: var(--color-surface-row);
   border-radius: 5px;
   padding: 13px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--color-border-default);
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -16,7 +16,7 @@
 
 .volumes_page .volume_item svg {
   font-size: 1.2rem;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--color-text-muted);
 }
 
 .volumes_page .volume_item .volume_info {
@@ -31,7 +31,7 @@
 .volumes_page .volume_item .volume_info h3 {
   font-size: 0.8rem;
   font-weight: 700;
-  color: #fff;
+  color: var(--color-text-primary);
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -41,35 +41,35 @@
 
 .volumes_page .volume_item .volume_info h3 span {
   font-weight: 400;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--color-text-muted);
 }
 
 .volumes_page .volume_item .volume_info .usage {
   width: 100%;
   height: 5px;
   border-radius: 5px;
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: var(--color-progress-track);
   overflow: hidden;
 }
 
 .volumes_page .volume_item .volume_info .usage .usage_bar {
   height: 100%;
   border-radius: 0 5px 5px 0;
-  background-color: rgba(255, 255, 255, 0.5);
+  background-color: var(--color-progress-fill);
 }
 
 .volumes_page .volume_item .volume_info p {
   font-size: 0.6rem;
   font-weight: 300;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--color-text-muted);
 }
 
 .volumes_page .volume_item:hover {
-  background-color: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background-color: var(--color-surface-interactive);
+  border: 1px solid var(--color-border-strong);
 }
 
 .volumes_page .volume_item.selected {
-  background-color: rgba(94, 154, 255, 0.18);
-  border: 1px solid rgba(94, 154, 255, 0.6);
+  background-color: var(--color-selection-background);
+  border: 1px solid var(--color-selection-border);
 }

@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect } from "react";
 import { convertFileSrc } from "@tauri-apps/api/core";
+import { classNames } from "../../../shared/utils";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -59,7 +60,7 @@ const AudioPreview = ({ isVisible, filePath }: AudioPreviewProps) => {
   }, [filePath, isPlaying, volume]);
 
   return (
-    <div className={`audio_preview${isVisible ? " visible" : ""}`}>
+    <div className={classNames("audio_preview", isVisible && "visible")}>
       <audio
         controls
         src={convertFileSrc(filePath)}
@@ -84,7 +85,12 @@ const AudioPreview = ({ isVisible, filePath }: AudioPreviewProps) => {
         <button onClick={handleVolumeButtonClick}>
           <FontAwesomeIcon icon={faVolumeHigh} />
         </button>
-        <div className={`volume_extension${isVolumeVisible ? " visible" : ""}`}>
+        <div
+          className={classNames(
+            "volume_extension",
+            isVolumeVisible && "visible",
+          )}
+        >
           <input
             type="range"
             min={0}

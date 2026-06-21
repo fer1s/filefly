@@ -1,5 +1,5 @@
 import { DirEntry } from "../../../shared/models";
-import { formatBytes } from "../../../shared/utils";
+import { classNames, formatBytes } from "../../../shared/utils";
 import { t } from "../../../lang";
 
 import "../../../styles/components/Properties.css";
@@ -16,10 +16,16 @@ const Properties = ({ entry, visible, onClose }: PropertiesProps) => {
   return (
     <>
       <div
-        className={`properties_backdrop${visible ? " visible" : ""}`}
+        className={classNames("properties_backdrop", visible && "visible")}
         onClick={onClose}
       ></div>
-      <div className={`properties_modal shadow${visible ? " visible" : ""}`}>
+      <div
+        className={classNames(
+          "properties_modal",
+          "shadow",
+          visible && "visible",
+        )}
+      >
         <div className="properties_header">
           <h4>{t.properties.title}</h4>
           <button onClick={onClose}>{t.common.close}</button>

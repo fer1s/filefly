@@ -1,4 +1,5 @@
 import { DirEntry } from "../models";
+import { classNames } from "./classNames";
 
 export const navigateToPath = (
   entry: DirEntry,
@@ -27,3 +28,5 @@ export const formatBytes = (bytes: number, decimals: number = 2) => {
 
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
 };
+
+export { classNames };

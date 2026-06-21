@@ -2,7 +2,11 @@ import { useEffect, useRef } from "react";
 import { convertFileSrc } from "@tauri-apps/api/core";
 
 import { DirEntry } from "../../../shared/models";
-import { navigateToPath, formatBytes } from "../../../shared/utils";
+import {
+  classNames,
+  navigateToPath,
+  formatBytes,
+} from "../../../shared/utils";
 import { useStateContext } from "../../../shared/providers/StateProvider";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -194,7 +198,7 @@ const DirEntryItem = ({
   const ImageFormats = ["png", "jpg", "jpeg", "webp"];
   return (
     <div
-      className={selected ? "dir_entry_item selected" : "dir_entry_item"}
+      className={classNames("dir_entry_item", selected && "selected")}
       id={id}
       tabIndex={0}
       onClick={onSelect}

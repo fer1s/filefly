@@ -1,0 +1,61 @@
+:root {
+  --color-background-window: rgba(0, 0, 0, 0.25);
+  --color-background-app: rgb(18, 18, 18);
+  --color-background-sidebar: rgba(18, 18, 18, 0.8);
+
+  --color-surface-solid: rgb(0, 0, 0);
+  --color-surface-input: rgba(0, 0, 0, 0.06);
+  --color-surface-row: rgba(0, 0, 0, 0.1);
+  --color-surface-interactive: rgba(0, 0, 0, 0.2);
+  --color-surface-backdrop: rgba(0, 0, 0, 0.4);
+  --color-surface-popover: rgba(0, 0, 0, 0.5);
+  --color-surface-floating: rgba(0, 0, 0, 0.7);
+  --color-surface-modal: rgba(20, 20, 20, 0.85);
+  --color-surface-toast: rgba(40, 40, 40, 0.95);
+
+  --color-overlay-faint: rgba(255, 255, 255, 0.01);
+  --color-overlay-soft: rgba(255, 255, 255, 0.03);
+  --color-overlay-hover: rgba(255, 255, 255, 0.05);
+  --color-overlay-active: rgba(255, 255, 255, 0.1);
+
+  --color-text-primary: #fff;
+  --color-text-high: rgba(255, 255, 255, 0.85);
+  --color-text-secondary: rgba(255, 255, 255, 0.8);
+  --color-text-tertiary: rgba(255, 255, 255, 0.7);
+  --color-text-subtle: rgba(255, 255, 255, 0.6);
+  --color-text-dim: rgba(255, 255, 255, 0.55);
+  --color-text-muted: rgba(255, 255, 255, 0.5);
+
+  --color-border-faint: rgba(255, 255, 255, 0.03);
+  --color-border-soft: rgba(255, 255, 255, 0.05);
+  --color-border-default: rgba(255, 255, 255, 0.1);
+  --color-border-toast: rgba(255, 255, 255, 0.12);
+  --color-border-strong: rgba(255, 255, 255, 0.2);
+
+  --color-selection-background: rgba(94, 154, 255, 0.18);
+  --color-selection-border: rgba(94, 154, 255, 0.6);
+  --color-selection-focus: rgba(94, 154, 255, 0.7);
+  --color-selection-indicator: rgba(94, 154, 255, 0.9);
+
+  --color-danger-hover: rgb(255, 38, 38);
+  --color-danger-surface: rgba(120, 30, 30, 0.95);
+  --color-danger-border: rgba(255, 80, 80, 0.5);
+  --color-link: #4ba3f5;
+
+  --color-scrollbar-thumb: #494949;
+  --color-range-track: #313131;
+  --color-audio-time: #929292;
+  --color-progress-track: var(--color-overlay-active);
+  --color-progress-fill: var(--color-text-muted);
+  --color-control-thumb: var(--color-text-primary);
+
+  --shadow-elevation:
+    2.8px 2.8px 2.2px rgba(0, 0, 0, 0.02),
+    6.7px 6.7px 5.3px rgba(0, 0, 0, 0.028),
+    12.5px 12.5px 10px rgba(0, 0, 0, 0.035),
+    22.3px 22.3px 17.9px rgba(0, 0, 0, 0.042),
+    41.8px 41.8px 33.4px rgba(0, 0, 0, 0.05),
+    100px 100px 80px rgba(0, 0, 0, 0.07);
+  --shadow-popover: 0 0 10px 0 var(--color-surface-popover);
+  --shadow-toast: 0 6px 20px var(--color-surface-backdrop);
+}

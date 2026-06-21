@@ -2,7 +2,7 @@
   position: fixed;
   inset: 0;
   z-index: 1500;
-  background-color: rgba(0, 0, 0, 0.4);
+  background-color: var(--color-surface-backdrop);
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
@@ -26,10 +26,10 @@
   width: 400px;
   max-width: calc(100% - 40px);
   transform: translate(-50%, -50%) scale(0.9);
-  background-color: rgba(20, 20, 20, 0.85);
+  background-color: var(--color-surface-modal);
   backdrop-filter: blur(20px);
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--color-border-default);
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
@@ -52,14 +52,14 @@
   justify-content: space-between;
   align-items: center;
   padding: 12px 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--color-border-default);
 }
 
 .properties_modal .properties_header h4 {
   margin: 0;
   font-size: 1rem;
   font-weight: 600;
-  color: #fff;
+  color: var(--color-text-primary);
   user-select: none;
 }
 
@@ -67,14 +67,14 @@
   background-color: transparent;
   border: none;
   outline: none;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--color-text-subtle);
   font-size: 0.8rem;
   cursor: pointer;
   transition: color 0.2s ease-in-out;
 }
 
 .properties_modal .properties_header button:hover {
-  color: #fff;
+  color: var(--color-text-primary);
 }
 
 .properties_modal .properties_content {
@@ -94,7 +94,7 @@
   flex: 0 0 80px;
   font-size: 0.78rem;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--color-text-high);
   white-space: nowrap;
 }
 
@@ -102,7 +102,7 @@
   flex: 1;
   font-size: 0.78rem;
   font-weight: 400;
-  color: rgba(255, 255, 255, 0.55);
+  color: var(--color-text-dim);
   text-align: right;
   word-break: break-word;
 }

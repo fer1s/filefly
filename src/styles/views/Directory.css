@@ -6,10 +6,10 @@
   width: 100%;
   min-width: 0;
   padding: 2px 4px;
-  background-color: rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(94, 154, 255, 0.7);
+  background-color: var(--color-surface-backdrop);
+  border: 1px solid var(--color-selection-focus);
   border-radius: 3px;
-  color: #fff;
+  color: var(--color-text-primary);
   font-family: "Inter", sans-serif;
   font-size: 0.7rem;
   font-weight: 400;
@@ -26,7 +26,7 @@
   margin-top: 20px;
   font-size: 0.85rem;
   font-weight: 400;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--color-text-muted);
   user-select: none;
 }
 
@@ -50,7 +50,7 @@
   font-weight: 400;
   user-select: none;
   margin: 5px;
-  background-color: rgb(0, 0, 0);
+  background-color: var(--color-surface-solid);
   padding: 2px 5px;
   border-radius: 5px;
 }
@@ -61,7 +61,7 @@
   left: 50%;
   transform: translate(-50%, -50%);
   font-size: 1.4rem;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--color-text-muted);
 }
 
 .directory_page .grid .dir_entry_item img {
@@ -90,18 +90,18 @@
 .directory_page .grid .dir_entry_item .dir_entry_info h3 {
   font-size: 0.7rem;
   font-weight: 400;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--color-text-subtle);
   user-select: none;
 }
 
 .directory_page .grid .dir_entry_item:hover {
-  background-color: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: var(--color-overlay-hover);
+  border: 1px solid var(--color-border-default);
 }
 
 .directory_page .grid .dir_entry_item:hover svg,
 .directory_page .grid .dir_entry_item:hover .dir_entry_info h3 {
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--color-text-secondary);
 }
 
 .directory_page .dir_entry_item:focus {
@@ -109,13 +109,13 @@
 }
 
 .directory_page .grid .dir_entry_item.selected {
-  background-color: rgba(94, 154, 255, 0.18);
-  border: 1px solid rgba(94, 154, 255, 0.6);
+  background-color: var(--color-selection-background);
+  border: 1px solid var(--color-selection-border);
 }
 
 .directory_page .grid .dir_entry_item.selected svg,
 .directory_page .grid .dir_entry_item.selected .dir_entry_info h3 {
-  color: #fff;
+  color: var(--color-text-primary);
 }
 
 .directory_page .list {
@@ -142,7 +142,7 @@
 
 .directory_page .list .dir_entry_item .icon svg {
   font-size: 0.9rem;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--color-text-muted);
 }
 
 .directory_page .list .dir_entry_item .icon img {
@@ -159,7 +159,7 @@
   user-select: none;
   font-size: 0.8rem;
   font-weight: 400;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--color-text-secondary);
 }
 
 .directory_page .list .dir_entry_item .size {
@@ -172,8 +172,8 @@
 .directory_page .list .dir_entry_item .size h3 {
   font-size: 0.6rem;
   font-weight: 400;
-  color: rgba(255, 255, 255, 0.7);
-  background-color: rgba(0, 0, 0, 0.5);
+  color: var(--color-text-tertiary);
+  background-color: var(--color-surface-popover);
   backdrop-filter: blur(50px);
   border-radius: 5px;
   padding: 5px;
@@ -190,8 +190,8 @@
 .directory_page .list .dir_entry_item .extension h3 {
   font-size: 0.8rem;
   font-weight: 400;
-  color: rgba(255, 255, 255, 0.7);
-  background-color: rgba(0, 0, 0, 0.5);
+  color: var(--color-text-tertiary);
+  background-color: var(--color-surface-popover);
   backdrop-filter: blur(50px);
   border-radius: 5px;
   padding: 5px;
@@ -199,34 +199,34 @@
 }
 
 .directory_page .list .dir_entry_item:nth-child(odd) {
-  background-color: rgba(255, 255, 255, 0.01);
+  background-color: var(--color-overlay-faint);
 }
 
 .directory_page .list .dir_entry_item:nth-child(even) {
-  background-color: rgba(0, 0, 0, 0.1);
+  background-color: var(--color-surface-row);
 }
 
 .directory_page .list .dir_entry_item:hover {
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: var(--color-overlay-hover);
 }
 
 .directory_page .list .dir_entry_item:hover .icon svg,
 .directory_page .list .dir_entry_item:hover .name h3,
 .directory_page .list .dir_entry_item:hover .size h3,
 .directory_page .list .dir_entry_item:hover .extension h3 {
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--color-text-secondary);
 }
 
 .directory_page .list .dir_entry_item.selected {
-  background-color: rgba(94, 154, 255, 0.18);
-  box-shadow: inset 2px 0 0 rgba(94, 154, 255, 0.9);
+  background-color: var(--color-selection-background);
+  box-shadow: inset 2px 0 0 var(--color-selection-indicator);
 }
 
 .directory_page .list .dir_entry_item.selected .icon svg,
 .directory_page .list .dir_entry_item.selected .name h3,
 .directory_page .list .dir_entry_item.selected .size h3,
 .directory_page .list .dir_entry_item.selected .extension h3 {
-  color: #fff;
+  color: var(--color-text-primary);
 }
 
 .directory_page .list .dir_entry_item:first-child {

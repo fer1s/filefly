@@ -15,8 +15,8 @@
   min-height: 30px;
   max-height: 30px;
   padding: 0;
-  background-color: rgba(255, 255, 255, 0.01);
-  border: 1px solid rgba(255, 255, 255, 0.03);
+  background-color: var(--color-overlay-faint);
+  border: 1px solid var(--color-border-faint);
   border-radius: 5px;
   display: grid;
   place-items: center;
@@ -25,13 +25,13 @@
 }
 
 .PathBar button:hover {
-  background-color: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: var(--color-surface-interactive);
+  border: 1px solid var(--color-border-default);
 }
 
 .PathBar button svg {
   font-size: 0.9rem;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--color-text-muted);
 }
 
 .PathBar button:disabled {
@@ -40,8 +40,8 @@
 }
 
 .PathBar button:disabled:hover {
-  background-color: rgba(255, 255, 255, 0.01);
-  border: 1px solid rgba(255, 255, 255, 0.03);
+  background-color: var(--color-overlay-faint);
+  border: 1px solid var(--color-border-faint);
 }
 
 .PathBar .controls {
@@ -70,9 +70,9 @@
   width: 100%;
   height: 30px;
   padding: 6px 10px;
-  background-color: rgba(255, 255, 255, 0.01);
-  border: 1px solid rgba(255, 255, 255, 0.03);
-  color: #fff;
+  background-color: var(--color-overlay-faint);
+  border: 1px solid var(--color-border-faint);
+  color: var(--color-text-primary);
   border-radius: 5px;
   font-family: "Inter", sans-serif;
   font-size: 0.8rem;
@@ -82,6 +82,6 @@
 
 .PathBar input:focus {
   outline: none;
-  background-color: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: var(--color-surface-interactive);
+  border: 1px solid var(--color-border-default);
 }

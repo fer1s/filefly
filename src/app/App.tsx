@@ -18,6 +18,7 @@ import { setNotifier, ToastType } from "../shared/toast";
 import { ROUTES } from "./routes";
 import { FileSystemManager } from "../shared/managers/FileSystemManager";
 import { Volume, DirEntry } from "../shared/models";
+import { classNames } from "../shared/utils";
 
 const App = () => {
   const navigate: NavigateFunction = useNavigate();
@@ -165,7 +166,7 @@ const App = () => {
       }}
     >
       <AppBar />
-      <div className={sidebarCollapsed ? "App collapsed" : "App"}>
+      <div className={classNames("App", sidebarCollapsed && "collapsed")}>
         <SideBar
           collapsed={sidebarCollapsed}
           onToggle={() => setSidebarCollapsed((c) => !c)}

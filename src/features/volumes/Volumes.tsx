@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import { useStateContext } from "../../shared/providers/StateProvider";
 import { Volume } from "../../shared/models";
+import { classNames } from "../../shared/utils";
 import { t } from "../../lang";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -56,7 +57,7 @@ const VolumeItem = ({
 }: VolumeItemProps) => {
   return (
     <div
-      className={selected ? "volume_item selected" : "volume_item"}
+      className={classNames("volume_item", selected && "selected")}
       onClick={onSelect}
       onDoubleClick={() => setPath(volume.mountPoint)}
     >

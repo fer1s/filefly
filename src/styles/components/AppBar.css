@@ -49,19 +49,19 @@
 }
 
 .app_bar .window_buttons button svg {
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--color-text-muted);
   transition: all 0.2s ease-in-out;
   font-size: 0.75rem;
 }
 
 .app_bar .window_buttons button:hover {
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: var(--color-overlay-hover);
 }
 
 .app_bar .window_buttons button:hover svg {
-  color: #fff;
+  color: var(--color-text-primary);
 }
 
 .app_bar .window_buttons button:last-child:hover {
-  background-color: rgb(255, 38, 38);
+  background-color: var(--color-danger-hover);
 }

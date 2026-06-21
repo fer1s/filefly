@@ -9,6 +9,7 @@ import {
 
 import { Volume } from "../../shared/models";
 import { useStateContext } from "../../shared/providers/StateProvider";
+import { classNames } from "../../shared/utils";
 import { t } from "../../lang";
 
 import SearchBar from "./components/SearchBar";
@@ -86,7 +87,7 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
   }, [setSidebarScrolled]);
 
   return (
-    <div className={collapsed ? "SideBar collapsed" : "SideBar"}>
+    <div className={classNames("SideBar", collapsed && "collapsed")}>
       <button
         className="collapse_toggle"
         onClick={onToggle}

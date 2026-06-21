@@ -2,7 +2,7 @@
   height: 100vh;
   overflow-y: auto;
   overflow-x: hidden;
-  background-color: rgba(18, 18, 18, 0.8);
+  background-color: var(--color-background-sidebar);
 }
 
 .SideBar .collapse_toggle {
@@ -12,8 +12,8 @@
   margin-bottom: 15px;
   margin-left: auto;
   padding: 0;
-  background-color: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background-color: var(--color-overlay-soft);
+  border: 1px solid var(--color-border-soft);
   border-radius: 5px;
   display: grid;
   place-items: center;
@@ -22,17 +22,17 @@
 }
 
 .SideBar .collapse_toggle:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: var(--color-overlay-active);
+  border: 1px solid var(--color-border-default);
 }
 
 .SideBar .collapse_toggle svg {
   font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--color-text-muted);
 }
 
 .SideBar .collapse_toggle:hover svg {
-  color: #fff;
+  color: var(--color-text-primary);
 }
 
 /* Collapsed: icon-only rail. Center icons and hide text. */
@@ -88,26 +88,26 @@
 
 .SideBar section .section_content .folder_item svg {
   font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--color-text-muted);
   transition: all 0.2s ease-in-out;
 }
 
 .SideBar section .section_content .folder_item p {
   font-size: 0.8rem;
   font-weight: 400;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--color-text-muted);
   user-select: none;
   transition: all 0.2s ease-in-out;
 }
 
 .SideBar section .section_content .folder_item:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: var(--color-overlay-active);
+  border: 1px solid var(--color-border-default);
 }
 
 .SideBar section .section_content .folder_item:hover svg,
 .SideBar section .section_content .folder_item:hover p {
-  color: #fff;
+  color: var(--color-text-primary);
 }
 
 .SideBar section .section_content .drive_item {
@@ -139,7 +139,7 @@
 
 .SideBar section .section_content .drive_item svg {
   font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--color-text-muted);
   transition: all 0.2s ease-in-out;
 }
 
@@ -155,7 +155,7 @@
 .SideBar section .section_content .drive_item .details p {
   font-size: 0.7rem;
   font-weight: 400;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--color-text-muted);
   user-select: none;
   transition: all 0.2s ease-in-out;
 }
@@ -168,24 +168,24 @@
   width: 90%;
   height: 3px;
   border-radius: 5px;
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: var(--color-progress-track);
   overflow: hidden;
 }
 
 .SideBar section .section_content .drive_item .details .usage .usage_bar {
   height: 100%;
   border-radius: 0 5px 5px 0;
-  background-color: rgba(255, 255, 255, 0.5);
+  background-color: var(--color-progress-fill);
 }
 
 .SideBar section .section_content .drive_item:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: var(--color-overlay-active);
+  border: 1px solid var(--color-border-default);
 }
 
 .SideBar section .section_content .drive_item:hover svg,
 .SideBar section .section_content .drive_item:hover .details p {
-  color: #fff;
+  color: var(--color-text-primary);
 }
 
 .SideBar section .section_content .folder_item,

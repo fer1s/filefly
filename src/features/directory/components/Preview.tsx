@@ -3,6 +3,7 @@ import { convertFileSrc } from "@tauri-apps/api/core";
 
 import { useStateContext } from "../../../shared/providers/StateProvider";
 import { ImageFormats, AudioFormats } from "../../../shared/constants";
+import { classNames } from "../../../shared/utils";
 import { t } from "../../../lang";
 
 import AudioPreview from "./AudioPreview";
@@ -80,7 +81,10 @@ const Preview = ({
   return (
     <>
       <div
-        className={`preview_backdrop${previewVisible ? " visible" : ""}`}
+        className={classNames(
+          "preview_backdrop",
+          previewVisible && "visible",
+        )}
         onClick={() => setPreviewVisible(false)}
       ></div>
       {AudioFormats.includes(fileType) ? (
@@ -91,7 +95,12 @@ const Preview = ({
         />
       ) : (
         <div
-          className={`preview_container shadow${ImageFormats.includes(fileType) ? " image" : ""}${previewVisible ? " visible" : ""}`}
+          className={classNames(
+            "preview_container",
+            "shadow",
+            ImageFormats.includes(fileType) && "image",
+            previewVisible && "visible",
+          )}
         >
           <div className="preview_header">
             <div className="preview_nav">
@@ -118,11 +127,12 @@ const Preview = ({
             </button>
           </div>
           <div
-            className={`preview_content
-                            ${isReady ? "" : "loading"}
-                            ${fileType === "md" ? "markdown" : ""}
-                            ${ImageFormats.includes(fileType) ? "image" : ""}
-                            `}
+            className={classNames(
+              "preview_content",
+              !isReady && "loading",
+              fileType === "md" && "markdown",
+              ImageFormats.includes(fileType) && "image",
+            )}
           >
             {isReady ? (
               fileType === "md" ? (

@@ -10,8 +10,8 @@
 body {
   width: 100vw;
   height: 100vh;
-  background-color: rgba(0, 0, 0, 0.25);
-  color: #fff;
+  background-color: var(--color-background-window);
+  color: var(--color-text-primary);
   overflow: hidden;
 }
 
@@ -24,20 +24,14 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: #494949;
+  background-color: var(--color-scrollbar-thumb);
   border-radius: 20px;
   border: 3px solid transparent;
   background-clip: content-box;
 }
 
 .shadow {
-  box-shadow:
-    2.8px 2.8px 2.2px rgba(0, 0, 0, 0.02),
-    6.7px 6.7px 5.3px rgba(0, 0, 0, 0.028),
-    12.5px 12.5px 10px rgba(0, 0, 0, 0.035),
-    22.3px 22.3px 17.9px rgba(0, 0, 0, 0.042),
-    41.8px 41.8px 33.4px rgba(0, 0, 0, 0.05),
-    100px 100px 80px rgba(0, 0, 0, 0.07);
+  box-shadow: var(--shadow-elevation);
 }
 
 .App {
@@ -68,7 +62,7 @@ body {
 }
 
 .AppContent {
-  background-color: rgb(18, 18, 18);
+  background-color: var(--color-background-app);
   overflow: hidden;
 }
 
