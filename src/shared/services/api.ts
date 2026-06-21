@@ -15,6 +15,9 @@ export const getVolumes = async (): Promise<Volume[]> =>
 export const readDirectory = async (path: string): Promise<DirEntry[]> =>
   (await invokeWithPathArg("read_directory", path)) as DirEntry[];
 
+export const getEntry = async (path: string): Promise<DirEntry> =>
+  await invoke("get_entry", { path });
+
 // Open a file with the OS default application. Goes through the Rust `open_file` command so the path
 // is logged to the Tauri terminal; the command returns the error if it fails.
 export const openFile = async (path: string): Promise<void> => {

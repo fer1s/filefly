@@ -87,6 +87,7 @@ export const en = {
     paste: (name: string, reason: string) =>
       `Could not paste ${name}: ${reason}`,
     rename: (reason: string) => `Could not rename: ${reason}`,
+    properties: (reason: string) => `Could not read properties: ${reason}`,
   },
 };
 

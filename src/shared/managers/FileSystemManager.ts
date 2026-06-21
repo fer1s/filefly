@@ -45,6 +45,10 @@ export class FileSystemManager {
     return files;
   }
 
+  getEntry(path: string): Promise<DirEntry> {
+    return api.getEntry(path);
+  }
+
   open(path: string): Promise<void> {
     return api.openFile(path);
   }

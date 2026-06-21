@@ -23,6 +23,36 @@ pub struct DirEntry {
     metadata: DirMetadata,
 }
 
+fn build_dir_entry(path: PathBuf) -> Result<DirEntry, String> {
+    let metadata = fs::metadata(&path).map_err(|error| error.to_string())?;
+    let modified = metadata.modified().unwrap_or(SystemTime::UNIX_EPOCH);
+    let accessed = metadata.accessed().unwrap_or(SystemTime::UNIX_EPOCH);
+    let created = metadata.created().unwrap_or(modified);
+    let name = path
+        .file_name()
+        .unwrap_or(path.as_os_str())
+        .to_string_lossy()
+        .into_owned();
+
+    Ok(DirEntry {
+        name,
+        path,
+        size: metadata.len(),
+        metadata: DirMetadata {
+            is_dir: metadata.is_dir(),
+            is_file: metadata.is_file(),
+            modified,
+            accessed,
+            created,
+        },
+    })
+}
+
+#[tauri::command]
+pub fn get_entry(path: String) -> Result<DirEntry, String> {
+    build_dir_entry(PathBuf::from(path))
+}
+
 #[tauri::command]
 pub fn read_directory(path: &str) -> Vec<DirEntry> {
     let mut result: Vec<DirEntry> = Vec::new();
@@ -30,24 +60,9 @@ pub fn read_directory(path: &str) -> Vec<DirEntry> {
     if let Ok(entries) = fs::read_dir(path) {
         for entry in entries {
             if let Ok(entry) = entry {
-                let file_name = entry.file_name();
-                let metadata = entry.metadata().unwrap();
-                let path = entry.path();
-
-                let dirmetadata = DirMetadata {
-                    is_dir: metadata.is_dir(),
-                    is_file: metadata.is_file(),
-                    modified: metadata.modified().unwrap(),
-                    accessed: metadata.accessed().unwrap(),
-                    created: metadata.created().unwrap(),
-                };
-
-                result.push(DirEntry {
-                    name: file_name.to_str().unwrap().to_string(),
-                    path,
-                    size: metadata.len(),
-                    metadata: dirmetadata,
-                });
+                if let Ok(dir_entry) = build_dir_entry(entry.path()) {
+                    result.push(dir_entry);
+                }
             }
         }
     };

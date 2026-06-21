@@ -98,6 +98,9 @@ const Directory = () => {
     setElementType: setContextMenuElementType,
     openAt: openContextMenuAt,
   } = useContextMenu();
+  const isCurrentDirectoryContext =
+    contextMenuElementType === ENTRY_KIND.DIRECTORY &&
+    contextMenuElementID === path;
 
   const [previewVisible, setPreviewVisible] = useState<boolean>(false);
   const [previewIndex, setPreviewIndex] = useState<number>(-1);
@@ -292,12 +295,20 @@ const Directory = () => {
     setContextMenuVisible(false);
   };
 
-  const handleProperties = () => {
-    setPropertiesEntry(
-      dirContent.find((e) => e.path === contextMenuElementID) || null,
-    );
-    setPropertiesVisible(true);
+  const handleProperties = async () => {
     setContextMenuVisible(false);
+
+    try {
+      const entry = isCurrentDirectoryContext
+        ? await fs.getEntry(contextMenuElementID)
+        : dirContent.find((item) => item.path === contextMenuElementID);
+
+      if (!entry) return;
+      setPropertiesEntry(entry);
+      setPropertiesVisible(true);
+    } catch (error) {
+      notify(t.errors.properties(String(error)), TOAST_TYPE.ERROR);
+    }
   };
 
   const handleRenameSubmit = async (targetPath: string, newName: string) => {
@@ -319,11 +330,12 @@ const Directory = () => {
     onDelete: deleteTargets,
   });
 
-  // Right-click on empty space opens a menu with Paste (item clicks are handled by each entry).
+  // Empty space represents the directory currently being viewed.
   const handleEmptyContextMenu = (e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest(".dir_entry_item")) return;
     e.preventDefault();
-    openContextMenuAt(e.clientX, e.clientY, "", ENTRY_KIND.NONE);
+    setSelectedIDs([]);
+    openContextMenuAt(e.clientX, e.clientY, path, ENTRY_KIND.DIRECTORY);
   };
 
   // useEffect(() => {
@@ -389,15 +401,30 @@ const Directory = () => {
       <StatusBar total={filtered.length} selected={selectedIDs.length} />
 
       <ContextMenu contextMenuVisible={contextMenuVisible} ref={contextMenuRef}>
-        {contextMenuElementType === ENTRY_KIND.NONE && (
-          <ContextMenuItem
-            text={t.contextMenu.paste}
-            icon={<Icon icon={faPaste} />}
-            onClick={clipboard ? handlePaste : undefined}
-          />
+        {isCurrentDirectoryContext && (
+          <>
+            <ContextMenuItem
+              text={t.contextMenu.paste}
+              icon={<Icon icon={faPaste} />}
+              onClick={clipboard ? handlePaste : undefined}
+            />
+            <ContextMenuItem isSeparator />
+            <ContextMenuItem
+              text={t.contextMenu.openInTerminal}
+              icon={<Icon icon={faTerminal} />}
+              onClick={handleOpenInTerminal}
+            />
+            <ContextMenuItem isSeparator />
+            <ContextMenuItem
+              text={t.contextMenu.properties}
+              icon={<Icon icon={faCircleInfo} />}
+              onClick={handleProperties}
+            />
+          </>
         )}
 
-        {contextMenuElementType === ENTRY_KIND.DIRECTORY && (
+        {contextMenuElementType === ENTRY_KIND.DIRECTORY &&
+          !isCurrentDirectoryContext && (
           <>
             <ContextMenuItem
               text={t.contextMenu.open}
@@ -471,7 +498,9 @@ const Directory = () => {
           </>
         )}
 
-        {contextMenuElementType !== ENTRY_KIND.NONE && (
+        {(contextMenuElementType === ENTRY_KIND.DIRECTORY ||
+          contextMenuElementType === ENTRY_KIND.FILE) &&
+          !isCurrentDirectoryContext && (
           <>
             <ContextMenuItem isSeparator />
             <ContextMenuItem
