@@ -78,7 +78,7 @@ src/
 
   shared/               # Generic / cross-feature building blocks
     components/
-      elements/          # Domain-agnostic UI primitives (Button, Spinner, Toast)
+      elements/          # Domain-agnostic UI primitives (Button, Icon, Spinner, Toast)
       patterns/          # Reusable compositions of elements (Dialog, Popup, ContextMenu)
     hooks/               # Reusable hooks used by multiple features
     providers/           # App-wide providers and context wiring

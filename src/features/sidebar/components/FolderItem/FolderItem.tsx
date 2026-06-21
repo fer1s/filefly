@@ -1,4 +1,4 @@
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import Icon from "@/shared/components/elements/Icon";
 
 import type { FolderItemProps } from "./types";
 
@@ -9,7 +9,7 @@ const FolderItem = ({ item, setPath, collapsed }: FolderItemProps) => {
       onClick={() => setPath(item.path)}
       title={collapsed ? item.name : undefined}
     >
-      <FontAwesomeIcon icon={item.icon} />
+      <Icon icon={item.icon} />
       <p>{item.name}</p>
     </div>
   );

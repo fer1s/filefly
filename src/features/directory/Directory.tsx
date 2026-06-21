@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 
 import { useStateContext } from "@/shared/providers/StateProvider";
+import Icon from "@/shared/components/elements/Icon";
 import {
   ContextMenu,
   ContextMenuItem,
@@ -23,7 +24,6 @@ import { useKeyboardNav } from "./hooks/useKeyboardNav";
 import { useClipboardShortcuts } from "./hooks/useClipboardShortcuts";
 import { useContextMenu } from "./hooks/useContextMenu";
 
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faArrowUpRightFromSquare,
   faCircleInfo,
@@ -389,7 +389,7 @@ const Directory = () => {
         {contextMenuElementType === ENTRY_KIND.NONE && (
           <ContextMenuItem
             text={t.contextMenu.paste}
-            icon={<FontAwesomeIcon icon={faPaste} />}
+            icon={<Icon icon={faPaste} />}
             onClick={clipboard ? handlePaste : undefined}
           />
         )}
@@ -398,32 +398,32 @@ const Directory = () => {
           <>
             <ContextMenuItem
               text={t.contextMenu.open}
-              icon={<FontAwesomeIcon icon={faArrowUpRightFromSquare} />}
+              icon={<Icon icon={faArrowUpRightFromSquare} />}
               onClick={handleOpenFile}
             />
             <ContextMenuItem
               text={t.contextMenu.openInTerminal}
-              icon={<FontAwesomeIcon icon={faTerminal} />}
+              icon={<Icon icon={faTerminal} />}
               onClick={handleOpenInTerminal}
             />
             <ContextMenuItem
               text={t.contextMenu.copy}
-              icon={<FontAwesomeIcon icon={faCopy} />}
+              icon={<Icon icon={faCopy} />}
               onClick={handleCopy}
             />
             <ContextMenuItem
               text={t.contextMenu.cut}
-              icon={<FontAwesomeIcon icon={faScissors} />}
+              icon={<Icon icon={faScissors} />}
               onClick={handleCut}
             />
             <ContextMenuItem
               text={t.contextMenu.rename}
-              icon={<FontAwesomeIcon icon={faFilePen} />}
+              icon={<Icon icon={faFilePen} />}
               onClick={handleRename}
             />
             <ContextMenuItem
               text={t.contextMenu.delete}
-              icon={<FontAwesomeIcon icon={faTrash} />}
+              icon={<Icon icon={faTrash} />}
               onClick={handleDelete}
             />
           </>
@@ -433,7 +433,7 @@ const Directory = () => {
           <>
             <ContextMenuItem
               text={t.contextMenu.open}
-              icon={<FontAwesomeIcon icon={faArrowUpRightFromSquare} />}
+              icon={<Icon icon={faArrowUpRightFromSquare} />}
               onClick={handleOpenFile}
             />
             {ACCEPTED_PREVIEW_FORMATS.includes(
@@ -441,28 +441,28 @@ const Directory = () => {
             ) && (
               <ContextMenuItem
                 text={t.common.preview}
-                icon={<FontAwesomeIcon icon={faEye} />}
+                icon={<Icon icon={faEye} />}
                 onClick={handlePreviewFile}
               />
             )}
             <ContextMenuItem
               text={t.contextMenu.copy}
-              icon={<FontAwesomeIcon icon={faCopy} />}
+              icon={<Icon icon={faCopy} />}
               onClick={handleCopy}
             />
             <ContextMenuItem
               text={t.contextMenu.cut}
-              icon={<FontAwesomeIcon icon={faScissors} />}
+              icon={<Icon icon={faScissors} />}
               onClick={handleCut}
             />
             <ContextMenuItem
               text={t.contextMenu.rename}
-              icon={<FontAwesomeIcon icon={faFilePen} />}
+              icon={<Icon icon={faFilePen} />}
               onClick={handleRename}
             />
             <ContextMenuItem
               text={t.contextMenu.delete}
-              icon={<FontAwesomeIcon icon={faTrash} />}
+              icon={<Icon icon={faTrash} />}
               onClick={handleDelete}
             />
           </>
@@ -473,7 +473,7 @@ const Directory = () => {
             <ContextMenuItem isSeparator />
             <ContextMenuItem
               text={t.contextMenu.properties}
-              icon={<FontAwesomeIcon icon={faCircleInfo} />}
+              icon={<Icon icon={faCircleInfo} />}
               onClick={handleProperties}
             />
           </>

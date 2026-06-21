@@ -1,4 +1,4 @@
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import Icon from "@/shared/components/elements/Icon";
 import { faHardDrive } from "@fortawesome/free-solid-svg-icons";
 import { faUsb } from "@fortawesome/free-brands-svg-icons";
 
@@ -13,7 +13,7 @@ const VolumeItem = ({ volume, setPath, index, collapsed }: VolumeItemProps) => {
       style={{ animationDelay: `${index * VOLUME_ITEM_STAGGER_MS}ms` }}
       title={collapsed ? `${volume.mountPoint} ${volume.name}` : undefined}
     >
-      <FontAwesomeIcon icon={volume.isRemovable ? faUsb : faHardDrive} />
+      <Icon icon={volume.isRemovable ? faUsb : faHardDrive} />
       <div className="details">
         <p>
           <span>{volume.mountPoint}</span> {volume.name}

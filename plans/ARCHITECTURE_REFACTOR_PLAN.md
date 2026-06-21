@@ -45,7 +45,7 @@ src/
     routes.ts
   shared/
     components/
-      elements/           # Button, IconButton, Spinner, Toast
+      elements/           # Button, Icon, IconButton, Spinner, Toast
       patterns/           # ContextMenu, Dialog, Popup, ToastStack
     providers/            # StateProvider (estado global de la app)
     services/             # api.ts (Tauri invoke)

@@ -4,9 +4,9 @@ import { useStateContext } from "@/shared/providers/StateProvider";
 import { Volume } from "@/shared/models";
 import { classNames } from "@/shared/utils";
 import { VIEW_MODE } from "@/shared/constants";
+import Icon from "@/shared/components/elements/Icon";
 import { t } from "@/lang";
 
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faHardDrive } from "@fortawesome/free-solid-svg-icons";
 import { faUsb } from "@fortawesome/free-brands-svg-icons";
 
@@ -90,7 +90,7 @@ const VolumeCard = ({
       onClick={onSelect}
       onDoubleClick={() => setPath(volume.mountPoint)}
     >
-      <FontAwesomeIcon icon={volume.isRemovable ? faUsb : faHardDrive} />
+      <Icon icon={volume.isRemovable ? faUsb : faHardDrive} />
       <div className="volume_info">
         <h3>
           <span>{volume.mountPoint}</span> {volume.name}
@@ -121,7 +121,7 @@ const VolumeListRow = ({
     >
       <td>
         <div className="volume_identity">
-          <FontAwesomeIcon icon={volume.isRemovable ? faUsb : faHardDrive} />
+          <Icon icon={volume.isRemovable ? faUsb : faHardDrive} />
           <div className="volume_summary">
             <span className="volume_name">{volume.name}</span>
             <div className="volume_usage">

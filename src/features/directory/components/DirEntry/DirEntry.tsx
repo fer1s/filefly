@@ -4,8 +4,8 @@ import { convertFileSrc } from "@tauri-apps/api/core";
 import { classNames, navigateToPath, formatBytes } from "@/shared/utils";
 import { useStateContext } from "@/shared/providers/StateProvider";
 import { ENTRY_KIND, IMAGE_FORMATS, VIEW_MODE } from "@/shared/constants";
+import Icon from "@/shared/components/elements/Icon";
 
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFile, faFolder } from "@fortawesome/free-solid-svg-icons";
 
 import type { DirEntryItemProps } from "./types";
@@ -192,7 +192,7 @@ const DirEntryItem = ({
           {IMAGE_FORMATS.includes(extension.toLowerCase().trim()) ? (
             <img src={convertFileSrc(entry.path)} />
           ) : (
-            <FontAwesomeIcon icon={entry.metadata.isDir ? faFolder : faFile} />
+            <Icon icon={entry.metadata.isDir ? faFolder : faFile} />
           )}
 
           <div className="dir_entry_info">
@@ -215,9 +215,7 @@ const DirEntryItem = ({
             {IMAGE_FORMATS.includes(extension.toLowerCase().trim()) ? (
               <img src={convertFileSrc(entry.path)} />
             ) : (
-              <FontAwesomeIcon
-                icon={entry.metadata.isDir ? faFolder : faFile}
-              />
+              <Icon icon={entry.metadata.isDir ? faFolder : faFile} />
             )}
           </div>
           <div className="name">
