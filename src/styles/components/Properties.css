@@ -96,6 +96,9 @@
   font-weight: 600;
   color: var(--color-text-high);
   white-space: nowrap;
+  -webkit-user-select: text;
+  user-select: text;
+  cursor: text;
 }
 
 .properties_modal .properties_content .row .value {
@@ -105,4 +108,7 @@
   color: var(--color-text-dim);
   text-align: right;
   word-break: break-word;
+  -webkit-user-select: text;
+  user-select: text;
+  cursor: text;
 }

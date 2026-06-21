@@ -333,7 +333,7 @@ const Directory = () => {
       onMouseDown={onMarqueeMouseDown}
       onClick={(e) => {
         const el = e.target as HTMLElement;
-        if (!el.closest(".dir_entry_item") && !el.closest(".status_bar"))
+        if (el.closest(".directory_content") && !el.closest(".dir_entry_item"))
           setSelectedIDs([]);
       }}
       onContextMenu={handleEmptyContextMenu}
