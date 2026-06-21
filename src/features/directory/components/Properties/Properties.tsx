@@ -7,6 +7,7 @@ import { faXmark } from "@fortawesome/free-solid-svg-icons";
 
 import "@/styles/components/Properties.css";
 
+import { PROPERTIES_TITLE_ID } from "./constants";
 import { formatDate } from "./utils";
 import type { PropertiesProps } from "./types";
 
@@ -16,10 +17,10 @@ const Properties = ({ entry, visible, onClose }: PropertiesProps) => {
       visible={visible}
       onClose={onClose}
       className="properties_modal"
-      labelledBy="properties-title"
+      labelledBy={PROPERTIES_TITLE_ID}
     >
       <div className="properties_header">
-        <h4 id="properties-title">{t.properties.title}</h4>
+        <h4 id={PROPERTIES_TITLE_ID}>{t.properties.title}</h4>
         <IconButton
           icon={faXmark}
           onClick={onClose}

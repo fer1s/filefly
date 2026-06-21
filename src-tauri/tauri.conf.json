@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "filefly",
+  "productName": "Sito File Browser",
   "version": "0.0.1",
-  "identifier": "com.fer1s.filefly",
+  "identifier": "com.sito8943.file-browser",
   "build": {
     "beforeDevCommand": "npm run dev",
     "beforeBuildCommand": "npm run build",
@@ -16,7 +16,7 @@
       {
         "fullscreen": false,
         "resizable": true,
-        "title": "filefly",
+        "title": "File Browser",
         "label": "main",
         "width": 950,
         "minWidth": 950,

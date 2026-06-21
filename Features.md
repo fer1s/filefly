@@ -1,8 +1,8 @@
-# filefly
+# Sito File Browser
 
 [![Discord Badge](https://dcbadge.vercel.app/api/server/jnXEtWQwdA)](https://discord.gg/jnXEtWQwdA)
 
-FileFly is a faster file explorer alternative.
+Sito File Browser is a faster file explorer alternative.
 
 ![Preview](preview.png)
 ![Preview2](preview2.png)

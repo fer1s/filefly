@@ -1,7 +1,7 @@
 // English translation resources, grouped by domain. Functions are used for interpolated strings.
 export const en = {
   app: {
-    name: "filefly",
+    name: "File Browser",
   },
   common: {
     close: "Close",
