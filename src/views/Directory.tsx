@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo, useState } from 'react'
 
 import { useStateContext } from '../providers/StateProvider'
 import { ContextMenu, ContextMenuItem } from '../components/ContextMenu'
@@ -7,6 +7,10 @@ import { notify } from '../lib/toast'
 import { ask } from '@tauri-apps/plugin-dialog'
 import { AcceptedPreviewFormats } from '../lib/constants'
 import { DirEntryItem } from '../components/DirEntry'
+import { useSelection } from '../hooks/useSelection'
+import { useKeyboardNav } from '../hooks/useKeyboardNav'
+import { useClipboardShortcuts } from '../hooks/useClipboardShortcuts'
+import { useContextMenu } from '../hooks/useContextMenu'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowUpRightFromSquare, faCircleInfo, faCopy, faEye, faFilePen, faPaste, faScissors, faTerminal, faTrash } from '@fortawesome/free-solid-svg-icons'
@@ -32,21 +36,22 @@ const Directory = () => {
    // Entries visible after applying the sidebar search filter.
    const filtered = useMemo(() => (search ? dirContent.filter((e) => e.name.toLowerCase().includes(search.toLowerCase())) : dirContent), [dirContent, search])
 
-   const [selectedIDs, setSelectedIDs] = useState<string[]>([])
-
-   // Single click replaces the selection; Ctrl (or Cmd on macOS) + click toggles the item in the selection.
-   const handleSelect = (id: string, e: React.MouseEvent) => {
-      const additive = e.ctrlKey || e.metaKey
-      setSelectedIDs((prev) => (additive ? (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]) : [id]))
-   }
+   const { selectedIDs, setSelectedIDs, handleSelect } = useSelection()
 
    const [detailsPopupVisible, setDetailsPopupVisible] = useState<boolean>(false)
    const [highlitedElementID, setHighlitedElementID] = useState('')
    const [highlitedElementType, setHighlitedElementType] = useState<'file' | 'dir' | 'none'>('none')
 
-   const [contextMenuVisible, setContextMenuVisible] = useState<boolean>(false)
-   const [contextMenuElementID, setContextMenuElementID] = useState('')
-   const [contextMenuElementType, setContextMenuElementType] = useState<'file' | 'dir' | 'none'>('none')
+   const {
+      ref: contextMenuRef,
+      visible: contextMenuVisible,
+      setVisible: setContextMenuVisible,
+      elementID: contextMenuElementID,
+      setElementID: setContextMenuElementID,
+      elementType: contextMenuElementType,
+      setElementType: setContextMenuElementType,
+      openAt: openContextMenuAt,
+   } = useContextMenu()
 
    const [previewVisible, setPreviewVisible] = useState<boolean>(false)
    const [previewIndex, setPreviewIndex] = useState<number>(-1)
@@ -64,128 +69,13 @@ const Directory = () => {
    const previewPrev = () => setPreviewIndex((i) => (i > 0 ? i - 1 : i))
    const previewNext = () => setPreviewIndex((i) => (i < previewables.length - 1 ? i + 1 : i))
 
-   const contextMenuRef = useRef<HTMLDivElement>(null)
-
-   // Type-to-find buffer and its reset timer.
-   const searchBufferRef = useRef('')
-   const searchTimerRef = useRef<number | null>(null)
-
-   useEffect(() => {
-      const handleCloseContextMenu = (e: MouseEvent) => {
-         if (contextMenuRef.current && !contextMenuRef.current.contains(e.target as Node)) setContextMenuVisible(false)
-      }
-
-      document.addEventListener('click', handleCloseContextMenu)
-
-      return () => {
-         document.removeEventListener('click', handleCloseContextMenu)
-      }
-   }, [contextMenuRef])
-
-   // Keyboard navigation: arrows move a cursor through the entries (and select it), Enter opens, Escape clears.
-   useEffect(() => {
-      // Skip when typing in the path bar or any other text field.
-      const isTypingTarget = (el: EventTarget | null) => {
-         const t = el as HTMLElement | null
-         return !!t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')
-      }
-
-      // Number of items in the first grid row, used as the vertical step.
-      const columns = () => {
-         const items = Array.from(document.querySelectorAll<HTMLElement>('.directory_page .grid .dir_entry_item'))
-         if (!items.length) return 1
-         const top = items[0].offsetTop
-         let cols = 0
-         for (const it of items) {
-            if (it.offsetTop === top) cols++
-            else break
-         }
-         return cols || 1
-      }
-
-      // Move the cursor by delta relative to the last selected entry and select that single entry.
-      const move = (delta: number) =>
-         setSelectedIDs((prev) => {
-            if (!filtered.length) return prev
-            const current = prev.length ? filtered.findIndex((e) => e.path === prev[prev.length - 1]) : -1
-            const next = Math.max(0, Math.min(filtered.length - 1, current < 0 ? 0 : current + delta))
-            return [filtered[next].path]
-         })
-
-      // Open the last selected entry (folder navigates, file opens).
-      const open = () =>
-         setSelectedIDs((prev) => {
-            const entry = prev.length ? filtered.find((e) => e.path === prev[prev.length - 1]) : undefined
-            if (entry) entry.metadata.isDir ? setPath(entry.path) : fs.open(entry.path)
-            return prev
-         })
-
-      // Type-to-find: append the typed char to a buffer and select the first matching entry.
-      // A single-char buffer starts the search after the current item so repeated presses cycle matches.
-      const typeahead = (char: string) => {
-         if (searchTimerRef.current) clearTimeout(searchTimerRef.current)
-         searchBufferRef.current += char.toLowerCase()
-         searchTimerRef.current = window.setTimeout(() => (searchBufferRef.current = ''), 700)
-
-         const buf = searchBufferRef.current
-         setSelectedIDs((prev) => {
-            if (!filtered.length) return prev
-            const current = prev.length ? filtered.findIndex((e) => e.path === prev[prev.length - 1]) : -1
-            const start = buf.length === 1 ? current + 1 : 0
-            for (let i = 0; i < filtered.length; i++) {
-               const entry = filtered[(start + i) % filtered.length]
-               if (entry.name.toLowerCase().startsWith(buf)) return [entry.path]
-            }
-            return prev
-         })
-      }
-
-      const handleKeyDown = (e: KeyboardEvent) => {
-         if (isTypingTarget(e.target)) return
-
-         // While the preview is open it owns the keyboard (arrows navigate, Escape closes).
-         if (previewVisible) return
-
-         // Printable single characters drive the type-to-find search.
-         if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
-            e.preventDefault()
-            typeahead(e.key)
-            return
-         }
-
-         switch (e.key) {
-            case 'Escape':
-               setSelectedIDs([])
-               break
-            case 'ArrowRight':
-               e.preventDefault()
-               move(1)
-               break
-            case 'ArrowLeft':
-               e.preventDefault()
-               move(-1)
-               break
-            case 'ArrowDown':
-               e.preventDefault()
-               move(view === 'grid' ? columns() : 1)
-               break
-            case 'ArrowUp':
-               e.preventDefault()
-               move(view === 'grid' ? -columns() : -1)
-               break
-            case 'Enter':
-               e.preventDefault()
-               open()
-               break
-         }
-      }
-
-      document.addEventListener('keydown', handleKeyDown)
-      return () => {
-         document.removeEventListener('keydown', handleKeyDown)
-         if (searchTimerRef.current) clearTimeout(searchTimerRef.current)
-      }
-   }, [filtered, view, previewVisible])
+   useKeyboardNav({
+      items: filtered,
+      view,
+      enabled: !previewVisible,
+      setSelectedIDs,
+      onOpen: (entry) => (entry.metadata.isDir ? setPath(entry.path) : fs.open(entry.path)),
+   })
 
    const handleOpenInTerminal = () => {
       if (contextMenuElementType === 'dir') fs.openInTerminal(contextMenuElementID)
@@ -316,54 +206,20 @@ const Directory = () => {
       refreshDir()
    }
 
-   // Keyboard shortcuts for clipboard actions (Cmd/Ctrl + C/X/V, Cmd/Ctrl + Backspace/Delete).
-   // They act on the current selection. Modifier combos are ignored by type-to-find, so no conflict.
-   useEffect(() => {
-      const handleShortcut = (e: KeyboardEvent) => {
-         const target = e.target as HTMLElement | null
-         if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) return
-         if (previewVisible) return
-
-         const mod = e.metaKey || e.ctrlKey
-         if (!mod) return
-
-         switch (e.key) {
-            case 'c':
-               e.preventDefault()
-               copyTargets(selectedIDs)
-               break
-            case 'x':
-               e.preventDefault()
-               cutTargets(selectedIDs)
-               break
-            case 'v':
-               e.preventDefault()
-               pasteIntoCurrent()
-               break
-            case 'Backspace':
-            case 'Delete':
-               e.preventDefault()
-               deleteTargets(selectedIDs)
-               break
-         }
-      }
-
-      document.addEventListener('keydown', handleShortcut)
-      return () => document.removeEventListener('keydown', handleShortcut)
-   }, [selectedIDs, clipboard, path, previewVisible])
+   useClipboardShortcuts({
+      enabled: !previewVisible,
+      selectedIDs,
+      onCopy: copyTargets,
+      onCut: cutTargets,
+      onPaste: pasteIntoCurrent,
+      onDelete: deleteTargets,
+   })
 
    // Right-click on empty space opens a menu with Paste (item clicks are handled by each entry).
    const handleEmptyContextMenu = (e: React.MouseEvent) => {
       if ((e.target as HTMLElement).closest('.dir_entry_item')) return
       e.preventDefault()
-
-      setContextMenuElementID('')
-      setContextMenuElementType('none')
-      if (contextMenuRef.current) {
-         contextMenuRef.current.style.left = `${e.clientX}px`
-         contextMenuRef.current.style.top = `${e.clientY}px`
-      }
-      setContextMenuVisible(true)
+      openContextMenuAt(e.clientX, e.clientY, '', 'none')
    }
 
    // useEffect(() => {
