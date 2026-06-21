@@ -17,7 +17,12 @@ const Dialog = ({
       onClick={onClose}
     />
     <div
-      className={classNames("dialog", "shadow", className, visible && "visible")}
+      className={classNames(
+        "dialog",
+        "shadow",
+        className,
+        visible && "visible",
+      )}
       role="dialog"
       aria-modal="true"
       aria-hidden={!visible}

@@ -52,7 +52,8 @@ export const useMarqueeSelection = ({
           .querySelectorAll<HTMLElement>(".dir_entry_item")
           .forEach((item) => {
             const b = item.getBoundingClientRect();
-            const hit = b.left < x2 && b.right > x1 && b.top < y2 && b.bottom > y1;
+            const hit =
+              b.left < x2 && b.right > x1 && b.top < y2 && b.bottom > y1;
             if (hit && item.id) ids.push(item.id);
           });
         setSelectedIDs(ids);

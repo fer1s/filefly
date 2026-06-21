@@ -8,11 +8,7 @@ const ToastStack = ({ toasts, onDismiss }: ToastStackProps) => {
   return (
     <div className="toasts">
       {toasts.map((toast) => (
-        <Toast
-          key={toast.id}
-          toast={toast}
-          onDismiss={onDismiss}
-        />
+        <Toast key={toast.id} toast={toast} onDismiss={onDismiss} />
       ))}
     </div>
   );

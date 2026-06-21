@@ -74,8 +74,7 @@ export const en = {
     deleteTitle: "Delete",
     items: (n: number) => `${n} items`,
     itemCount: (n: number) => `${n} ${n === 1 ? "item" : "items"}`,
-    selectedCount: (n: number) =>
-      `${n} ${n === 1 ? "item" : "items"} selected`,
+    selectedCount: (n: number) => `${n} ${n === 1 ? "item" : "items"} selected`,
   },
   errors: {
     open: (reason: string) => `Could not open file: ${reason}`,
