@@ -64,6 +64,7 @@ export const useMarqueeSelection = ({
           active = true;
           dragged = true;
           document.body.style.userSelect = "none";
+          document.body.style.webkitUserSelect = "none";
         }
         selectWithin(ev.clientX, ev.clientY);
       };
@@ -72,6 +73,7 @@ export const useMarqueeSelection = ({
         document.removeEventListener("mousemove", onMove);
         document.removeEventListener("mouseup", onUp);
         document.body.style.userSelect = "";
+        document.body.style.webkitUserSelect = "";
         setMarquee(null);
 
         // Swallow the click that follows a drag so the empty-area onClick does

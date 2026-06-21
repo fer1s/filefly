@@ -1,5 +1,5 @@
 .context_menu {
-  position: absolute;
+  position: fixed;
   z-index: 1000;
   max-height: var(--size-context-menu-max-height);
   max-width: var(--size-context-menu-max-width);

@@ -36,6 +36,7 @@ import {
 import "@/styles/views/Directory.css";
 import Preview from "./components/Preview";
 import Properties from "./components/Properties";
+import StatusBar from "./components/StatusBar";
 import { DirEntry } from "@/shared/models";
 
 const Directory = () => {
@@ -375,6 +376,8 @@ const Directory = () => {
       {search && filtered.length === 0 && (
         <p className="no_results">{t.directory.noResults(search)}</p>
       )}
+
+      <StatusBar total={filtered.length} selected={selectedIDs.length} />
 
       <ContextMenu contextMenuVisible={contextMenuVisible} ref={contextMenuRef}>
         {contextMenuElementType === ENTRY_KIND.NONE && (

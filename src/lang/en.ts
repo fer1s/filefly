@@ -73,6 +73,9 @@ export const en = {
     confirmDelete: (label: string) => `Move ${label} to the Trash?`,
     deleteTitle: "Delete",
     items: (n: number) => `${n} items`,
+    itemCount: (n: number) => `${n} ${n === 1 ? "item" : "items"}`,
+    selectedCount: (n: number) =>
+      `${n} ${n === 1 ? "item" : "items"} selected`,
   },
   errors: {
     open: (reason: string) => `Could not open file: ${reason}`,

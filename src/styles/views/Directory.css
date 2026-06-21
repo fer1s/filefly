@@ -12,6 +12,16 @@
   border-radius: var(--radius-xs);
 }
 
+/* Entries are not text-selectable, and their icons/images are not draggable
+   (WebKit honours only the -webkit- prefixed properties). */
+.directory_page .dir_entry_item,
+.directory_page .dir_entry_item img,
+.directory_page .dir_entry_item svg {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
 .directory_page .rename_input {
   width: 100%;
   min-width: 0;
@@ -37,6 +47,7 @@
   font-size: 0.85rem;
   font-weight: 400;
   color: var(--color-text-muted);
+  -webkit-user-select: none;
   user-select: none;
 }
 
@@ -58,6 +69,7 @@
   z-index: 998;
   font-size: 0.6rem;
   font-weight: 400;
+  -webkit-user-select: none;
   user-select: none;
   margin: var(--space-1);
   background-color: var(--color-surface-solid);
@@ -101,6 +113,7 @@
   font-size: 0.7rem;
   font-weight: 400;
   color: var(--color-text-subtle);
+  -webkit-user-select: none;
   user-select: none;
 }
 
@@ -166,6 +179,7 @@
 }
 
 .directory_page .list .dir_entry_item .name h3 {
+  -webkit-user-select: none;
   user-select: none;
   font-size: 0.8rem;
   font-weight: 400;
@@ -187,6 +201,7 @@
   backdrop-filter: blur(var(--blur-large));
   border-radius: var(--radius-sm);
   padding: var(--space-1);
+  -webkit-user-select: none;
   user-select: none;
 }
 
@@ -205,6 +220,7 @@
   backdrop-filter: blur(var(--blur-large));
   border-radius: var(--radius-sm);
   padding: var(--space-1);
+  -webkit-user-select: none;
   user-select: none;
 }
 
