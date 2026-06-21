@@ -48,6 +48,7 @@ const SideBar = ({ collapsed, onToggle, visitedPaths }: SideBarProps) => {
             item={item}
             setPath={setPath}
             collapsed={collapsed}
+            active={item.path === path}
           />
         ))}
       </SidebarSection>
@@ -59,6 +60,7 @@ const SideBar = ({ collapsed, onToggle, visitedPaths }: SideBarProps) => {
             item={item}
             setPath={setPath}
             collapsed={collapsed}
+            active={item.path === path}
           />
         ))}
       </SidebarSection>
@@ -71,6 +73,7 @@ const SideBar = ({ collapsed, onToggle, visitedPaths }: SideBarProps) => {
             setPath={setPath}
             index={i}
             collapsed={collapsed}
+            active={volume.mountPoint === path}
           />
         ))}
       </SidebarSection>

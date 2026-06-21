@@ -102,13 +102,16 @@
   transition: all 0.2s ease-in-out;
 }
 
-.SideBar section .section_content .folder_item:hover {
+.SideBar section .section_content .folder_item:hover,
+.SideBar section .section_content .folder_item.active {
   background-color: var(--color-overlay-active);
   border: var(--border-width-default) solid var(--color-border-default);
 }
 
 .SideBar section .section_content .folder_item:hover svg,
-.SideBar section .section_content .folder_item:hover p {
+.SideBar section .section_content .folder_item:hover p,
+.SideBar section .section_content .folder_item.active svg,
+.SideBar section .section_content .folder_item.active p {
   color: var(--color-text-primary);
 }
 
@@ -180,13 +183,16 @@
   background-color: var(--color-progress-fill);
 }
 
-.SideBar section .section_content .drive_item:hover {
+.SideBar section .section_content .drive_item:hover,
+.SideBar section .section_content .drive_item.active {
   background-color: var(--color-overlay-active);
   border: var(--border-width-default) solid var(--color-border-default);
 }
 
 .SideBar section .section_content .drive_item:hover svg,
-.SideBar section .section_content .drive_item:hover .details p {
+.SideBar section .section_content .drive_item:hover .details p,
+.SideBar section .section_content .drive_item.active svg,
+.SideBar section .section_content .drive_item.active .details p {
   color: var(--color-text-primary);
 }
 

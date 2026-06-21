@@ -1,11 +1,12 @@
 import Icon from "@/shared/components/elements/Icon";
+import { classNames } from "@/shared/utils";
 
 import type { FolderItemProps } from "./types";
 
-const FolderItem = ({ item, setPath, collapsed }: FolderItemProps) => {
+const FolderItem = ({ item, setPath, collapsed, active }: FolderItemProps) => {
   return (
     <div
-      className="folder_item"
+      className={classNames("folder_item", active && "active")}
       onClick={() => setPath(item.path)}
       title={collapsed ? item.name : undefined}
     >

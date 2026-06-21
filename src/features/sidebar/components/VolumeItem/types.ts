@@ -5,4 +5,5 @@ export type VolumeItemProps = {
   setPath: (path: string) => void;
   index: number;
   collapsed: boolean;
+  active: boolean;
 };
