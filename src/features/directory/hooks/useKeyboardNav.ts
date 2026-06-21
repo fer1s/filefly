@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import type { Dispatch, SetStateAction } from 'react'
 
-import { DirEntry } from '../shared/models'
+import { DirEntry } from '../../../shared/models'
 
 type Params = {
    items: DirEntry[]

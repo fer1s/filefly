@@ -3,7 +3,7 @@ import { Routes, Route } from 'react-router-dom'
 import PathBar from '../components/PathBar'
 
 import Volumes from '../views/Volumes'
-import Directory from '../views/Directory'
+import Directory from '../features/directory'
 
 import { ROUTES } from './routes'
 

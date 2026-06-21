@@ -1,7 +1,7 @@
-import { DirEntry } from '../shared/models'
-import { formatBytes } from '../shared/utils'
+import { DirEntry } from '../../../shared/models'
+import { formatBytes } from '../../../shared/utils'
 
-import '../styles/components/Properties.css'
+import '../../../styles/components/Properties.css'
 
 type PropertiesProps = {
    entry: DirEntry | null

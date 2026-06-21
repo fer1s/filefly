@@ -4,7 +4,7 @@ import { convertFileSrc } from '@tauri-apps/api/core'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPause, faPlay, faVolumeHigh } from '@fortawesome/free-solid-svg-icons'
 
-import '../styles/components/AudioPreview.css'
+import '../../../styles/components/AudioPreview.css'
 
 interface AudioPreviewProps {
    isVisible: boolean

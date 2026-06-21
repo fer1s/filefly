@@ -1,16 +1,16 @@
 import { useEffect, useState } from 'react'
 import { convertFileSrc } from '@tauri-apps/api/core'
 
-import { useStateContext } from '../shared/providers/StateProvider'
-import { ImageFormats, AudioFormats } from '../shared/constants'
+import { useStateContext } from '../../../shared/providers/StateProvider'
+import { ImageFormats, AudioFormats } from '../../../shared/constants'
 
 import AudioPreview from './AudioPreview'
-import Spinner from '../shared/components/Spinner'
+import Spinner from '../../../shared/components/Spinner'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons'
 
-import '../styles/components/Preview.css'
+import '../../../styles/components/Preview.css'
 
 interface PreviewProps {
    fileType: string
