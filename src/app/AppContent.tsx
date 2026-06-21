@@ -1,11 +1,11 @@
 import { Routes, Route } from 'react-router-dom'
 
-import PathBar from './components/PathBar'
+import PathBar from '../components/PathBar'
 
-import Volumes from './views/Volumes'
-import Directory from './views/Directory'
+import Volumes from '../views/Volumes'
+import Directory from '../views/Directory'
 
-import { ROUTES } from './app/routes'
+import { ROUTES } from './routes'
 
 function AppContent() {
    return (
