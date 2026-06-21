@@ -7,6 +7,9 @@
 
 /* Scrollable entry area; the status bar stays pinned below it. */
 .directory_page .directory_content {
+  /* Shared column template so the list header and its rows stay aligned. */
+  --list-grid: minmax(0, 2.2fr) minmax(110px, 1.4fr) minmax(110px, 1.4fr)
+    90px 100px;
   flex: 1;
   min-height: 0;
   overflow-y: auto;
@@ -160,12 +163,86 @@
   padding-bottom: var(--space-2-5);
 }
 
+/* Sticky column-header row above the entries. */
+.directory_page .list_header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: var(--list-grid);
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1-5) var(--space-2-5);
+  background-color: var(--color-surface-backdrop);
+  backdrop-filter: blur(var(--blur-medium));
+  border-bottom: var(--border-width-default) solid var(--color-border-default);
+}
+
+.directory_page .list_header button {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--space-1);
+  min-width: 0;
+  padding: var(--space-0-5) var(--space-1);
+  margin: var(--space-0);
+  border: none;
+  border-radius: var(--radius-xs);
+  background-color: transparent;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+/* Short vertical divider between columns (centered in the grid gap), Finder-style. */
+.directory_page .list_header button:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  right: calc(var(--space-2) / -2);
+  top: 20%;
+  bottom: 20%;
+  width: var(--border-width-default);
+  background-color: var(--color-border-default);
+}
+
+.directory_page .list_header button span {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.directory_page .list_header button svg {
+  font-size: 0.5rem;
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
+}
+
+.directory_page .list_header button:hover {
+  background-color: var(--color-overlay-hover);
+}
+
+.directory_page .list_header button:hover span,
+.directory_page .list_header button.active span {
+  color: var(--color-text-secondary);
+}
+
+
 .directory_page .list .dir_entry_item {
   width: 100%;
   height: var(--size-directory-row);
-  display: flex;
-  justify-content: flex-start;
+  display: grid;
+  grid-template-columns: var(--list-grid);
   align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-0) var(--space-2-5);
   cursor: pointer;
   transition: all 0.1s ease-in-out;
 }
@@ -173,6 +250,7 @@
 .directory_page .list .dir_entry_item .icon {
   width: var(--size-control-large);
   height: var(--size-control-large);
+  flex-shrink: 0;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -190,7 +268,10 @@
 }
 
 .directory_page .list .dir_entry_item .name {
-  width: 50%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
 }
 
 .directory_page .list .dir_entry_item .name h3 {
@@ -199,16 +280,33 @@
   font-size: 0.8rem;
   font-weight: 400;
   color: var(--color-text-secondary);
-  max-width: 100%;
+  min-width: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
+.directory_page .list .dir_entry_item .date_modified,
+.directory_page .list .dir_entry_item .date_created {
+  min-width: 0;
+  text-align: right;
+}
+
+.directory_page .list .dir_entry_item .date_modified h3,
+.directory_page .list .dir_entry_item .date_created h3 {
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: var(--color-text-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
 .directory_page .list .dir_entry_item .size {
-  width: 20%;
   display: flex;
-  justify-content: center;
+  justify-content: flex-end;
   align-items: center;
 }
 
@@ -224,21 +322,20 @@
   user-select: none;
 }
 
-.directory_page .list .dir_entry_item .extension {
-  width: 20%;
+.directory_page .list .dir_entry_item .kind {
   display: flex;
-  justify-content: center;
+  justify-content: flex-end;
   align-items: center;
+  min-width: 0;
 }
 
-.directory_page .list .dir_entry_item .extension h3 {
-  font-size: 0.8rem;
+.directory_page .list .dir_entry_item .kind h3 {
+  font-size: 0.7rem;
   font-weight: 400;
   color: var(--color-text-tertiary);
-  background-color: var(--color-surface-popover);
-  backdrop-filter: blur(var(--blur-large));
-  border-radius: var(--radius-sm);
-  padding: var(--space-1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   -webkit-user-select: none;
   user-select: none;
 }
@@ -257,8 +354,10 @@
 
 .directory_page .list .dir_entry_item:hover .icon svg,
 .directory_page .list .dir_entry_item:hover .name h3,
+.directory_page .list .dir_entry_item:hover .date_modified h3,
+.directory_page .list .dir_entry_item:hover .date_created h3,
 .directory_page .list .dir_entry_item:hover .size h3,
-.directory_page .list .dir_entry_item:hover .extension h3 {
+.directory_page .list .dir_entry_item:hover .kind h3 {
   color: var(--color-text-secondary);
 }
 
@@ -270,8 +369,10 @@
 
 .directory_page .list .dir_entry_item.selected .icon svg,
 .directory_page .list .dir_entry_item.selected .name h3,
+.directory_page .list .dir_entry_item.selected .date_modified h3,
+.directory_page .list .dir_entry_item.selected .date_created h3,
 .directory_page .list .dir_entry_item.selected .size h3,
-.directory_page .list .dir_entry_item.selected .extension h3 {
+.directory_page .list .dir_entry_item.selected .kind h3 {
   color: var(--color-text-primary);
 }
 

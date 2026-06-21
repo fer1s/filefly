@@ -72,6 +72,13 @@ export const en = {
   },
   directory: {
     find: "Find",
+    columns: {
+      name: "Name",
+      modified: "Date Modified",
+      created: "Date Created",
+      size: "Size",
+      kind: "Kind",
+    },
     noResults: (query: string) => `No results for "${query}"`,
     fileTypeNotSupported: "File type not supported",
     confirmDelete: (label: string) => `Move ${label} to the Trash?`,

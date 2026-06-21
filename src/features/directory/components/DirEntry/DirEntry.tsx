@@ -1,10 +1,16 @@
 import { useEffect, useRef } from "react";
 import { convertFileSrc } from "@tauri-apps/api/core";
 
-import { classNames, navigateToPath, formatBytes } from "@/shared/utils";
+import {
+  classNames,
+  navigateToPath,
+  formatBytes,
+  formatDate,
+} from "@/shared/utils";
 import { useStateContext } from "@/shared/providers/StateProvider";
 import { ENTRY_KIND, IMAGE_FORMATS, VIEW_MODE } from "@/shared/constants";
 import Icon from "@/shared/components/elements/Icon";
+import { t } from "@/lang";
 
 import { faFile, faFolder } from "@fortawesome/free-solid-svg-icons";
 
@@ -201,21 +207,33 @@ const DirEntryItem = ({
         </>
       ) : (
         <>
-          <div className="icon">
-            {IMAGE_FORMATS.includes(extension.toLowerCase().trim()) ? (
-              <img src={convertFileSrc(entry.path)} />
-            ) : (
-              <Icon icon={entry.metadata.isDir ? faFolder : faFile} />
-            )}
-          </div>
           <div className="name">
+            <div className="icon">
+              {IMAGE_FORMATS.includes(extension.toLowerCase().trim()) ? (
+                <img src={convertFileSrc(entry.path)} />
+              ) : (
+                <Icon icon={entry.metadata.isDir ? faFolder : faFile} />
+              )}
+            </div>
             {renaming ? renameInput : <h3>{name || extension}</h3>}
+          </div>
+          <div className="date_modified">
+            <h3>{formatDate(entry.metadata.modified.secs_since_epoch)}</h3>
+          </div>
+          <div className="date_created">
+            <h3>{formatDate(entry.metadata.created.secs_since_epoch)}</h3>
           </div>
           <div className="size">
             {entry.size > 0 && <h3>{formatBytes(entry.size)}</h3>}
           </div>
-          <div className="extension">
-            {extension && name && <h3>{extension}</h3>}
+          <div className="kind">
+            <h3>
+              {entry.metadata.isDir
+                ? t.common.directory
+                : name && extension
+                  ? extension.toUpperCase()
+                  : t.common.file}
+            </h3>
           </div>
         </>
       )}

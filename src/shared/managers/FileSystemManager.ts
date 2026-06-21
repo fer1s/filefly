@@ -49,6 +49,10 @@ export class FileSystemManager {
     return api.getEntry(path);
   }
 
+  getDirSize(path: string): Promise<number> {
+    return api.getDirSize(path);
+  }
+
   open(path: string): Promise<void> {
     return api.openFile(path);
   }

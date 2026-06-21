@@ -53,6 +53,29 @@ pub fn get_entry(path: String) -> Result<DirEntry, String> {
     build_dir_entry(PathBuf::from(path))
 }
 
+// Recursively sum the apparent size (bytes) of every file under `path`. Used to fill the
+// size column for directories, which the OS reports as 0. Symlinks are not followed (jwalk
+// default), matching `du` without -L.
+//
+// The command is `async` and the walk runs on `spawn_blocking`: Tauri executes synchronous
+// commands on the main thread, so a plain sync version froze the UI for the whole walk.
+// This keeps the webview responsive while the (CPU/IO-bound) walk runs on a worker thread.
+#[tauri::command]
+pub async fn get_dir_size(path: String) -> u64 {
+    tauri::async_runtime::spawn_blocking(move || {
+        jwalk::WalkDir::new(path)
+            .skip_hidden(false)
+            .into_iter()
+            .filter_map(|entry| entry.ok())
+            .filter(|entry| entry.file_type().is_file())
+            .filter_map(|entry| entry.metadata().ok())
+            .map(|metadata| metadata.len())
+            .sum()
+    })
+    .await
+    .unwrap_or(0)
+}
+
 #[tauri::command]
 pub fn read_directory(path: &str) -> Vec<DirEntry> {
     let mut result: Vec<DirEntry> = Vec::new();

@@ -29,4 +29,8 @@ export const formatBytes = (bytes: number, decimals: number = 2) => {
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
 };
 
+// Format a Unix epoch (seconds) as a locale date-time string.
+export const formatDate = (secs: number) =>
+  new Date(secs * 1000).toLocaleString();
+
 export { classNames };

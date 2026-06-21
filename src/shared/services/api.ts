@@ -18,6 +18,10 @@ export const readDirectory = async (path: string): Promise<DirEntry[]> =>
 export const getEntry = async (path: string): Promise<DirEntry> =>
   await invoke("get_entry", { path });
 
+// Recursively computed total size (bytes) of a directory.
+export const getDirSize = async (path: string): Promise<number> =>
+  await invoke("get_dir_size", { path });
+
 // Open a file with the OS default application. Goes through the Rust `open_file` command so the path
 // is logged to the Tauri terminal; the command returns the error if it fails.
 export const openFile = async (path: string): Promise<void> => {
