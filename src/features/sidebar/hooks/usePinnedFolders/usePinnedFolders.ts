@@ -48,9 +48,7 @@ export const usePinnedFolders = () => {
         }
       }),
     ).then((items) =>
-      setPinned(
-        items.filter((item): item is SidebarPathItem => item !== null),
-      ),
+      setPinned(items.filter((item): item is SidebarPathItem => item !== null)),
     );
   }, []);
 

@@ -9,10 +9,10 @@ export const useRecentPaths = (path: string): string[] => {
     if (!path) return;
 
     setRecentPaths((currentPaths) =>
-      [path, ...currentPaths.filter((currentPath) => currentPath !== path)].slice(
-        0,
-        MAX_RECENT_PATHS,
-      ),
+      [
+        path,
+        ...currentPaths.filter((currentPath) => currentPath !== path),
+      ].slice(0, MAX_RECENT_PATHS),
     );
   }, [path]);
 

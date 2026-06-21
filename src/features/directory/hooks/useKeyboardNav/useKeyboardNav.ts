@@ -23,7 +23,9 @@ export const useKeyboardNav = ({
       const t = el as HTMLElement | null;
       return (
         !!t &&
-        (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)
+        (t.tagName === "INPUT" ||
+          t.tagName === "TEXTAREA" ||
+          t.isContentEditable)
       );
     };
 
