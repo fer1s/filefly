@@ -55,7 +55,8 @@ All coding agents (Codex, Claude, or any automated contributor) **must read this
 
 - Use **plain CSS** for component styling. This project does **not** use Tailwind.
 - One CSS file per component/view, mirroring the component tree under `src/styles/` (e.g. `src/styles/components/PathBar.css`, `src/styles/pages/Directory.css`). Each component imports its own stylesheet.
-- Define theme tokens/variables and shared globals in `src/styles/index.css` (colors, spacing, typography, reusable utility classes like `.shadow`).
+- Define theme tokens/variables in `src/styles/theme.css` (the `:root` design-token source: `--space-*`, `--size-*`, `--radius-*`, `--border-width-*`, `--color-*`, `--shadow-*`, etc.). Keep shared globals and reusable utility classes (like `.shadow`) in `src/styles/index.css`.
+- See section 12 for the mandatory rule on using these tokens instead of literal values.
 - Keep selectors scoped by the component's root class (e.g. `.PathBar ...`) to avoid leakage between components.
 - Global CSS should stay minimal and design-token oriented; avoid duplicating tokens in component files.
 
@@ -211,3 +212,50 @@ Rules:
 - Trivial, non-semantic values with no reuse and obvious meaning (`0`, `1`, `-1`, `""`, `true`).
 - Local-only loop/index math where a name adds no clarity.
 - When in doubt, name it.
+
+---
+
+## 12) Design Tokens — No Literal Sizes in CSS (Mandatory)
+
+All CSS must respect the theme in `src/styles/theme.css`. When you create or edit a CSS class,
+do **not** hardcode dimensional/visual literals — use the existing `:root` tokens.
+
+### 12.1) Use tokens, not literals
+
+- Spacing (margin, padding, gap, top/left/right/bottom, inset): use `var(--space-*)`.
+- Sizes (width, height, min/max, flex-basis): use `var(--size-*)`.
+- Radius: `var(--radius-*)`. Border width: `var(--border-width-*)`. Blur: `var(--blur-*)`.
+- Colors: `var(--color-*)`. Shadows: `var(--shadow-*)`. Icon/font sizing: the `--size-icon-*` / `--font-size-*` tokens.
+- Never write raw `px`/`rem` for these properties when a token exists.
+
+```css
+/* ❌ literal values */
+.panel {
+  padding: 16px;
+  gap: 10px;
+  border-radius: 8px;
+}
+
+/* ✅ tokens from theme.css */
+.panel {
+  padding: var(--space-4);
+  gap: var(--space-2-5);
+  border-radius: var(--radius-md);
+}
+```
+
+### 12.2) Need a value that has no token? Define one.
+
+- Only when no existing token fits, add a **new token** to `theme.css` `:root`, then reference it.
+- Reuse before adding: scan the existing `--space-*` / `--size-*` scale first; pick the closest
+  rather than inventing a near-duplicate.
+- Naming: follow the established convention — generic scale (`--space-6`), or purpose-named for
+  one-off component dimensions (`--size-<thing>`, e.g. `--size-properties-width`).
+- Add the token in `theme.css` only; never redeclare custom properties inside component CSS.
+
+### 12.3) Allowed literals
+
+- `0`, `100%`, `100vw`/`100vh`, `1fr`, `auto`, and ratio/percentage layout values.
+- `transition`/`animation` timings and easings (no token scale for these yet).
+- Genuinely one-off non-spatial values that carry no theme meaning.
+- When in doubt, prefer a token.
