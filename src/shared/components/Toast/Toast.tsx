@@ -1,15 +1,9 @@
-import { ToastType } from "@/shared/toast";
 import { classNames } from "@/shared/utils";
 import { t } from "@/lang";
 
 import "@/styles/components/Toast.css";
 
-export type ToastData = { id: number; message: string; type: ToastType };
-
-type ToastsProps = {
-  toasts: ToastData[];
-  onDismiss: (id: number) => void;
-};
+import type { ToastsProps } from "./types";
 
 const Toasts = ({ toasts, onDismiss }: ToastsProps) => {
   return (

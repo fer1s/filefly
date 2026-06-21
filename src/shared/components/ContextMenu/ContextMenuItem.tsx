@@ -1,34 +1,6 @@
-import { ReactNode, forwardRef } from "react";
 import { classNames } from "@/shared/utils";
-import "@/styles/components/ContextMenu.css";
 
-// ContextMenu
-interface ContextMenuProps {
-  children: ReactNode;
-  contextMenuVisible: boolean;
-}
-
-export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
-  ({ children, contextMenuVisible }, ref) => {
-    return (
-      <div
-        className={classNames("context_menu", contextMenuVisible && "visible")}
-        ref={ref}
-      >
-        {children}
-      </div>
-    );
-  },
-);
-
-// ContextMenuItem
-interface ContextMenuItemProps {
-  isSeparator?: boolean;
-  onClick?: () => void;
-  icon?: ReactNode;
-  text?: string;
-  disabled?: boolean;
-}
+import type { ContextMenuItemProps } from "./types";
 
 export const ContextMenuItem = ({
   isSeparator,

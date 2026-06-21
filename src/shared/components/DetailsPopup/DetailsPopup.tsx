@@ -1,13 +1,8 @@
-import { ReactNode } from "react";
 import { classNames } from "@/shared/utils";
 
 import "@/styles/components/DetailsPopup.css";
 
-interface DetailsPopupProps {
-  visible: boolean;
-  title: string;
-  children: ReactNode;
-}
+import type { DetailsPopupProps } from "./types";
 
 const DetailsPopup = ({ visible, title, children }: DetailsPopupProps) => (
   <div className={classNames("details_popup", "shadow", visible && "visible")}>
