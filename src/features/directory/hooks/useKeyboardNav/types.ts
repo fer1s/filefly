@@ -9,4 +9,5 @@ export type UseKeyboardNavArgs = {
   enabled: boolean;
   setSelectedIDs: Dispatch<SetStateAction<string[]>>;
   onOpen: (entry: DirEntry) => void;
+  onTypeaheadChange: (query: string) => void;
 };

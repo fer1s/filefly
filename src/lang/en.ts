@@ -71,6 +71,7 @@ export const en = {
     freeOf: (free: string, total: string) => `${free} free of ${total}`,
   },
   directory: {
+    find: "Find",
     noResults: (query: string) => `No results for "${query}"`,
     fileTypeNotSupported: "File type not supported",
     confirmDelete: (label: string) => `Move ${label} to the Trash?`,

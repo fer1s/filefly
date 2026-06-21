@@ -32,6 +32,10 @@
   transition-delay: 0s;
 }
 
+.popup.non_interactive.visible {
+  pointer-events: none;
+}
+
 .popup .title {
   background-color: var(--color-surface-popover);
   backdrop-filter: blur(var(--blur-large));

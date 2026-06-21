@@ -12,6 +12,7 @@ export const useKeyboardNav = ({
   enabled,
   setSelectedIDs,
   onOpen,
+  onTypeaheadChange,
 }: UseKeyboardNavArgs) => {
   const searchBufferRef = useRef("");
   const searchTimerRef = useRef<number | null>(null);
@@ -20,7 +21,10 @@ export const useKeyboardNav = ({
     // Skip when typing in the path bar or any other text field.
     const isTypingTarget = (el: EventTarget | null) => {
       const t = el as HTMLElement | null;
-      return !!t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA");
+      return (
+        !!t &&
+        (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)
+      );
     };
 
     // Number of items in the first grid row, used as the vertical step.
@@ -64,17 +68,29 @@ export const useKeyboardNav = ({
         return prev;
       });
 
+    const clearTypeahead = () => {
+      if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+      searchTimerRef.current = null;
+      searchBufferRef.current = "";
+      onTypeaheadChange("");
+    };
+
+    const scheduleTypeaheadReset = () => {
+      if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+      searchTimerRef.current = window.setTimeout(
+        clearTypeahead,
+        TYPEAHEAD_RESET_MS,
+      );
+    };
+
     // Type-to-find: accumulate typed chars; a single-char buffer starts after the current entry so
     // repeated presses cycle through matches.
     const typeahead = (char: string) => {
-      if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
-      searchBufferRef.current += char.toLowerCase();
-      searchTimerRef.current = window.setTimeout(
-        () => (searchBufferRef.current = ""),
-        TYPEAHEAD_RESET_MS,
-      );
+      searchBufferRef.current += char;
+      onTypeaheadChange(searchBufferRef.current);
+      scheduleTypeaheadReset();
 
-      const buf = searchBufferRef.current;
+      const buf = searchBufferRef.current.toLowerCase();
       setSelectedIDs((prev) => {
         if (!items.length) return prev;
         const current = prev.length
@@ -102,7 +118,16 @@ export const useKeyboardNav = ({
 
       switch (e.key) {
         case "Escape":
+          clearTypeahead();
           setSelectedIDs([]);
+          break;
+        case "Backspace":
+          if (!searchBufferRef.current) break;
+          e.preventDefault();
+          searchBufferRef.current = searchBufferRef.current.slice(0, -1);
+          onTypeaheadChange(searchBufferRef.current);
+          if (searchBufferRef.current) scheduleTypeaheadReset();
+          else clearTypeahead();
           break;
         case "ArrowRight":
           e.preventDefault();
@@ -130,7 +155,7 @@ export const useKeyboardNav = ({
     document.addEventListener("keydown", handleKeyDown);
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
-      if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+      clearTypeahead();
     };
-  }, [items, view, enabled, setSelectedIDs, onOpen]);
+  }, [items, view, enabled, setSelectedIDs, onOpen, onTypeaheadChange]);
 };

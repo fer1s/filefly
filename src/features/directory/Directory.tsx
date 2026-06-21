@@ -40,6 +40,7 @@ import "@/styles/views/Directory.css";
 import Preview from "./components/Preview";
 import Properties from "./components/Properties";
 import StatusBar from "./components/StatusBar";
+import TypeaheadPopup from "./components/TypeaheadPopup";
 import { DirEntry } from "@/shared/models";
 
 const Directory = () => {
@@ -58,6 +59,7 @@ const Directory = () => {
   // Properties modal.
   const [propertiesEntry, setPropertiesEntry] = useState<DirEntry | null>(null);
   const [propertiesVisible, setPropertiesVisible] = useState(false);
+  const [typeaheadQuery, setTypeaheadQuery] = useState("");
 
   // Entries visible after applying the sidebar search filter.
   const filtered = useMemo(
@@ -138,9 +140,10 @@ const Directory = () => {
   useKeyboardNav({
     items: filtered,
     view,
-    enabled: !previewVisible,
+    enabled: !previewVisible && !propertiesVisible,
     setSelectedIDs,
     onOpen: handleKeyboardOpen,
+    onTypeaheadChange: setTypeaheadQuery,
   });
 
   const handleOpenInTerminal = () => {
@@ -508,6 +511,8 @@ const Directory = () => {
           </h3>
         )}
       </Popup>
+
+      <TypeaheadPopup query={typeaheadQuery} />
 
       <Preview
         fileType={previewFileType}
