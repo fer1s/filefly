@@ -1,16 +1,10 @@
-import { DirEntry } from "@/shared/models";
 import { classNames, formatBytes } from "@/shared/utils";
 import { t } from "@/lang";
 
 import "@/styles/components/Properties.css";
 
-type PropertiesProps = {
-  entry: DirEntry | null;
-  visible: boolean;
-  onClose: () => void;
-};
-
-const formatDate = (secs: number) => new Date(secs * 1000).toLocaleString();
+import { formatDate } from "./utils";
+import type { PropertiesProps } from "./types";
 
 const Properties = ({ entry, visible, onClose }: PropertiesProps) => {
   return (

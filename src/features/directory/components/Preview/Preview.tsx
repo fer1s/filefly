@@ -10,7 +10,7 @@ import {
 import { classNames } from "@/shared/utils";
 import { t } from "@/lang";
 
-import AudioPreview from "./AudioPreview";
+import AudioPreview from "../AudioPreview";
 import Spinner from "@/shared/components/Spinner";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -21,18 +21,7 @@ import {
 
 import "@/styles/components/Preview.css";
 
-interface PreviewProps {
-  fileType: string;
-  filePath: string;
-
-  previewVisible: boolean;
-  setPreviewVisible: (visible: boolean) => void;
-
-  onPrev: () => void;
-  onNext: () => void;
-  hasPrev: boolean;
-  hasNext: boolean;
-}
+import type { PreviewProps } from "./types";
 
 const Preview = ({
   fileType,

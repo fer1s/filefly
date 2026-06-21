@@ -11,11 +11,9 @@ import {
 
 import "@/styles/components/AudioPreview.css";
 
-interface AudioPreviewProps {
-  isVisible: boolean;
-
-  filePath: string;
-}
+import { DEFAULT_VOLUME } from "./constants";
+import { formatTime } from "./utils";
+import type { AudioPreviewProps } from "./types";
 
 const AudioPreview = ({ isVisible, filePath }: AudioPreviewProps) => {
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -25,7 +23,7 @@ const AudioPreview = ({ isVisible, filePath }: AudioPreviewProps) => {
 
   const [progress, setProgress] = useState<number>(0);
   const [duration, setDuration] = useState<number>(0);
-  const [volume, setVolume] = useState<number>(50);
+  const [volume, setVolume] = useState<number>(DEFAULT_VOLUME);
 
   const togglePlay = () => {
     setIsPlaying((prev) => !prev);
@@ -105,14 +103,3 @@ const AudioPreview = ({ isVisible, filePath }: AudioPreviewProps) => {
 };
 
 export default AudioPreview;
-
-const formatTime = (time: number) => {
-  if (time && !isNaN(time)) {
-    const minutes = Math.floor(time / 60);
-    const formatMinutes = minutes < 10 ? `0${minutes}` : `${minutes}`;
-    const seconds = Math.floor(time % 60);
-    const formatSeconds = seconds < 10 ? `0${seconds}` : `${seconds}`;
-    return `${formatMinutes}:${formatSeconds}`;
-  }
-  return "00:00";
-};

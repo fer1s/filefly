@@ -1,43 +1,14 @@
 import { useEffect, useRef } from "react";
 import { convertFileSrc } from "@tauri-apps/api/core";
 
-import { DirEntry } from "@/shared/models";
 import { classNames, navigateToPath, formatBytes } from "@/shared/utils";
 import { useStateContext } from "@/shared/providers/StateProvider";
-import {
-  ENTRY_KIND,
-  IMAGE_FORMATS,
-  VIEW_MODE,
-  type EntryKind,
-  type ViewMode,
-} from "@/shared/constants";
+import { ENTRY_KIND, IMAGE_FORMATS, VIEW_MODE } from "@/shared/constants";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFile, faFolder } from "@fortawesome/free-solid-svg-icons";
 
-type DirEntryItemProps = {
-  entry: DirEntry;
-  setPath: (path: string) => void;
-  view: ViewMode;
-
-  selected: boolean;
-  onSelect: (e: React.MouseEvent) => void;
-
-  renaming: boolean;
-  onRename: (newName: string) => void;
-  onCancelRename: () => void;
-
-  setHighlitedElementID: (id: string) => void;
-  setHighlitedElementType: (type: EntryKind) => void;
-  setDetailsPopupVisible: (visible: boolean) => void;
-
-  setContextMenuVisible: (visible: boolean) => void;
-  setContextMenuElementID: (id: string) => void;
-  setContextMenuElementType: (type: EntryKind) => void;
-
-  contextMenuRef: React.RefObject<HTMLDivElement | null>;
-  id: string;
-};
+import type { DirEntryItemProps } from "./types";
 
 const DirEntryItem = ({
   entry,
