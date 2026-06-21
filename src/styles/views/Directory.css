@@ -5,10 +5,10 @@
 .directory_page .rename_input {
   width: 100%;
   min-width: 0;
-  padding: 2px 4px;
+  padding: var(--space-0-5) var(--space-1);
   background-color: var(--color-surface-backdrop);
-  border: 1px solid var(--color-selection-focus);
-  border-radius: 3px;
+  border: var(--border-width-default) solid var(--color-selection-focus);
+  border-radius: var(--radius-sm);
   color: var(--color-text-primary);
   font-family: "Inter", sans-serif;
   font-size: 0.7rem;
@@ -23,7 +23,7 @@
 }
 
 .directory_page .no_results {
-  margin-top: 20px;
+  margin-top: var(--space-5);
   font-size: 0.85rem;
   font-weight: 400;
   color: var(--color-text-muted);
@@ -31,28 +31,28 @@
 }
 
 .directory_page .grid .dir_entry_item {
-  width: 77px;
-  height: 77px;
+  width: var(--size-directory-tile);
+  height: var(--size-directory-tile);
   cursor: pointer;
   background-color: transparent;
-  border-radius: 5px;
-  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  border: var(--border-width-default) solid transparent;
   position: relative;
   transition: all 0.1s ease-in-out;
 }
 
 .directory_page .grid .dir_entry_item .extension {
   position: absolute;
-  top: 0;
-  right: 0;
+  top: var(--space-0);
+  right: var(--space-0);
   z-index: 998;
   font-size: 0.6rem;
   font-weight: 400;
   user-select: none;
-  margin: 5px;
+  margin: var(--space-1);
   background-color: var(--color-surface-solid);
-  padding: 2px 5px;
-  border-radius: 5px;
+  padding: var(--space-0-5) var(--space-1);
+  border-radius: var(--radius-sm);
 }
 
 .directory_page .grid .dir_entry_item svg {
@@ -72,16 +72,16 @@
   width: 50%;
   height: 60%;
   object-fit: contain;
-  border-radius: 2px;
+  border-radius: var(--radius-xs);
 }
 
 .directory_page .grid .dir_entry_item .dir_entry_info {
   position: absolute;
-  bottom: 0;
+  bottom: var(--space-0);
   left: 50%;
   transform: translateX(-50%);
   width: 100%;
-  height: 30px;
+  height: var(--size-directory-row);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -96,7 +96,7 @@
 
 .directory_page .grid .dir_entry_item:hover {
   background-color: var(--color-overlay-hover);
-  border: 1px solid var(--color-border-default);
+  border: var(--border-width-default) solid var(--color-border-default);
 }
 
 .directory_page .grid .dir_entry_item:hover svg,
@@ -110,7 +110,7 @@
 
 .directory_page .grid .dir_entry_item.selected {
   background-color: var(--color-selection-background);
-  border: 1px solid var(--color-selection-border);
+  border: var(--border-width-default) solid var(--color-selection-border);
 }
 
 .directory_page .grid .dir_entry_item.selected svg,
@@ -119,12 +119,12 @@
 }
 
 .directory_page .list {
-  padding-bottom: 10px;
+  padding-bottom: var(--space-2-5);
 }
 
 .directory_page .list .dir_entry_item {
   width: 100%;
-  height: 30px;
+  height: var(--size-directory-row);
   display: flex;
   justify-content: flex-start;
   align-items: center;
@@ -133,8 +133,8 @@
 }
 
 .directory_page .list .dir_entry_item .icon {
-  width: 30px;
-  height: 30px;
+  width: var(--size-control-large);
+  height: var(--size-control-large);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -174,9 +174,9 @@
   font-weight: 400;
   color: var(--color-text-tertiary);
   background-color: var(--color-surface-popover);
-  backdrop-filter: blur(50px);
-  border-radius: 5px;
-  padding: 5px;
+  backdrop-filter: blur(var(--blur-large));
+  border-radius: var(--radius-sm);
+  padding: var(--space-1);
   user-select: none;
 }
 
@@ -192,9 +192,9 @@
   font-weight: 400;
   color: var(--color-text-tertiary);
   background-color: var(--color-surface-popover);
-  backdrop-filter: blur(50px);
-  border-radius: 5px;
-  padding: 5px;
+  backdrop-filter: blur(var(--blur-large));
+  border-radius: var(--radius-sm);
+  padding: var(--space-1);
   user-select: none;
 }
 
@@ -219,7 +219,8 @@
 
 .directory_page .list .dir_entry_item.selected {
   background-color: var(--color-selection-background);
-  box-shadow: inset 2px 0 0 var(--color-selection-indicator);
+  box-shadow: inset var(--border-width-accent) 0 0
+    var(--color-selection-indicator);
 }
 
 .directory_page .list .dir_entry_item.selected .icon svg,
@@ -230,11 +231,11 @@
 }
 
 .directory_page .list .dir_entry_item:first-child {
-  border-top-left-radius: 5px;
-  border-top-right-radius: 5px;
+  border-top-left-radius: var(--radius-sm);
+  border-top-right-radius: var(--radius-sm);
 }
 
 .directory_page .list .dir_entry_item:last-child {
-  border-bottom-left-radius: 5px;
-  border-bottom-right-radius: 5px;
+  border-bottom-left-radius: var(--radius-sm);
+  border-bottom-right-radius: var(--radius-sm);
 }

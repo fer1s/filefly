@@ -1,6 +1,6 @@
 .loader {
-  width: 48px;
-  height: 48px;
+  width: var(--size-spinner);
+  height: var(--size-spinner);
   display: inline-block;
   position: relative;
 }
@@ -9,13 +9,13 @@
 .loader::before {
   content: "";
   box-sizing: border-box;
-  width: 48px;
-  height: 48px;
+  width: var(--size-spinner);
+  height: var(--size-spinner);
   border-radius: 50%;
-  border: 2px solid var(--color-text-primary);
+  border: var(--border-width-accent) solid var(--color-text-primary);
   position: absolute;
-  left: 0;
-  top: 0;
+  left: var(--space-0);
+  top: var(--space-0);
   animation: animloader 2s linear infinite;
 }
 

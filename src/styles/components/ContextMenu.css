@@ -1,21 +1,21 @@
 .context_menu {
   position: absolute;
   z-index: 1000;
-  max-height: 250px;
-  max-width: 170px;
+  max-height: var(--size-context-menu-max-height);
+  max-width: var(--size-context-menu-max-width);
   overflow-y: auto;
   background-color: var(--color-surface-popover);
-  backdrop-filter: blur(20px);
-  border-radius: 5px;
-  border: 1px solid var(--color-border-default);
+  backdrop-filter: blur(var(--blur-medium));
+  border-radius: var(--radius-sm);
+  border: var(--border-width-default) solid var(--color-border-default);
   box-shadow: var(--shadow-popover);
-  padding: 5px;
-  margin: 0;
+  padding: var(--space-1);
+  margin: var(--space-0);
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
   align-items: flex-start;
-  gap: 1px;
+  gap: var(--space-0-25);
   opacity: 0;
   transform: scale(0.8);
   visibility: hidden;
@@ -36,23 +36,23 @@
 
 .context_menu .context_menu_item.separator {
   width: 100%;
-  height: 1px;
-  min-height: 1px;
+  height: var(--border-width-default);
+  min-height: var(--border-width-default);
   background-color: var(--color-overlay-active);
-  margin: 5px 0;
+  margin: var(--space-1) var(--space-0);
 }
 
 .context_menu .context_menu_item.ctx_button {
   width: 100%;
   min-width: 100%;
   max-width: 100%;
-  max-height: 22px;
-  height: 22px;
-  min-height: 22px;
-  padding: 0 10px;
-  margin: 0;
+  max-height: var(--size-context-menu-item);
+  height: var(--size-context-menu-item);
+  min-height: var(--size-context-menu-item);
+  padding: var(--space-0) var(--space-2-5);
+  margin: var(--space-0);
   border: none;
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
   background-color: transparent;
   color: var(--color-text-secondary);
   font-size: 0.75rem;
@@ -62,7 +62,7 @@
   flex-direction: row;
   justify-content: flex-start;
   align-items: center;
-  gap: 9px;
+  gap: var(--space-2);
   transition: all 0.2s ease-in-out;
 }
 
@@ -72,8 +72,8 @@
 
 /* Fixed-width icon column so every label starts at the same x. */
 .context_menu .context_menu_item.ctx_button .ctx_icon {
-  width: 14px;
-  min-width: 14px;
+  width: var(--size-icon-medium);
+  min-width: var(--size-icon-medium);
   display: inline-flex;
   justify-content: center;
   align-items: center;
@@ -88,8 +88,8 @@
 }
 
 .context_menu .context_menu_item.ctx_button svg {
-  width: 12.5px;
-  height: 12.5px;
+  width: var(--size-icon-small);
+  height: var(--size-icon-small);
   color: var(--color-text-secondary);
 }
 

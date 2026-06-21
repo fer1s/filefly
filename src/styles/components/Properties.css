@@ -1,6 +1,6 @@
 .properties_backdrop {
   position: fixed;
-  inset: 0;
+  inset: var(--space-0);
   z-index: 1500;
   background-color: var(--color-surface-backdrop);
   opacity: 0;
@@ -23,13 +23,13 @@
   z-index: 1501;
   top: 50%;
   left: 50%;
-  width: 400px;
-  max-width: calc(100% - 40px);
+  width: var(--size-properties-width);
+  max-width: calc(100% - var(--space-10));
   transform: translate(-50%, -50%) scale(0.9);
   background-color: var(--color-surface-modal);
-  backdrop-filter: blur(20px);
-  border-radius: 8px;
-  border: 1px solid var(--color-border-default);
+  backdrop-filter: blur(var(--blur-medium));
+  border-radius: var(--radius-md);
+  border: var(--border-width-default) solid var(--color-border-default);
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
@@ -51,12 +51,12 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--color-border-default);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: var(--border-width-default) solid var(--color-border-default);
 }
 
 .properties_modal .properties_header h4 {
-  margin: 0;
+  margin: var(--space-0);
   font-size: 1rem;
   font-weight: 600;
   color: var(--color-text-primary);
@@ -78,20 +78,20 @@
 }
 
 .properties_modal .properties_content {
-  padding: 16px;
+  padding: var(--space-4);
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--space-2-5);
 }
 
 .properties_modal .properties_content .row {
   display: flex;
-  gap: 16px;
+  gap: var(--space-4);
   align-items: baseline;
 }
 
 .properties_modal .properties_content .row .label {
-  flex: 0 0 80px;
+  flex: 0 0 var(--space-20);
   font-size: 0.78rem;
   font-weight: 600;
   color: var(--color-text-high);

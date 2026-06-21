@@ -57,6 +57,14 @@ export const en = {
   },
   volumes: {
     title: "Volumes",
+    name: "Name",
+    mountPoint: "Mount point",
+    type: "Type",
+    used: "Used",
+    available: "Available",
+    capacity: "Capacity",
+    removable: "Removable",
+    localDrive: "Local drive",
     freeOf: (free: string, total: string) => `${free} free of ${total}`,
   },
   directory: {

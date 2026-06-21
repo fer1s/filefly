@@ -1,34 +1,34 @@
-.volumes_page .volume_item {
-  width: 226.33px;
-  height: 60px;
+.volumes_page .grid .volume_item {
+  width: var(--size-volume-card-width);
+  height: var(--size-volume-card-height);
   background-color: var(--color-surface-row);
-  border-radius: 5px;
-  padding: 13px;
-  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  border: var(--border-width-default) solid var(--color-border-default);
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: flex-start;
-  gap: 10px;
+  gap: var(--space-2-5);
   cursor: pointer;
   transition: all 0.2s ease-in-out;
 }
 
-.volumes_page .volume_item svg {
+.volumes_page .grid .volume_item svg {
   font-size: 1.2rem;
   color: var(--color-text-muted);
 }
 
-.volumes_page .volume_item .volume_info {
+.volumes_page .grid .volume_item .volume_info {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   justify-content: flex-start;
-  gap: 5px;
+  gap: var(--space-1);
   width: 100%;
 }
 
-.volumes_page .volume_item .volume_info h3 {
+.volumes_page .grid .volume_item .volume_info h3 {
   font-size: 0.8rem;
   font-weight: 700;
   color: var(--color-text-primary);
@@ -36,40 +36,166 @@
   flex-direction: row;
   align-items: center;
   justify-content: flex-start;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
-.volumes_page .volume_item .volume_info h3 span {
+.volumes_page .grid .volume_item .volume_info h3 span {
   font-weight: 400;
   color: var(--color-text-muted);
 }
 
-.volumes_page .volume_item .volume_info .usage {
+.volumes_page .grid .volume_item .volume_info .usage {
   width: 100%;
-  height: 5px;
-  border-radius: 5px;
+  height: var(--size-progress-track);
+  border-radius: var(--radius-sm);
   background-color: var(--color-progress-track);
   overflow: hidden;
 }
 
-.volumes_page .volume_item .volume_info .usage .usage_bar {
+.volumes_page .grid .volume_item .volume_info .usage .usage_bar {
   height: 100%;
-  border-radius: 0 5px 5px 0;
+  border-radius: var(--space-0) var(--radius-sm) var(--radius-sm) var(--space-0);
   background-color: var(--color-progress-fill);
 }
 
-.volumes_page .volume_item .volume_info p {
+.volumes_page .grid .volume_item .volume_info p {
   font-size: 0.6rem;
   font-weight: 300;
   color: var(--color-text-muted);
 }
 
-.volumes_page .volume_item:hover {
+.volumes_page .grid .volume_item:hover {
   background-color: var(--color-surface-interactive);
-  border: 1px solid var(--color-border-strong);
+  border: var(--border-width-default) solid var(--color-border-strong);
 }
 
-.volumes_page .volume_item.selected {
+.volumes_page .grid .volume_item.selected {
   background-color: var(--color-selection-background);
-  border: 1px solid var(--color-selection-border);
+  border: var(--border-width-default) solid var(--color-selection-border);
+}
+
+.volumes_page .volumes_list_wrapper {
+  width: 100%;
+  overflow-x: auto;
+  border: var(--border-width-default) solid var(--color-border-default);
+  border-radius: var(--radius-sm);
+}
+
+.volumes_page .volumes_list {
+  width: 100%;
+  min-width: var(--size-volume-table-min-width);
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.volumes_page .volumes_list th {
+  padding: var(--space-2) var(--space-2-5);
+  background-color: var(--color-overlay-faint);
+  border-bottom: var(--border-width-default) solid var(--color-border-default);
+  color: var(--color-text-muted);
+  font-size: 0.68rem;
+  font-weight: 500;
+  text-align: left;
+  user-select: none;
+}
+
+.volumes_page .volumes_list th:first-child {
+  width: 28%;
+}
+
+.volumes_page .volumes_list th:nth-child(2) {
+  width: 14%;
+}
+
+.volumes_page .volumes_list th:nth-child(3) {
+  width: 12%;
+}
+
+.volumes_page .volumes_list .volume_item {
+  cursor: pointer;
+  transition: background-color 0.15s ease-in-out;
+}
+
+.volumes_page .volumes_list .volume_item:nth-child(even) {
+  background-color: var(--color-surface-row);
+}
+
+.volumes_page .volumes_list .volume_item:hover {
+  background-color: var(--color-overlay-hover);
+}
+
+.volumes_page .volumes_list .volume_item.selected {
+  background-color: var(--color-selection-background);
+  box-shadow: inset var(--border-width-accent) 0 0
+    var(--color-selection-indicator);
+}
+
+.volumes_page .volumes_list td {
+  height: var(--size-volume-row-height);
+  padding: var(--space-2) var(--space-2-5);
+  border-bottom: var(--border-width-default) solid var(--color-border-faint);
+  color: var(--color-text-secondary);
+  font-size: 0.72rem;
+  font-weight: 400;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.volumes_page .volumes_list tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.volumes_page .volumes_list .volume_identity,
+.volumes_page .volumes_list .volume_usage {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.volumes_page .volumes_list .volume_identity svg {
+  flex: 0 0 auto;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+.volumes_page .volumes_list .volume_summary {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.volumes_page .volumes_list .volume_name {
+  overflow: hidden;
+  color: var(--color-text-primary);
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.volumes_page .volumes_list .mount_point {
+  color: var(--color-text-muted);
+}
+
+.volumes_page .volumes_list .volume_usage .usage {
+  width: min(100%, var(--size-volume-usage-max-width));
+  height: var(--size-progress-track);
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  background-color: var(--color-progress-track);
+}
+
+.volumes_page .volumes_list .volume_usage .usage_bar {
+  height: 100%;
+  border-radius: var(--space-0) var(--radius-sm) var(--radius-sm) var(--space-0);
+  background-color: var(--color-progress-fill);
+}
+
+.volumes_page .volumes_list .volume_usage span {
+  min-width: var(--size-control-large);
+  color: var(--color-text-muted);
+  font-size: 0.65rem;
+  text-align: right;
 }

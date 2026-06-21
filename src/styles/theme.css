@@ -1,4 +1,64 @@
 :root {
+  --space-0: 0;
+  --space-0-25: 1px;
+  --space-0-5: 2px;
+  --space-1: 4px;
+  --space-1-5: 6px;
+  --space-2: 8px;
+  --space-2-5: 10px;
+  --space-3: 12px;
+  --space-3-5: 14px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-20: 80px;
+  --space-negative-2-5: -10px;
+
+  --border-width-default: 1px;
+  --border-width-accent: 2px;
+  --border-width-scrollbar: 4px;
+
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-pill: 999px;
+
+  --blur-medium: 20px;
+  --blur-large: 48px;
+
+  --size-scrollbar: 12px;
+  --size-app-bar: 36px;
+  --size-window-actions: 108px;
+  --size-control-small: 20px;
+  --size-control-medium: 28px;
+  --size-control-large: 32px;
+  --size-path-controls: 96px;
+  --size-progress-track: 4px;
+  --size-slider-thumb: 8px;
+  --size-spinner: 48px;
+  --size-directory-tile: 76px;
+  --size-directory-row: 32px;
+  --size-sidebar-expanded: 220px;
+  --size-sidebar-collapsed: 72px;
+  --size-volume-card-width: 228px;
+  --size-volume-card-height: 60px;
+  --size-volume-table-min-width: 848px;
+  --size-volume-row-height: 40px;
+  --size-volume-usage-max-width: 152px;
+  --size-context-menu-max-width: 168px;
+  --size-context-menu-max-height: 248px;
+  --size-context-menu-item: 24px;
+  --size-icon-small: 12px;
+  --size-icon-medium: 16px;
+  --size-preview-header: 48px;
+  --size-audio-progress: 180px;
+  --size-audio-volume: 100px;
+  --size-toast-max-width: 320px;
+  --size-properties-width: 400px;
+  --font-size-icon-large: 20px;
+
   --color-background-window: rgba(0, 0, 0, 0.25);
   --color-background-app: rgb(18, 18, 18);
   --color-background-sidebar: rgba(18, 18, 18, 0.8);

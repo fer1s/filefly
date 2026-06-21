@@ -1,19 +1,19 @@
 .audio_preview {
   position: absolute;
   z-index: 1005;
-  bottom: 0;
+  bottom: var(--space-0);
   left: 50%;
   transform: translate(-50%, 100%) scale(0.6);
-  margin-bottom: 20px;
-  padding: 10px;
+  margin-bottom: var(--space-5);
+  padding: var(--space-2-5);
   background-color: var(--color-surface-floating);
-  backdrop-filter: blur(20px);
-  border: 1px solid var(--color-border-default);
-  border-radius: 5px;
+  backdrop-filter: blur(var(--blur-medium));
+  border: var(--border-width-default) solid var(--color-border-default);
+  border-radius: var(--radius-sm);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-2-5);
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
@@ -36,8 +36,8 @@
 }
 
 .audio_preview > button {
-  width: 30px;
-  height: 30px;
+  width: var(--size-control-large);
+  height: var(--size-control-large);
   background-color: transparent;
   border: none;
   outline: none;
@@ -47,32 +47,32 @@
 }
 
 .audio_preview > button svg {
-  font-size: 20px;
+  font-size: var(--font-size-icon-large);
   color: var(--color-text-primary);
 }
 
 .audio_preview .progress {
   width: 100%;
-  height: 5px;
+  height: var(--size-progress-track);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 5px;
+  gap: var(--space-1);
 }
 
 .audio_preview .progress span {
   font-size: 0.7rem;
   font-weight: 400;
-  width: 30px;
+  width: var(--size-control-large);
   color: var(--color-audio-time);
 }
 
 .audio_preview .progress input[type="range"] {
-  width: 180px;
-  height: 5px;
+  width: var(--size-audio-progress);
+  height: var(--size-progress-track);
   background-color: var(--color-range-track);
   border: none;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   outline: none;
   cursor: pointer;
   -webkit-appearance: none;
@@ -81,8 +81,8 @@
 
 .audio_preview .progress input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 7px;
-  height: 7px;
+  width: var(--size-slider-thumb);
+  height: var(--size-slider-thumb);
   border-radius: 50%;
   background-color: var(--color-control-thumb);
   transition: transform 0.2s;
@@ -93,8 +93,8 @@
 }
 
 .audio_preview .volume_control button {
-  width: 30px;
-  height: 30px;
+  width: var(--size-control-large);
+  height: var(--size-control-large);
   background-color: transparent;
   border: none;
   outline: none;
@@ -104,7 +104,7 @@
 }
 
 .audio_preview .volume_control button svg {
-  font-size: 20px;
+  font-size: var(--font-size-icon-large);
   color: var(--color-text-primary);
 }
 
@@ -112,11 +112,11 @@
   position: absolute;
   z-index: 1004;
   background-color: var(--color-surface-floating);
-  backdrop-filter: blur(20px);
-  border: 1px solid var(--color-border-default);
-  border-radius: 5px;
-  padding: 10px;
-  bottom: 40px;
+  backdrop-filter: blur(var(--blur-medium));
+  border: var(--border-width-default) solid var(--color-border-default);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2-5);
+  bottom: var(--space-10);
   left: 50%;
   transform: translateX(50%) scale(0.6);
   display: grid;
@@ -139,11 +139,11 @@
 }
 
 .audio_preview .volume_control .volume_extension input[type="range"] {
-  width: 100px;
-  height: 5px;
+  width: var(--size-audio-volume);
+  height: var(--size-progress-track);
   background-color: var(--color-range-track);
   border: none;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   outline: none;
   cursor: pointer;
   -webkit-appearance: none;
@@ -155,8 +155,8 @@
   .volume_extension
   input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 7px;
-  height: 7px;
+  width: var(--size-slider-thumb);
+  height: var(--size-slider-thumb);
   border-radius: 50%;
   background-color: var(--color-control-thumb);
   transition: transform 0.2s;

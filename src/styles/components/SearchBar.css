@@ -1,6 +1,6 @@
 .SearchBar {
   width: 100%;
-  margin-bottom: 20px;
+  margin-bottom: var(--space-5);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -9,12 +9,12 @@
 
 .SearchBar input {
   width: 100%;
-  height: 30px;
-  padding: 6px 30px 6px 10px;
+  height: var(--size-control-large);
+  padding: var(--space-1-5) var(--space-8) var(--space-1-5) var(--space-2-5);
   background-color: var(--color-surface-input);
-  border: 1px solid var(--color-border-default);
+  border: var(--border-width-default) solid var(--color-border-default);
   color: var(--color-text-primary);
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   font-family: "Inter", sans-serif;
   font-size: 0.8rem;
   font-weight: 400;
@@ -24,25 +24,25 @@
 .SearchBar input:focus {
   outline: none;
   background-color: var(--color-surface-row);
-  border: 1px solid var(--color-border-strong);
+  border: var(--border-width-default) solid var(--color-border-strong);
 }
 
 .SearchBar input:hover {
   background-color: var(--color-surface-row);
-  border: 1px solid var(--color-border-strong);
+  border: var(--border-width-default) solid var(--color-border-strong);
 }
 
 .SearchBar .clear {
   position: absolute;
-  right: 6px;
+  right: var(--space-1-5);
   top: 50%;
   transform: translateY(-50%);
-  width: 20px;
-  height: 20px;
-  padding: 0;
+  width: var(--size-control-small);
+  height: var(--size-control-small);
+  padding: var(--space-0);
   background-color: transparent;
   border: none;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   display: grid;
   place-items: center;
   cursor: pointer;

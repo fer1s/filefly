@@ -163,3 +163,51 @@ Rules:
 - Prefer small, composable modules over monolithic files.
 - Keep APIs typed and explicit.
 - New features must follow these rules unless an exception is documented in the implementation notes/PR.
+
+---
+
+## 11) No Magic Literals — Use Named Constants (Mandatory)
+
+Do not scatter raw literals (strings or numbers) through the code. A literal that carries
+meaning, is compared against, or is reused must be a named constant.
+
+### 11.1) Closed sets of string values → const-object "enum"
+
+For a fixed set of related string values (modes, kinds, statuses), define a frozen const object
+and derive its type from it. Do **not** use bare string unions or inline literals.
+
+```ts
+// shared/constants.ts (pattern already used by VIEW_MODE, ENTRY_KIND, CLIPBOARD_MODE)
+export const VIEW_MODE = {
+  GRID: "grid",
+  LIST: "list",
+} as const;
+
+export type ViewMode = (typeof VIEW_MODE)[keyof typeof VIEW_MODE];
+```
+
+Rules:
+
+- Always `as const` so values are literal types, not widened `string`.
+- Derive the type from the object (`(typeof X)[keyof typeof X]`); never hand-maintain a parallel union.
+- Reference values as `VIEW_MODE.GRID`, never the raw `"grid"`.
+- Place shared sets in `shared/constants.ts`; feature-only sets in `features/<feature>/constants.ts`.
+
+### 11.2) Single values, formats and thresholds → named constants
+
+- Reused single values (file extensions, format groups, numeric thresholds, timeouts, keys)
+  go in `constants.ts` with a descriptive `UPPER_SNAKE_CASE` name (e.g. `MARKDOWN_FORMAT`,
+  `IMAGE_FORMATS`, `ACCEPTED_PREVIEW_FORMATS`).
+- Type collections as `readonly` (e.g. `readonly string[]`) to prevent mutation.
+- Compose constants from constants instead of repeating literals.
+
+### 11.3) User-facing text is not a constant — it is i18n
+
+- Human-readable strings belong in `lang/` (see section 9), not in `constants.ts`.
+- Constants are for machine values (enum tags, formats, keys); translations are for display text.
+
+### 11.4) Allowed bare literals
+
+- Trivial, non-semantic values with no reuse and obvious meaning (`0`, `1`, `-1`, `""`, `true`).
+- Local-only loop/index math where a name adds no clarity.
+- When in doubt, name it.

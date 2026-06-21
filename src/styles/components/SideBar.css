@@ -6,15 +6,15 @@
 }
 
 .SideBar .collapse_toggle {
-  width: 28px;
-  min-width: 28px;
-  height: 28px;
-  margin-bottom: 15px;
+  width: var(--size-control-medium);
+  min-width: var(--size-control-medium);
+  height: var(--size-control-medium);
+  margin-bottom: var(--space-4);
   margin-left: auto;
-  padding: 0;
+  padding: var(--space-0);
   background-color: var(--color-overlay-soft);
-  border: 1px solid var(--color-border-soft);
-  border-radius: 5px;
+  border: var(--border-width-default) solid var(--color-border-soft);
+  border-radius: var(--radius-sm);
   display: grid;
   place-items: center;
   cursor: pointer;
@@ -23,7 +23,7 @@
 
 .SideBar .collapse_toggle:hover {
   background-color: var(--color-overlay-active);
-  border: 1px solid var(--color-border-default);
+  border: var(--border-width-default) solid var(--color-border-default);
 }
 
 .SideBar .collapse_toggle svg {
@@ -37,14 +37,14 @@
 
 /* Collapsed: icon-only rail. Center icons and hide text. */
 .SideBar.collapsed .collapse_toggle {
-  margin-left: 0;
+  margin-left: var(--space-0);
 }
 
 .SideBar.collapsed section .section_content .folder_item,
 .SideBar.collapsed section .section_content .drive_item {
   justify-content: center;
-  padding: 10px 0;
-  height: 35px;
+  padding: var(--space-2-5) var(--space-0);
+  height: var(--size-app-bar);
 }
 
 .SideBar.collapsed section .section_content .folder_item p,
@@ -54,15 +54,15 @@
 
 .SideBar section {
   width: 100%;
-  margin-bottom: 30px;
+  margin-bottom: var(--space-8);
 }
 
 .SideBar section:last-child {
-  margin-bottom: 0;
+  margin-bottom: var(--space-0);
 }
 
 .SideBar section h2 {
-  margin-bottom: 10px;
+  margin-bottom: var(--space-2-5);
   font-size: 0.8rem;
   font-weight: 500;
   user-select: none;
@@ -74,15 +74,15 @@
 
 .SideBar section .section_content .folder_item {
   width: 100%;
-  height: 35px;
+  height: var(--size-app-bar);
   cursor: pointer;
-  border-radius: 5px;
-  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  border: var(--border-width-default) solid transparent;
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  gap: 10px;
-  padding: 10px;
+  gap: var(--space-2-5);
+  padding: var(--space-2-5);
   transition: all 0.2s ease-in-out;
 }
 
@@ -102,7 +102,7 @@
 
 .SideBar section .section_content .folder_item:hover {
   background-color: var(--color-overlay-active);
-  border: 1px solid var(--color-border-default);
+  border: var(--border-width-default) solid var(--color-border-default);
 }
 
 .SideBar section .section_content .folder_item:hover svg,
@@ -112,15 +112,15 @@
 
 .SideBar section .section_content .drive_item {
   width: 100%;
-  height: 40px;
+  height: var(--space-10);
   cursor: pointer;
-  border-radius: 5px;
-  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  border: var(--border-width-default) solid transparent;
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  gap: 10px;
-  padding: 10px;
+  gap: var(--space-2-5);
+  padding: var(--space-2-5);
   transition: all 0.2s ease-in-out;
   animation: drive-item-enter 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
@@ -148,8 +148,8 @@
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
-  gap: 5px;
-  width: calc(100% - 40px);
+  gap: var(--space-1);
+  width: calc(100% - var(--space-10));
 }
 
 .SideBar section .section_content .drive_item .details p {
@@ -166,21 +166,21 @@
 
 .SideBar section .section_content .drive_item .details .usage {
   width: 90%;
-  height: 3px;
-  border-radius: 5px;
+  height: var(--size-progress-track);
+  border-radius: var(--radius-sm);
   background-color: var(--color-progress-track);
   overflow: hidden;
 }
 
 .SideBar section .section_content .drive_item .details .usage .usage_bar {
   height: 100%;
-  border-radius: 0 5px 5px 0;
+  border-radius: var(--space-0) var(--radius-sm) var(--radius-sm) var(--space-0);
   background-color: var(--color-progress-fill);
 }
 
 .SideBar section .section_content .drive_item:hover {
   background-color: var(--color-overlay-active);
-  border: 1px solid var(--color-border-default);
+  border: var(--border-width-default) solid var(--color-border-default);
 }
 
 .SideBar section .section_content .drive_item:hover svg,
@@ -190,10 +190,10 @@
 
 .SideBar section .section_content .folder_item,
 .SideBar section .section_content .drive_item {
-  margin-bottom: 8px;
+  margin-bottom: var(--space-2);
 }
 
 .SideBar section .section_content .folder_item:last-child,
 .SideBar section .section_content .drive_item:last-child {
-  margin-bottom: 0;
+  margin-bottom: var(--space-0);
 }

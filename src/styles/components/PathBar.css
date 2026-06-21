@@ -1,23 +1,23 @@
 .PathBar {
   width: 100%;
-  margin-bottom: 20px;
+  margin-bottom: var(--space-5);
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-2-5);
 }
 
 .PathBar button {
-  width: 30px;
-  min-width: 30px;
-  max-width: 30px;
-  height: 30px;
-  min-height: 30px;
-  max-height: 30px;
-  padding: 0;
+  width: var(--size-control-large);
+  min-width: var(--size-control-large);
+  max-width: var(--size-control-large);
+  height: var(--size-control-large);
+  min-height: var(--size-control-large);
+  max-height: var(--size-control-large);
+  padding: var(--space-0);
   background-color: var(--color-overlay-faint);
-  border: 1px solid var(--color-border-faint);
-  border-radius: 5px;
+  border: var(--border-width-default) solid var(--color-border-faint);
+  border-radius: var(--radius-sm);
   display: grid;
   place-items: center;
   cursor: pointer;
@@ -26,7 +26,7 @@
 
 .PathBar button:hover {
   background-color: var(--color-surface-interactive);
-  border: 1px solid var(--color-border-default);
+  border: var(--border-width-default) solid var(--color-border-default);
 }
 
 .PathBar button svg {
@@ -41,15 +41,15 @@
 
 .PathBar button:disabled:hover {
   background-color: var(--color-overlay-faint);
-  border: 1px solid var(--color-border-faint);
+  border: var(--border-width-default) solid var(--color-border-faint);
 }
 
 .PathBar .controls {
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 90px;
-  height: 30px;
+  width: var(--size-path-controls);
+  height: var(--size-control-large);
 }
 
 .PathBar .controls button:first-child {
@@ -68,12 +68,12 @@
 
 .PathBar input {
   width: 100%;
-  height: 30px;
-  padding: 6px 10px;
+  height: var(--size-control-large);
+  padding: var(--space-1-5) var(--space-2-5);
   background-color: var(--color-overlay-faint);
-  border: 1px solid var(--color-border-faint);
+  border: var(--border-width-default) solid var(--color-border-faint);
   color: var(--color-text-primary);
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   font-family: "Inter", sans-serif;
   font-size: 0.8rem;
   font-weight: 400;
@@ -83,5 +83,5 @@
 .PathBar input:focus {
   outline: none;
   background-color: var(--color-surface-interactive);
-  border: 1px solid var(--color-border-default);
+  border: var(--border-width-default) solid var(--color-border-default);
 }
