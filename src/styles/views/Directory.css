@@ -125,6 +125,11 @@
   color: var(--color-text-subtle);
   -webkit-user-select: none;
   user-select: none;
+  max-width: 100%;
+  padding-inline: var(--space-1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .directory_page .grid .dir_entry_item:hover {
@@ -194,6 +199,10 @@
   font-size: 0.8rem;
   font-weight: 400;
   color: var(--color-text-secondary);
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .directory_page .list .dir_entry_item .size {

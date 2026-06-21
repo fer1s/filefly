@@ -196,17 +196,7 @@ const DirEntryItem = ({
           )}
 
           <div className="dir_entry_info">
-            {renaming ? (
-              renameInput
-            ) : (
-              <h3>
-                {name
-                  ? name.length > 9
-                    ? name.substring(0, 9) + "..."
-                    : name
-                  : extension}
-              </h3>
-            )}
+            {renaming ? renameInput : <h3>{name || extension}</h3>}
           </div>
         </>
       ) : (
@@ -219,17 +209,7 @@ const DirEntryItem = ({
             )}
           </div>
           <div className="name">
-            {renaming ? (
-              renameInput
-            ) : (
-              <h3>
-                {name
-                  ? name.length > 25
-                    ? name.substring(0, 25) + "..."
-                    : name
-                  : extension}
-              </h3>
-            )}
+            {renaming ? renameInput : <h3>{name || extension}</h3>}
           </div>
           <div className="size">
             {entry.size > 0 && <h3>{formatBytes(entry.size)}</h3>}
