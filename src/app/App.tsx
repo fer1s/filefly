@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useNavigate, useLocation, NavigateFunction, Location } from 'react-router-dom'
 
 import { StateProvider } from '../shared/providers/StateProvider'
@@ -19,7 +19,7 @@ const App = () => {
    const location: Location = useLocation()
 
    const [volumes, setVolumes                ] = useState<Volume[]>([])
-   const [path   , setPath                   ] = useState<string>('')
+   const [pathHistory, setPathHistory] = useState<{ stack: string[]; index: number }>({ stack: [''], index: 0 })
    const [sidebarScrolled, setSidebarScrolled] = useState<boolean>(false)
    const [dirContent, setDirContent          ] = useState<DirEntry[]>([])
    const [view      , setView                ] = useState<'list' | 'grid'>('grid')
@@ -28,6 +28,28 @@ const App = () => {
 
    const [toasts, setToasts] = useState<ToastData[]>([])
    const toastId = useRef(0)
+
+   const path = pathHistory.stack[pathHistory.index]
+
+   const setPath = useCallback((nextPath: string) => {
+      setSearch('')
+      setPathHistory((history) => {
+         if (history.stack[history.index] === nextPath) return history
+
+         const stack = [...history.stack.slice(0, history.index + 1), nextPath]
+         return { stack, index: stack.length - 1 }
+      })
+   }, [])
+
+   const goBack = useCallback(() => {
+      setSearch('')
+      setPathHistory((history) => (history.index === 0 ? history : { ...history, index: history.index - 1 }))
+   }, [])
+
+   const goForward = useCallback(() => {
+      setSearch('')
+      setPathHistory((history) => (history.index >= history.stack.length - 1 ? history : { ...history, index: history.index + 1 }))
+   }, [])
 
    // Persist the collapsed state across sessions.
    useEffect(() => {
@@ -49,26 +71,30 @@ const App = () => {
    // Single domain manager instance for the whole app, provided through context.
    const fs = useMemo(() => new FileSystemManager(), [])
 
-   const fetchVolumes = async () => setVolumes(await fs.listVolumes())
+   const fetchVolumes = useCallback(async () => setVolumes(await fs.listVolumes()), [fs])
 
-   const fetchDirectory = (path: string) => fs.readDirectory(path)
+   const fetchDirectory = useCallback((path: string) => fs.readDirectory(path), [fs])
 
    // Reload the current view (used after filesystem operations like copy/move/rename/delete).
-   const refreshDir = () => {
+   const refreshDir = useCallback(() => {
         if (path === '') return fetchVolumes()
         fetchDirectory(path).then(setDirContent)
-   }
+   }, [fetchDirectory, fetchVolumes, path])
 
     useEffect(() => {
-        fetchVolumes()
-    }, [])
+        let cancelled = false
+
+        fs.listVolumes().then((nextVolumes) => {
+            if (!cancelled) setVolumes(nextVolumes)
+        })
+
+        return () => {
+            cancelled = true
+        }
+    }, [fs])
 
     useEffect(() => {
-        // Reset the filter whenever we navigate so the new directory shows in full.
-        setSearch('')
-
         if (path === '') {
-            setDirContent([])
             navigate(ROUTES.volumes)
             return
         }
@@ -77,12 +103,15 @@ const App = () => {
             setDirContent(files)
             if (location.pathname !== ROUTES.directory && path !== '') navigate(ROUTES.directory)
         })
-    }, [path])
+    }, [fetchDirectory, location.pathname, navigate, path])
 
     useEffect(() => {
-        document.addEventListener('contextmenu', (event) => {
+        const preventContextMenu = (event: MouseEvent) => {
             event.preventDefault()
-        })
+        }
+
+        document.addEventListener('contextmenu', preventContextMenu)
+        return () => document.removeEventListener('contextmenu', preventContextMenu)
     }, [])
 
    return (
@@ -93,6 +122,10 @@ const App = () => {
             setVolumes,
             path,
             setPath,
+            canGoBack: pathHistory.index > 0,
+            canGoForward: pathHistory.index < pathHistory.stack.length - 1,
+            goBack,
+            goForward,
             sidebarScrolled,
             setSidebarScrolled,
             dirContent,

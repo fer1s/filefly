@@ -9,6 +9,10 @@ type State = {
    setVolumes: (volumes: Volume[]) => void
    path: string
    setPath: (path: string) => void
+   canGoBack: boolean
+   canGoForward: boolean
+   goBack: () => void
+   goForward: () => void
    sidebarScrolled: boolean
    setSidebarScrolled: (sidebarScrolled: boolean) => void
    dirContent: DirEntry[]
@@ -26,6 +30,10 @@ export const initialState: State = {
    setVolumes: () => {},
    path: '',
    setPath: () => {},
+   canGoBack: false,
+   canGoForward: false,
+   goBack: () => {},
+   goForward: () => {},
    sidebarScrolled: false,
    setSidebarScrolled: () => {},
    dirContent: [],

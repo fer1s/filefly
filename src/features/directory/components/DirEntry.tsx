@@ -60,6 +60,7 @@ const DirEntryItem = ({
 
    // handle context menu
    useEffect(() => {
+      const item = itemRef.current
       const handleContextMenu = (e: MouseEvent) => {
          e.preventDefault()
 
@@ -80,13 +81,14 @@ const DirEntryItem = ({
       }
 
       // Attach the event listener to the individual item
-      itemRef.current?.addEventListener('contextmenu', handleContextMenu)
+      item?.addEventListener('contextmenu', handleContextMenu)
       // Remove the event listener from the individual item
-      return () => itemRef.current?.removeEventListener('contextmenu', handleContextMenu)
-   }, [contextMenuRef])
+      return () => item?.removeEventListener('contextmenu', handleContextMenu)
+   }, [contextMenuRef, entry.metadata.isDir, entry.metadata.isFile, setContextMenuElementID, setContextMenuElementType, setContextMenuVisible])
 
    // handle details popup
    useEffect(() => {
+      const item = itemRef.current
       let timer: number | null = null
 
       const handleMouseEnter = () => {
@@ -110,14 +112,14 @@ const DirEntryItem = ({
          if (timer) clearTimeout(timer)
       }
 
-      itemRef.current?.addEventListener('mouseenter', handleMouseEnter)
-      itemRef.current?.addEventListener('mouseleave', handleMouseLeave)
+      item?.addEventListener('mouseenter', handleMouseEnter)
+      item?.addEventListener('mouseleave', handleMouseLeave)
 
       return () => {
-         itemRef.current?.removeEventListener('mouseenter', handleMouseEnter)
-         itemRef.current?.removeEventListener('mouseleave', handleMouseLeave)
+         item?.removeEventListener('mouseenter', handleMouseEnter)
+         item?.removeEventListener('mouseleave', handleMouseLeave)
       }
-   }, [])
+   }, [entry.metadata.isDir, entry.metadata.isFile, setDetailsPopupVisible, setHighlitedElementID, setHighlitedElementType])
 
    // Move keyboard focus to the entry when it becomes the selected one.
    useEffect(() => {
@@ -135,7 +137,7 @@ const DirEntryItem = ({
       el.focus()
       const dot = entry.name.lastIndexOf('.')
       el.setSelectionRange(0, dot > 0 ? dot : entry.name.length)
-   }, [renaming])
+   }, [entry.name, renaming])
 
    const submitRename = () => {
       if (renameDoneRef.current) return
@@ -170,8 +172,8 @@ const DirEntryItem = ({
    )
 
    // Split extension from the file name
-   let name = entry.metadata.isFile ? entry.name.split('.')[0] : entry.name
-   let extension = entry.metadata.isFile ? entry.name.split('.')[entry.name.split('.').length - 1] : ''
+   const name = entry.metadata.isFile ? entry.name.split('.')[0] : entry.name
+   const extension = entry.metadata.isFile ? entry.name.split('.')[entry.name.split('.').length - 1] : ''
 
    const ImageFormats = ['png', 'jpg', 'jpeg', 'webp']
    return (

@@ -29,28 +29,23 @@ interface PreviewProps {
 const Preview = ({ fileType, filePath, previewVisible, setPreviewVisible, onPrev, onNext, hasPrev, hasNext }: PreviewProps) => {
    const { fs } = useStateContext()
 
-   const [isReady, setIsReady] = useState<boolean>(false)
-   const [previewContent, setPreviewContent] = useState<string>('')
+   const [markdownPreview, setMarkdownPreview] = useState<{ filePath: string; content: string } | null>(null)
 
    useEffect(() => {
-      if (!previewVisible) return
+      if (!previewVisible || fileType !== 'md') return
 
-      if (fileType === 'md') {
-         setIsReady(false)
-         fs.markdownPreview(filePath).then((data) => {
-            setPreviewContent(data)
-            setIsReady(true)
-         })
-      }
+      let cancelled = false
+      fs.markdownPreview(filePath).then((content) => {
+         if (!cancelled) setMarkdownPreview({ filePath, content })
+      })
 
-      if (ImageFormats.includes(fileType)) {
-         setIsReady(true)
+      return () => {
+         cancelled = true
       }
+   }, [filePath, fileType, fs, previewVisible])
 
-      if (AudioFormats.includes(fileType)) {
-         setIsReady(true)
-      }
-   }, [previewVisible, filePath])
+   const isReady = fileType !== 'md' || markdownPreview?.filePath === filePath
+   const previewContent = markdownPreview?.filePath === filePath ? markdownPreview.content : ''
 
    // Keyboard control while the preview is open: arrows navigate, Escape closes.
    useEffect(() => {
@@ -64,7 +59,7 @@ const Preview = ({ fileType, filePath, previewVisible, setPreviewVisible, onPrev
 
       document.addEventListener('keydown', handleKeyDown)
       return () => document.removeEventListener('keydown', handleKeyDown)
-   }, [previewVisible, onPrev, onNext])
+   }, [onNext, onPrev, previewVisible, setPreviewVisible])
 
    return (
       <>
@@ -73,7 +68,7 @@ const Preview = ({ fileType, filePath, previewVisible, setPreviewVisible, onPrev
             onClick={() => setPreviewVisible(false)}
          ></div>
          {AudioFormats.includes(fileType) ? (
-            <AudioPreview isVisible={previewVisible} filePath={filePath} />
+            <AudioPreview key={`${filePath}:${previewVisible}`} isVisible={previewVisible} filePath={filePath} />
          ) : (
             <div
                className={`preview_container shadow${ImageFormats.includes(fileType) ? ' image' : ''}${previewVisible ? ' visible' : ''}`}

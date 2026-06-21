@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 
 import { useStateContext } from '../../shared/providers/StateProvider'
 import { ContextMenu, ContextMenuItem } from '../../shared/components/ContextMenu'
@@ -67,15 +67,20 @@ const Directory = () => {
    const previewFilePath = previewEntry?.path ?? ''
    const previewFileType = previewEntry ? (previewEntry.name.split('.').pop() || '').toLowerCase() : ''
 
-   const previewPrev = () => setPreviewIndex((i) => (i > 0 ? i - 1 : i))
-   const previewNext = () => setPreviewIndex((i) => (i < previewables.length - 1 ? i + 1 : i))
+   const previewPrev = useCallback(() => setPreviewIndex((i) => (i > 0 ? i - 1 : i)), [])
+   const previewNext = useCallback(() => setPreviewIndex((i) => (i < previewables.length - 1 ? i + 1 : i)), [previewables.length])
+
+   const handleKeyboardOpen = useCallback(
+      (entry: DirEntry) => (entry.metadata.isDir ? setPath(entry.path) : fs.open(entry.path)),
+      [fs, setPath]
+   )
 
    useKeyboardNav({
       items: filtered,
       view,
       enabled: !previewVisible,
       setSelectedIDs,
-      onOpen: (entry) => (entry.metadata.isDir ? setPath(entry.path) : fs.open(entry.path)),
+      onOpen: handleKeyboardOpen,
    })
 
    const handleOpenInTerminal = () => {

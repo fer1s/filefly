@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 import { useStateContext } from '../../shared/providers/StateProvider'
 import { t } from '../../lang'
@@ -9,27 +9,7 @@ import { faArrowLeft, faArrowRight, faArrowUp, faHouse, faList, faTableCellsLarg
 import '../../styles/components/PathBar.css'
 
 const PathBar = () => {
-   const { path, setPath, view, setView } = useStateContext()
-
-   // Browser-style history: a stack of visited paths plus a position pointer.
-   const [history, setHistory] = useState<{ stack: string[]; index: number }>({ stack: [''], index: 0 })
-
-   // Local draft so typing does not navigate (and pollute the history) on every keystroke.
-   const [draft, setDraft] = useState<string>(path)
-
-   // Keep the input in sync whenever the path changes from anywhere (sidebar, entries, back/forward, home).
-   useEffect(() => setDraft(path), [path])
-
-   // Record every path change into the history stack, unless it already matches the current position
-   // (which happens when the change came from goBack/goForward themselves).
-   useEffect(() => {
-      setHistory((h) => {
-         if (h.stack[h.index] === path) return h
-         const stack = h.stack.slice(0, h.index + 1)
-         stack.push(path)
-         return { stack, index: stack.length - 1 }
-      })
-   }, [path])
+   const { path, setPath, canGoBack, canGoForward, goBack, goForward, view, setView } = useStateContext()
 
    const goHome = () => setPath('')
 
@@ -41,28 +21,6 @@ const PathBar = () => {
       setPath(idx <= 0 ? '/' : trimmed.slice(0, idx))
    }
 
-   const goBack = () => {
-      if (history.index === 0) return
-      const index = history.index - 1
-      setHistory({ ...history, index })
-      setPath(history.stack[index])
-   }
-
-   const goForward = () => {
-      if (history.index >= history.stack.length - 1) return
-      const index = history.index + 1
-      setHistory({ ...history, index })
-      setPath(history.stack[index])
-   }
-
-   const commitDraft = () => {
-      if (draft !== path) setPath(draft)
-   }
-
-   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === 'Enter') commitDraft()
-   }
-
    const switchView = () => setView(view === 'grid' ? 'list' : 'grid')
 
    return (
@@ -72,10 +30,10 @@ const PathBar = () => {
          </button>
 
          <div className="controls shadow">
-            <button onClick={goBack} disabled={history.index === 0}>
+            <button onClick={goBack} disabled={!canGoBack}>
                <FontAwesomeIcon icon={faArrowLeft} />
             </button>
-            <button onClick={goForward} disabled={history.index >= history.stack.length - 1}>
+            <button onClick={goForward} disabled={!canGoForward}>
                <FontAwesomeIcon icon={faArrowRight} />
             </button>
             <button onClick={goUp} disabled={path === ''}>
@@ -83,15 +41,7 @@ const PathBar = () => {
             </button>
          </div>
 
-         <input
-            type="text"
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={handleKeyDown}
-            onBlur={commitDraft}
-            placeholder={t.pathbar.pathPlaceholder}
-            className="shadow"
-         />
+         <PathInput key={path} path={path} onCommit={setPath} />
 
          <button className="shadow" onClick={switchView}>
             <FontAwesomeIcon icon={view === 'grid' ? faList : faTableCellsLarge} />
@@ -101,3 +51,33 @@ const PathBar = () => {
 }
 
 export default PathBar
+
+type PathInputProps = {
+   path: string
+   onCommit: (path: string) => void
+}
+
+const PathInput = ({ path, onCommit }: PathInputProps) => {
+   // Local draft prevents navigation on every keystroke. The parent key resets it after any navigation.
+   const [draft, setDraft] = useState(path)
+
+   const commitDraft = () => {
+      if (draft !== path) onCommit(draft)
+   }
+
+   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+      if (event.key === 'Enter') commitDraft()
+   }
+
+   return (
+      <input
+         type="text"
+         value={draft}
+         onChange={(event) => setDraft(event.target.value)}
+         onKeyDown={handleKeyDown}
+         onBlur={commitDraft}
+         placeholder={t.pathbar.pathPlaceholder}
+         className="shadow"
+      />
+   )
+}

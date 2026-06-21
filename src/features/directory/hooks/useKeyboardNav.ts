@@ -117,5 +117,5 @@ export const useKeyboardNav = ({ items, view, enabled, setSelectedIDs, onOpen }:
          document.removeEventListener('keydown', handleKeyDown)
          if (searchTimerRef.current) clearTimeout(searchTimerRef.current)
       }
-   }, [items, view, enabled])
+   }, [items, view, enabled, setSelectedIDs, onOpen])
 }

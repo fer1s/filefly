@@ -26,16 +26,6 @@ const AudioPreview = ({ isVisible, filePath }: AudioPreviewProps) => {
       setIsPlaying((prev) => !prev)
    }
 
-   const handlePlay = () => {
-      if (!audioRef.current) return
-
-      if (isPlaying) {
-         audioRef.current.play()
-      } else {
-         audioRef.current.pause()
-      }
-   }
-
    const handleProgress = (e: React.ChangeEvent<HTMLInputElement>) => {
       if (!audioRef.current) return
 
@@ -50,42 +40,23 @@ const AudioPreview = ({ isVisible, filePath }: AudioPreviewProps) => {
       setDuration(audioRef.current.duration)
    }
 
-   const handleVolumeChange = () => {
-      if (!audioRef.current) return
-
-      audioRef.current.volume = volume / 100
-   }
-
    const handleVolumeButtonClick = () => {
       setIsVolumeVisible((prev) => !prev)
    }
 
    useEffect(() => {
-      handlePlay()
-      handleVolumeChange()
-   }, [isPlaying, volume, audioRef, filePath])
+      const audio = audioRef.current
+      if (!audio) return
 
-   useEffect(() => {
-      if (!audioRef.current) return
+      if (isPlaying) void audio.play()
+      else audio.pause()
 
-      audioRef.current.addEventListener('timeupdate', handleTimeUpdate)
-
-      return () => {
-         if (!audioRef.current) return
-         audioRef.current.removeEventListener('timeupdate', handleTimeUpdate)
-      }
-   }, [audioRef])
-
-   useEffect(() => {
-      if(!isVisible) {
-         setIsPlaying(false)
-         setIsVolumeVisible(false)
-      }
-   }, [isVisible])
+      audio.volume = volume / 100
+   }, [filePath, isPlaying, volume])
 
    return (
       <div className={`audio_preview${isVisible ? ' visible' : ''}`}>
-         <audio controls src={convertFileSrc(filePath)} ref={audioRef} />
+         <audio controls src={convertFileSrc(filePath)} ref={audioRef} onTimeUpdate={handleTimeUpdate} />
          <button onClick={togglePlay}><FontAwesomeIcon icon={isPlaying ? faPause : faPlay} /></button>
          <div className="progress">
             <span className="currentTime">{formatTime(progress)}</span>

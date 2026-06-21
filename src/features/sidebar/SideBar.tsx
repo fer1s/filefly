@@ -62,7 +62,7 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
             if (!sidebar) return;
             sidebar.removeEventListener('scroll', handleScroll)
         }
-   }, [])
+   }, [setSidebarScrolled])
 
    return (
       <div className={collapsed ? 'SideBar collapsed' : 'SideBar'}>
