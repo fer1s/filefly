@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { convertFileSrc } from "@tauri-apps/api/core";
 
 import { useStateContext } from "@/shared/providers/StateProvider";
-import Button from "@/shared/components/elements/Button";
 import IconButton from "@/shared/components/elements/IconButton";
 import Spinner from "@/shared/components/elements/Spinner";
 import {
@@ -18,6 +17,7 @@ import AudioPreview from "../AudioPreview";
 import {
   faChevronLeft,
   faChevronRight,
+  faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 
 import "@/styles/components/Preview.css";
@@ -112,9 +112,12 @@ const Preview = ({
               />
             </div>
             <h4>{t.common.preview}</h4>
-            <Button onClick={() => setPreviewVisible(false)}>
-              {t.common.close}
-            </Button>
+            <IconButton
+              icon={faXmark}
+              onClick={() => setPreviewVisible(false)}
+              title={t.common.close}
+              aria-label={t.common.close}
+            />
           </div>
           <div
             className={classNames(

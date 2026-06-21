@@ -13,16 +13,16 @@ FileFly is a faster file explorer alternative.
 
   - [x] Open
   - [x] Open in terminal
-  - [ ] Copy
-  - [ ] Cut
-  - [ ] Delete
-  - [ ] Rename
+  - [x] Copy
+  - [x] Cut
+  - [x] Delete
+  - [x] Rename
 
 - [ ] Make it work offline (font, icons, etc.)
 
 - [x] Create a custom context menu (ensure functionality!)
 
-- [ ] Refactor code for cleaner structure
+- [x] Refactor code for cleaner structure
 
 - [x] Fix file names (e.g., .gitignore)
 

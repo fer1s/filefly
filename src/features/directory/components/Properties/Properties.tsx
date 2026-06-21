@@ -1,7 +1,9 @@
 import { formatBytes } from "@/shared/utils";
-import Button from "@/shared/components/elements/Button";
+import IconButton from "@/shared/components/elements/IconButton";
 import Dialog from "@/shared/components/patterns/Dialog";
 import { t } from "@/lang";
+
+import { faXmark } from "@fortawesome/free-solid-svg-icons";
 
 import "@/styles/components/Properties.css";
 
@@ -18,7 +20,12 @@ const Properties = ({ entry, visible, onClose }: PropertiesProps) => {
     >
       <div className="properties_header">
         <h4 id="properties-title">{t.properties.title}</h4>
-        <Button onClick={onClose}>{t.common.close}</Button>
+        <IconButton
+          icon={faXmark}
+          onClick={onClose}
+          title={t.common.close}
+          aria-label={t.common.close}
+        />
       </div>
       {entry && (
         <div className="properties_content">
