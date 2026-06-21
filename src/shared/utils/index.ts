@@ -1,4 +1,4 @@
-import { DirEntry } from "../models";
+import { DirEntry } from "@/shared/models";
 import { classNames } from "./classNames";
 
 export const navigateToPath = (

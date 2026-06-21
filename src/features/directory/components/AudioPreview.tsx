@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from "react";
 import { convertFileSrc } from "@tauri-apps/api/core";
-import { classNames } from "../../../shared/utils";
+import { classNames } from "@/shared/utils";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -9,7 +9,7 @@ import {
   faVolumeHigh,
 } from "@fortawesome/free-solid-svg-icons";
 
-import "../../../styles/components/AudioPreview.css";
+import "@/styles/components/AudioPreview.css";
 
 interface AudioPreviewProps {
   isVisible: boolean;

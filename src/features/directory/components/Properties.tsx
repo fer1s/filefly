@@ -1,8 +1,8 @@
-import { DirEntry } from "../../../shared/models";
-import { classNames, formatBytes } from "../../../shared/utils";
-import { t } from "../../../lang";
+import { DirEntry } from "@/shared/models";
+import { classNames, formatBytes } from "@/shared/utils";
+import { t } from "@/lang";
 
-import "../../../styles/components/Properties.css";
+import "@/styles/components/Properties.css";
 
 type PropertiesProps = {
   entry: DirEntry | null;

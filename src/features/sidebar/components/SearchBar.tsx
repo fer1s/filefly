@@ -1,10 +1,10 @@
-import { useStateContext } from "../../../shared/providers/StateProvider";
-import { t } from "../../../lang";
+import { useStateContext } from "@/shared/providers/StateProvider";
+import { t } from "@/lang";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 
-import "../../../styles/components/SearchBar.css";
+import "@/styles/components/SearchBar.css";
 
 const SearchBar = () => {
   const { search, setSearch } = useStateContext();

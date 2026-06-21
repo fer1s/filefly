@@ -7,10 +7,10 @@ import {
   pictureDir,
 } from "@tauri-apps/api/path";
 
-import { Volume } from "../../shared/models";
-import { useStateContext } from "../../shared/providers/StateProvider";
-import { classNames } from "../../shared/utils";
-import { t } from "../../lang";
+import { Volume } from "@/shared/models";
+import { useStateContext } from "@/shared/providers/StateProvider";
+import { classNames } from "@/shared/utils";
+import { t } from "@/lang";
 
 import SearchBar from "./components/SearchBar";
 
@@ -28,7 +28,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { faUsb } from "@fortawesome/free-brands-svg-icons";
 
-import "../../styles/components/SideBar.css";
+import "@/styles/components/SideBar.css";
 
 type Pinned = { name: string; path: string; icon: IconDefinition };
 

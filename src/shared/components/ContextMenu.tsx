@@ -1,6 +1,6 @@
 import { ReactNode, forwardRef } from "react";
-import { classNames } from "../utils";
-import "../../styles/components/ContextMenu.css";
+import { classNames } from "@/shared/utils";
+import "@/styles/components/ContextMenu.css";
 
 // ContextMenu
 interface ContextMenuProps {
@@ -12,10 +12,7 @@ export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
   ({ children, contextMenuVisible }, ref) => {
     return (
       <div
-        className={classNames(
-          "context_menu",
-          contextMenuVisible && "visible",
-        )}
+        className={classNames("context_menu", contextMenuVisible && "visible")}
         ref={ref}
       >
         {children}

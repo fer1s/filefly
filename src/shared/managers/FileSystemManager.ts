@@ -1,5 +1,5 @@
-import * as api from "../services/api";
-import { DirEntry, Volume } from "../models";
+import * as api from "@/shared/services/api";
+import { DirEntry, Volume } from "@/shared/models";
 
 // Encapsulates all filesystem domain operations. Views/components consume this through the provider
 // instead of calling the Tauri service (`api`) directly. Also owns data shaping (filtering, sorting).

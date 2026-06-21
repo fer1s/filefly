@@ -1,15 +1,12 @@
 import { useCallback, useMemo, useState } from "react";
 
-import { useStateContext } from "../../shared/providers/StateProvider";
-import {
-  ContextMenu,
-  ContextMenuItem,
-} from "../../shared/components/ContextMenu";
-import DetailsPopup from "../../shared/components/DetailsPopup";
-import { notify } from "../../shared/toast";
-import { t } from "../../lang";
+import { useStateContext } from "@/shared/providers/StateProvider";
+import { ContextMenu, ContextMenuItem } from "@/shared/components/ContextMenu";
+import DetailsPopup from "@/shared/components/DetailsPopup";
+import { notify } from "@/shared/toast";
+import { t } from "@/lang";
 import { ask } from "@tauri-apps/plugin-dialog";
-import { AcceptedPreviewFormats } from "../../shared/constants";
+import { AcceptedPreviewFormats } from "@/shared/constants";
 import { DirEntryItem } from "./components/DirEntry";
 import { useSelection } from "./hooks/useSelection";
 import { useKeyboardNav } from "./hooks/useKeyboardNav";
@@ -29,10 +26,10 @@ import {
   faTrash,
 } from "@fortawesome/free-solid-svg-icons";
 
-import "../../styles/views/Directory.css";
+import "@/styles/views/Directory.css";
 import Preview from "./components/Preview";
 import Properties from "./components/Properties";
-import { DirEntry } from "../../shared/models";
+import { DirEntry } from "@/shared/models";
 
 const Directory = () => {
   const { fs, dirContent, path, setPath, view, search, refreshDir } =

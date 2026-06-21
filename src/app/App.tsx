@@ -6,19 +6,19 @@ import {
   Location,
 } from "react-router-dom";
 
-import { StateProvider } from "../shared/providers/StateProvider";
+import { StateProvider } from "@/shared/providers/StateProvider";
 
 import AppBar from "./AppBar";
-import SideBar from "../features/sidebar";
-import Toasts, { ToastData } from "../shared/components/Toast";
+import SideBar from "@/features/sidebar";
+import Toasts, { ToastData } from "@/shared/components/Toast";
 
 import AppContent from "./AppContent";
 
-import { setNotifier, ToastType } from "../shared/toast";
+import { setNotifier, ToastType } from "@/shared/toast";
 import { ROUTES } from "./routes";
-import { FileSystemManager } from "../shared/managers/FileSystemManager";
-import { Volume, DirEntry } from "../shared/models";
-import { classNames } from "../shared/utils";
+import { FileSystemManager } from "@/shared/managers/FileSystemManager";
+import { Volume, DirEntry } from "@/shared/models";
+import { classNames } from "@/shared/utils";
 
 const App = () => {
   const navigate: NavigateFunction = useNavigate();

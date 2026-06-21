@@ -1,7 +1,7 @@
 import { createContext, useContext } from "react";
 
-import { Volume, DirEntry } from "../models";
-import { FileSystemManager } from "../managers/FileSystemManager";
+import { Volume, DirEntry } from "@/shared/models";
+import { FileSystemManager } from "@/shared/managers/FileSystemManager";
 
 type State = {
   fs: FileSystemManager;

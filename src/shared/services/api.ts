@@ -1,8 +1,8 @@
 import { invoke } from "@tauri-apps/api/core";
 
-import { notify } from "../toast";
-import { t } from "../../lang";
-import { Volume, DirEntry } from "../models";
+import { notify } from "@/shared/toast";
+import { t } from "@/lang";
+import { Volume, DirEntry } from "@/shared/models";
 
 // Get the user's disks (volumes)
 export const getVolumes = async (): Promise<Volume[]> =>

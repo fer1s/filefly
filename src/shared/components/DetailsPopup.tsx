@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
-import { classNames } from "../utils";
+import { classNames } from "@/shared/utils";
 
-import "../../styles/components/DetailsPopup.css";
+import "@/styles/components/DetailsPopup.css";
 
 interface DetailsPopupProps {
   visible: boolean;

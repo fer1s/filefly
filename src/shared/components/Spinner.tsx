@@ -1,4 +1,4 @@
-import "../../styles/components/Spinner.css";
+import "@/styles/components/Spinner.css";
 
 const Spinner = () => {
   return <span className="loader"></span>;

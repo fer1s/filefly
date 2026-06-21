@@ -2,10 +2,10 @@ import { useEffect, useState } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { invoke } from "@tauri-apps/api/core";
 
-import { useStateContext } from "../shared/providers/StateProvider";
-import { classNames } from "../shared/utils";
+import { useStateContext } from "@/shared/providers/StateProvider";
+import { classNames } from "@/shared/utils";
 
-import "../styles/components/AppBar.css";
+import "@/styles/components/AppBar.css";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {

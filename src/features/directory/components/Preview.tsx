@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import { convertFileSrc } from "@tauri-apps/api/core";
 
-import { useStateContext } from "../../../shared/providers/StateProvider";
-import { ImageFormats, AudioFormats } from "../../../shared/constants";
-import { classNames } from "../../../shared/utils";
-import { t } from "../../../lang";
+import { useStateContext } from "@/shared/providers/StateProvider";
+import { ImageFormats, AudioFormats } from "@/shared/constants";
+import { classNames } from "@/shared/utils";
+import { t } from "@/lang";
 
 import AudioPreview from "./AudioPreview";
-import Spinner from "../../../shared/components/Spinner";
+import Spinner from "@/shared/components/Spinner";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -15,7 +15,7 @@ import {
   faChevronRight,
 } from "@fortawesome/free-solid-svg-icons";
 
-import "../../../styles/components/Preview.css";
+import "@/styles/components/Preview.css";
 
 interface PreviewProps {
   fileType: string;
@@ -81,10 +81,7 @@ const Preview = ({
   return (
     <>
       <div
-        className={classNames(
-          "preview_backdrop",
-          previewVisible && "visible",
-        )}
+        className={classNames("preview_backdrop", previewVisible && "visible")}
         onClick={() => setPreviewVisible(false)}
       ></div>
       {AudioFormats.includes(fileType) ? (

@@ -1,9 +1,9 @@
 import { Routes, Route } from "react-router-dom";
 
-import PathBar from "../features/navigation";
+import PathBar from "@/features/navigation";
 
-import Volumes from "../features/volumes";
-import Directory from "../features/directory";
+import Volumes from "@/features/volumes";
+import Directory from "@/features/directory";
 
 import { ROUTES } from "./routes";
 
