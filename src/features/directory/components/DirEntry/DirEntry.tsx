@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { memo, useEffect, useRef } from "react";
 import { convertFileSrc } from "@tauri-apps/api/core";
 
 import {
@@ -7,8 +7,7 @@ import {
   formatBytes,
   formatDate,
 } from "@/shared/utils";
-import { useStateContext } from "@/shared/providers/StateProvider";
-import { ENTRY_KIND, IMAGE_FORMATS, VIEW_MODE } from "@/shared/constants";
+import { ENTRY_KIND, IMAGE_FORMATS } from "@/shared/constants";
 import Icon from "@/shared/components/elements/Icon";
 import { t } from "@/lang";
 
@@ -16,12 +15,12 @@ import { faFile, faFolder } from "@fortawesome/free-solid-svg-icons";
 
 import type { DirEntryItemProps } from "./types";
 
-const DirEntryItem = ({
+const DirEntryItemComponent = ({
   entry,
+  fs,
   setPath,
   contextMenuRef,
   id,
-  view,
 
   selected,
   onSelect,
@@ -38,8 +37,6 @@ const DirEntryItem = ({
   setContextMenuElementID,
   setContextMenuElementType,
 }: DirEntryItemProps) => {
-  const { fs } = useStateContext();
-
   const itemRef = useRef<HTMLDivElement>(null);
 
   // handle context menu
@@ -144,7 +141,7 @@ const DirEntryItem = ({
     if (renameDoneRef.current) return;
     renameDoneRef.current = true;
     const value = renameInputRef.current?.value.trim();
-    if (value && value !== entry.name) onRename(value);
+    if (value && value !== entry.name) onRename(entry.path, value);
     else onCancelRename();
   };
 
@@ -178,12 +175,14 @@ const DirEntryItem = ({
     ? entry.name.split(".")[entry.name.split(".").length - 1]
     : "";
 
+  // One DOM for both views; .grid / .list on the container arranges it via CSS, so toggling
+  // the view never rebuilds these subtrees (which is what made the switch laggy).
   return (
     <div
       className={classNames("dir_entry_item", selected && "selected")}
       id={id}
       tabIndex={0}
-      onClick={onSelect}
+      onClick={(e) => onSelect(entry.path, e)}
       onDoubleClick={() =>
         entry.metadata.isDir
           ? navigateToPath(entry, setPath)
@@ -191,54 +190,47 @@ const DirEntryItem = ({
       }
       ref={itemRef}
     >
-      {view === VIEW_MODE.GRID ? (
-        <>
-          {extension && name && <div className="extension">{extension}</div>}
+      {/* Grid-only extension badge (hidden in list). */}
+      {extension && name && <div className="extension">{extension}</div>}
 
+      <div className="name">
+        <div className="icon">
           {IMAGE_FORMATS.includes(extension.toLowerCase().trim()) ? (
             <img src={convertFileSrc(entry.path)} />
           ) : (
             <Icon icon={entry.metadata.isDir ? faFolder : faFile} />
           )}
+        </div>
+        {renaming ? renameInput : <h3>{name || extension}</h3>}
+      </div>
 
-          <div className="dir_entry_info">
-            {renaming ? renameInput : <h3>{name || extension}</h3>}
-          </div>
-        </>
-      ) : (
-        <>
-          <div className="name">
-            <div className="icon">
-              {IMAGE_FORMATS.includes(extension.toLowerCase().trim()) ? (
-                <img src={convertFileSrc(entry.path)} />
-              ) : (
-                <Icon icon={entry.metadata.isDir ? faFolder : faFile} />
-              )}
-            </div>
-            {renaming ? renameInput : <h3>{name || extension}</h3>}
-          </div>
-          <div className="date_modified">
-            <h3>{formatDate(entry.metadata.modified.secs_since_epoch)}</h3>
-          </div>
-          <div className="date_created">
-            <h3>{formatDate(entry.metadata.created.secs_since_epoch)}</h3>
-          </div>
-          <div className="size">
-            {entry.size > 0 && <h3>{formatBytes(entry.size)}</h3>}
-          </div>
-          <div className="kind">
-            <h3>
-              {entry.metadata.isDir
-                ? t.common.directory
-                : name && extension
-                  ? extension.toUpperCase()
-                  : t.common.file}
-            </h3>
-          </div>
-        </>
-      )}
+      {/* List-only columns (hidden in grid). */}
+      <div className="date_modified">
+        <h3>{formatDate(entry.metadata.modified.secs_since_epoch)}</h3>
+      </div>
+      <div className="date_created">
+        <h3>{formatDate(entry.metadata.created.secs_since_epoch)}</h3>
+      </div>
+      <div className="size">
+        {entry.size > 0 && <h3>{formatBytes(entry.size)}</h3>}
+      </div>
+      <div className="kind">
+        <h3>
+          {entry.metadata.isDir
+            ? t.common.directory
+            : name && extension
+              ? extension.toUpperCase()
+              : t.common.file}
+        </h3>
+      </div>
     </div>
   );
 };
+
+// Memoized so toggling the view (or one row changing) doesn't re-render every row.
+// Relies on its props being stable (handlers are useCallback'd, `entry`/`fs` refs are kept)
+// and on NOT subscribing to the app context — a context change re-renders consumers
+// regardless of memo, so `fs` is passed in as a prop instead.
+const DirEntryItem = memo(DirEntryItemComponent);
 
 export { DirEntryItem };

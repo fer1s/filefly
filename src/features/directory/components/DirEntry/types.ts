@@ -1,18 +1,19 @@
 import type { MouseEvent, RefObject } from "react";
 
 import { DirEntry } from "@/shared/models";
-import { type EntryKind, type ViewMode } from "@/shared/constants";
+import { FileSystemManager } from "@/shared/managers/FileSystemManager";
+import { type EntryKind } from "@/shared/constants";
 
 export type DirEntryItemProps = {
   entry: DirEntry;
+  fs: FileSystemManager;
   setPath: (path: string) => void;
-  view: ViewMode;
 
   selected: boolean;
-  onSelect: (e: MouseEvent) => void;
+  onSelect: (id: string, e: MouseEvent) => void;
 
   renaming: boolean;
-  onRename: (newName: string) => void;
+  onRename: (path: string, newName: string) => void;
   onCancelRename: () => void;
 
   setHighlitedElementID: (id: string) => void;

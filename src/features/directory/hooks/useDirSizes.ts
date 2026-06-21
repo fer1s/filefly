@@ -7,6 +7,11 @@ import { DirEntry } from "@/shared/models";
 // off the main thread, so a small pool overlaps IO latency without oversubscribing CPU/disk.
 const CONCURRENCY = 4;
 
+// Results are flushed to state in batches on this interval. Without batching, a large
+// directory triggers one re-render per folder (e.g. 200 folders = 200 full re-renders of
+// the list), which makes the grid/list switch janky.
+const FLUSH_INTERVAL_MS = 120;
+
 // Lazily compute recursive sizes for the directories in the current view. The OS reports
 // directory size as 0, so we walk each folder in the background and return a path -> size
 // map that fills in progressively without blocking the listing. Folders are processed by a
@@ -24,6 +29,24 @@ export const useDirSizes = (entries: DirEntry[], enabled: boolean) => {
 
     let cancelled = false;
 
+    // Buffer resolved sizes and flush them together on an interval, so a large directory
+    // re-renders a handful of times instead of once per folder.
+    let pending: Record<string, number> = {};
+    let flushTimer: number | null = null;
+
+    const flush = () => {
+      flushTimer = null;
+      if (cancelled || !Object.keys(pending).length) return;
+      const batch = pending;
+      pending = {};
+      setSizes((prev) => ({ ...prev, ...batch }));
+    };
+
+    const scheduleFlush = () => {
+      if (flushTimer === null)
+        flushTimer = window.setTimeout(flush, FLUSH_INTERVAL_MS);
+    };
+
     // Each worker pulls the next folder off the shared queue until it's drained.
     const worker = async () => {
       while (!cancelled) {
@@ -31,8 +54,10 @@ export const useDirSizes = (entries: DirEntry[], enabled: boolean) => {
         if (!folder) return;
         try {
           const size = await fs.getDirSize(folder.path);
-          if (!cancelled)
-            setSizes((prev) => ({ ...prev, [folder.path]: size }));
+          if (!cancelled) {
+            pending[folder.path] = size;
+            scheduleFlush();
+          }
         } catch {
           // Ignore folders we can't read; they just keep an empty size cell.
         }
@@ -44,6 +69,7 @@ export const useDirSizes = (entries: DirEntry[], enabled: boolean) => {
 
     return () => {
       cancelled = true;
+      if (flushTimer !== null) window.clearTimeout(flushTimer);
     };
   }, [entries, enabled, fs]);
 

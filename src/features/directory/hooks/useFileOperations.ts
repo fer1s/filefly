@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 
 import { useStateContext } from "@/shared/providers/StateProvider";
 import { notify, TOAST_TYPE } from "@/shared/toast";
@@ -24,45 +24,49 @@ export const useFileOperations = ({
   const { fs } = useStateContext();
   const [clipboard, setClipboard] = useState<Clipboard>(null);
 
-  const copy = (targets: string[]) => {
+  // All wrapped in useCallback so they're stable props for memoized entry rows.
+  const copy = useCallback((targets: string[]) => {
     if (targets.length && targets[0])
       setClipboard({ paths: targets, mode: CLIPBOARD_MODE.COPY });
-  };
+  }, []);
 
-  const cut = (targets: string[]) => {
+  const cut = useCallback((targets: string[]) => {
     if (targets.length && targets[0])
       setClipboard({ paths: targets, mode: CLIPBOARD_MODE.CUT });
-  };
+  }, []);
 
-  const remove = async (targets: string[]) => {
-    if (!targets.length || !targets[0]) return;
+  const remove = useCallback(
+    async (targets: string[]) => {
+      if (!targets.length || !targets[0]) return;
 
-    const label =
-      targets.length === 1
-        ? `"${targets[0].split("/").pop()}"`
-        : t.directory.items(targets.length);
-    const confirmed = await ask(t.directory.confirmDelete(label), {
-      title: t.directory.deleteTitle,
-      kind: "warning",
-    });
-    if (!confirmed) return;
+      const label =
+        targets.length === 1
+          ? `"${targets[0].split("/").pop()}"`
+          : t.directory.items(targets.length);
+      const confirmed = await ask(t.directory.confirmDelete(label), {
+        title: t.directory.deleteTitle,
+        kind: "warning",
+      });
+      if (!confirmed) return;
 
-    for (const target of targets) {
-      try {
-        await fs.trash(target);
-      } catch (err) {
-        notify(
-          t.errors.delete(target.split("/").pop() || target, String(err)),
-          TOAST_TYPE.ERROR,
-        );
+      for (const target of targets) {
+        try {
+          await fs.trash(target);
+        } catch (err) {
+          notify(
+            t.errors.delete(target.split("/").pop() || target, String(err)),
+            TOAST_TYPE.ERROR,
+          );
+        }
       }
-    }
 
-    setSelectedIDs([]);
-    refreshDir();
-  };
+      setSelectedIDs([]);
+      refreshDir();
+    },
+    [fs, refreshDir, setSelectedIDs],
+  );
 
-  const paste = async () => {
+  const paste = useCallback(async () => {
     if (!clipboard || path === "") return;
 
     for (const source of clipboard.paths) {
@@ -80,16 +84,19 @@ export const useFileOperations = ({
     if (clipboard.mode === CLIPBOARD_MODE.CUT) setClipboard(null);
     setSelectedIDs([]);
     refreshDir();
-  };
+  }, [clipboard, path, fs, refreshDir, setSelectedIDs]);
 
-  const rename = async (targetPath: string, newName: string) => {
-    try {
-      await fs.rename(targetPath, newName);
-    } catch (err) {
-      notify(t.errors.rename(String(err)), TOAST_TYPE.ERROR);
-    }
-    refreshDir();
-  };
+  const rename = useCallback(
+    async (targetPath: string, newName: string) => {
+      try {
+        await fs.rename(targetPath, newName);
+      } catch (err) {
+        notify(t.errors.rename(String(err)), TOAST_TYPE.ERROR);
+      }
+      refreshDir();
+    },
+    [fs, refreshDir],
+  );
 
   return { clipboard, copy, cut, remove, paste, rename };
 };

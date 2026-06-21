@@ -61,6 +61,8 @@ const Directory = () => {
     [fs, setPath],
   );
 
+  const handleCancelRename = useCallback(() => setRenamingID(""), []);
+
   useKeyboardNav({
     items: sorted,
     view,
@@ -117,10 +119,11 @@ const Directory = () => {
 
       <div className="directory_content">
         {view === VIEW_MODE.LIST && sorted.length > 0 && (
-          <ListHeader sort={sort} onSort={handleSort} />
+          <ListHeader key="list-header" sort={sort} onSort={handleSort} />
         )}
 
         <EntriesView
+          key="entries-view"
           entries={sorted}
           view={view}
           selectedIDs={selectedIDs}
@@ -128,7 +131,7 @@ const Directory = () => {
           contextMenuRef={menu.ref}
           onSelect={handleSelect}
           onRename={fileOps.rename}
-          onCancelRename={() => setRenamingID("")}
+          onCancelRename={handleCancelRename}
           details={{
             setVisible: details.setVisible,
             setId: details.setId,

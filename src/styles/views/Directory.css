@@ -72,7 +72,10 @@
   border-radius: var(--radius-sm);
   border: var(--border-width-default) solid transparent;
   position: relative;
-  transition: all 0.1s ease-in-out;
+  /* Only animate hover colors; geometry must change instantly on grid/list switch. */
+  transition:
+    background-color 0.1s ease-in-out,
+    border-color 0.1s ease-in-out;
 }
 
 .directory_page .grid .dir_entry_item .extension {
@@ -90,39 +93,42 @@
   border-radius: var(--radius-sm);
 }
 
-.directory_page .grid .dir_entry_item svg {
-  position: absolute;
-  top: 40%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 1.4rem;
-  color: var(--color-text-muted);
+/* Dissolve the .name wrapper so its icon and label position within the tile. */
+.directory_page .grid .dir_entry_item .name {
+  display: contents;
 }
 
-.directory_page .grid .dir_entry_item img {
+.directory_page .grid .dir_entry_item .icon {
   position: absolute;
-  top: 35%;
+  top: 38%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 50%;
-  height: 60%;
-  object-fit: contain;
-  border-radius: var(--radius-xs);
-}
-
-.directory_page .grid .dir_entry_item .dir_entry_info {
-  position: absolute;
-  bottom: var(--space-0);
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  height: var(--size-directory-row);
+  width: 55%;
+  height: 55%;
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-.directory_page .grid .dir_entry_item .dir_entry_info h3 {
+.directory_page .grid .dir_entry_item .icon svg {
+  font-size: 1.4rem;
+  color: var(--color-text-muted);
+}
+
+.directory_page .grid .dir_entry_item .icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: var(--radius-xs);
+}
+
+.directory_page .grid .dir_entry_item .name h3 {
+  position: absolute;
+  bottom: var(--space-1);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  text-align: center;
   font-size: 0.7rem;
   font-weight: 400;
   color: var(--color-text-subtle);
@@ -135,13 +141,29 @@
   text-overflow: ellipsis;
 }
 
+.directory_page .grid .dir_entry_item .name .rename_input {
+  position: absolute;
+  bottom: var(--space-1);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 86%;
+}
+
+/* List-only columns are hidden in the grid. */
+.directory_page .grid .dir_entry_item .date_modified,
+.directory_page .grid .dir_entry_item .date_created,
+.directory_page .grid .dir_entry_item .size,
+.directory_page .grid .dir_entry_item .kind {
+  display: none;
+}
+
 .directory_page .grid .dir_entry_item:hover {
   background-color: var(--color-overlay-hover);
   border: var(--border-width-default) solid var(--color-border-default);
 }
 
-.directory_page .grid .dir_entry_item:hover svg,
-.directory_page .grid .dir_entry_item:hover .dir_entry_info h3 {
+.directory_page .grid .dir_entry_item:hover .icon svg,
+.directory_page .grid .dir_entry_item:hover .name h3 {
   color: var(--color-text-secondary);
 }
 
@@ -154,8 +176,8 @@
   border: var(--border-width-default) solid var(--color-selection-border);
 }
 
-.directory_page .grid .dir_entry_item.selected svg,
-.directory_page .grid .dir_entry_item.selected .dir_entry_info h3 {
+.directory_page .grid .dir_entry_item.selected .icon svg,
+.directory_page .grid .dir_entry_item.selected .name h3 {
   color: var(--color-text-primary);
 }
 
@@ -242,7 +264,15 @@
   gap: var(--space-2);
   padding: var(--space-0) var(--space-2-5);
   cursor: pointer;
-  transition: all 0.1s ease-in-out;
+  /* Only animate hover colors; geometry must change instantly on grid/list switch. */
+  transition:
+    background-color 0.1s ease-in-out,
+    border-color 0.1s ease-in-out;
+}
+
+/* Grid-only extension badge is hidden in the list (the Kind column shows it). */
+.directory_page .list .dir_entry_item .extension {
+  display: none;
 }
 
 .directory_page .list .dir_entry_item .icon {

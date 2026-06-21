@@ -17,7 +17,7 @@ const EntriesView = ({
   details,
   menu,
 }: EntriesViewProps) => {
-  const { setPath } = useStateContext();
+  const { fs, setPath } = useStateContext();
 
   return (
     <div className={view}>
@@ -25,14 +25,14 @@ const EntriesView = ({
         <DirEntryItem
           key={`${entry.name}#${entry.path}`}
           entry={entry}
+          fs={fs}
           setPath={setPath}
           contextMenuRef={contextMenuRef}
           id={entry.path}
-          view={view}
           selected={selectedIDs.includes(entry.path)}
-          onSelect={(e) => onSelect(entry.path, e)}
+          onSelect={onSelect}
           renaming={renamingID === entry.path}
-          onRename={(newName) => onRename(entry.path, newName)}
+          onRename={onRename}
           onCancelRename={onCancelRename}
           setHighlitedElementID={details.setId}
           setHighlitedElementType={details.setType}

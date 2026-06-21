@@ -9,6 +9,7 @@ import {
   type SortKey,
   type ViewMode,
 } from "@/shared/constants";
+import { FEATURE_FLAGS } from "@/shared/featureFlags";
 import { sortEntries, type Sort } from "../sort";
 import { useDirSizes } from "./useDirSizes";
 
@@ -34,8 +35,12 @@ export const useDirectoryEntries = (view: ViewMode) => {
     direction: SORT_DIRECTION.ASC,
   });
 
-  // Lazily computed directory sizes (the OS reports 0 for folders).
-  const dirSizes = useDirSizes(filtered, view === VIEW_MODE.LIST);
+  // Lazily computed directory sizes (the OS reports 0 for folders). Gated behind a
+  // feature flag (off by default) since walking every folder is costly on large dirs.
+  const dirSizes = useDirSizes(
+    filtered,
+    FEATURE_FLAGS.directorySizes && view === VIEW_MODE.LIST,
+  );
 
   // Fill in the computed size for folders so it shows and sorts like file sizes.
   const withSizes = useMemo(

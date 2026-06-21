@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import type { MouseEvent } from "react";
 
 // Selection of directory entries (by path). Single click replaces the selection;
@@ -6,7 +6,8 @@ import type { MouseEvent } from "react";
 export const useSelection = () => {
   const [selectedIDs, setSelectedIDs] = useState<string[]>([]);
 
-  const handleSelect = (id: string, e: MouseEvent) => {
+  // Stable so memoized entry rows don't re-render when an unrelated row changes.
+  const handleSelect = useCallback((id: string, e: MouseEvent) => {
     const additive = e.ctrlKey || e.metaKey;
     setSelectedIDs((prev) =>
       additive
@@ -15,9 +16,9 @@ export const useSelection = () => {
           : [...prev, id]
         : [id],
     );
-  };
+  }, []);
 
-  const clearSelection = () => setSelectedIDs([]);
+  const clearSelection = useCallback(() => setSelectedIDs([]), []);
 
   return { selectedIDs, setSelectedIDs, handleSelect, clearSelection };
 };
