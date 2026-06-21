@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { invoke } from '@tauri-apps/api/core'
 
-import { useStateContext } from '../providers/StateProvider'
+import { useStateContext } from '../shared/providers/StateProvider'
 
 import '../styles/components/AppBar.css'
 

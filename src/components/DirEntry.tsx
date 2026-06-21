@@ -1,9 +1,9 @@
 import { useEffect, useRef } from 'react'
 import { convertFileSrc } from '@tauri-apps/api/core'
 
-import { DirEntry } from '../lib/models'
-import { navigateToPath, formatBytes } from '../lib/utils'
-import { useStateContext } from '../providers/StateProvider'
+import { DirEntry } from '../shared/models'
+import { navigateToPath, formatBytes } from '../shared/utils'
+import { useStateContext } from '../shared/providers/StateProvider'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFile, faFolder } from '@fortawesome/free-solid-svg-icons'

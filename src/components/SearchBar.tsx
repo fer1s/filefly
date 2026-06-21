@@ -1,4 +1,4 @@
-import { useStateContext } from '../providers/StateProvider'
+import { useStateContext } from '../shared/providers/StateProvider'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faXmark } from '@fortawesome/free-solid-svg-icons'

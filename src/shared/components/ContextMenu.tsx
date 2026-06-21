@@ -1,5 +1,5 @@
 import { ReactNode, forwardRef } from 'react'
-import '../styles/components/ContextMenu.css'
+import '../../styles/components/ContextMenu.css'
 
 // ContextMenu
 interface ContextMenuProps {

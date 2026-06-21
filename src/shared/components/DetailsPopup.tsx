@@ -1,6 +1,6 @@
 import { ReactNode } from 'react'
 
-import '../styles/components/DetailsPopup.css'
+import '../../styles/components/DetailsPopup.css'
 
 interface DetailsPopupProps {
    visible  : boolean

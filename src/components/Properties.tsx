@@ -1,5 +1,5 @@
-import { DirEntry } from '../lib/models'
-import { formatBytes } from '../lib/utils'
+import { DirEntry } from '../shared/models'
+import { formatBytes } from '../shared/utils'
 
 import '../styles/components/Properties.css'
 

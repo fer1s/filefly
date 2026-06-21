@@ -5,7 +5,7 @@ import PathBar from './components/PathBar'
 import Volumes from './views/Volumes'
 import Directory from './views/Directory'
 
-import { ROUTES } from './lib/routes'
+import { ROUTES } from './app/routes'
 
 function AppContent() {
    return (

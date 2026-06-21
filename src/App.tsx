@@ -1,18 +1,18 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { useNavigate, useLocation, NavigateFunction, Location } from 'react-router-dom'
 
-import { StateProvider } from './providers/StateProvider'
+import { StateProvider } from './shared/providers/StateProvider'
 
 import AppBar from './components/AppBar'
 import SideBar from './components/SideBar'
-import Toasts, { ToastData } from './components/Toast'
+import Toasts, { ToastData } from './shared/components/Toast'
 
 import AppContent from './AppContent'
 
-import { setNotifier, ToastType } from './lib/toast'
-import { ROUTES } from './lib/routes'
-import { FileSystemManager } from './lib/managers/FileSystemManager'
-import { Volume, DirEntry } from './lib/models'
+import { setNotifier, ToastType } from './shared/toast'
+import { ROUTES } from './app/routes'
+import { FileSystemManager } from './shared/managers/FileSystemManager'
+import { Volume, DirEntry } from './shared/models'
 
 const App = () => {
    const navigate: NavigateFunction = useNavigate()

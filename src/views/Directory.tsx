@@ -1,11 +1,11 @@
 import { useMemo, useState } from 'react'
 
-import { useStateContext } from '../providers/StateProvider'
-import { ContextMenu, ContextMenuItem } from '../components/ContextMenu'
-import DetailsPopup from '../components/DetailsPopup'
-import { notify } from '../lib/toast'
+import { useStateContext } from '../shared/providers/StateProvider'
+import { ContextMenu, ContextMenuItem } from '../shared/components/ContextMenu'
+import DetailsPopup from '../shared/components/DetailsPopup'
+import { notify } from '../shared/toast'
 import { ask } from '@tauri-apps/plugin-dialog'
-import { AcceptedPreviewFormats } from '../lib/constants'
+import { AcceptedPreviewFormats } from '../shared/constants'
 import { DirEntryItem } from '../components/DirEntry'
 import { useSelection } from '../hooks/useSelection'
 import { useKeyboardNav } from '../hooks/useKeyboardNav'
@@ -18,7 +18,7 @@ import { faArrowUpRightFromSquare, faCircleInfo, faCopy, faEye, faFilePen, faPas
 import '../styles/views/Directory.css'
 import Preview from '../components/Preview'
 import Properties from '../components/Properties'
-import { DirEntry } from '../lib/models'
+import { DirEntry } from '../shared/models'
 
 const Directory = () => {
    const { fs, dirContent, path, setPath, view, search, refreshDir } = useStateContext()

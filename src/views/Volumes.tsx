@@ -1,7 +1,7 @@
 import { useState } from 'react'
 
-import { useStateContext } from '../providers/StateProvider'
-import { Volume } from '../lib/models'
+import { useStateContext } from '../shared/providers/StateProvider'
+import { Volume } from '../shared/models'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faHardDrive } from '@fortawesome/free-solid-svg-icons'

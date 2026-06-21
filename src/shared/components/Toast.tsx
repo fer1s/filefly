@@ -1,6 +1,6 @@
-import { ToastType } from '../lib/toast'
+import { ToastType } from '../toast'
 
-import '../styles/components/Toast.css'
+import '../../styles/components/Toast.css'
 
 export type ToastData = { id: number; message: string; type: ToastType }
 

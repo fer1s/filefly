@@ -1,149 +1,173 @@
-# Architecture Refactor Plan
+# Architecture Refactor Plan (Feature-Sliced)
 
 ## Objetivo
 
-Alinear el frontend React de `sito-file-browser` con `ARCHITECTURE_RULES.md`: estructura de carpetas, rutas centralizadas, providers + managers, estructura por feature, modelos en `lib/` e i18n. Estilos siguen en **CSS plano** (no Tailwind, ya adaptado en las reglas). Sin cambios funcionales: refactor estructural a iso-comportamiento.
+Alinear el frontend con `ARCHITECTURE_RULES.md` (estructura feature-sliced): `app/` (composition root),
+`shared/` (genérico/cross-feature) y `features/<feature>/` (auto-contenidos por dominio). Estilos en CSS
+plano. Refactor a **iso-comportamiento**: solo estructura, sin cambiar funcionalidad.
 
-Plan creado el 20 de junio de 2026.
+Plan reescrito el 21 de junio de 2026 (sustituye al plan previo basado en `lib/ + views/ + providers/` top-level).
 
-## Baseline (estructura actual)
+## Granularidad de features (decisión)
+
+Features por dominio de pantalla. Ajustable, pero el punto de partida:
+
+- `features/directory` — pantalla de directorio: entradas, menú contextual, preview, properties y sus hooks.
+- `features/volumes` — pantalla de volúmenes.
+- `features/sidebar` — sidebar (pinned + búsqueda).
+- `features/navigation` — barra de ruta (PathBar) e historial.
+
+Lo transversal (estado global, manager, service, modelos, UI genérica) vive en `shared/`. La composición
+(App, router, layout, chrome de ventana) en `app/`.
+
+## Estado actual (tras el refactor previo)
 
 ```txt
 src/
   App.tsx, AppContent.tsx, main.tsx
-  api.ts, constants.ts, toast.ts, types.ts, utils.ts
-  components/   (AppBar, AudioPreview, ContextMenu, DetailsPopup, DirEntry,
-                 PathBar, Preview, Properties, SearchBar, SideBar, Spinner, Toast)
-  context/StateContext.tsx
-  pages/        (Directory.tsx [469 LOC], Volumes.tsx)
-  styles/       (components/, pages/, index.css)
+  components/  (AppBar, AudioPreview, ContextMenu, DetailsPopup, DirEntry, PathBar,
+                Preview, Properties, SearchBar, SideBar, Spinner, Toast)
+  hooks/       (useSelection, useKeyboardNav, useClipboardShortcuts, useContextMenu)
+  lib/         (constants, toast, routes, models/, managers/, services/, utils/)
+  providers/   (StateProvider)
+  views/       (Directory, Volumes)
+  styles/      (components/, views/, index.css)
 ```
-
-Incumplimientos vs reglas:
-- Carpetas: falta `providers/ views/ layouts/ hooks/ lib/{models,utils,services} lang/`; existen `context/` y `pages/`.
-- Rutas hardcodeadas (`navigate('/directory')`, `navigate('/')`, `<Route path="directory">`).
-- Sin manager classes: logica de fs repartida entre `api.ts` y `pages/Directory.tsx`.
-- `Directory.tsx` mezcla estado, helpers, constantes, tipos y varios hooks inline (nav teclado, type-to-find, clipboard, preview).
-- Modelos (`types.ts`) y utils sueltos en raiz de `src/`.
-- Sin i18n: strings en ingles hardcodeados.
-
-## Reglas de trabajo
-
-1. El usuario ejecuta instalaciones, build y Tauri; el agente no ejecuta scripts.
-2. Refactor a **iso-comportamiento**: cada fase no cambia funcionalidad, solo estructura.
-3. Preservar imports publicos re-exportando desde `index.ts` locales cuando aplique.
-4. Una fase por checkpoint (commit) tras validar build + smoke test.
-5. Mover archivos con `git mv` para conservar historial.
-6. No mezclar este refactor con features nuevas.
 
 ## Estructura objetivo
 
 ```txt
 src/
-  providers/                # StateProvider + hook de acceso (ex context/)
-  components/               # UI reutilizable global
-  views/                    # Directory, Volumes (ex pages/)
-  layouts/                  # shell App (AppBar + SideBar + AppContent)
-  hooks/                    # useKeyboardNav, useTypeahead, useClipboard, useWindowState, ...
-  lib/
-    models/                 # tipos de dominio (DirEntry, Volume, ...)
-    services/               # api.ts (invokes Tauri)
-    managers/               # FileSystemManager, ClipboardManager
-    utils/                  # formatBytes, navigateToPath, path helpers
-    routes.ts               # rutas centralizadas (as const)
-    constants.ts
-  lang/                     # i18n (en, es, ...)
-  styles/                   # global.css/index.css + por componente
+  app/
+    App.tsx, AppContent.tsx, main.tsx
+    AppBar.tsx            # chrome de ventana (min/max/close)
+    layout/              # AppLayout (shell AppBar + Sidebar + contenido)
+    routes.ts
+  shared/
+    components/           # ContextMenu, DetailsPopup, Spinner, Toast (UI genérica)
+    providers/            # StateProvider (estado global de la app)
+    services/             # api.ts (Tauri invoke)
+    managers/             # FileSystemManager
+    models/               # tipos compartidos
+    utils/                # helpers compartidos
+    constants.ts          # constantes compartidas (formatos de archivo)
+    toast.ts              # bridge de notificaciones
+  features/
+    directory/
+      Directory.tsx, index.ts
+      components/          # DirEntry, Preview, AudioPreview, Properties
+      hooks/              # useSelection, useKeyboardNav, useClipboardShortcuts, useContextMenu
+      constants.ts        # AcceptedPreviewFormats (si se decide local)
+    volumes/
+      Volumes.tsx, index.ts
+    sidebar/
+      Sidebar.tsx, index.ts
+      components/          # SearchBar
+    navigation/
+      PathBar.tsx, index.ts
+  lang/                   # i18n
+  styles/
 ```
 
-## Fase 1. Andamiaje de carpetas y `lib/` (bajo riesgo)
+## Reglas de trabajo
+
+1. El usuario ejecuta instalaciones, build y Tauri; el agente no ejecuta scripts.
+2. Refactor a iso-comportamiento; una fase por checkpoint (commit) tras build + smoke test.
+3. `git mv` para conservar historial.
+4. Dependencias: `features` no importan internals de otras features (vía `shared/` o el `index.ts` público);
+   `shared/` no depende de `features/`; `app/` puede depender de ambos.
+5. No mezclar features nuevas con este refactor.
+
+## Mapeo actual -> objetivo
+
+| Actual | Objetivo |
+| --- | --- |
+| `lib/models/` | `shared/models/` |
+| `lib/services/api.ts` | `shared/services/api.ts` |
+| `lib/managers/FileSystemManager.ts` | `shared/managers/` |
+| `lib/utils/` | `shared/utils/` |
+| `lib/constants.ts` | `shared/constants.ts` |
+| `lib/toast.ts` | `shared/toast.ts` |
+| `lib/routes.ts` | `app/routes.ts` |
+| `providers/StateProvider.tsx` | `shared/providers/StateProvider.tsx` |
+| `components/{ContextMenu,DetailsPopup,Spinner,Toast}` | `shared/components/` |
+| `components/AppBar` | `app/AppBar.tsx` |
+| `App.tsx, AppContent.tsx, main.tsx` | `app/` |
+| `views/Directory.tsx` + `components/{DirEntry,Preview,AudioPreview,Properties}` + `hooks/*` | `features/directory/` |
+| `views/Volumes.tsx` | `features/volumes/` |
+| `components/SideBar` + `components/SearchBar` | `features/sidebar/` |
+| `components/PathBar` | `features/navigation/` |
+
+## Fase 1. Andamiaje + `shared/`
 
 Estado: pendiente.
 
-- Crear `lib/{models,services,managers,utils}`, `hooks/`, `layouts/`, `lang/`.
-- `git mv`: `types.ts -> lib/models/`, `utils.ts -> lib/utils/`, `constants.ts -> lib/constants.ts`, `api.ts -> lib/services/api.ts`, `toast.ts -> lib/toast.ts` (o `lib/services/`).
-- Actualizar todos los imports.
-- Opcional: `index.ts` en `lib/models` y `lib/utils` para reexport.
+- Crear `app/`, `shared/{components,providers,services,managers,models,utils}`, `features/`.
+- `git mv` de `lib/*` y `providers/` a `shared/` según el mapeo; `lib/routes.ts` a `app/`.
+- Mover UI genérica (`ContextMenu, DetailsPopup, Spinner, Toast`) a `shared/components/`.
+- Actualizar imports.
 
-Donde probar: build TS/Vite limpio; arranque; sin imports rotos.
+Donde probar: build limpio; arranque.
 
-## Fase 2. Renombrar `pages/ -> views/` y `context/ -> providers/`
-
-Estado: pendiente.
-
-- `git mv pages views`, `git mv context providers`.
-- `StateContext.tsx -> providers/StateProvider.tsx` (mantener `useStateContext` como hook de acceso; renombrar a `useAppState` opcional con reexport).
-- Actualizar imports en `App.tsx`, `AppContent.tsx`, vistas y componentes.
-- Mover CSS de `styles/pages/ -> styles/views/` (coherencia) y actualizar imports.
-
-Donde probar: arranque, navegacion Volumes/Directory, estilos intactos.
-
-## Fase 3. Rutas centralizadas (`lib/routes.ts`)
+## Fase 2. `app/` (composition root)
 
 Estado: pendiente.
 
-- Crear `lib/routes.ts` con `Routes = { volumes: '/', directory: '/directory' } as const`.
-- Reemplazar strings en `App.tsx` (`navigate`), `AppContent.tsx` (`<Route path>`), y cualquier `location.pathname` comparado.
-- Si surgen rutas con parametros, exponer helpers (`getX(id)`).
+- `git mv` `App.tsx, AppContent.tsx, main.tsx` a `app/`; `components/AppBar` a `app/AppBar.tsx`.
+- Ajustar `index.html`/entry si referencia `main.tsx`.
+- Actualizar imports.
 
-Donde probar: navegacion completa (entrar/salir, atras/adelante, home).
+Donde probar: arranque, ventana/tray, navegación.
 
-## Fase 4. Providers + Managers (separar logica de dominio)
-
-Estado: pendiente.
-
-- `FileSystemManager` en `lib/managers/`: encapsula `readDirectory`, `copy/move/rename/delete`, `openFile`, resolucion de pinned dirs y volumenes; usa `lib/services/api.ts`.
-- `ClipboardManager` (o estado dentro del provider) para copy/cut.
-- Exponer via provider(s); las vistas/componentes consumen el manager por el hook, sin llamar `api.ts` directo.
-- Sacar de `Directory.tsx`/`App.tsx` la orquestacion (fetch, refresh, side effects) hacia el provider/manager.
-
-Donde probar: todas las operaciones fs (copy/cut/paste/rename/delete/open), refresh, toasts de error.
-
-## Fase 5. Estructura por feature (descomponer `Directory`)
+## Fase 3. `features/directory`
 
 Estado: pendiente.
 
-- Convertir componentes grandes en carpetas `FeatureName/` con `Component.tsx`, `constants.ts`, `utils.ts`, `types.ts`, `index.ts`.
-- Extraer hooks de `Directory.tsx` a `hooks/` (uno por archivo):
-  - `useSelection` (seleccion + multiseleccion).
-  - `useKeyboardNav` (flechas/Enter/Escape, columnas del grid).
-  - `useTypeahead` (busqueda por letra).
-  - `useClipboardActions` (copy/cut/paste + atajos).
-  - `useContextMenu` (estado/posicion del menu).
-- `Directory` queda como composicion delgada que orquesta hooks + presentacion.
-- Mover helpers/constantes/tipos inline a sus archivos.
+- `git mv` `views/Directory.tsx` a `features/directory/Directory.tsx`.
+- Mover `DirEntry, Preview, AudioPreview, Properties` a `features/directory/components/`.
+- Mover `hooks/*` a `features/directory/hooks/`.
+- `index.ts` exportando `Directory`.
+- Actualizar imports (incluye CSS).
 
-Donde probar: seleccion, teclado, type-to-find, menu contextual, preview, rename, todo igual.
+Donde probar: directorio completo (selección, teclado, menú, preview, properties, fs ops).
+
+## Fase 4. `features/volumes`, `features/sidebar`, `features/navigation`
+
+Estado: pendiente.
+
+- `views/Volumes.tsx` a `features/volumes/`.
+- `SideBar` (+ `SearchBar`) a `features/sidebar/`.
+- `PathBar` a `features/navigation/`.
+- `index.ts` por feature; actualizar imports.
+
+Donde probar: volúmenes, sidebar (pinned/colapsable/búsqueda), pathbar (historial/subir).
+
+## Fase 5. `index.ts` públicos + límites de dependencia
+
+Estado: pendiente.
+
+- Cada feature expone su API por `index.ts`; los consumidores importan del `index.ts`, no de internals.
+- Verificar que ninguna feature importe internals de otra; mover lo compartido a `shared/`.
+
+Donde probar: build; arranque.
 
 ## Fase 6. i18n (`lang/`)
 
 Estado: pendiente.
 
-- Elegir libreria ligera o un dictionary + hook propio (`useT`).
-- `lang/en.ts`, `lang/es.ts` con claves por dominio.
-- Reemplazar strings de UI (menus, Properties, toasts, placeholders) por claves.
-- Default idioma + (futuro) selector.
+- `lang/en.ts` (+ idiomas) con claves por dominio; hook/util de traducción.
+- Reemplazar strings de UI (menús, Properties, toasts, placeholders).
 
-Donde probar: textos visibles correctos en el idioma por defecto; sin claves crudas.
-
-## Fase 7. Layout shell
-
-Estado: pendiente.
-
-- `layouts/AppLayout.tsx`: estructura AppBar + (SideBar + AppContent) que hoy vive en `App.tsx`.
-- `App.tsx` queda como wiring de providers + router + layout.
-
-Donde probar: layout identico, sidebar colapsable, toasts.
+Donde probar: textos correctos en el idioma por defecto.
 
 ## Criterio de exito
 
-- Estructura de `src/` coincide con la estructura objetivo de `ARCHITECTURE_RULES.md`.
-- Cero rutas hardcodeadas; cero logica de dominio en componentes hoja.
+- `src/` con `app/ + shared/ + features/` según `ARCHITECTURE_RULES.md`.
+- Sin imports cruzados entre features; `shared/` sin dependencias a `features/`.
 - Un componente/hook por archivo; helpers/constantes/tipos en sus archivos.
-- Comportamiento identico al actual en cada checkpoint (refactor iso-comportamiento).
-- Estilos siguen en CSS plano, sin regresiones visuales.
+- Comportamiento idéntico en cada checkpoint; estilos CSS sin regresiones.
 
 ## Referencias
 
 - `../ARCHITECTURE_RULES.md`
-- `KEYBINDINGS_PLAN.md` (la Fase 5 deja el terreno listo para el keymap configurable).
+- `KEYBINDINGS_PLAN.md`

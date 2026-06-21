@@ -61,39 +61,65 @@ All coding agents (Codex, Claude, or any automated contributor) **must read this
 
 ---
 
-## 6) Folder Structure (Required)
+## 6) Folder Structure (Required) — Feature-Sliced
 
-Use this project structure as the default organization:
+Organize the app around **features**. There is no top-level `lib/`, `components/`, `hooks/` or
+`providers/`. Instead:
+
+- `shared/` holds everything generic/cross-feature (used by more than one feature or app-wide).
+- `features/` holds one folder per domain feature, each self-contained with its own
+  `components/`, `hooks/`, `providers/`, etc.
 
 ```txt
 src/
-  providers/      # App/domain providers and context wiring
-  components/     # Reusable global components
-  views/          # Route/page-level screens
-  layouts/        # Shared layout shells used by views
-  hooks/          # Reusable custom hooks
-  lib/            # Core logic: models, managers, utils, services, constants
-    models/
-    utils/
-  lang/           # i18n resources (translations, dictionaries)
-  styles/         # Global styles (including global.css/theme definitions)
+  app/                  # Composition root: app entry, router, provider wiring, layout shells
+    routes.ts           # Centralized routes (as const)
+
+  shared/               # Generic / cross-feature building blocks
+    components/          # Reusable UI used by multiple features
+    hooks/               # Reusable hooks used by multiple features
+    providers/           # App-wide providers and context wiring
+    models/              # Shared/generic types
+    services/            # External integrations (e.g. Tauri/API service wrappers)
+    managers/            # Cross-cutting domain managers
+    utils/               # Shared helpers
+    constants.ts         # Shared constants
+
+  features/             # One folder per domain feature
+    <feature>/
+      components/        # Feature-specific components
+      hooks/             # Feature-specific hooks
+      providers/         # Feature-specific providers/context
+      managers/          # Feature-specific domain managers
+      models/            # Feature-specific types
+      utils/             # Feature-specific helpers
+      constants.ts       # Feature-specific constants
+      <Feature>.tsx      # The feature screen/view (or a views/ subfolder)
+      index.ts           # Public API of the feature
+
+  lang/                 # i18n resources (translations, dictionaries)
+  styles/               # Global styles (theme/tokens) + per-component CSS
 ```
 
-Notes:
+Rules:
 
-- `components/` is for shared/global UI blocks, not route-specific page composition.
-- `views/` should focus on screen composition and orchestration.
-- `layouts/` should hold reusable structures shared between multiple views.
+- Put code in a `features/<feature>/` folder when it belongs to one domain feature.
+- Promote code to `shared/` only when it is reused across features or is genuinely generic.
+- A feature must not import the internals of another feature; cross-feature reuse goes through
+  `shared/` (or a feature's public `index.ts`).
+- The composition root in `app/` wires providers, routing and layouts; it may depend on features
+  and `shared/`, but `shared/` must not depend on `features/`.
 
 ---
 
-## 7) Feature-Level File Structure (Mandatory)
+## 7) Unit-Level File Structure (Mandatory)
 
-When creating or refactoring hooks/components, use this per-feature structure:
+This applies to any non-trivial component or hook, whether it lives in `shared/` or inside a
+`features/<feature>/` folder. When a unit needs supporting code, give it its own folder:
 
 ```txt
-FeatureName/
-  FeatureName.tsx|ts   # Only one component or one hook per file
+Something/
+  Something.tsx|ts     # Only one component or one hook per file
   constants.ts         # Constants only
   utils.ts             # Reusable helper functions only
   types.ts             # Type aliases and interfaces only
@@ -116,7 +142,7 @@ Rules:
 
 ## 8) Routing Conventions (Mandatory)
 
-- Centralize app routes in one shared file (for example: `src/lib/routes.ts`) using constant objects (`as const`).
+- Centralize app routes in one file (for example: `src/app/routes.ts`) using constant objects (`as const`).
 - Do not hardcode route strings in `navigate(...)`, `<Link to=...>`, `<Route path=...>`, menu config, or sitemap config.
 - For dynamic routes and query-based routes, expose helper functions (for example: `getShipRoute(id)`).
 - Centralize query parameter keys in route constants (for example: `RouteQueryParam`) and reuse them consistently.
