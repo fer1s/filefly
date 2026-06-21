@@ -79,9 +79,13 @@ const Directory = () => {
     onDelete: fileOps.remove,
   });
 
-  // Empty space represents the directory currently being viewed.
+  // The empty floor of the entries area represents the directory currently being viewed.
+  // Restrict the menu to that area: not the list header, the status bar, or an entry row.
   const handleEmptyContextMenu = (e: React.MouseEvent) => {
-    if ((e.target as HTMLElement).closest(".dir_entry_item")) return;
+    const target = e.target as HTMLElement;
+    if (!target.closest(".directory_content")) return;
+    if (target.closest(".list_header")) return;
+    if (target.closest(".dir_entry_item")) return;
     e.preventDefault();
     setSelectedIDs([]);
     menu.openAt(e.clientX, e.clientY, path, ENTRY_KIND.DIRECTORY);
