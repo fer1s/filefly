@@ -82,6 +82,8 @@ export const en = {
   },
   errors: {
     open: (reason: string) => `Could not open file: ${reason}`,
+    openInTerminal: (reason: string) =>
+      `Could not open terminal: ${reason}`,
     delete: (name: string, reason: string) =>
       `Could not delete ${name}: ${reason}`,
     paste: (name: string, reason: string) =>

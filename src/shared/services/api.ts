@@ -28,9 +28,13 @@ export const openFile = async (path: string): Promise<void> => {
   }
 };
 
-// Open in terminal invokement method
-export const openInTerminal = async (path: string): Promise<void> =>
-  (await invokeWithPathArg("open_in_terminal", path)) as void;
+export const openInTerminal = async (path: string): Promise<void> => {
+  try {
+    await invoke("open_in_terminal", { path });
+  } catch (error) {
+    notify(t.errors.openInTerminal(String(error)), TOAST_TYPE.ERROR);
+  }
+};
 
 // Generate markdown preview invokement method
 export const generateMarkdownPreview = async (path: string): Promise<string> =>
@@ -54,7 +58,7 @@ export const deleteEntry = async (path: string): Promise<void> =>
 
 // Helper function to invoke methods with a path argument
 const invokeWithPathArg = async (
-  method: "open_in_terminal" | "read_directory" | "open_file" | "md_to_html",
+  method: "read_directory" | "open_file" | "md_to_html",
   path: string,
 ): Promise<DirEntry[] | void | string> =>
   await invoke(method, { path: path })
