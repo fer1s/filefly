@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-
-export type ContextMenuElementType = "file" | "dir" | "none";
+import { ENTRY_KIND, type EntryKind } from "@/shared/constants";
 
 // Context-menu state: visibility, the targeted element (id + type) and positioning.
 // Closes itself on any outside click.
@@ -8,8 +7,7 @@ export const useContextMenu = () => {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
   const [elementID, setElementID] = useState("");
-  const [elementType, setElementType] =
-    useState<ContextMenuElementType>("none");
+  const [elementType, setElementType] = useState<EntryKind>(ENTRY_KIND.NONE);
 
   useEffect(() => {
     const handleClose = (e: MouseEvent) => {
@@ -22,12 +20,7 @@ export const useContextMenu = () => {
   }, []);
 
   // Open the menu at a screen position for a given element.
-  const openAt = (
-    x: number,
-    y: number,
-    id: string,
-    type: ContextMenuElementType,
-  ) => {
+  const openAt = (x: number, y: number, id: string, type: EntryKind) => {
     setElementID(id);
     setElementType(type);
     if (ref.current) {

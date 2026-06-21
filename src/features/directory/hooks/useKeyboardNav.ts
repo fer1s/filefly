@@ -2,10 +2,11 @@ import { useEffect, useRef } from "react";
 import type { Dispatch, SetStateAction } from "react";
 
 import { DirEntry } from "@/shared/models";
+import { VIEW_MODE, type ViewMode } from "@/shared/constants";
 
 type Params = {
   items: DirEntry[];
-  view: "grid" | "list";
+  view: ViewMode;
   enabled: boolean;
   setSelectedIDs: Dispatch<SetStateAction<string[]>>;
   onOpen: (entry: DirEntry) => void;
@@ -121,11 +122,11 @@ export const useKeyboardNav = ({
           break;
         case "ArrowDown":
           e.preventDefault();
-          move(view === "grid" ? columns() : 1);
+          move(view === VIEW_MODE.GRID ? columns() : 1);
           break;
         case "ArrowUp":
           e.preventDefault();
-          move(view === "grid" ? -columns() : -1);
+          move(view === VIEW_MODE.GRID ? -columns() : -1);
           break;
         case "Enter":
           e.preventDefault();

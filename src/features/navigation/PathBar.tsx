@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { useStateContext } from "@/shared/providers/StateProvider";
+import { VIEW_MODE } from "@/shared/constants";
 import { t } from "@/lang";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -37,7 +38,8 @@ const PathBar = () => {
     setPath(idx <= 0 ? "/" : trimmed.slice(0, idx));
   };
 
-  const switchView = () => setView(view === "grid" ? "list" : "grid");
+  const switchView = () =>
+    setView(view === VIEW_MODE.GRID ? VIEW_MODE.LIST : VIEW_MODE.GRID);
 
   return (
     <div className="PathBar">
@@ -60,7 +62,9 @@ const PathBar = () => {
       <PathInput key={path} path={path} onCommit={setPath} />
 
       <button className="shadow" onClick={switchView}>
-        <FontAwesomeIcon icon={view === "grid" ? faList : faTableCellsLarge} />
+        <FontAwesomeIcon
+          icon={view === VIEW_MODE.GRID ? faList : faTableCellsLarge}
+        />
       </button>
     </div>
   );

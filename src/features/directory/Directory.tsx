@@ -3,10 +3,16 @@ import { useCallback, useMemo, useState } from "react";
 import { useStateContext } from "@/shared/providers/StateProvider";
 import { ContextMenu, ContextMenuItem } from "@/shared/components/ContextMenu";
 import DetailsPopup from "@/shared/components/DetailsPopup";
-import { notify } from "@/shared/toast";
+import { notify, TOAST_TYPE } from "@/shared/toast";
 import { t } from "@/lang";
 import { ask } from "@tauri-apps/plugin-dialog";
-import { AcceptedPreviewFormats } from "@/shared/constants";
+import {
+  ACCEPTED_PREVIEW_FORMATS,
+  CLIPBOARD_MODE,
+  ENTRY_KIND,
+  type ClipboardMode,
+  type EntryKind,
+} from "@/shared/constants";
 import { DirEntryItem } from "./components/DirEntry";
 import { useSelection } from "./hooks/useSelection";
 import { useKeyboardNav } from "./hooks/useKeyboardNav";
@@ -38,7 +44,7 @@ const Directory = () => {
   // Internal clipboard for copy/cut, pasted via the empty-area context menu.
   const [clipboard, setClipboard] = useState<{
     paths: string[];
-    mode: "copy" | "cut";
+    mode: ClipboardMode;
   } | null>(null);
 
   // Path of the entry currently being renamed inline (empty when none).
@@ -64,9 +70,9 @@ const Directory = () => {
   const [detailsPopupVisible, setDetailsPopupVisible] =
     useState<boolean>(false);
   const [highlitedElementID, setHighlitedElementID] = useState("");
-  const [highlitedElementType, setHighlitedElementType] = useState<
-    "file" | "dir" | "none"
-  >("none");
+  const [highlitedElementType, setHighlitedElementType] = useState<EntryKind>(
+    ENTRY_KIND.NONE,
+  );
 
   const {
     ref: contextMenuRef,
@@ -88,7 +94,7 @@ const Directory = () => {
       filtered.filter(
         (e) =>
           e.metadata.isFile &&
-          AcceptedPreviewFormats.includes(
+          ACCEPTED_PREVIEW_FORMATS.includes(
             (e.name.split(".").pop() || "").toLowerCase(),
           ),
       ),
@@ -126,9 +132,9 @@ const Directory = () => {
   });
 
   const handleOpenInTerminal = () => {
-    if (contextMenuElementType === "dir")
+    if (contextMenuElementType === ENTRY_KIND.DIRECTORY)
       fs.openInTerminal(contextMenuElementID);
-    else if (contextMenuElementType === "file")
+    else if (contextMenuElementType === ENTRY_KIND.FILE)
       fs.openInTerminal(contextMenuElementID.split("/").slice(0, -1).join("/"));
     else
       console.error(
@@ -139,8 +145,10 @@ const Directory = () => {
   };
 
   const handleOpenFile = () => {
-    if (contextMenuElementType === "file") fs.open(contextMenuElementID);
-    else if (contextMenuElementType === "dir") setPath(contextMenuElementID);
+    if (contextMenuElementType === ENTRY_KIND.FILE)
+      fs.open(contextMenuElementID);
+    else if (contextMenuElementType === ENTRY_KIND.DIRECTORY)
+      setPath(contextMenuElementID);
     else
       console.error(
         'An error occured while handling the Open_File event, See the defenition of the function "handleOpenFile()" for more information in Directory.tsx',
@@ -150,7 +158,8 @@ const Directory = () => {
   };
 
   const handlePreviewFile = () => {
-    if (contextMenuElementType !== "file" && !contextMenuElementID) return;
+    if (contextMenuElementType !== ENTRY_KIND.FILE && !contextMenuElementID)
+      return;
 
     // Get the file extension
     const fileExtension = contextMenuElementID.split(".").pop();
@@ -160,7 +169,7 @@ const Directory = () => {
       );
 
     // Check if the file extension is accepted
-    if (!AcceptedPreviewFormats.includes(fileExtension)) return;
+    if (!ACCEPTED_PREVIEW_FORMATS.includes(fileExtension)) return;
 
     // Locate the file among the previewable entries so prev/next can navigate from here.
     const index = previewables.findIndex(
@@ -184,12 +193,12 @@ const Directory = () => {
   // Core operations on a list of paths, shared by the context menu and the keyboard shortcuts.
   const copyTargets = (targets: string[]) => {
     if (targets.length && targets[0])
-      setClipboard({ paths: targets, mode: "copy" });
+      setClipboard({ paths: targets, mode: CLIPBOARD_MODE.COPY });
   };
 
   const cutTargets = (targets: string[]) => {
     if (targets.length && targets[0])
-      setClipboard({ paths: targets, mode: "cut" });
+      setClipboard({ paths: targets, mode: CLIPBOARD_MODE.CUT });
   };
 
   const deleteTargets = async (targets: string[]) => {
@@ -211,7 +220,7 @@ const Directory = () => {
       } catch (err) {
         notify(
           t.errors.delete(target.split("/").pop() || target, String(err)),
-          "error",
+          TOAST_TYPE.ERROR,
         );
       }
     }
@@ -225,17 +234,17 @@ const Directory = () => {
 
     for (const source of clipboard.paths) {
       try {
-        if (clipboard.mode === "copy") await fs.copy(source, path);
+        if (clipboard.mode === CLIPBOARD_MODE.COPY) await fs.copy(source, path);
         else await fs.move(source, path);
       } catch (err) {
         notify(
           t.errors.paste(source.split("/").pop() || source, String(err)),
-          "error",
+          TOAST_TYPE.ERROR,
         );
       }
     }
 
-    if (clipboard.mode === "cut") setClipboard(null);
+    if (clipboard.mode === CLIPBOARD_MODE.CUT) setClipboard(null);
     setSelectedIDs([]);
     refreshDir();
   };
@@ -281,7 +290,7 @@ const Directory = () => {
     try {
       await fs.rename(targetPath, newName);
     } catch (err) {
-      notify(t.errors.rename(String(err)), "error");
+      notify(t.errors.rename(String(err)), TOAST_TYPE.ERROR);
     }
     refreshDir();
   };
@@ -299,7 +308,7 @@ const Directory = () => {
   const handleEmptyContextMenu = (e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest(".dir_entry_item")) return;
     e.preventDefault();
-    openContextMenuAt(e.clientX, e.clientY, "", "none");
+    openContextMenuAt(e.clientX, e.clientY, "", ENTRY_KIND.NONE);
   };
 
   // useEffect(() => {
@@ -317,7 +326,7 @@ const Directory = () => {
       }
       onContextMenu={handleEmptyContextMenu}
     >
-      <div className={view == "list" ? "list" : "grid"}>
+      <div className={view}>
         {filtered.map((entry) => (
           <DirEntryItem
             key={`${entry.name}#${entry.path}`}
@@ -325,7 +334,7 @@ const Directory = () => {
             setPath={setPath}
             contextMenuRef={contextMenuRef}
             id={entry.path}
-            view={view == "list" ? "list" : "grid"}
+            view={view}
             selected={selectedIDs.includes(entry.path)}
             onSelect={(e) => handleSelect(entry.path, e)}
             renaming={renamingID === entry.path}
@@ -346,7 +355,7 @@ const Directory = () => {
       )}
 
       <ContextMenu contextMenuVisible={contextMenuVisible} ref={contextMenuRef}>
-        {contextMenuElementType === "none" && (
+        {contextMenuElementType === ENTRY_KIND.NONE && (
           <ContextMenuItem
             text={t.contextMenu.paste}
             icon={<FontAwesomeIcon icon={faPaste} />}
@@ -354,7 +363,7 @@ const Directory = () => {
           />
         )}
 
-        {contextMenuElementType === "dir" && (
+        {contextMenuElementType === ENTRY_KIND.DIRECTORY && (
           <>
             <ContextMenuItem
               text={t.contextMenu.open}
@@ -389,14 +398,14 @@ const Directory = () => {
           </>
         )}
 
-        {contextMenuElementType === "file" && (
+        {contextMenuElementType === ENTRY_KIND.FILE && (
           <>
             <ContextMenuItem
               text={t.contextMenu.open}
               icon={<FontAwesomeIcon icon={faArrowUpRightFromSquare} />}
               onClick={handleOpenFile}
             />
-            {AcceptedPreviewFormats.includes(
+            {ACCEPTED_PREVIEW_FORMATS.includes(
               contextMenuElementID.split(".").pop() || "",
             ) && (
               <ContextMenuItem
@@ -428,7 +437,7 @@ const Directory = () => {
           </>
         )}
 
-        {contextMenuElementType !== "none" && (
+        {contextMenuElementType !== ENTRY_KIND.NONE && (
           <>
             <ContextMenuItem isSeparator />
             <ContextMenuItem
@@ -444,9 +453,9 @@ const Directory = () => {
         <h3>
           {t.details.type}{" "}
           <span>
-            {highlitedElementType === "dir"
+            {highlitedElementType === ENTRY_KIND.DIRECTORY
               ? t.common.directory
-              : highlitedElementType === "file"
+              : highlitedElementType === ENTRY_KIND.FILE
                 ? t.common.file
                 : t.common.unknown}
           </span>
@@ -459,7 +468,7 @@ const Directory = () => {
               : highlitedElementID || t.common.unknown}
           </span>
         </h3>
-        {highlitedElementType === "file" && (
+        {highlitedElementType === ENTRY_KIND.FILE && (
           <h3>
             {t.details.extension}{" "}
             <span>

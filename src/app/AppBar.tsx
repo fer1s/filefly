@@ -4,6 +4,7 @@ import { invoke } from "@tauri-apps/api/core";
 
 import { useStateContext } from "@/shared/providers/StateProvider";
 import { classNames } from "@/shared/utils";
+import { t } from "@/lang";
 
 import "@/styles/components/AppBar.css";
 
@@ -50,7 +51,7 @@ const AppBar = () => {
   return (
     <div className="app_bar" data-tauri-drag-region>
       <div className={classNames("title", sidebarScrolled && "hidden")}>
-        filefly
+        {t.app.name}
       </div>
 
       <div className="window_buttons">

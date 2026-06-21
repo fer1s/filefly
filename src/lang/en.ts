@@ -1,5 +1,8 @@
 // English translation resources, grouped by domain. Functions are used for interpolated strings.
 export const en = {
+  app: {
+    name: "filefly",
+  },
   common: {
     close: "Close",
     dismiss: "Dismiss",
@@ -72,3 +75,6 @@ export const en = {
     rename: (reason: string) => `Could not rename: ${reason}`,
   },
 };
+
+// English is the canonical dictionary shape. Other languages must satisfy this type.
+export type TranslationDictionary = typeof en;

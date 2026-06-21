@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 
-import { notify } from "@/shared/toast";
+import { notify, TOAST_TYPE } from "@/shared/toast";
 import { t } from "@/lang";
 import { Volume, DirEntry } from "@/shared/models";
 
@@ -18,7 +18,7 @@ export const openFile = async (path: string): Promise<void> => {
   try {
     await invoke("open_file", { path });
   } catch (err) {
-    notify(t.errors.open(String(err)), "error");
+    notify(t.errors.open(String(err)), TOAST_TYPE.ERROR);
   }
 };
 

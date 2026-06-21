@@ -4,6 +4,13 @@ import { convertFileSrc } from "@tauri-apps/api/core";
 import { DirEntry } from "@/shared/models";
 import { classNames, navigateToPath, formatBytes } from "@/shared/utils";
 import { useStateContext } from "@/shared/providers/StateProvider";
+import {
+  ENTRY_KIND,
+  IMAGE_FORMATS,
+  VIEW_MODE,
+  type EntryKind,
+  type ViewMode,
+} from "@/shared/constants";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFile, faFolder } from "@fortawesome/free-solid-svg-icons";
@@ -11,7 +18,7 @@ import { faFile, faFolder } from "@fortawesome/free-solid-svg-icons";
 type DirEntryItemProps = {
   entry: DirEntry;
   setPath: (path: string) => void;
-  view: "grid" | "list";
+  view: ViewMode;
 
   selected: boolean;
   onSelect: (e: React.MouseEvent) => void;
@@ -21,12 +28,12 @@ type DirEntryItemProps = {
   onCancelRename: () => void;
 
   setHighlitedElementID: (id: string) => void;
-  setHighlitedElementType: (type: "file" | "dir" | "none") => void;
+  setHighlitedElementType: (type: EntryKind) => void;
   setDetailsPopupVisible: (visible: boolean) => void;
 
   setContextMenuVisible: (visible: boolean) => void;
   setContextMenuElementID: (id: string) => void;
-  setContextMenuElementType: (type: "file" | "dir" | "none") => void;
+  setContextMenuElementType: (type: EntryKind) => void;
 
   contextMenuRef: React.RefObject<HTMLDivElement | null>;
   id: string;
@@ -70,9 +77,11 @@ const DirEntryItem = ({
 
         setContextMenuElementID(itemRef.current.id);
 
-        if (entry.metadata.isDir) setContextMenuElementType("dir");
-        else if (entry.metadata.isFile) setContextMenuElementType("file");
-        else setContextMenuElementType("none");
+        if (entry.metadata.isDir)
+          setContextMenuElementType(ENTRY_KIND.DIRECTORY);
+        else if (entry.metadata.isFile)
+          setContextMenuElementType(ENTRY_KIND.FILE);
+        else setContextMenuElementType(ENTRY_KIND.NONE);
 
         contextMenuRef.current.style.left = `${e.clientX}px`;
         contextMenuRef.current.style.top = `${e.clientY}px`;
@@ -104,9 +113,10 @@ const DirEntryItem = ({
         if (!itemRef.current) return;
 
         setHighlitedElementID(itemRef.current.id);
-        if (entry.metadata.isDir) setHighlitedElementType("dir");
-        else if (entry.metadata.isFile) setHighlitedElementType("file");
-        else setHighlitedElementType("none");
+        if (entry.metadata.isDir) setHighlitedElementType(ENTRY_KIND.DIRECTORY);
+        else if (entry.metadata.isFile)
+          setHighlitedElementType(ENTRY_KIND.FILE);
+        else setHighlitedElementType(ENTRY_KIND.NONE);
 
         setTimeout(() => {
           if (!itemRef.current) return;
@@ -191,7 +201,6 @@ const DirEntryItem = ({
     ? entry.name.split(".")[entry.name.split(".").length - 1]
     : "";
 
-  const ImageFormats = ["png", "jpg", "jpeg", "webp"];
   return (
     <div
       className={classNames("dir_entry_item", selected && "selected")}
@@ -205,11 +214,11 @@ const DirEntryItem = ({
       }
       ref={itemRef}
     >
-      {view === "grid" ? (
+      {view === VIEW_MODE.GRID ? (
         <>
           {extension && name && <div className="extension">{extension}</div>}
 
-          {ImageFormats.includes(extension.toLowerCase().trim()) ? (
+          {IMAGE_FORMATS.includes(extension.toLowerCase().trim()) ? (
             <img src={convertFileSrc(entry.path)} />
           ) : (
             <FontAwesomeIcon icon={entry.metadata.isDir ? faFolder : faFile} />
@@ -232,7 +241,7 @@ const DirEntryItem = ({
       ) : (
         <>
           <div className="icon">
-            {ImageFormats.includes(extension.toLowerCase().trim()) ? (
+            {IMAGE_FORMATS.includes(extension.toLowerCase().trim()) ? (
               <img src={convertFileSrc(entry.path)} />
             ) : (
               <FontAwesomeIcon

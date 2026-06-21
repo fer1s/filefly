@@ -2,6 +2,7 @@ import { createContext, useContext } from "react";
 
 import { Volume, DirEntry } from "@/shared/models";
 import { FileSystemManager } from "@/shared/managers/FileSystemManager";
+import { VIEW_MODE, type ViewMode } from "@/shared/constants";
 
 type State = {
   fs: FileSystemManager;
@@ -17,8 +18,8 @@ type State = {
   setSidebarScrolled: (sidebarScrolled: boolean) => void;
   dirContent: DirEntry[];
   setDirContent: (dirContent: DirEntry[]) => void;
-  view: "list" | "grid";
-  setView: (view: "list" | "grid") => void;
+  view: ViewMode;
+  setView: (view: ViewMode) => void;
   search: string;
   setSearch: (search: string) => void;
   refreshDir: () => void;
@@ -38,7 +39,7 @@ export const initialState: State = {
   setSidebarScrolled: () => {},
   dirContent: [],
   setDirContent: () => {},
-  view: "grid",
+  view: VIEW_MODE.GRID,
   setView: () => {},
   search: "",
   setSearch: () => {},

@@ -2,7 +2,11 @@ import { useEffect, useState } from "react";
 import { convertFileSrc } from "@tauri-apps/api/core";
 
 import { useStateContext } from "@/shared/providers/StateProvider";
-import { ImageFormats, AudioFormats } from "@/shared/constants";
+import {
+  AUDIO_FORMATS,
+  IMAGE_FORMATS,
+  MARKDOWN_FORMAT,
+} from "@/shared/constants";
 import { classNames } from "@/shared/utils";
 import { t } from "@/lang";
 
@@ -48,7 +52,7 @@ const Preview = ({
   } | null>(null);
 
   useEffect(() => {
-    if (!previewVisible || fileType !== "md") return;
+    if (!previewVisible || fileType !== MARKDOWN_FORMAT) return;
 
     let cancelled = false;
     fs.markdownPreview(filePath).then((content) => {
@@ -60,7 +64,8 @@ const Preview = ({
     };
   }, [filePath, fileType, fs, previewVisible]);
 
-  const isReady = fileType !== "md" || markdownPreview?.filePath === filePath;
+  const isReady =
+    fileType !== MARKDOWN_FORMAT || markdownPreview?.filePath === filePath;
   const previewContent =
     markdownPreview?.filePath === filePath ? markdownPreview.content : "";
 
@@ -84,7 +89,7 @@ const Preview = ({
         className={classNames("preview_backdrop", previewVisible && "visible")}
         onClick={() => setPreviewVisible(false)}
       ></div>
-      {AudioFormats.includes(fileType) ? (
+      {AUDIO_FORMATS.includes(fileType) ? (
         <AudioPreview
           key={`${filePath}:${previewVisible}`}
           isVisible={previewVisible}
@@ -95,7 +100,7 @@ const Preview = ({
           className={classNames(
             "preview_container",
             "shadow",
-            ImageFormats.includes(fileType) && "image",
+            IMAGE_FORMATS.includes(fileType) && "image",
             previewVisible && "visible",
           )}
         >
@@ -127,14 +132,14 @@ const Preview = ({
             className={classNames(
               "preview_content",
               !isReady && "loading",
-              fileType === "md" && "markdown",
-              ImageFormats.includes(fileType) && "image",
+              fileType === MARKDOWN_FORMAT && "markdown",
+              IMAGE_FORMATS.includes(fileType) && "image",
             )}
           >
             {isReady ? (
-              fileType === "md" ? (
+              fileType === MARKDOWN_FORMAT ? (
                 <div dangerouslySetInnerHTML={{ __html: previewContent }}></div>
-              ) : ImageFormats.includes(fileType) ? (
+              ) : IMAGE_FORMATS.includes(fileType) ? (
                 <img src={convertFileSrc(filePath)} alt={filePath} />
               ) : (
                 <div className="preview_file_not_supported">

@@ -19,6 +19,7 @@ import { ROUTES } from "./routes";
 import { FileSystemManager } from "@/shared/managers/FileSystemManager";
 import { Volume, DirEntry } from "@/shared/models";
 import { classNames } from "@/shared/utils";
+import { VIEW_MODE, type ViewMode } from "@/shared/constants";
 
 const App = () => {
   const navigate: NavigateFunction = useNavigate();
@@ -31,7 +32,7 @@ const App = () => {
   }>({ stack: [""], index: 0 });
   const [sidebarScrolled, setSidebarScrolled] = useState<boolean>(false);
   const [dirContent, setDirContent] = useState<DirEntry[]>([]);
-  const [view, setView] = useState<"list" | "grid">("grid");
+  const [view, setView] = useState<ViewMode>(VIEW_MODE.GRID);
   const [search, setSearch] = useState<string>("");
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(
     () => localStorage.getItem("sidebarCollapsed") === "true",
