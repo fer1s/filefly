@@ -3,6 +3,7 @@ import { convertFileSrc } from '@tauri-apps/api/core'
 
 import { useStateContext } from '../../../shared/providers/StateProvider'
 import { ImageFormats, AudioFormats } from '../../../shared/constants'
+import { t } from '../../../lang'
 
 import AudioPreview from './AudioPreview'
 import Spinner from '../../../shared/components/Spinner'
@@ -79,15 +80,15 @@ const Preview = ({ fileType, filePath, previewVisible, setPreviewVisible, onPrev
             >
                <div className="preview_header">
                   <div className="preview_nav">
-                     <button className="nav_btn" onClick={onPrev} disabled={!hasPrev} aria-label="Previous">
+                     <button className="nav_btn" onClick={onPrev} disabled={!hasPrev} aria-label={t.common.previous}>
                         <FontAwesomeIcon icon={faChevronLeft} />
                      </button>
-                     <button className="nav_btn" onClick={onNext} disabled={!hasNext} aria-label="Next">
+                     <button className="nav_btn" onClick={onNext} disabled={!hasNext} aria-label={t.common.next}>
                         <FontAwesomeIcon icon={faChevronRight} />
                      </button>
                   </div>
-                  <h4>Preview</h4>
-                  <button onClick={() => setPreviewVisible(false)}>Close</button>
+                  <h4>{t.common.preview}</h4>
+                  <button onClick={() => setPreviewVisible(false)}>{t.common.close}</button>
                </div>
                <div
                   className={`preview_content
@@ -103,7 +104,7 @@ const Preview = ({ fileType, filePath, previewVisible, setPreviewVisible, onPrev
                         <img src={convertFileSrc(filePath)} alt={filePath} />
                      ) : (
                         <div className="preview_file_not_supported">
-                           <h3>File type not supported</h3>
+                           <h3>{t.directory.fileTypeNotSupported}</h3>
                         </div>
                      )
                   ) : (

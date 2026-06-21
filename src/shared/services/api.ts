@@ -1,6 +1,7 @@
 import { invoke } from '@tauri-apps/api/core'
 
 import { notify } from '../toast'
+import { t } from '../../lang'
 import { Volume, DirEntry } from '../models'
 
 // Get the user's disks (volumes)
@@ -15,7 +16,7 @@ export const openFile = async (path: string): Promise<void> => {
    try {
       await invoke('open_file', { path })
    } catch (err) {
-      notify('Could not open file: ' + err, 'error')
+      notify(t.errors.open(String(err)), 'error')
    }
 }
 

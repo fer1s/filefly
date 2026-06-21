@@ -1,4 +1,5 @@
 import { useStateContext } from '../../../shared/providers/StateProvider'
+import { t } from '../../../lang'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faXmark } from '@fortawesome/free-solid-svg-icons'
@@ -10,9 +11,9 @@ const SearchBar = () => {
 
   return (
     <div className='SearchBar'>
-      <input type='text' placeholder='Search...' value={search} onChange={(e) => setSearch(e.target.value)} />
+      <input type='text' placeholder={t.sidebar.searchPlaceholder} value={search} onChange={(e) => setSearch(e.target.value)} />
       {search && (
-        <button className='clear' onClick={() => setSearch('')} aria-label='Clear search'>
+        <button className='clear' onClick={() => setSearch('')} aria-label={t.sidebar.clearSearch}>
           <FontAwesomeIcon icon={faXmark} />
         </button>
       )}

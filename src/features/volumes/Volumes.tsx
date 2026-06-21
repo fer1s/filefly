@@ -2,6 +2,7 @@ import { useState } from 'react'
 
 import { useStateContext } from '../../shared/providers/StateProvider'
 import { Volume } from '../../shared/models'
+import { t } from '../../lang'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faHardDrive } from '@fortawesome/free-solid-svg-icons'
@@ -17,7 +18,7 @@ const Volumes = () => {
 
    return (
       <div className="volumes_page" onClick={(e) => !(e.target as HTMLElement).closest('.volume_item') && setSelected('')}>
-         <h1>Volumes</h1>
+         <h1>{t.volumes.title}</h1>
          <div className="grid">
             {volumes.map((volume) => (
                 <VolumeItem
@@ -53,9 +54,7 @@ const VolumeItem = ({ volume, setPath, selected, onSelect }: VolumeItemProps) =>
             <div className="usage">
                <div className="usage_bar" style={{ width: `${volume.diskUsage.percentage}%` }}></div>
             </div>
-            <p>
-               {volume.availableSpace} free of {volume.totalSpace}
-            </p>
+            <p>{t.volumes.freeOf(volume.availableSpace, volume.totalSpace)}</p>
          </div>
       </div>
    )

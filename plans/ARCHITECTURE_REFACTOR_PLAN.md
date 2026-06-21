@@ -100,7 +100,7 @@ src/
 
 ## Fase 1. Andamiaje + `shared/`
 
-Estado: pendiente.
+Estado: completada.
 
 - Crear `app/`, `shared/{components,providers,services,managers,models,utils}`, `features/`.
 - `git mv` de `lib/*` y `providers/` a `shared/` según el mapeo; `lib/routes.ts` a `app/`.
@@ -111,7 +111,7 @@ Donde probar: build limpio; arranque.
 
 ## Fase 2. `app/` (composition root)
 
-Estado: pendiente.
+Estado: completada.
 
 - `git mv` `App.tsx, AppContent.tsx, main.tsx` a `app/`; `components/AppBar` a `app/AppBar.tsx`.
 - Ajustar `index.html`/entry si referencia `main.tsx`.
@@ -121,7 +121,7 @@ Donde probar: arranque, ventana/tray, navegación.
 
 ## Fase 3. `features/directory`
 
-Estado: pendiente.
+Estado: completada.
 
 - `git mv` `views/Directory.tsx` a `features/directory/Directory.tsx`.
 - Mover `DirEntry, Preview, AudioPreview, Properties` a `features/directory/components/`.
@@ -133,7 +133,7 @@ Donde probar: directorio completo (selección, teclado, menú, preview, properti
 
 ## Fase 4. `features/volumes`, `features/sidebar`, `features/navigation`
 
-Estado: pendiente.
+Estado: completada.
 
 - `views/Volumes.tsx` a `features/volumes/`.
 - `SideBar` (+ `SearchBar`) a `features/sidebar/`.
@@ -144,7 +144,7 @@ Donde probar: volúmenes, sidebar (pinned/colapsable/búsqueda), pathbar (histor
 
 ## Fase 5. `index.ts` públicos + límites de dependencia
 
-Estado: pendiente.
+Estado: completada.
 
 - Cada feature expone su API por `index.ts`; los consumidores importan del `index.ts`, no de internals.
 - Verificar que ninguna feature importe internals de otra; mover lo compartido a `shared/`.
@@ -153,7 +153,7 @@ Donde probar: build; arranque.
 
 ## Fase 6. i18n (`lang/`)
 
-Estado: pendiente.
+Estado: completada.
 
 - `lang/en.ts` (+ idiomas) con claves por dominio; hook/util de traducción.
 - Reemplazar strings de UI (menús, Properties, toasts, placeholders).

@@ -4,6 +4,7 @@ import { useStateContext } from '../../shared/providers/StateProvider'
 import { ContextMenu, ContextMenuItem } from '../../shared/components/ContextMenu'
 import DetailsPopup from '../../shared/components/DetailsPopup'
 import { notify } from '../../shared/toast'
+import { t } from '../../lang'
 import { ask } from '@tauri-apps/plugin-dialog'
 import { AcceptedPreviewFormats } from '../../shared/constants'
 import { DirEntryItem } from './components/DirEntry'
@@ -129,15 +130,15 @@ const Directory = () => {
    const deleteTargets = async (targets: string[]) => {
       if (!targets.length || !targets[0]) return
 
-      const label = targets.length === 1 ? `"${targets[0].split('/').pop()}"` : `${targets.length} items`
-      const confirmed = await ask(`Move ${label} to the Trash?`, { title: 'Delete', kind: 'warning' })
+      const label = targets.length === 1 ? `"${targets[0].split('/').pop()}"` : t.directory.items(targets.length)
+      const confirmed = await ask(t.directory.confirmDelete(label), { title: t.directory.deleteTitle, kind: 'warning' })
       if (!confirmed) return
 
       for (const target of targets) {
          try {
             await fs.trash(target)
          } catch (err) {
-            notify('Could not delete ' + (target.split('/').pop() || target) + ': ' + err, 'error')
+            notify(t.errors.delete(target.split('/').pop() || target, String(err)), 'error')
          }
       }
 
@@ -153,7 +154,7 @@ const Directory = () => {
             if (clipboard.mode === 'copy') await fs.copy(source, path)
             else await fs.move(source, path)
          } catch (err) {
-            notify('Could not paste ' + (source.split('/').pop() || source) + ': ' + err, 'error')
+            notify(t.errors.paste(source.split('/').pop() || source, String(err)), 'error')
          }
       }
 
@@ -201,7 +202,7 @@ const Directory = () => {
       try {
          await fs.rename(targetPath, newName)
       } catch (err) {
-         notify('Could not rename: ' + err, 'error')
+         notify(t.errors.rename(String(err)), 'error')
       }
       refreshDir()
    }
@@ -254,53 +255,53 @@ const Directory = () => {
             ))}
          </div>
 
-         {search && filtered.length === 0 && <p className="no_results">No results for "{search}"</p>}
+         {search && filtered.length === 0 && <p className="no_results">{t.directory.noResults(search)}</p>}
 
          <ContextMenu contextMenuVisible={contextMenuVisible} ref={contextMenuRef}>
             {contextMenuElementType === 'none' && (
-               <ContextMenuItem text="Paste" icon={<FontAwesomeIcon icon={faPaste} />} onClick={clipboard ? handlePaste : undefined} />
+               <ContextMenuItem text={t.contextMenu.paste} icon={<FontAwesomeIcon icon={faPaste} />} onClick={clipboard ? handlePaste : undefined} />
             )}
 
             {contextMenuElementType === 'dir' && (
                <>
-                  <ContextMenuItem text="Open" icon={<FontAwesomeIcon icon={faArrowUpRightFromSquare} />} onClick={handleOpenFile} />
-                  <ContextMenuItem text="Open in Terminal" icon={<FontAwesomeIcon icon={faTerminal} />} onClick={handleOpenInTerminal} />
-                  <ContextMenuItem text="Copy" icon={<FontAwesomeIcon icon={faCopy} />} onClick={handleCopy} />
-                  <ContextMenuItem text="Cut" icon={<FontAwesomeIcon icon={faScissors} />} onClick={handleCut} />
-                  <ContextMenuItem text="Rename" icon={<FontAwesomeIcon icon={faFilePen} />} onClick={handleRename} />
-                  <ContextMenuItem text="Delete" icon={<FontAwesomeIcon icon={faTrash} />} onClick={handleDelete} />
+                  <ContextMenuItem text={t.contextMenu.open} icon={<FontAwesomeIcon icon={faArrowUpRightFromSquare} />} onClick={handleOpenFile} />
+                  <ContextMenuItem text={t.contextMenu.openInTerminal} icon={<FontAwesomeIcon icon={faTerminal} />} onClick={handleOpenInTerminal} />
+                  <ContextMenuItem text={t.contextMenu.copy} icon={<FontAwesomeIcon icon={faCopy} />} onClick={handleCopy} />
+                  <ContextMenuItem text={t.contextMenu.cut} icon={<FontAwesomeIcon icon={faScissors} />} onClick={handleCut} />
+                  <ContextMenuItem text={t.contextMenu.rename} icon={<FontAwesomeIcon icon={faFilePen} />} onClick={handleRename} />
+                  <ContextMenuItem text={t.contextMenu.delete} icon={<FontAwesomeIcon icon={faTrash} />} onClick={handleDelete} />
                </>
             )}
 
             {contextMenuElementType === 'file' && (
                <>
-                  <ContextMenuItem text="Open" icon={<FontAwesomeIcon icon={faArrowUpRightFromSquare} />} onClick={handleOpenFile} />
-                  {AcceptedPreviewFormats.includes(contextMenuElementID.split('.').pop() || '') && <ContextMenuItem text="Preview" icon={<FontAwesomeIcon icon={faEye} />} onClick={handlePreviewFile} />}
-                  <ContextMenuItem text="Copy" icon={<FontAwesomeIcon icon={faCopy} />} onClick={handleCopy} />
-                  <ContextMenuItem text="Cut" icon={<FontAwesomeIcon icon={faScissors} />} onClick={handleCut} />
-                  <ContextMenuItem text="Rename" icon={<FontAwesomeIcon icon={faFilePen} />} onClick={handleRename} />
-                  <ContextMenuItem text="Delete" icon={<FontAwesomeIcon icon={faTrash} />} onClick={handleDelete} />
+                  <ContextMenuItem text={t.contextMenu.open} icon={<FontAwesomeIcon icon={faArrowUpRightFromSquare} />} onClick={handleOpenFile} />
+                  {AcceptedPreviewFormats.includes(contextMenuElementID.split('.').pop() || '') && <ContextMenuItem text={t.common.preview} icon={<FontAwesomeIcon icon={faEye} />} onClick={handlePreviewFile} />}
+                  <ContextMenuItem text={t.contextMenu.copy} icon={<FontAwesomeIcon icon={faCopy} />} onClick={handleCopy} />
+                  <ContextMenuItem text={t.contextMenu.cut} icon={<FontAwesomeIcon icon={faScissors} />} onClick={handleCut} />
+                  <ContextMenuItem text={t.contextMenu.rename} icon={<FontAwesomeIcon icon={faFilePen} />} onClick={handleRename} />
+                  <ContextMenuItem text={t.contextMenu.delete} icon={<FontAwesomeIcon icon={faTrash} />} onClick={handleDelete} />
                </>
             )}
 
             {contextMenuElementType !== 'none' && (
                <>
                   <ContextMenuItem isSeparator />
-                  <ContextMenuItem text="Properties" icon={<FontAwesomeIcon icon={faCircleInfo} />} onClick={handleProperties} />
+                  <ContextMenuItem text={t.contextMenu.properties} icon={<FontAwesomeIcon icon={faCircleInfo} />} onClick={handleProperties} />
                </>
             )}
          </ContextMenu>
 
-         <DetailsPopup visible={detailsPopupVisible} title="Metadata">
+         <DetailsPopup visible={detailsPopupVisible} title={t.details.title}>
             <h3>
-               Type <span>{highlitedElementType === 'dir' ? 'Directory' : highlitedElementType === 'file' ? 'File' : '?'}</span>
+               {t.details.type} <span>{highlitedElementType === 'dir' ? t.common.directory : highlitedElementType === 'file' ? t.common.file : t.common.unknown}</span>
             </h3>
             <h3>
-               Path <span>{highlitedElementID.length > 40 ? `${highlitedElementID.slice(0, 40)}...` : highlitedElementID || '?'}</span>
+               {t.details.path} <span>{highlitedElementID.length > 40 ? `${highlitedElementID.slice(0, 40)}...` : highlitedElementID || t.common.unknown}</span>
             </h3>
             {highlitedElementType === 'file' && (
                <h3>
-                  Extension <span>{highlitedElementID.split('.').pop() || '?'}</span>
+                  {t.details.extension} <span>{highlitedElementID.split('.').pop() || t.common.unknown}</span>
                </h3>
             )}
          </DetailsPopup>

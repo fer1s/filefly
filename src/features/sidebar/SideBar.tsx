@@ -3,6 +3,7 @@ import { desktopDir, documentDir, downloadDir, homeDir, pictureDir } from '@taur
 
 import { Volume } from '../../shared/models'
 import { useStateContext } from '../../shared/providers/StateProvider'
+import { t } from '../../lang'
 
 import SearchBar from './components/SearchBar'
 
@@ -28,11 +29,11 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
    // Resolve the standard user directories once and keep only the ones the OS reports.
    useEffect(() => {
       const resolvers: { name: string; icon: IconDefinition; resolve: () => Promise<string> }[] = [
-         { name: 'Home', icon: faHouse, resolve: homeDir },
-         { name: 'Desktop', icon: faDesktop, resolve: desktopDir },
-         { name: 'Documents', icon: faFileLines, resolve: documentDir },
-         { name: 'Downloads', icon: faDownload, resolve: downloadDir },
-         { name: 'Pictures', icon: faImage, resolve: pictureDir },
+         { name: t.sidebar.home, icon: faHouse, resolve: homeDir },
+         { name: t.sidebar.desktop, icon: faDesktop, resolve: desktopDir },
+         { name: t.sidebar.documents, icon: faFileLines, resolve: documentDir },
+         { name: t.sidebar.downloads, icon: faDownload, resolve: downloadDir },
+         { name: t.sidebar.pictures, icon: faImage, resolve: pictureDir },
       ]
 
       Promise.all(
@@ -66,14 +67,14 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
    return (
       <div className={collapsed ? 'SideBar collapsed' : 'SideBar'}>
 
-         <button className="collapse_toggle" onClick={onToggle} title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'} aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}>
+         <button className="collapse_toggle" onClick={onToggle} title={collapsed ? t.sidebar.expand : t.sidebar.collapse} aria-label={collapsed ? t.sidebar.expand : t.sidebar.collapse}>
             <FontAwesomeIcon icon={collapsed ? faAnglesRight : faAnglesLeft} />
          </button>
 
          {!collapsed && <SearchBar />}
 
          <section>
-            {!collapsed && <h2>Pinned</h2>}
+            {!collapsed && <h2>{t.sidebar.pinned}</h2>}
             <div className="section_content">
                {pinned.map((item) => (
                   <FolderItem key={item.path} item={item} setPath={setPath} collapsed={collapsed} />
@@ -82,7 +83,7 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
          </section>
 
          <section>
-            {!collapsed && <h2>Drives</h2>}
+            {!collapsed && <h2>{t.sidebar.drives}</h2>}
             <div className="section_content">
                {volumes.map((volume, i) => (
                   <VolumeItem key={`${volume.name}#${volume.mountPoint}`} volume={volume} setPath={setPath} index={i} collapsed={collapsed} />

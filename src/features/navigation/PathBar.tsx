@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 
 import { useStateContext } from '../../shared/providers/StateProvider'
+import { t } from '../../lang'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowLeft, faArrowRight, faArrowUp, faHouse, faList, faTableCellsLarge } from '@fortawesome/free-solid-svg-icons'
@@ -88,7 +89,7 @@ const PathBar = () => {
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={handleKeyDown}
             onBlur={commitDraft}
-            placeholder="Directory path"
+            placeholder={t.pathbar.pathPlaceholder}
             className="shadow"
          />
 

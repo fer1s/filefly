@@ -1,4 +1,5 @@
 import { ToastType } from '../toast'
+import { t } from '../../lang'
 
 import '../../styles/components/Toast.css'
 
@@ -13,7 +14,7 @@ const Toasts = ({ toasts, onDismiss }: ToastsProps) => {
    return (
       <div className="toasts">
          {toasts.map((toast) => (
-            <div key={toast.id} className={`toast ${toast.type}`} onClick={() => onDismiss(toast.id)} title="Dismiss">
+            <div key={toast.id} className={`toast ${toast.type}`} onClick={() => onDismiss(toast.id)} title={t.common.dismiss}>
                {toast.message}
             </div>
          ))}
