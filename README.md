@@ -8,7 +8,7 @@ git clone https://github.com/sito8943/sito-file-browser.git
 
 # 2. Requirements:
 
-1. Node https://nodejs.org/en/blog/release/v18.18.0/
+1. Node https://nodejs.org/en/blog/release/v20.20.0/
 
 _if you are on windows just download the binary and install it_
 
