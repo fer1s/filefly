@@ -53,6 +53,10 @@ export class FileSystemManager {
     return api.getDirSize(path);
   }
 
+  getThumbnail(path: string, size: number): Promise<string> {
+    return api.getThumbnail(path, size);
+  }
+
   open(path: string): Promise<void> {
     return api.openFile(path);
   }

@@ -86,6 +86,7 @@ export const en = {
     items: (n: number) => `${n} items`,
     itemCount: (n: number) => `${n} ${n === 1 ? "item" : "items"}`,
     selectedCount: (n: number) => `${n} ${n === 1 ? "item" : "items"} selected`,
+    loadingPreviews: "Loading previews…",
   },
   errors: {
     open: (reason: string) => `Could not open file: ${reason}`,

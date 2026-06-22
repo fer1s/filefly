@@ -22,6 +22,13 @@ export const getEntry = async (path: string): Promise<DirEntry> =>
 export const getDirSize = async (path: string): Promise<number> =>
   await invoke("get_dir_size", { path });
 
+// Generate (or fetch from cache) a downscaled thumbnail for an image file. Returns the
+// filesystem path to the thumbnail (load it via convertFileSrc).
+export const getThumbnail = async (
+  path: string,
+  size: number,
+): Promise<string> => await invoke("get_thumbnail", { path, size });
+
 // Open a file with the OS default application. Goes through the Rust `open_file` command so the path
 // is logged to the Tauri terminal; the command returns the error if it fails.
 export const openFile = async (path: string): Promise<void> => {

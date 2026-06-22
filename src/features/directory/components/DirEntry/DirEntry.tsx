@@ -1,4 +1,4 @@
-import { memo, useEffect, useRef } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { convertFileSrc } from "@tauri-apps/api/core";
 
 import {
@@ -9,11 +9,18 @@ import {
 } from "@/shared/utils";
 import { ENTRY_KIND, IMAGE_FORMATS } from "@/shared/constants";
 import Icon from "@/shared/components/elements/Icon";
+import {
+  imagePreviewLoad,
+  acquireImageSlot,
+} from "../../hooks/useImagePreviewLoading";
 import { t } from "@/lang";
 
 import { faFile, faFolder } from "@fortawesome/free-solid-svg-icons";
 
 import type { DirEntryItemProps } from "./types";
+
+// Max thumbnail edge in px. Sized for a retina grid icon; the backend caches at this size.
+const THUMBNAIL_SIZE = 160;
 
 const DirEntryItemComponent = ({
   entry,
@@ -175,6 +182,78 @@ const DirEntryItemComponent = ({
     ? entry.name.split(".")[entry.name.split(".").length - 1]
     : "";
 
+  const isImage =
+    entry.metadata.isFile &&
+    IMAGE_FORMATS.includes(extension.toLowerCase().trim());
+
+  // Lazy + throttled image thumbnails. A row only "wants" its thumbnail once it
+  // scrolls near the viewport (IntersectionObserver); it then queues for a load
+  // slot so only a few decode at a time. This keeps opening a screenshot-heavy
+  // folder from janking the main thread.
+  const [wanted, setWanted] = useState(false);
+  const [imgSrc, setImgSrc] = useState<string | null>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
+  const loadEndedRef = useRef(false);
+  const releaseSlotRef = useRef<(() => void) | null>(null);
+
+  // Settle one load: free the slot (so the next queued thumbnail starts) and
+  // drop the StatusBar spinner count. Idempotent per load.
+  const finishLoad = () => {
+    if (loadEndedRef.current) return;
+    loadEndedRef.current = true;
+    releaseSlotRef.current?.();
+    releaseSlotRef.current = null;
+    imagePreviewLoad.end();
+  };
+
+  useEffect(() => {
+    if (!isImage) return;
+    const el = itemRef.current;
+    if (!el) return;
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setWanted(true);
+          io.disconnect();
+        }
+      },
+      { rootMargin: "300px" },
+    );
+
+    io.observe(el);
+    return () => io.disconnect();
+  }, [isImage]);
+
+  // Once wanted, count it as loading and queue for a slot; when granted, ask the backend
+  // for a small cached thumbnail (decoded/resized off the UI thread) and load that — never
+  // the multi-megabyte original.
+  useEffect(() => {
+    if (!wanted) return;
+    loadEndedRef.current = false;
+    imagePreviewLoad.start();
+    releaseSlotRef.current = acquireImageSlot(() => {
+      fs.getThumbnail(entry.path, THUMBNAIL_SIZE)
+        .then((thumb) => setImgSrc(convertFileSrc(thumb)))
+        .catch(() => finishLoad());
+    });
+
+    return () => {
+      releaseSlotRef.current?.();
+      releaseSlotRef.current = null;
+      if (!loadEndedRef.current) {
+        loadEndedRef.current = true;
+        imagePreviewLoad.end();
+      }
+    };
+  }, [wanted, entry.path, fs]);
+
+  // Cached images can already be complete before onLoad fires — settle now so
+  // the slot frees and the spinner count doesn't get stuck.
+  useEffect(() => {
+    if (imgSrc && imgRef.current?.complete) finishLoad();
+  }, [imgSrc]);
+
   // One DOM for both views; .grid / .list on the container arranges it via CSS, so toggling
   // the view never rebuilds these subtrees (which is what made the switch laggy).
   return (
@@ -195,8 +274,14 @@ const DirEntryItemComponent = ({
 
       <div className="name">
         <div className="icon">
-          {IMAGE_FORMATS.includes(extension.toLowerCase().trim()) ? (
-            <img src={convertFileSrc(entry.path)} />
+          {isImage && imgSrc ? (
+            <img
+              ref={imgRef}
+              src={imgSrc}
+              decoding="async"
+              onLoad={finishLoad}
+              onError={finishLoad}
+            />
           ) : (
             <Icon icon={entry.metadata.isDir ? faFolder : faFile} />
           )}

@@ -14,3 +14,11 @@
 .directory_page .status_bar .selected {
   color: var(--color-text-secondary);
 }
+
+.directory_page .status_bar .previews {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--color-text-secondary);
+}

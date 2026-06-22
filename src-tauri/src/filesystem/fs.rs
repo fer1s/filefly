@@ -1,8 +1,11 @@
 use serde::Serialize;
+use std::collections::hash_map::DefaultHasher;
 use std::ffi::OsStr;
 use std::fs;
+use std::hash::{Hash, Hasher};
 use std::path::{Path, PathBuf};
 use std::time::SystemTime;
+use tauri::{AppHandle, Manager};
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -74,6 +77,55 @@ pub async fn get_dir_size(path: String) -> u64 {
     })
     .await
     .unwrap_or(0)
+}
+
+// Generate (and cache) a downscaled thumbnail for an image file, returning the path to the
+// cached thumbnail. The full-resolution decode + resize runs on a worker thread
+// (spawn_blocking) so it never blocks the UI thread, and the result is cached on disk keyed
+// by source path + mtime + size, so a given file version is processed at most once. The
+// frontend loads the tiny thumbnail instead of the multi-megabyte original, which keeps a
+// folder full of screenshots from saturating the compositor with huge bitmaps.
+#[tauri::command]
+pub async fn get_thumbnail(app: AppHandle, path: String, size: u32) -> Result<String, String> {
+    let cache_dir = app
+        .path()
+        .app_cache_dir()
+        .map_err(|e| e.to_string())?
+        .join("thumbnails");
+
+    tauri::async_runtime::spawn_blocking(move || -> Result<String, String> {
+        fs::create_dir_all(&cache_dir).map_err(|e| e.to_string())?;
+
+        let metadata = fs::metadata(&path).map_err(|e| e.to_string())?;
+        let mtime = metadata
+            .modified()
+            .ok()
+            .and_then(|m| m.duration_since(SystemTime::UNIX_EPOCH).ok())
+            .map(|d| d.as_secs())
+            .unwrap_or(0);
+
+        let mut hasher = DefaultHasher::new();
+        path.hash(&mut hasher);
+        mtime.hash(&mut hasher);
+        size.hash(&mut hasher);
+        let out = cache_dir.join(format!("{:x}.jpg", hasher.finish()));
+
+        if out.exists() {
+            return Ok(out.to_string_lossy().into_owned());
+        }
+
+        let img = image::open(&path).map_err(|e| e.to_string())?;
+        // JPEG can't encode alpha, so flatten to RGB. `thumbnail` keeps the aspect ratio and
+        // fits within size x size.
+        let thumb = image::DynamicImage::ImageRgb8(img.thumbnail(size, size).to_rgb8());
+        thumb
+            .save_with_format(&out, image::ImageFormat::Jpeg)
+            .map_err(|e| e.to_string())?;
+
+        Ok(out.to_string_lossy().into_owned())
+    })
+    .await
+    .map_err(|e| e.to_string())?
 }
 
 #[tauri::command]
