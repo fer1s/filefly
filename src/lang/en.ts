@@ -54,6 +54,7 @@ export const en = {
     documents: "Documents",
     downloads: "Downloads",
     pictures: "Pictures",
+    trash: "Trash",
   },
   pathbar: {
     pathPlaceholder: "Directory path",
@@ -87,6 +88,13 @@ export const en = {
     itemCount: (n: number) => `${n} ${n === 1 ? "item" : "items"}`,
     selectedCount: (n: number) => `${n} ${n === 1 ? "item" : "items"} selected`,
     loadingPreviews: "Loading previews…",
+    accessDenied: {
+      title: "Can't read this folder",
+      description:
+        "macOS blocks apps from reading protected folders like the Trash until you grant Full Disk Access.",
+      grant: "Open Full Disk Access settings",
+      hint: "After enabling access, reopen the app.",
+    },
   },
   errors: {
     open: (reason: string) => `Could not open file: ${reason}`,

@@ -4,6 +4,7 @@ import {
   documentDir,
   downloadDir,
   homeDir,
+  join,
   pictureDir,
 } from "@tauri-apps/api/path";
 
@@ -16,7 +17,10 @@ import {
   faFileLines,
   faHouse,
   faImage,
+  faTrash,
 } from "@fortawesome/free-solid-svg-icons";
+
+import { TRASH_DIR_NAME } from "./constants";
 
 import type { SidebarPathItem } from "../../types";
 
@@ -35,6 +39,11 @@ export const usePinnedFolders = () => {
       { name: t.sidebar.documents, icon: faFileLines, resolve: documentDir },
       { name: t.sidebar.downloads, icon: faDownload, resolve: downloadDir },
       { name: t.sidebar.pictures, icon: faImage, resolve: pictureDir },
+      {
+        name: t.sidebar.trash,
+        icon: faTrash,
+        resolve: async () => join(await homeDir(), TRASH_DIR_NAME),
+      },
     ];
 
     Promise.all(

@@ -43,6 +43,7 @@ fn main() {
             filesystem::fs::delete_entry,
             functions::terminal::open_in_terminal,
             functions::markdown::md_to_html,
+            functions::system::open_full_disk_access_settings,
         ])
         .on_window_event(|window, event| match event {
             tauri::WindowEvent::CloseRequested { api, .. } => {

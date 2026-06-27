@@ -16,6 +16,7 @@ export const initialState: State = {
   goForward: () => {},
   dirContent: [],
   setDirContent: () => {},
+  accessDenied: false,
   view: VIEW_MODE.GRID,
   setView: () => {},
   search: "",

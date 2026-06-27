@@ -128,21 +128,25 @@ pub async fn get_thumbnail(app: AppHandle, path: String, size: u32) -> Result<St
     .map_err(|e| e.to_string())?
 }
 
+// Marker returned when a directory cannot be read due to OS privacy/permission protection
+// (e.g. macOS TCC guards ~/.Trash). The frontend matches this to prompt for Full Disk Access.
+const ACCESS_DENIED: &str = "ACCESS_DENIED";
+
 #[tauri::command]
-pub fn read_directory(path: &str) -> Vec<DirEntry> {
+pub fn read_directory(path: &str) -> Result<Vec<DirEntry>, String> {
+    let entries = fs::read_dir(path).map_err(|e| match e.kind() {
+        std::io::ErrorKind::PermissionDenied => ACCESS_DENIED.to_string(),
+        _ => e.to_string(),
+    })?;
+
     let mut result: Vec<DirEntry> = Vec::new();
-
-    if let Ok(entries) = fs::read_dir(path) {
-        for entry in entries {
-            if let Ok(entry) = entry {
-                if let Ok(dir_entry) = build_dir_entry(entry.path()) {
-                    result.push(dir_entry);
-                }
-            }
+    for entry in entries.flatten() {
+        if let Ok(dir_entry) = build_dir_entry(entry.path()) {
+            result.push(dir_entry);
         }
-    };
+    }
 
-    result
+    Ok(result)
 }
 
 // Open a file with the OS default application. Logs the path to the Tauri terminal (stdout)
@@ -249,8 +253,23 @@ pub fn rename_entry(path: String, new_name: String) -> Result<(), String> {
 }
 
 // Move an entry to the system Trash/Recycle Bin (reversible).
+//
+// On macOS the `trash` crate defaults to the Finder method (osascript "tell Finder to delete"),
+// which requires Automation/Apple Events permission. In an unsigned/dev bundle that prompt can be
+// denied or fail, so files never reach ~/.Trash. Force the NsFileManager backend (trashItemAtURL):
+// no permission needed, faster, and reliably moves the item to the volume's Trash.
 #[tauri::command]
 pub fn delete_entry(path: String) -> Result<(), String> {
     println!("[delete_entry] trashing: {}", path);
+
+    #[cfg(target_os = "macos")]
+    {
+        use trash::macos::{DeleteMethod, TrashContextExtMacos};
+        let mut ctx = trash::TrashContext::default();
+        ctx.set_delete_method(DeleteMethod::NsFileManager);
+        return ctx.delete(&path).map_err(|e| e.to_string());
+    }
+
+    #[cfg(not(target_os = "macos"))]
     trash::delete(&path).map_err(|e| e.to_string())
 }

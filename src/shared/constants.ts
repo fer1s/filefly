@@ -39,6 +39,10 @@ export const SORT_DIRECTION = {
 export type SortDirection =
   (typeof SORT_DIRECTION)[keyof typeof SORT_DIRECTION];
 
+// Marker the Rust `read_directory` command returns when a folder is blocked by OS privacy
+// protection (e.g. macOS TCC on ~/.Trash). Matched in the UI to prompt for Full Disk Access.
+export const ACCESS_DENIED_ERROR = "ACCESS_DENIED";
+
 export const MARKDOWN_FORMAT = "md";
 export const IMAGE_FORMATS: readonly string[] = ["png", "jpg", "jpeg", "webp"];
 export const AUDIO_FORMATS: readonly string[] = ["mp3", "wav", "ogg"];

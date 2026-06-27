@@ -18,6 +18,7 @@ import { useDetailsPopup } from "./hooks/useDetailsPopup";
 
 import ListHeader from "./components/ListHeader";
 import EntriesView from "./components/EntriesView";
+import AccessDeniedNotice from "./components/AccessDeniedNotice";
 import EntryContextMenu from "./components/EntryContextMenu";
 import DetailsPopup from "./components/DetailsPopup";
 import StatusBar from "./components/StatusBar";
@@ -28,7 +29,8 @@ import Properties from "./components/Properties";
 import "@/styles/views/Directory.css";
 
 const Directory = () => {
-  const { fs, path, setPath, view, search, refreshDir } = useStateContext();
+  const { fs, path, setPath, view, search, refreshDir, accessDenied } =
+    useStateContext();
 
   // Path of the entry currently being renamed inline (empty when none).
   const [renamingID, setRenamingID] = useState("");
@@ -118,11 +120,14 @@ const Directory = () => {
       )}
 
       <div className="directory_content">
-        {view === VIEW_MODE.LIST && sorted.length > 0 && (
+        {accessDenied && <AccessDeniedNotice />}
+
+        {!accessDenied && view === VIEW_MODE.LIST && sorted.length > 0 && (
           <ListHeader key="list-header" sort={sort} onSort={handleSort} />
         )}
 
-        <EntriesView
+        {!accessDenied && (
+          <EntriesView
           key="entries-view"
           entries={sorted}
           view={view}
@@ -142,9 +147,10 @@ const Directory = () => {
             setId: menu.setElementID,
             setType: menu.setElementType,
           }}
-        />
+          />
+        )}
 
-        {search && filtered.length === 0 && (
+        {!accessDenied && search && filtered.length === 0 && (
           <p className="no_results">{t.directory.noResults(search)}</p>
         )}
       </div>

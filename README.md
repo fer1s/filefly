@@ -1,47 +1,68 @@
 # README OF SITO FILE BROWSER
 
-# 1. Clone the project
+## 1. Clone the project
 
-```
+```bash
 git clone https://github.com/sito8943/sito-file-browser.git
 ```
 
-# 2. Requirements:
+## 2. Requirements
 
-1. Node https://nodejs.org/en/blog/release/v20.20.0/
+### Node
 
-_if you are on windows just download the binary and install it_
+This project targets **Node 22** (pinned in [`.nvmrc`](./.nvmrc)). Download: <https://nodejs.org/en/download>
 
-_if you are on linux or macos use NVM_
+> On Windows, just download the binary and install it. On Linux or macOS, use NVM:
 
-```
+```bash
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
 ```
 
-_you can use NVM on windows if you wish too [here](https://github.com/coreybutler/nvm-windows/releases/download/1.2.2/nvm-setup.exe)_
+With NVM installed, run `nvm use` in the project root to switch to the version in `.nvmrc` (run `nvm install 22` first if you don't have it yet).
 
-2. Rust https://www.rust-lang.org/tools/install
+> You can also use [NVM for Windows](https://github.com/coreybutler/nvm-windows/releases/download/1.2.2/nvm-setup.exe) if you wish.
 
-```
+### Rust
+
+Install: <https://www.rust-lang.org/tools/install>
+
+```bash
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
 
-_if you are on windows just click here [Rust windows binary](https://translate.google.com/website?sl=en&tl=es&hl=es&client=srp&u=https://static.rust-lang.org/rustup/dist/x86_64-pc-windows-msvc/rustup-init.exe)_
+> On Windows, use the [Rust Windows installer](https://static.rust-lang.org/rustup/dist/x86_64-pc-windows-msvc/rustup-init.exe).
 
-_and optional if you don't have curl_ 3. Curl https://curl.se/windows/
+### Curl (optional, only if you don't have it)
 
-# 3. How to run?
+Download: <https://curl.se/windows/>
 
-To install all dependencies, only one time per clone
+## 3. How to run?
 
-```
+Install all dependencies (only once per clone):
+
+```bash
 npm install
 ```
 
-To run frontend and desktop app
+Run the frontend and the desktop app:
 
-```
+```bash
 npm run tauri dev
 ```
 
-This will install rust packages if they are not in hard drive yet, this will happen one time only
+This installs the Rust packages if they are not on disk yet; this happens only once.
+
+## 4. macOS: Full Disk Access (for the Trash)
+
+macOS protects some folders (like the **Trash**, `~/.Trash`) behind a privacy permission. Without it the app shows a "Can't read this folder" notice when you open the Trash, with a button to open the right settings pane.
+
+To enable it:
+
+1. Open **System Settings → Privacy & Security → Full Disk Access**.
+2. Turn on the toggle for **Sito File Browser** (use the `+` to add it if it's not listed).
+3. **Fully quit the app and relaunch it.** The app hides to the menu-bar tray on close, so reopening the window is not enough — quit it from the tray (or `Cmd + Q`) so macOS re-evaluates the permission on the next launch.
+
+Notes:
+
+- The permission applies per-executable, so the **production build** (installed `.app`) and a `tauri dev` run are treated separately. To test in dev, grant Full Disk Access to the **terminal app** that launches `npm run tauri dev` instead, then restart the terminal.
+- Deleting files always moves them to the Trash (via macOS `NSFileManager`); this permission only affects **listing** the Trash contents inside the app.

@@ -84,4 +84,8 @@ export class FileSystemManager {
   trash(path: string): Promise<void> {
     return api.deleteEntry(path);
   }
+
+  openFullDiskAccessSettings(): Promise<void> {
+    return api.openFullDiskAccessSettings();
+  }
 }

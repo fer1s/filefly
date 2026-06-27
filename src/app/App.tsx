@@ -20,7 +20,11 @@ import { ROUTES } from "./routes";
 import { FileSystemManager } from "@/shared/managers/FileSystemManager";
 import { Volume, DirEntry } from "@/shared/models";
 import { classNames } from "@/shared/utils";
-import { VIEW_MODE, type ViewMode } from "@/shared/constants";
+import {
+  ACCESS_DENIED_ERROR,
+  VIEW_MODE,
+  type ViewMode,
+} from "@/shared/constants";
 
 const App = () => {
   const navigate: NavigateFunction = useNavigate();
@@ -32,6 +36,7 @@ const App = () => {
     index: number;
   }>({ stack: [""], index: 0 });
   const [dirContent, setDirContent] = useState<DirEntry[]>([]);
+  const [accessDenied, setAccessDenied] = useState<boolean>(false);
   const [view, setView] = useState<ViewMode>(VIEW_MODE.GRID);
   const [search, setSearch] = useState<string>("");
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(
@@ -97,16 +102,29 @@ const App = () => {
     [fs],
   );
 
-  const fetchDirectory = useCallback(
-    (path: string) => fs.readDirectory(path),
+  // Read a directory, reporting whether the OS blocked it (Full Disk Access required, e.g. the
+  // Trash). Kept free of setState so callers own state updates in their async callbacks.
+  const loadDirectory = useCallback(
+    async (
+      target: string,
+    ): Promise<{ files: DirEntry[]; denied: boolean }> => {
+      try {
+        return { files: await fs.readDirectory(target), denied: false };
+      } catch (err) {
+        return { files: [], denied: String(err).includes(ACCESS_DENIED_ERROR) };
+      }
+    },
     [fs],
   );
 
   // Reload the current view (used after filesystem operations like copy/move/rename/delete).
   const refreshDir = useCallback(() => {
     if (path === "") return fetchVolumes();
-    fetchDirectory(path).then(setDirContent);
-  }, [fetchDirectory, fetchVolumes, path]);
+    loadDirectory(path).then(({ files, denied }) => {
+      setDirContent(files);
+      setAccessDenied(denied);
+    });
+  }, [loadDirectory, fetchVolumes, path]);
 
   useEffect(() => {
     let cancelled = false;
@@ -126,12 +144,13 @@ const App = () => {
       return;
     }
 
-    fetchDirectory(path).then((files) => {
+    loadDirectory(path).then(({ files, denied }) => {
       setDirContent(files);
+      setAccessDenied(denied);
       if (location.pathname !== ROUTES.directory && path !== "")
         navigate(ROUTES.directory);
     });
-  }, [fetchDirectory, location.pathname, navigate, path]);
+  }, [loadDirectory, location.pathname, navigate, path]);
 
   useEffect(() => {
     const preventContextMenu = (event: MouseEvent) => {
@@ -157,6 +176,7 @@ const App = () => {
         goForward,
         dirContent,
         setDirContent,
+        accessDenied,
         view,
         setView,
         search,

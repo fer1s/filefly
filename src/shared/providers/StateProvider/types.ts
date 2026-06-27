@@ -14,6 +14,9 @@ export type State = {
   goForward: () => void;
   dirContent: DirEntry[];
   setDirContent: (dirContent: DirEntry[]) => void;
+  // True when the current directory could not be read due to OS privacy protection
+  // (e.g. macOS Full Disk Access required for the Trash).
+  accessDenied: boolean;
   view: ViewMode;
   setView: (view: ViewMode) => void;
   search: string;

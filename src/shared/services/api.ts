@@ -3,6 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { notify, TOAST_TYPE } from "@/shared/toast";
 import { t } from "@/lang";
 import { Volume, DirEntry } from "@/shared/models";
+import { ACCESS_DENIED_ERROR } from "@/shared/constants";
 
 export const getHostName = async (): Promise<string | null> =>
   await invoke("get_host_name");
@@ -11,9 +12,17 @@ export const getHostName = async (): Promise<string | null> =>
 export const getVolumes = async (): Promise<Volume[]> =>
   await invoke("get_volumes");
 
-// Read directory invokement method
-export const readDirectory = async (path: string): Promise<DirEntry[]> =>
-  (await invokeWithPathArg("read_directory", path)) as DirEntry[];
+// Read directory invokement method. Rethrows ACCESS_DENIED_ERROR so the UI can prompt for Full
+// Disk Access; any other failure (invalid/missing path) resolves to an empty listing.
+export const readDirectory = async (path: string): Promise<DirEntry[]> => {
+  try {
+    return (await invoke("read_directory", { path })) as DirEntry[];
+  } catch (err) {
+    if (String(err).includes(ACCESS_DENIED_ERROR)) throw err;
+    console.error("Path is either not valid or does not exist:\n" + err);
+    return [];
+  }
+};
 
 export const getEntry = async (path: string): Promise<DirEntry> =>
   await invoke("get_entry", { path });
@@ -67,15 +76,19 @@ export const renameEntry = async (
 export const deleteEntry = async (path: string): Promise<void> =>
   await invoke("delete_entry", { path });
 
+// Open the OS privacy settings (macOS Full Disk Access) so the user can grant access to
+// protected folders like the Trash.
+export const openFullDiskAccessSettings = async (): Promise<void> =>
+  await invoke("open_full_disk_access_settings");
+
 // Helper function to invoke methods with a path argument
 const invokeWithPathArg = async (
-  method: "read_directory" | "open_file" | "md_to_html",
+  method: "md_to_html",
   path: string,
-): Promise<DirEntry[] | void | string> =>
+): Promise<string | void> =>
   await invoke(method, { path: path })
-    .then((value) => value as void | DirEntry[])
+    .then((value) => value as string | void)
     .catch((err) => {
       console.error("Path is either not valid or does not exist:\n" + err);
-      if (method != "read_directory") return;
-      return [];
+      return;
     });
