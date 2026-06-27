@@ -1,11 +1,15 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useRef, useState, type CSSProperties } from "react";
 
 import { useStateContext } from "@/shared/providers/StateProvider";
 import { ENTRY_KIND, VIEW_MODE } from "@/shared/constants";
+import { classNames } from "@/shared/utils";
 import { t } from "@/lang";
 import { DirEntry } from "@/shared/models";
 
+import { COLUMN_KEYS, buildListGrid } from "./columns";
 import { useSelection } from "./hooks/useSelection";
+import { useColumnVisibility } from "./hooks/useColumnVisibility";
+import { useFolderView } from "./hooks/useFolderView";
 import { useMarqueeSelection } from "./hooks/useMarqueeSelection";
 import { useKeyboardNav } from "./hooks/useKeyboardNav";
 import { useClipboardShortcuts } from "./hooks/useClipboardShortcuts";
@@ -47,6 +51,14 @@ const Directory = () => {
     containerRef: directoryRef,
     setSelectedIDs,
   });
+
+  useFolderView(path);
+
+  const { visible: visibleColumns, toggle: toggleColumn } =
+    useColumnVisibility(path);
+  const hiddenColumns = COLUMN_KEYS.filter(
+    (key) => !visibleColumns.includes(key),
+  );
 
   const preview = usePreview(previewables);
   const properties = useProperties();
@@ -125,11 +137,23 @@ const Directory = () => {
         />
       )}
 
-      <div className="directory_content">
+      <div
+        className={classNames(
+          "directory_content",
+          ...hiddenColumns.map((key) => `hide_col_${key}`),
+        )}
+        style={{ "--list-grid": buildListGrid(visibleColumns) } as CSSProperties}
+      >
         {accessDenied && <AccessDeniedNotice />}
 
         {!accessDenied && view === VIEW_MODE.LIST && sorted.length > 0 && (
-          <ListHeader key="list-header" sort={sort} onSort={handleSort} />
+          <ListHeader
+            key="list-header"
+            sort={sort}
+            onSort={handleSort}
+            visibleColumns={visibleColumns}
+            onToggleColumn={toggleColumn}
+          />
         )}
 
         {!accessDenied && (

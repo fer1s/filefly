@@ -45,6 +45,10 @@ fn main() {
             functions::markdown::md_to_html,
             functions::system::open_full_disk_access_settings,
             functions::keymap::get_keymap,
+            functions::folder_columns::get_folder_columns,
+            functions::folder_columns::set_folder_columns,
+            functions::folder_columns::get_folder_view,
+            functions::folder_columns::set_folder_view,
         ])
         .on_window_event(|window, event| match event {
             tauri::WindowEvent::CloseRequested { api, .. } => {

@@ -13,6 +13,26 @@ export const getHostName = async (): Promise<string | null> =>
 export const getKeymap = async (): Promise<Keymap> =>
   (await invoke("get_keymap")) as Keymap;
 
+// Visible list columns for a folder (saved preference, or a well-known-folder default).
+export const getFolderColumns = async (path: string): Promise<string[]> =>
+  (await invoke("get_folder_columns", { path })) as string[];
+
+// Persist the visible list columns for a folder to the central config file.
+export const setFolderColumns = async (
+  path: string,
+  columns: string[],
+): Promise<void> => await invoke("set_folder_columns", { path, columns });
+
+// Saved grid/list view for a folder (null when the user hasn't set one).
+export const getFolderView = async (path: string): Promise<string | null> =>
+  (await invoke("get_folder_view", { path })) as string | null;
+
+// Persist the grid/list view for a folder to the central config file.
+export const setFolderView = async (
+  path: string,
+  view: string,
+): Promise<void> => await invoke("set_folder_view", { path, view });
+
 // Get the user's disks (volumes)
 export const getVolumes = async (): Promise<Volume[]> =>
   await invoke("get_volumes");

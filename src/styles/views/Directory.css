@@ -21,6 +21,29 @@
   padding: 0 var(--space-2-5) var(--space-2-5);
 }
 
+/* Hidden columns (toggled from the list header context menu). The cell stays in the DOM but is
+   removed from the grid flow, so the dynamic --list-grid (set inline with one track per visible
+   column) keeps the header and rows aligned. Name is never hideable. */
+.directory_content.hide_col_modified .list_header .modified,
+.directory_content.hide_col_modified .list .date_modified {
+  display: none;
+}
+
+.directory_content.hide_col_created .list_header .created,
+.directory_content.hide_col_created .list .date_created {
+  display: none;
+}
+
+.directory_content.hide_col_size .list_header .size,
+.directory_content.hide_col_size .list .size {
+  display: none;
+}
+
+.directory_content.hide_col_kind .list_header .kind,
+.directory_content.hide_col_kind .list .kind {
+  display: none;
+}
+
 /* While rubber-band selecting, entries ignore the pointer so their hover tooltip doesn't
    pop up mid-drag. The marquee hit-test uses geometry (getBoundingClientRect), not events,
    so selection still works. */
