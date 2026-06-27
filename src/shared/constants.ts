@@ -5,6 +5,12 @@ export const VIEW_MODE = {
 
 export type ViewMode = (typeof VIEW_MODE)[keyof typeof VIEW_MODE];
 
+// Directory zoom: a CSS `zoom` multiplier applied to the entries area. 1 = 100%.
+export const ZOOM_MIN = 0.75;
+export const ZOOM_MAX = 3;
+export const ZOOM_STEP = 0.25;
+export const ZOOM_DEFAULT = 1;
+
 export const ENTRY_KIND = {
   FILE: "file",
   DIRECTORY: "dir",

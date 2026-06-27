@@ -119,8 +119,9 @@ body.is-marqueeing .directory_page .dir_entry_item {
 }
 
 .directory_page .grid .dir_entry_item {
-  width: var(--size-directory-tile);
-  height: var(--size-directory-tile);
+  /* Zoom scales the tile (and thus the icon), but not the label/badge fonts. */
+  width: calc(var(--size-directory-tile) * var(--zoom, 1));
+  height: calc(var(--size-directory-tile) * var(--zoom, 1));
   cursor: pointer;
   background-color: transparent;
   border-radius: var(--radius-sm);
@@ -165,7 +166,7 @@ body.is-marqueeing .directory_page .dir_entry_item {
 }
 
 .directory_page .grid .dir_entry_item .icon svg {
-  font-size: 1.4rem;
+  font-size: calc(1.4rem * var(--zoom, 1));
   color: var(--color-text-muted);
 }
 
@@ -314,7 +315,8 @@ body.is-marqueeing .directory_page .dir_entry_item {
 
 .directory_page .list .dir_entry_item {
   width: 100%;
-  height: var(--size-directory-row);
+  /* Row grows with the icon zoom so the larger icon fits; column text stays the same size. */
+  height: calc(var(--size-directory-row) * var(--zoom, 1));
   display: grid;
   grid-template-columns: var(--list-grid);
   align-items: center;
@@ -333,8 +335,8 @@ body.is-marqueeing .directory_page .dir_entry_item {
 }
 
 .directory_page .list .dir_entry_item .icon {
-  width: var(--size-control-large);
-  height: var(--size-control-large);
+  width: calc(var(--size-control-large) * var(--zoom, 1));
+  height: calc(var(--size-control-large) * var(--zoom, 1));
   flex-shrink: 0;
   display: flex;
   justify-content: center;
@@ -342,7 +344,7 @@ body.is-marqueeing .directory_page .dir_entry_item {
 }
 
 .directory_page .list .dir_entry_item .icon svg {
-  font-size: 0.9rem;
+  font-size: calc(0.9rem * var(--zoom, 1));
   color: var(--color-text-muted);
 }
 

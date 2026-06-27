@@ -24,6 +24,8 @@ struct FolderSettings {
     view: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     sort: Option<SortSetting>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    zoom: Option<f64>,
 }
 
 // path -> settings. A BTreeMap keeps the file stably ordered (nicer diffs / AI-friendly).
@@ -129,5 +131,19 @@ pub fn set_folder_sort(
 ) -> Result<(), String> {
     let mut config = read_config(&app);
     config.entry(path).or_default().sort = Some(SortSetting { key, direction });
+    write_config(&app, &config)
+}
+
+// Saved zoom level for a folder (None when the user hasn't zoomed it).
+#[tauri::command]
+pub fn get_folder_zoom(app: AppHandle, path: String) -> Option<f64> {
+    read_config(&app).get(&path).and_then(|s| s.zoom)
+}
+
+// Persist the zoom level for a folder, preserving its other settings.
+#[tauri::command]
+pub fn set_folder_zoom(app: AppHandle, path: String, zoom: f64) -> Result<(), String> {
+    let mut config = read_config(&app);
+    config.entry(path).or_default().zoom = Some(zoom);
     write_config(&app, &config)
 }

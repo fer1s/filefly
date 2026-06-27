@@ -1,5 +1,5 @@
 import { FileSystemManager } from "@/shared/managers/FileSystemManager";
-import { VIEW_MODE } from "@/shared/constants";
+import { VIEW_MODE, ZOOM_DEFAULT } from "@/shared/constants";
 
 import type { State } from "./types";
 
@@ -21,6 +21,9 @@ export const initialState: State = {
   setView: () => {},
   showHidden: false,
   toggleShowHidden: () => {},
+  zoom: ZOOM_DEFAULT,
+  zoomIn: () => {},
+  zoomOut: () => {},
   search: "",
   setSearch: () => {},
   refreshDir: () => {},

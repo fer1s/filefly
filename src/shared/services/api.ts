@@ -50,6 +50,16 @@ export const setFolderSort = async (
   direction: string,
 ): Promise<void> => await invoke("set_folder_sort", { path, key, direction });
 
+// Saved zoom level for a folder (null when the user hasn't zoomed it).
+export const getFolderZoom = async (path: string): Promise<number | null> =>
+  (await invoke("get_folder_zoom", { path })) as number | null;
+
+// Persist the zoom level for a folder to the central config file.
+export const setFolderZoom = async (
+  path: string,
+  zoom: number,
+): Promise<void> => await invoke("set_folder_zoom", { path, zoom });
+
 // Get the user's disks (volumes)
 export const getVolumes = async (): Promise<Volume[]> =>
   await invoke("get_volumes");

@@ -22,6 +22,10 @@ export type State = {
   // Whether hidden entries (dotfiles) are shown in the listing. Toggled via the keymap.
   showHidden: boolean;
   toggleShowHidden: () => void;
+  // Directory zoom multiplier (1 = 100%), persisted per folder.
+  zoom: number;
+  zoomIn: () => void;
+  zoomOut: () => void;
   search: string;
   setSearch: (search: string) => void;
   refreshDir: () => void;

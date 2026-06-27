@@ -66,6 +66,11 @@ export const en = {
     up: "Up",
     toggleView: "Toggle view",
   },
+  quickbar: {
+    zoomIn: "Zoom in",
+    zoomOut: "Zoom out",
+    zoomLevel: (percent: number) => `Zoom: ${percent}%`,
+  },
   volumes: {
     title: "Volumes",
     name: "Name",

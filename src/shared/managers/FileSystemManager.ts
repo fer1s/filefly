@@ -54,6 +54,15 @@ export class FileSystemManager {
     return api.watchDirectory(path, onChange);
   }
 
+  // Per-folder zoom level (null when unset).
+  getFolderZoom(path: string): Promise<number | null> {
+    return api.getFolderZoom(path);
+  }
+
+  setFolderZoom(path: string, zoom: number): Promise<void> {
+    return api.setFolderZoom(path, zoom);
+  }
+
   getDirSize(path: string): Promise<number> {
     return api.getDirSize(path);
   }

@@ -31,7 +31,7 @@ import Properties from "./components/Properties";
 import "@/styles/views/Directory.css";
 
 const Directory = () => {
-  const { fs, path, setPath, view, search, refreshDir, accessDenied } =
+  const { fs, path, setPath, view, search, refreshDir, accessDenied, zoom } =
     useStateContext();
 
   // Path of the entry currently being renamed inline (empty when none).
@@ -142,7 +142,12 @@ const Directory = () => {
           "directory_content",
           ...hiddenColumns.map((key) => `hide_col_${key}`),
         )}
-        style={{ "--list-grid": buildListGrid(visibleColumns) } as CSSProperties}
+        style={
+          {
+            "--list-grid": buildListGrid(visibleColumns),
+            "--zoom": zoom,
+          } as CSSProperties
+        }
       >
         {accessDenied && <AccessDeniedNotice />}
 

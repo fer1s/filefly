@@ -27,6 +27,10 @@ import { t } from "@/lang";
 import {
   ACCESS_DENIED_ERROR,
   VIEW_MODE,
+  ZOOM_DEFAULT,
+  ZOOM_MAX,
+  ZOOM_MIN,
+  ZOOM_STEP,
   type ViewMode,
 } from "@/shared/constants";
 
@@ -46,6 +50,7 @@ const App = () => {
   const [accessDenied, setAccessDenied] = useState<boolean>(false);
   const [view, setView] = useState<ViewMode>(VIEW_MODE.GRID);
   const [showHidden, setShowHidden] = useState<boolean>(false);
+  const [zoom, setZoom] = useState<number>(ZOOM_DEFAULT);
   const [search, setSearch] = useState<string>("");
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(
     () => localStorage.getItem("sidebarCollapsed") === "true",
@@ -154,6 +159,41 @@ const App = () => {
     );
   }, [showHidden]);
 
+  // Load the folder's saved zoom on navigation (defaults to 100% when none is saved).
+  useEffect(() => {
+    if (path === "") return;
+    let cancelled = false;
+    fs.getFolderZoom(path).then((saved) => {
+      if (!cancelled) setZoom(saved ?? ZOOM_DEFAULT);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [fs, path]);
+
+  // Step the zoom and persist it for the current folder. Persisting only on explicit zoom
+  // (not in an effect watching `zoom`) avoids a load -> save loop.
+  const stepZoom = useCallback(
+    (delta: number) => {
+      if (path === "") return;
+      setZoom((current) => {
+        const next = Math.min(
+          ZOOM_MAX,
+          Math.max(ZOOM_MIN, Math.round((current + delta) * 100) / 100),
+        );
+        if (next !== current)
+          fs.setFolderZoom(path, next).catch((err) =>
+            console.error("Failed to persist zoom preference:\n" + err),
+          );
+        return next;
+      });
+    },
+    [fs, path],
+  );
+
+  const zoomIn = useCallback(() => stepZoom(ZOOM_STEP), [stepZoom]);
+  const zoomOut = useCallback(() => stepZoom(-ZOOM_STEP), [stepZoom]);
+
   // Keep a ref to the latest refreshDir so the watcher below doesn't re-subscribe on every
   // change to it (it changes with `path`, which already re-runs the watch effect).
   const refreshDirRef = useRef(refreshDir);
@@ -250,6 +290,9 @@ const App = () => {
         setView,
         showHidden,
         toggleShowHidden,
+        zoom,
+        zoomIn,
+        zoomOut,
         search,
         setSearch,
         refreshDir,
