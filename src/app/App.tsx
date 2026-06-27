@@ -129,9 +129,7 @@ const App = () => {
   // Read a directory, reporting whether the OS blocked it (Full Disk Access required, e.g. the
   // Trash). Kept free of setState so callers own state updates in their async callbacks.
   const loadDirectory = useCallback(
-    async (
-      target: string,
-    ): Promise<{ files: DirEntry[]; denied: boolean }> => {
+    async (target: string): Promise<{ files: DirEntry[]; denied: boolean }> => {
       try {
         return { files: await fs.readDirectory(target), denied: false };
       } catch (err) {

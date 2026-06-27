@@ -163,20 +163,20 @@ const Directory = () => {
 
         {!accessDenied && (
           <EntriesView
-          key={path}
-          entries={sorted}
-          view={view}
-          selectedIDs={selectedIDs}
-          renamingID={renamingID}
-          contextMenuRef={menu.ref}
-          onSelect={handleSelect}
-          onRename={fileOps.rename}
-          onCancelRename={handleCancelRename}
-          menu={{
-            setVisible: menu.setVisible,
-            setId: menu.setElementID,
-            setType: menu.setElementType,
-          }}
+            key={path}
+            entries={sorted}
+            view={view}
+            selectedIDs={selectedIDs}
+            renamingID={renamingID}
+            contextMenuRef={menu.ref}
+            onSelect={handleSelect}
+            onRename={fileOps.rename}
+            onCancelRename={handleCancelRename}
+            menu={{
+              setVisible: menu.setVisible,
+              setId: menu.setElementID,
+              setType: menu.setElementType,
+            }}
           />
         )}
 

@@ -4,11 +4,7 @@ import IconButton, {
   ICON_BUTTON_VARIANT,
 } from "@/shared/components/elements/IconButton";
 import { TOOLTIP_PLACEMENT } from "@/shared/components/elements/Tooltip";
-import {
-  useKeymap,
-  formatBinding,
-  PINNED_ACTIONS,
-} from "@/shared/keymap";
+import { useKeymap, formatBinding, PINNED_ACTIONS } from "@/shared/keymap";
 import { classNames } from "@/shared/utils";
 import { t } from "@/lang";
 

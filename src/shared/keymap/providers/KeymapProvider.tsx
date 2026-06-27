@@ -20,11 +20,14 @@ export const KeymapProvider = ({ children }: KeymapProviderProps) => {
     };
   }, [manager]);
 
-  const setBinding = useCallback((action: KeymapAction, binding: KeyBinding) => {
-    // Reflect the change immediately so consumers update live.
-    setKeymap((prev) => ({ ...prev, [action]: binding }));
-    // TODO: persist to keymap.toml (see KeymapManager).
-  }, []);
+  const setBinding = useCallback(
+    (action: KeymapAction, binding: KeyBinding) => {
+      // Reflect the change immediately so consumers update live.
+      setKeymap((prev) => ({ ...prev, [action]: binding }));
+      // TODO: persist to keymap.toml (see KeymapManager).
+    },
+    [],
+  );
 
   const value = useMemo(() => ({ keymap, setBinding }), [keymap, setBinding]);
 
