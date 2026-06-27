@@ -37,7 +37,9 @@ const Directory = () => {
   const { filtered, sorted, previewables, sort, handleSort } =
     useDirectoryEntries(view);
 
-  const { selectedIDs, setSelectedIDs, handleSelect } = useSelection();
+  const { selectedIDs, setSelectedIDs, handleSelect } = useSelection(
+    sorted.map((entry) => entry.path),
+  );
 
   // Rubber-band selection over the empty floor of the directory.
   const directoryRef = useRef<HTMLDivElement>(null);
