@@ -19,6 +19,8 @@ export const initialState: State = {
   accessDenied: false,
   view: VIEW_MODE.GRID,
   setView: () => {},
+  showHidden: false,
+  toggleShowHidden: () => {},
   search: "",
   setSearch: () => {},
   refreshDir: () => {},

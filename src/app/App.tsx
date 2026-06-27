@@ -18,11 +18,12 @@ import ToastStack, {
 
 import AppContent from "./AppContent";
 
-import { setNotifier, ToastType } from "@/shared/toast";
+import { setNotifier, notify, TOAST_TYPE, ToastType } from "@/shared/toast";
 import { ROUTES } from "./routes";
 import { FileSystemManager } from "@/shared/managers/FileSystemManager";
 import { Volume, DirEntry } from "@/shared/models";
 import { classNames } from "@/shared/utils";
+import { t } from "@/lang";
 import {
   ACCESS_DENIED_ERROR,
   VIEW_MODE,
@@ -44,6 +45,7 @@ const App = () => {
   const [dirContent, setDirContent] = useState<DirEntry[]>([]);
   const [accessDenied, setAccessDenied] = useState<boolean>(false);
   const [view, setView] = useState<ViewMode>(VIEW_MODE.GRID);
+  const [showHidden, setShowHidden] = useState<boolean>(false);
   const [search, setSearch] = useState<string>("");
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(
     () => localStorage.getItem("sidebarCollapsed") === "true",
@@ -143,6 +145,15 @@ const App = () => {
     });
   }, [loadDirectory, fetchVolumes, path]);
 
+  const toggleShowHidden = useCallback(() => {
+    const next = !showHidden;
+    setShowHidden(next);
+    notify(
+      next ? t.directory.showingHidden : t.directory.hidingHidden,
+      TOAST_TYPE.INFO,
+    );
+  }, [showHidden]);
+
   // Keep a ref to the latest refreshDir so the watcher below doesn't re-subscribe on every
   // change to it (it changes with `path`, which already re-runs the watch effect).
   const refreshDirRef = useRef(refreshDir);
@@ -237,6 +248,8 @@ const App = () => {
         accessDenied,
         view,
         setView,
+        showHidden,
+        toggleShowHidden,
         search,
         setSearch,
         refreshDir,

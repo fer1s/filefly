@@ -96,6 +96,8 @@ export const en = {
     selectedCount: (n: number) => `${n} ${n === 1 ? "item" : "items"} selected`,
     loadingPreviews: "Loading previews…",
     calculatingSizes: "Calculating sizes…",
+    showingHidden: "Showing hidden files",
+    hidingHidden: "Hiding hidden files",
     accessDenied: {
       title: "Can't read this folder",
       description:

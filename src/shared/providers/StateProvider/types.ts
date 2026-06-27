@@ -19,6 +19,9 @@ export type State = {
   accessDenied: boolean;
   view: ViewMode;
   setView: (view: ViewMode) => void;
+  // Whether hidden entries (dotfiles) are shown in the listing. Toggled via the keymap.
+  showHidden: boolean;
+  toggleShowHidden: () => void;
   search: string;
   setSearch: (search: string) => void;
   refreshDir: () => void;

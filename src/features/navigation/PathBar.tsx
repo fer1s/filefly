@@ -32,6 +32,7 @@ const PathBar = () => {
     goForward,
     view,
     setView,
+    toggleShowHidden,
   } = useStateContext();
 
   const goHome = () => setPath("");
@@ -48,7 +49,13 @@ const PathBar = () => {
     setView(view === VIEW_MODE.GRID ? VIEW_MODE.LIST : VIEW_MODE.GRID);
 
   const { keymap } = useKeymap();
-  usePathBarShortcuts({ goBack, goForward, goUp, toggleView: switchView });
+  usePathBarShortcuts({
+    goBack,
+    goForward,
+    goUp,
+    toggleView: switchView,
+    toggleHidden: toggleShowHidden,
+  });
 
   return (
     <div className="PathBar">

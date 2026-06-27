@@ -145,6 +145,9 @@ const DirEntryItemComponent = ({
     entry.metadata.isFile &&
     IMAGE_FORMATS.includes(extension.toLowerCase().trim());
 
+  // Dotfiles are hidden on macOS/Unix; dim them to set them apart (Finder-style).
+  const isHidden = entry.name.startsWith(".");
+
   // Lazy + throttled image thumbnails. A row only "wants" its thumbnail once it
   // scrolls near the viewport (IntersectionObserver); it then queues for a load
   // slot so only a few decode at a time. This keeps opening a screenshot-heavy
@@ -246,7 +249,11 @@ const DirEntryItemComponent = ({
   return (
     <Tooltip contents delay={METADATA_TOOLTIP_DELAY} content={metadataContent}>
       <div
-        className={classNames("dir_entry_item", selected && "selected")}
+        className={classNames(
+          "dir_entry_item",
+          selected && "selected",
+          isHidden && "hidden",
+        )}
         id={id}
         tabIndex={0}
         onClick={(e) => onSelect(entry.path, e)}

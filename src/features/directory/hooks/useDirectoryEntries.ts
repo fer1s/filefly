@@ -16,17 +16,18 @@ import { useDirSizes } from "./useDirSizes";
 // Owns the visible entry list: search filter, column sort, lazily computed folder
 // sizes, and the previewable subset (for prev/next navigation).
 export const useDirectoryEntries = (view: ViewMode) => {
-  const { dirContent, search } = useStateContext();
+  const { dirContent, search, showHidden } = useStateContext();
 
-  // Entries visible after applying the sidebar search filter.
+  // Entries visible after applying the hidden-files toggle and the sidebar search filter.
   const filtered = useMemo(
     () =>
-      search
-        ? dirContent.filter((e) =>
-            e.name.toLowerCase().includes(search.toLowerCase()),
-          )
-        : dirContent,
-    [dirContent, search],
+      dirContent.filter((e) => {
+        if (!showHidden && e.name.startsWith(".")) return false;
+        if (search && !e.name.toLowerCase().includes(search.toLowerCase()))
+          return false;
+        return true;
+      }),
+    [dirContent, search, showHidden],
   );
 
   // Column sort (driven by the list-view headers).

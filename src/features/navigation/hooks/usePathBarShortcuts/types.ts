@@ -3,4 +3,5 @@ export type UsePathBarShortcutsArgs = {
   goForward: () => void;
   goUp: () => void;
   toggleView: () => void;
+  toggleHidden: () => void;
 };

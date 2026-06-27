@@ -58,6 +58,9 @@
   --size-properties-width: 400px;
   --font-size-icon-large: 20px;
 
+  /* Hidden entries (dotfiles) are dimmed to set them apart from regular files. */
+  --opacity-hidden-entry: 0.55;
+
   --color-background-window: rgba(0, 0, 0, 0.25);
   /* Sidebar sits darker/translucent (lets the window vibrancy through); the main content
      panel is a touch lighter and solid, so the two read as distinct surfaces (Finder-style). */

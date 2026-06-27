@@ -10,6 +10,7 @@ export const KEYMAP_ACTION = {
   NAV_FORWARD: "nav_forward",
   NAV_UP: "nav_up",
   TOGGLE_VIEW: "toggle_view",
+  TOGGLE_HIDDEN: "toggle_hidden",
   PREVIEW_PREV: "preview_prev",
   PREVIEW_NEXT: "preview_next",
   PINNED_1: "pinned_1",

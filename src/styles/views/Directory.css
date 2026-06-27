@@ -60,6 +60,11 @@ body.is-marqueeing .directory_page .dir_entry_item {
   border-radius: var(--radius-xs);
 }
 
+/* Hidden entries (dotfiles) are dimmed to distinguish them from regular files. */
+.directory_page .dir_entry_item.hidden {
+  opacity: var(--opacity-hidden-entry);
+}
+
 /* Entries are not text-selectable, and their icons/images are not draggable
    (WebKit honours only the -webkit- prefixed properties). */
 .directory_page .dir_entry_item,

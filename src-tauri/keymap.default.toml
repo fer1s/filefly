@@ -50,6 +50,11 @@ keys = ["g"]
 mod = true
 shift = true
 
+[toggle_hidden]
+keys = ["."]
+mod = true
+shift = true
+
 # Jump to a pinned folder by its position in the sidebar (1 = first). mod = Cmd / Ctrl.
 [pinned_1]
 keys = ["1"]
