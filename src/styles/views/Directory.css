@@ -105,6 +105,14 @@ body.is-marqueeing .directory_page .dir_entry_item {
   padding-top: var(--space-2-5);
 }
 
+/* Invisible marker at the end of the rendered slice; when it nears the viewport the next batch
+   of entries mounts. Full-width so it sits on its own row in the wrapping grid. */
+.directory_page .entries_sentinel {
+  width: 100%;
+  height: var(--border-width-default);
+  pointer-events: none;
+}
+
 .directory_page .grid .dir_entry_item {
   width: var(--size-directory-tile);
   height: var(--size-directory-tile);

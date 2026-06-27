@@ -158,7 +158,7 @@ const Directory = () => {
 
         {!accessDenied && (
           <EntriesView
-          key="entries-view"
+          key={path}
           entries={sorted}
           view={view}
           selectedIDs={selectedIDs}
