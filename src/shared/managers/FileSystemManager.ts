@@ -49,6 +49,11 @@ export class FileSystemManager {
     return api.getEntry(path);
   }
 
+  // Watch a directory for external changes; returns a function that stops watching.
+  watchDirectory(path: string, onChange: () => void): Promise<() => void> {
+    return api.watchDirectory(path, onChange);
+  }
+
   getDirSize(path: string): Promise<number> {
     return api.getDirSize(path);
   }

@@ -1,4 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
+import { watchImmediate } from "@tauri-apps/plugin-fs";
 
 import { notify, TOAST_TYPE } from "@/shared/toast";
 import { t } from "@/lang";
@@ -51,6 +52,14 @@ export const readDirectory = async (path: string): Promise<DirEntry[]> => {
 
 export const getEntry = async (path: string): Promise<DirEntry> =>
   await invoke("get_entry", { path });
+
+// Watch a directory for filesystem changes (e.g. files added/removed/renamed from the terminal).
+// Fires `onChange` on every event; returns a function that stops watching. Non-recursive — only
+// changes directly inside the folder matter for the listing.
+export const watchDirectory = async (
+  path: string,
+  onChange: () => void,
+): Promise<() => void> => await watchImmediate(path, () => onChange());
 
 // Recursively computed total size (bytes) of a directory.
 export const getDirSize = async (path: string): Promise<number> =>

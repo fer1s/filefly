@@ -29,6 +29,9 @@ import {
   type ViewMode,
 } from "@/shared/constants";
 
+// Coalesce bursts of filesystem events (a single move fires several) into one refresh.
+const DIRECTORY_WATCH_DEBOUNCE_MS = 150;
+
 const App = () => {
   const navigate: NavigateFunction = useNavigate();
   const location: Location = useLocation();
@@ -139,6 +142,47 @@ const App = () => {
       setAccessDenied(denied);
     });
   }, [loadDirectory, fetchVolumes, path]);
+
+  // Keep a ref to the latest refreshDir so the watcher below doesn't re-subscribe on every
+  // change to it (it changes with `path`, which already re-runs the watch effect).
+  const refreshDirRef = useRef(refreshDir);
+  useEffect(() => {
+    refreshDirRef.current = refreshDir;
+  }, [refreshDir]);
+
+  // Watch the current directory so external changes (e.g. `mv`/`rm` from a terminal, or another
+  // app) refresh the listing automatically. Debounced, and torn down when the path changes.
+  useEffect(() => {
+    if (path === "") return; // Volumes view — nothing to watch.
+
+    let cancelled = false;
+    let stopWatching: (() => void) | undefined;
+    let timer: number | undefined;
+
+    const onChange = () => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(
+        () => refreshDirRef.current(),
+        DIRECTORY_WATCH_DEBOUNCE_MS,
+      );
+    };
+
+    fs.watchDirectory(path, onChange)
+      .then((unwatch) => {
+        if (cancelled) unwatch();
+        else stopWatching = unwatch;
+      })
+      .catch((err) => {
+        // Unwatchable paths (e.g. permission denied) simply won't auto-refresh.
+        console.error("Failed to watch directory:\n" + err);
+      });
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+      stopWatching?.();
+    };
+  }, [fs, path]);
 
   useEffect(() => {
     let cancelled = false;
