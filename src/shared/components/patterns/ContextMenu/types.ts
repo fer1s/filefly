@@ -10,5 +10,6 @@ export interface ContextMenuItemProps {
   onClick?: () => void;
   icon?: ReactNode;
   text?: string;
+  hotkey?: string;
   disabled?: boolean;
 }

@@ -4,9 +4,14 @@ import { notify, TOAST_TYPE } from "@/shared/toast";
 import { t } from "@/lang";
 import { Volume, DirEntry } from "@/shared/models";
 import { ACCESS_DENIED_ERROR } from "@/shared/constants";
+import type { Keymap } from "@/shared/keymap/types";
 
 export const getHostName = async (): Promise<string | null> =>
   await invoke("get_host_name");
+
+// Load the keybindings (reads keymap.toml, falling back to bundled defaults).
+export const getKeymap = async (): Promise<Keymap> =>
+  (await invoke("get_keymap")) as Keymap;
 
 // Get the user's disks (volumes)
 export const getVolumes = async (): Promise<Volume[]> =>

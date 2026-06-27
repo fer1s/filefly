@@ -5,7 +5,7 @@ import IconButton, {
   ICON_BUTTON_SIZE,
   ICON_BUTTON_VARIANT,
 } from "@/shared/components/elements/IconButton";
-import { VIEW_MODE } from "@/shared/constants";
+import { KEY, VIEW_MODE } from "@/shared/constants";
 import { t } from "@/lang";
 
 import {
@@ -117,7 +117,7 @@ const PathInput = ({ path, onCommit }: PathInputProps) => {
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === "Enter") commitDraft();
+    if (event.key === KEY.ENTER) commitDraft();
   };
 
   return (

@@ -7,7 +7,7 @@ import {
   formatBytes,
   formatDate,
 } from "@/shared/utils";
-import { ENTRY_KIND, IMAGE_FORMATS } from "@/shared/constants";
+import { ENTRY_KIND, IMAGE_FORMATS, KEY } from "@/shared/constants";
 import Icon from "@/shared/components/elements/Icon";
 import {
   imagePreviewLoad,
@@ -160,8 +160,8 @@ const DirEntryItemComponent = ({
 
   const handleRenameKeyDown = (e: React.KeyboardEvent) => {
     e.stopPropagation();
-    if (e.key === "Enter") submitRename();
-    else if (e.key === "Escape") cancelRename();
+    if (e.key === KEY.ENTER) submitRename();
+    else if (e.key === KEY.ESCAPE) cancelRename();
   };
 
   const renameInput = (

@@ -5,6 +5,7 @@ import {
 import Icon from "@/shared/components/elements/Icon";
 import { useStateContext } from "@/shared/providers/StateProvider";
 import { ACCEPTED_PREVIEW_FORMATS, ENTRY_KIND } from "@/shared/constants";
+import { useKeymap, formatBinding, KEYMAP_ACTION } from "@/shared/keymap";
 import { t } from "@/lang";
 
 import {
@@ -39,6 +40,7 @@ const EntryContextMenu = ({
   onProperties,
 }: EntryContextMenuProps) => {
   const { fs, setPath } = useStateContext();
+  const { keymap } = useKeymap();
 
   // The whole selection if the clicked item is part of it, otherwise just the clicked item.
   const actionTargets = () =>
@@ -104,6 +106,7 @@ const EntryContextMenu = ({
           <ContextMenuItem
             text={t.contextMenu.paste}
             icon={<Icon icon={faPaste} />}
+            hotkey={formatBinding(keymap[KEYMAP_ACTION.PASTE])}
             onClick={canPaste ? handlePaste : undefined}
           />
           <ContextMenuItem isSeparator />
@@ -136,11 +139,13 @@ const EntryContextMenu = ({
           <ContextMenuItem
             text={t.contextMenu.copy}
             icon={<Icon icon={faCopy} />}
+            hotkey={formatBinding(keymap[KEYMAP_ACTION.COPY])}
             onClick={handleCopy}
           />
           <ContextMenuItem
             text={t.contextMenu.cut}
             icon={<Icon icon={faScissors} />}
+            hotkey={formatBinding(keymap[KEYMAP_ACTION.CUT])}
             onClick={handleCut}
           />
           <ContextMenuItem
@@ -151,6 +156,7 @@ const EntryContextMenu = ({
           <ContextMenuItem
             text={t.contextMenu.delete}
             icon={<Icon icon={faTrash} />}
+            hotkey={formatBinding(keymap[KEYMAP_ACTION.TRASH])}
             onClick={handleDelete}
           />
         </>
@@ -173,11 +179,13 @@ const EntryContextMenu = ({
           <ContextMenuItem
             text={t.contextMenu.copy}
             icon={<Icon icon={faCopy} />}
+            hotkey={formatBinding(keymap[KEYMAP_ACTION.COPY])}
             onClick={handleCopy}
           />
           <ContextMenuItem
             text={t.contextMenu.cut}
             icon={<Icon icon={faScissors} />}
+            hotkey={formatBinding(keymap[KEYMAP_ACTION.CUT])}
             onClick={handleCut}
           />
           <ContextMenuItem
@@ -188,6 +196,7 @@ const EntryContextMenu = ({
           <ContextMenuItem
             text={t.contextMenu.delete}
             icon={<Icon icon={faTrash} />}
+            hotkey={formatBinding(keymap[KEYMAP_ACTION.TRASH])}
             onClick={handleDelete}
           />
         </>

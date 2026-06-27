@@ -87,6 +87,13 @@
   text-overflow: ellipsis;
 }
 
+.context_menu .context_menu_item.ctx_button .ctx_hotkey {
+  flex-shrink: 0;
+  margin-left: var(--space-3);
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+}
+
 .context_menu .context_menu_item.ctx_button svg {
   width: var(--size-icon-small);
   height: var(--size-icon-small);

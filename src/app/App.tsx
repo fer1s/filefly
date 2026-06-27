@@ -7,6 +7,7 @@ import {
 } from "react-router-dom";
 
 import { StateProvider } from "@/shared/providers/StateProvider";
+import { KeymapProvider } from "@/shared/keymap";
 
 import SideBar from "@/features/sidebar";
 import ToastStack, {
@@ -197,18 +198,17 @@ const App = () => {
         refreshDir,
       }}
     >
-      <div className={classNames("App", sidebarCollapsed && "collapsed")}>
-        <SideBar
-          collapsed={sidebarCollapsed}
-          onToggle={() => setSidebarCollapsed((c) => !c)}
-          visitedPaths={pathHistory.stack}
-        />
-        <AppContent />
-      </div>
-      <ToastStack
-        toasts={toasts}
-        onDismiss={dismissToast}
-      />
+      <KeymapProvider>
+        <div className={classNames("App", sidebarCollapsed && "collapsed")}>
+          <SideBar
+            collapsed={sidebarCollapsed}
+            onToggle={() => setSidebarCollapsed((c) => !c)}
+            visitedPaths={pathHistory.stack}
+          />
+          <AppContent />
+        </div>
+        <ToastStack toasts={toasts} onDismiss={dismissToast} />
+      </KeymapProvider>
     </StateProvider>
   );
 };

@@ -44,6 +44,7 @@ fn main() {
             functions::terminal::open_in_terminal,
             functions::markdown::md_to_html,
             functions::system::open_full_disk_access_settings,
+            functions::keymap::get_keymap,
         ])
         .on_window_event(|window, event| match event {
             tauri::WindowEvent::CloseRequested { api, .. } => {

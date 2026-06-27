@@ -3866,6 +3866,7 @@ dependencies = [
  "tauri-plugin-fs",
  "tauri-plugin-opener",
  "tauri-plugin-window-state",
+ "toml 0.8.2",
  "trash",
  "window-vibrancy 0.5.3",
 ]

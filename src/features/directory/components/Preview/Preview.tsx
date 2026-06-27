@@ -7,9 +7,14 @@ import Spinner from "@/shared/components/elements/Spinner";
 import {
   AUDIO_FORMATS,
   IMAGE_FORMATS,
-  KEY_HINT,
   MARKDOWN_FORMAT,
 } from "@/shared/constants";
+import {
+  useKeymap,
+  matchesBinding,
+  formatBinding,
+  KEYMAP_ACTION,
+} from "@/shared/keymap";
 import { classNames } from "@/shared/utils";
 import { t } from "@/lang";
 
@@ -36,6 +41,7 @@ const Preview = ({
   hasNext,
 }: PreviewProps) => {
   const { fs } = useStateContext();
+  const { keymap } = useKeymap();
 
   const [markdownPreview, setMarkdownPreview] = useState<{
     filePath: string;
@@ -65,14 +71,15 @@ const Preview = ({
     if (!previewVisible) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "ArrowLeft") onPrev();
-      else if (e.key === "ArrowRight") onNext();
-      else if (e.key === "Escape") setPreviewVisible(false);
+      if (matchesBinding(e, keymap[KEYMAP_ACTION.PREVIEW_PREV])) onPrev();
+      else if (matchesBinding(e, keymap[KEYMAP_ACTION.PREVIEW_NEXT])) onNext();
+      else if (matchesBinding(e, keymap[KEYMAP_ACTION.PREVIEW_CLOSE]))
+        setPreviewVisible(false);
     };
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [onNext, onPrev, previewVisible, setPreviewVisible]);
+  }, [keymap, onNext, onPrev, previewVisible, setPreviewVisible]);
 
   return (
     <>
@@ -102,7 +109,7 @@ const Preview = ({
                 onClick={onPrev}
                 disabled={!hasPrev}
                 tooltip={t.common.previous}
-                hotkey={KEY_HINT.ARROW_LEFT}
+                hotkey={formatBinding(keymap[KEYMAP_ACTION.PREVIEW_PREV])}
                 aria-label={t.common.previous}
               />
               <IconButton
@@ -110,7 +117,7 @@ const Preview = ({
                 onClick={onNext}
                 disabled={!hasNext}
                 tooltip={t.common.next}
-                hotkey={KEY_HINT.ARROW_RIGHT}
+                hotkey={formatBinding(keymap[KEYMAP_ACTION.PREVIEW_NEXT])}
                 aria-label={t.common.next}
               />
             </div>
@@ -119,7 +126,7 @@ const Preview = ({
               icon={faXmark}
               onClick={() => setPreviewVisible(false)}
               tooltip={t.common.close}
-              hotkey={KEY_HINT.ESC}
+              hotkey={formatBinding(keymap[KEYMAP_ACTION.PREVIEW_CLOSE])}
               aria-label={t.common.close}
             />
           </div>

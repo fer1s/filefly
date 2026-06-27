@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-import { VIEW_MODE } from "@/shared/constants";
+import { KEY, VIEW_MODE } from "@/shared/constants";
 import { TYPEAHEAD_RESET_MS } from "./constants";
 import type { UseKeyboardNavArgs } from "./types";
 
@@ -119,11 +119,11 @@ export const useKeyboardNav = ({
       }
 
       switch (e.key) {
-        case "Escape":
+        case KEY.ESCAPE:
           clearTypeahead();
           setSelectedIDs([]);
           break;
-        case "Backspace":
+        case KEY.BACKSPACE:
           if (!searchBufferRef.current) break;
           e.preventDefault();
           searchBufferRef.current = searchBufferRef.current.slice(0, -1);
@@ -131,23 +131,23 @@ export const useKeyboardNav = ({
           if (searchBufferRef.current) scheduleTypeaheadReset();
           else clearTypeahead();
           break;
-        case "ArrowRight":
+        case KEY.ARROW_RIGHT:
           e.preventDefault();
           move(1);
           break;
-        case "ArrowLeft":
+        case KEY.ARROW_LEFT:
           e.preventDefault();
           move(-1);
           break;
-        case "ArrowDown":
+        case KEY.ARROW_DOWN:
           e.preventDefault();
           move(view === VIEW_MODE.GRID ? columns() : 1);
           break;
-        case "ArrowUp":
+        case KEY.ARROW_UP:
           e.preventDefault();
           move(view === VIEW_MODE.GRID ? -columns() : -1);
           break;
-        case "Enter":
+        case KEY.ENTER:
           e.preventDefault();
           open();
           break;

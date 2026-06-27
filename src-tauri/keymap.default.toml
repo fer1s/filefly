@@ -1,0 +1,27 @@
+# Default keybindings. Each table is an action; `keys` are KeyboardEvent.key values, `mod`
+# means Cmd (macOS) / Ctrl (Windows/Linux). This file is the source of truth loaded at startup.
+
+[copy]
+keys = ["c"]
+mod = true
+
+[cut]
+keys = ["x"]
+mod = true
+
+[paste]
+keys = ["v"]
+mod = true
+
+[trash]
+keys = ["Backspace", "Delete"]
+mod = true
+
+[preview_prev]
+keys = ["ArrowLeft"]
+
+[preview_next]
+keys = ["ArrowRight"]
+
+[preview_close]
+keys = ["Escape"]

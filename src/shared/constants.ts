@@ -39,12 +39,17 @@ export const SORT_DIRECTION = {
 export type SortDirection =
   (typeof SORT_DIRECTION)[keyof typeof SORT_DIRECTION];
 
-// Display glyphs for keyboard hints shown in tooltips. Placeholder until the keymapping
-// plan lands; replace with the real bindings then.
-export const KEY_HINT = {
-  ESC: "Esc",
-  ARROW_LEFT: "←",
-  ARROW_RIGHT: "→",
+// DOM KeyboardEvent.key names used in non-configurable key handling (navigation, input
+// submit/cancel). These are not user-rebindable bindings — see shared/keymap for those — but
+// they still shouldn't be raw string literals scattered through the code.
+export const KEY = {
+  ENTER: "Enter",
+  ESCAPE: "Escape",
+  BACKSPACE: "Backspace",
+  ARROW_UP: "ArrowUp",
+  ARROW_DOWN: "ArrowDown",
+  ARROW_LEFT: "ArrowLeft",
+  ARROW_RIGHT: "ArrowRight",
 } as const;
 
 // Marker the Rust `read_directory` command returns when a folder is blocked by OS privacy
