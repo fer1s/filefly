@@ -78,39 +78,10 @@
   user-select: none;
 }
 
-.preview_container .preview_header button {
-  background-color: transparent;
-  border: none;
-  outline: none;
-  color: var(--color-text-primary);
-  font-size: 0.8rem;
-  font-weight: 300;
-  cursor: pointer;
-  user-select: none;
-}
-
 .preview_container .preview_header .preview_nav {
   display: flex;
   align-items: center;
   gap: var(--space-1);
-}
-
-.preview_container .preview_header .preview_nav .nav_btn {
-  width: var(--size-control-medium);
-  height: var(--size-control-medium);
-  display: grid;
-  place-items: center;
-  border-radius: var(--radius-sm);
-  transition: all 0.2s ease-in-out;
-}
-
-.preview_container .preview_header .preview_nav .nav_btn:hover:not(:disabled) {
-  background-color: var(--color-overlay-active);
-}
-
-.preview_container .preview_header .preview_nav .nav_btn:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
 }
 
 .preview_container .preview_content {

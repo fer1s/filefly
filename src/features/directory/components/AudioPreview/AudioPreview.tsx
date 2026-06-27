@@ -1,6 +1,8 @@
 import { useRef, useState, useEffect } from "react";
 import { convertFileSrc } from "@tauri-apps/api/core";
-import IconButton from "@/shared/components/elements/IconButton";
+import IconButton, {
+  ICON_BUTTON_SIZE,
+} from "@/shared/components/elements/IconButton";
 import { classNames } from "@/shared/utils";
 
 import {
@@ -65,7 +67,11 @@ const AudioPreview = ({ isVisible, filePath }: AudioPreviewProps) => {
         ref={audioRef}
         onTimeUpdate={handleTimeUpdate}
       />
-      <IconButton icon={isPlaying ? faPause : faPlay} onClick={togglePlay} />
+      <IconButton
+        icon={isPlaying ? faPause : faPlay}
+        size={ICON_BUTTON_SIZE.LG}
+        onClick={togglePlay}
+      />
       <div className="progress">
         <span className="currentTime">{formatTime(progress)}</span>
         <input
@@ -78,7 +84,11 @@ const AudioPreview = ({ isVisible, filePath }: AudioPreviewProps) => {
         <span className="duration">{formatTime(duration)}</span>
       </div>
       <div className="volume_control">
-        <IconButton icon={faVolumeHigh} onClick={handleVolumeButtonClick} />
+        <IconButton
+          icon={faVolumeHigh}
+          size={ICON_BUTTON_SIZE.LG}
+          onClick={handleVolumeButtonClick}
+        />
         <div
           className={classNames(
             "volume_extension",

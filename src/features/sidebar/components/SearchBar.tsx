@@ -1,5 +1,7 @@
 import { useStateContext } from "@/shared/providers/StateProvider";
-import IconButton from "@/shared/components/elements/IconButton";
+import IconButton, {
+  ICON_BUTTON_SIZE,
+} from "@/shared/components/elements/IconButton";
 import { t } from "@/lang";
 
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
@@ -20,6 +22,7 @@ const SearchBar = () => {
       {search && (
         <IconButton
           icon={faXmark}
+          size={ICON_BUTTON_SIZE.SM}
           className="clear"
           onClick={() => setSearch("")}
           aria-label={t.sidebar.clearSearch}

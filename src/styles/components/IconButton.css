@@ -1,3 +1,64 @@
+/* Icon-only button. The compound `.Button.IconButton` selector reliably overrides the
+   text-button base from Button.css regardless of stylesheet import order.
+   Variants: size (sm | md | lg) and the bordered `boxed` look. */
+.Button.IconButton {
+  padding: var(--space-0);
+  background-color: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  display: grid;
+  place-items: center;
+}
+
 .IconButton > svg {
   pointer-events: none;
+  font-size: 0.85rem;
+}
+
+.Button.IconButton:hover {
+  background-color: var(--color-overlay-hover);
+  color: var(--color-text-primary);
+}
+
+.Button.IconButton:disabled:hover {
+  background-color: transparent;
+}
+
+/* Sizes */
+.IconButton.sm {
+  width: var(--size-control-small);
+  min-width: var(--size-control-small);
+  height: var(--size-control-small);
+  min-height: var(--size-control-small);
+}
+
+.IconButton.md {
+  width: var(--size-control-medium);
+  min-width: var(--size-control-medium);
+  height: var(--size-control-medium);
+  min-height: var(--size-control-medium);
+}
+
+.IconButton.lg {
+  width: var(--size-control-large);
+  min-width: var(--size-control-large);
+  height: var(--size-control-large);
+  min-height: var(--size-control-large);
+}
+
+/* Boxed variant — bordered square (e.g. PathBar nav controls). */
+.Button.IconButton.boxed {
+  background-color: var(--color-overlay-faint);
+  border: var(--border-width-default) solid var(--color-border-faint);
+}
+
+.Button.IconButton.boxed:hover {
+  background-color: var(--color-surface-interactive);
+  border-color: var(--color-border-default);
+}
+
+.Button.IconButton.boxed:disabled:hover {
+  background-color: var(--color-overlay-faint);
+  border-color: var(--color-border-faint);
 }

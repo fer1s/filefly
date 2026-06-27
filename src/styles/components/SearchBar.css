@@ -32,32 +32,10 @@
   border: var(--border-width-default) solid var(--color-border-strong);
 }
 
+/* Look comes from IconButton; only the overlay positioning is component-specific. */
 .SearchBar .clear {
   position: absolute;
   right: var(--space-1-5);
   top: 50%;
   transform: translateY(-50%);
-  width: var(--size-control-small);
-  height: var(--size-control-small);
-  padding: var(--space-0);
-  background-color: transparent;
-  border: none;
-  border-radius: var(--radius-sm);
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-}
-
-.SearchBar .clear svg {
-  font-size: 0.8rem;
-  color: var(--color-text-muted);
-}
-
-.SearchBar .clear:hover {
-  background-color: var(--color-overlay-active);
-}
-
-.SearchBar .clear:hover svg {
-  color: var(--color-text-primary);
 }

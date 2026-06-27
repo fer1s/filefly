@@ -1,5 +1,8 @@
 import { useStateContext } from "@/shared/providers/StateProvider";
-import IconButton from "@/shared/components/elements/IconButton";
+import IconButton, {
+  ICON_BUTTON_SIZE,
+  ICON_BUTTON_VARIANT,
+} from "@/shared/components/elements/IconButton";
 import { classNames } from "@/shared/utils";
 import { t } from "@/lang";
 
@@ -33,6 +36,8 @@ const SideBar = ({ collapsed, onToggle, visitedPaths }: SideBarProps) => {
       <div className="sidebar_header">
         <IconButton
           icon={faBars}
+          variant={ICON_BUTTON_VARIANT.BOXED}
+          size={ICON_BUTTON_SIZE.MD}
           className="collapse_toggle"
           onClick={onToggle}
           title={collapsed ? t.sidebar.expand : t.sidebar.collapse}

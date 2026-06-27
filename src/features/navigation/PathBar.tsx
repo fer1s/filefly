@@ -1,7 +1,10 @@
 import { useState } from "react";
 
 import { useStateContext } from "@/shared/providers/StateProvider";
-import IconButton from "@/shared/components/elements/IconButton";
+import IconButton, {
+  ICON_BUTTON_SIZE,
+  ICON_BUTTON_VARIANT,
+} from "@/shared/components/elements/IconButton";
 import { VIEW_MODE } from "@/shared/constants";
 import { t } from "@/lang";
 
@@ -43,24 +46,46 @@ const PathBar = () => {
 
   return (
     <div className="PathBar">
-      <IconButton icon={faHouse} onClick={goHome} className="shadow" />
+      <IconButton
+        icon={faHouse}
+        onClick={goHome}
+        variant={ICON_BUTTON_VARIANT.BOXED}
+        size={ICON_BUTTON_SIZE.LG}
+        className="shadow"
+      />
 
       <div className="controls shadow">
-        <IconButton icon={faArrowLeft} onClick={goBack} disabled={!canGoBack} />
+        <IconButton
+          icon={faArrowLeft}
+          onClick={goBack}
+          disabled={!canGoBack}
+          variant={ICON_BUTTON_VARIANT.BOXED}
+          size={ICON_BUTTON_SIZE.LG}
+        />
         <IconButton
           icon={faArrowRight}
           onClick={goForward}
           disabled={!canGoForward}
+          variant={ICON_BUTTON_VARIANT.BOXED}
+          size={ICON_BUTTON_SIZE.LG}
         />
-        <IconButton icon={faArrowUp} onClick={goUp} disabled={path === ""} />
+        <IconButton
+          icon={faArrowUp}
+          onClick={goUp}
+          disabled={path === ""}
+          variant={ICON_BUTTON_VARIANT.BOXED}
+          size={ICON_BUTTON_SIZE.LG}
+        />
       </div>
 
       <PathInput key={path} path={path} onCommit={setPath} />
 
       <IconButton
         icon={view === VIEW_MODE.GRID ? faList : faTableCellsLarge}
-        className="shadow"
         onClick={switchView}
+        variant={ICON_BUTTON_VARIANT.BOXED}
+        size={ICON_BUTTON_SIZE.LG}
+        className="shadow"
       />
     </div>
   );

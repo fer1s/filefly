@@ -23,33 +23,9 @@
   white-space: nowrap;
 }
 
+/* Look comes from IconButton (boxed); only the auto-margin alignment is component-specific. */
 .SideBar .collapse_toggle {
-  width: var(--size-control-medium);
-  min-width: var(--size-control-medium);
-  height: var(--size-control-medium);
   margin-left: auto;
-  padding: var(--space-0);
-  background-color: var(--color-overlay-soft);
-  border: var(--border-width-default) solid var(--color-border-soft);
-  border-radius: var(--radius-sm);
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-}
-
-.SideBar .collapse_toggle:hover {
-  background-color: var(--color-overlay-active);
-  border: var(--border-width-default) solid var(--color-border-default);
-}
-
-.SideBar .collapse_toggle svg {
-  font-size: 0.8rem;
-  color: var(--color-text-muted);
-}
-
-.SideBar .collapse_toggle:hover svg {
-  color: var(--color-text-primary);
 }
 
 /* Collapsed: icon-only rail. Center icons and hide text. */

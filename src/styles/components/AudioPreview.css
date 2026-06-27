@@ -35,20 +35,16 @@
   display: none;
 }
 
-.audio_preview > button {
-  width: var(--size-control-large);
-  height: var(--size-control-large);
-  background-color: transparent;
-  border: none;
-  outline: none;
-  cursor: pointer;
-  display: grid;
-  place-items: center;
-}
-
-.audio_preview > button svg {
+/* Media controls use the IconButton look; only the larger icon + accent color are specific. */
+.audio_preview > .IconButton > svg,
+.audio_preview .volume_control .IconButton > svg {
   font-size: var(--font-size-icon-large);
   color: var(--color-text-primary);
+}
+
+.audio_preview > .IconButton:hover,
+.audio_preview .volume_control .IconButton:hover {
+  background-color: transparent;
 }
 
 .audio_preview .progress {
@@ -90,22 +86,6 @@
 
 .audio_preview .progress input[type="range"]:hover::-webkit-slider-thumb {
   transform: scale(1.5);
-}
-
-.audio_preview .volume_control button {
-  width: var(--size-control-large);
-  height: var(--size-control-large);
-  background-color: transparent;
-  border: none;
-  outline: none;
-  cursor: pointer;
-  display: grid;
-  place-items: center;
-}
-
-.audio_preview .volume_control button svg {
-  font-size: var(--font-size-icon-large);
-  color: var(--color-text-primary);
 }
 
 .audio_preview .volume_control .volume_extension {

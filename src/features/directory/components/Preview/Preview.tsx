@@ -98,14 +98,12 @@ const Preview = ({
             <div className="preview_nav">
               <IconButton
                 icon={faChevronLeft}
-                className="nav_btn"
                 onClick={onPrev}
                 disabled={!hasPrev}
                 aria-label={t.common.previous}
               />
               <IconButton
                 icon={faChevronRight}
-                className="nav_btn"
                 onClick={onNext}
                 disabled={!hasNext}
                 aria-label={t.common.next}
