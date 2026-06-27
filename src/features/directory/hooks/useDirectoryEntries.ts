@@ -37,7 +37,7 @@ export const useDirectoryEntries = (view: ViewMode) => {
 
   // Lazily computed directory sizes (the OS reports 0 for folders). Gated behind a
   // feature flag (off by default) since walking every folder is costly on large dirs.
-  const dirSizes = useDirSizes(
+  const { sizes: dirSizes, computing: computingSizes } = useDirSizes(
     filtered,
     FEATURE_FLAGS.directorySizes && view === VIEW_MODE.LIST,
   );
@@ -81,5 +81,5 @@ export const useDirectoryEntries = (view: ViewMode) => {
     [sorted],
   );
 
-  return { filtered, sorted, previewables, sort, handleSort };
+  return { filtered, sorted, previewables, sort, handleSort, computingSizes };
 };

@@ -15,7 +15,9 @@
   color: var(--color-text-secondary);
 }
 
-.directory_page .status_bar .previews {
+/* Right-aligned progress indicators (computing sizes, loading previews). With two present, the
+   first absorbs the free space and both sit together on the right. */
+.directory_page .status_bar .busy {
   margin-left: auto;
   display: flex;
   align-items: center;

@@ -38,7 +38,7 @@ const Directory = () => {
   const [renamingID, setRenamingID] = useState("");
   const [typeaheadQuery, setTypeaheadQuery] = useState("");
 
-  const { filtered, sorted, previewables, sort, handleSort } =
+  const { filtered, sorted, previewables, sort, handleSort, computingSizes } =
     useDirectoryEntries(view);
 
   const { selectedIDs, setSelectedIDs, handleSelect } = useSelection(
@@ -180,7 +180,11 @@ const Directory = () => {
         )}
       </div>
 
-      <StatusBar total={filtered.length} selected={selectedIDs.length} />
+      <StatusBar
+        total={filtered.length}
+        selected={selectedIDs.length}
+        computingSizes={computingSizes}
+      />
 
       <EntryContextMenu
         contextMenuRef={menu.ref}

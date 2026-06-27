@@ -10,8 +10,9 @@ import "@/styles/components/StatusBar.css";
 import type { StatusBarProps } from "./types";
 
 // Footer with the total entry count and, when any are selected, the selection count.
-// Shows a spinner on the right while image thumbnails are still loading.
-const StatusBar = ({ total, selected }: StatusBarProps) => {
+// Shows spinners on the right while folder sizes are being computed (the list re-sorts as they
+// land) and while image thumbnails are still loading.
+const StatusBar = ({ total, selected, computingSizes }: StatusBarProps) => {
   const loadingPreviews = useImagePreviewLoading();
 
   return (
@@ -22,8 +23,13 @@ const StatusBar = ({ total, selected }: StatusBarProps) => {
           {t.directory.selectedCount(selected)}
         </span>
       )}
+      {computingSizes && (
+        <span className="count busy">
+          <Icon icon={faSpinner} spin /> {t.directory.calculatingSizes}
+        </span>
+      )}
       {loadingPreviews > 0 && (
-        <span className="count previews">
+        <span className="count busy">
           <Icon icon={faSpinner} spin /> {t.directory.loadingPreviews}
         </span>
       )}

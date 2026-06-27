@@ -59,7 +59,12 @@ export const useDirSizes = (entries: DirEntry[], enabled: boolean) => {
             scheduleFlush();
           }
         } catch {
-          // Ignore folders we can't read; they just keep an empty size cell.
+          // Folders we can't read still get recorded (as 0, an empty cell) so they count as
+          // "resolved" — otherwise the computing indicator below would never clear.
+          if (!cancelled) {
+            pending[folder.path] = 0;
+            scheduleFlush();
+          }
         }
       }
     };
@@ -73,5 +78,11 @@ export const useDirSizes = (entries: DirEntry[], enabled: boolean) => {
     };
   }, [entries, enabled, fs]);
 
-  return sizes;
+  // Still computing while any visible folder has no size yet. Derived (no extra state) so it
+  // flips off on its own as the batches land.
+  const computing =
+    enabled &&
+    entries.some((entry) => entry.metadata.isDir && sizes[entry.path] == null);
+
+  return { sizes, computing };
 };
