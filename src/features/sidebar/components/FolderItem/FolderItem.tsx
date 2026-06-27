@@ -1,4 +1,7 @@
 import Icon from "@/shared/components/elements/Icon";
+import Tooltip, {
+  TOOLTIP_PLACEMENT,
+} from "@/shared/components/elements/Tooltip";
 import { classNames } from "@/shared/utils";
 
 import type { FolderItemProps } from "./types";
@@ -10,16 +13,29 @@ const FolderItem = ({
   active,
   hotkey,
 }: FolderItemProps) => {
-  return (
+  const row = (
     <div
       className={classNames("folder_item", active && "active")}
       onClick={() => setPath(item.path)}
-      title={collapsed ? item.name : undefined}
     >
       <Icon icon={item.icon} />
       <p>{item.name}</p>
       {hotkey && <span className="folder_hotkey">{hotkey}</span>}
     </div>
+  );
+
+  // Collapsed: the label/hotkey are hidden in the rail, so surface them in our tooltip.
+  return collapsed ? (
+    <Tooltip
+      contents
+      label={item.name}
+      hotkey={hotkey}
+      placement={TOOLTIP_PLACEMENT.RIGHT}
+    >
+      {row}
+    </Tooltip>
+  ) : (
+    row
   );
 };
 

@@ -1,4 +1,7 @@
 import Icon from "@/shared/components/elements/Icon";
+import Tooltip, {
+  TOOLTIP_PLACEMENT,
+} from "@/shared/components/elements/Tooltip";
 import { classNames } from "@/shared/utils";
 import { faHardDrive } from "@fortawesome/free-solid-svg-icons";
 import { faUsb } from "@fortawesome/free-brands-svg-icons";
@@ -13,12 +16,11 @@ const VolumeItem = ({
   collapsed,
   active,
 }: VolumeItemProps) => {
-  return (
+  const row = (
     <div
       className={classNames("drive_item", active && "active")}
       onClick={() => setPath(volume.mountPoint)}
       style={{ animationDelay: `${index * VOLUME_ITEM_STAGGER_MS}ms` }}
-      title={collapsed ? `${volume.mountPoint} ${volume.name}` : undefined}
     >
       <Icon icon={volume.isRemovable ? faUsb : faHardDrive} />
       <div className="details">
@@ -33,6 +35,19 @@ const VolumeItem = ({
         </div>
       </div>
     </div>
+  );
+
+  // Collapsed: the details are hidden in the rail, so surface them in our tooltip.
+  return collapsed ? (
+    <Tooltip
+      contents
+      label={`${volume.mountPoint} ${volume.name}`}
+      placement={TOOLTIP_PLACEMENT.RIGHT}
+    >
+      {row}
+    </Tooltip>
+  ) : (
+    row
   );
 };
 
