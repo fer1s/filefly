@@ -5,4 +5,5 @@ export type FolderItemProps = {
   setPath: (path: string) => void;
   collapsed: boolean;
   active: boolean;
+  hotkey?: string;
 };

@@ -1,22 +1,45 @@
-import { TOOLTIP_PLACEMENT, type TooltipPlacement } from "./constants";
+import {
+  TOOLTIP_PLACEMENT,
+  TOOLTIP_VIEWPORT_PADDING,
+  type TooltipPlacement,
+} from "./constants";
 import type { TooltipCoords } from "./types";
 
-// Viewport (position: fixed) coordinates for the bubble's anchor point, given the trigger's
-// rect and placement. The bubble's own CSS transform handles centering from this point.
+// Final viewport (position: fixed) top-left for the bubble, given the trigger and bubble
+// rects and placement, clamped so it never spills past the viewport edges.
 export const computeTooltipPosition = (
-  rect: DOMRect,
+  trigger: DOMRect,
+  bubble: DOMRect,
   placement: TooltipPlacement,
   gap: number,
 ): TooltipCoords => {
+  let top: number;
+  let left: number;
+
   switch (placement) {
     case TOOLTIP_PLACEMENT.TOP:
-      return { top: rect.top - gap, left: rect.left + rect.width / 2 };
+      top = trigger.top - gap - bubble.height;
+      left = trigger.left + trigger.width / 2 - bubble.width / 2;
+      break;
     case TOOLTIP_PLACEMENT.RIGHT:
-      return { top: rect.top + rect.height / 2, left: rect.right + gap };
+      top = trigger.top + trigger.height / 2 - bubble.height / 2;
+      left = trigger.right + gap;
+      break;
     case TOOLTIP_PLACEMENT.LEFT:
-      return { top: rect.top + rect.height / 2, left: rect.left - gap };
+      top = trigger.top + trigger.height / 2 - bubble.height / 2;
+      left = trigger.left - gap - bubble.width;
+      break;
     case TOOLTIP_PLACEMENT.BOTTOM:
     default:
-      return { top: rect.bottom + gap, left: rect.left + rect.width / 2 };
+      top = trigger.bottom + gap;
+      left = trigger.left + trigger.width / 2 - bubble.width / 2;
+      break;
   }
+
+  const maxLeft = window.innerWidth - bubble.width - TOOLTIP_VIEWPORT_PADDING;
+  const maxTop = window.innerHeight - bubble.height - TOOLTIP_VIEWPORT_PADDING;
+  left = Math.max(TOOLTIP_VIEWPORT_PADDING, Math.min(left, maxLeft));
+  top = Math.max(TOOLTIP_VIEWPORT_PADDING, Math.min(top, maxTop));
+
+  return { top, left };
 };

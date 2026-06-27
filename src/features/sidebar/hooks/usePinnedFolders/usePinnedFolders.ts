@@ -20,7 +20,7 @@ import {
   faTrash,
 } from "@fortawesome/free-solid-svg-icons";
 
-import { TRASH_DIR_NAME } from "./constants";
+import { MAX_PINNED_FOLDERS, TRASH_DIR_NAME } from "./constants";
 
 import type { SidebarPathItem } from "../../types";
 
@@ -57,7 +57,11 @@ export const usePinnedFolders = () => {
         }
       }),
     ).then((items) =>
-      setPinned(items.filter((item): item is SidebarPathItem => item !== null)),
+      setPinned(
+        items
+          .filter((item): item is SidebarPathItem => item !== null)
+          .slice(0, MAX_PINNED_FOLDERS),
+      ),
     );
   }, []);
 

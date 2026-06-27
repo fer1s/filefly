@@ -11,3 +11,6 @@ export type TooltipPlacement =
 
 // Gap (px) between the trigger and the tooltip bubble.
 export const TOOLTIP_GAP = 8;
+
+// Minimum gap (px) kept between the bubble and the viewport edges when clamping.
+export const TOOLTIP_VIEWPORT_PADDING = 8;

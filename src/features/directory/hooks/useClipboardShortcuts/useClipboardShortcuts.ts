@@ -4,8 +4,8 @@ import { useKeymap, matchesBinding, KEYMAP_ACTION } from "@/shared/keymap";
 
 import type { UseClipboardShortcutsArgs } from "./types";
 
-// Clipboard keyboard shortcuts acting on the current selection, resolved from the keymap
-// (copy/cut/paste/trash). Ignored while typing in inputs or when disabled.
+// Selection keyboard shortcuts resolved from the keymap (copy/cut/paste/trash/rename).
+// Ignored while typing in inputs or when disabled.
 export const useClipboardShortcuts = ({
   enabled,
   selectedIDs,
@@ -13,6 +13,7 @@ export const useClipboardShortcuts = ({
   onCut,
   onPaste,
   onDelete,
+  onRename,
 }: UseClipboardShortcutsArgs) => {
   const { keymap } = useKeymap();
 
@@ -38,10 +39,22 @@ export const useClipboardShortcuts = ({
       } else if (matchesBinding(e, keymap[KEYMAP_ACTION.TRASH])) {
         e.preventDefault();
         onDelete(selectedIDs);
+      } else if (matchesBinding(e, keymap[KEYMAP_ACTION.RENAME])) {
+        e.preventDefault();
+        onRename(selectedIDs);
       }
     };
 
     document.addEventListener("keydown", handleShortcut);
     return () => document.removeEventListener("keydown", handleShortcut);
-  }, [enabled, selectedIDs, onCopy, onCut, onPaste, onDelete, keymap]);
+  }, [
+    enabled,
+    selectedIDs,
+    onCopy,
+    onCut,
+    onPaste,
+    onDelete,
+    onRename,
+    keymap,
+  ]);
 };

@@ -118,6 +118,10 @@ export const useKeyboardNav = ({
         return;
       }
 
+      // Cursor nav handles only unmodified keys; modified combos (e.g. Alt+Arrow for history
+      // navigation) belong to the keymap listeners.
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+
       switch (e.key) {
         case KEY.ESCAPE:
           clearTypeahead();

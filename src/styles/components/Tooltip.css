@@ -3,7 +3,8 @@
   display: inline-flex;
 }
 
-/* Rendered in a portal on document.body, positioned via inline top/left (viewport coords). */
+/* Rendered in a portal on document.body. Positioned via inline top/left (viewport coords)
+   computed in JS after measuring, so it's clamped inside the viewport. Hidden until then. */
 .tooltip_bubble {
   position: fixed;
   z-index: 2500;
@@ -22,24 +23,12 @@
   font-weight: 400;
   white-space: nowrap;
   pointer-events: none;
+  visibility: hidden;
+}
+
+.tooltip_bubble.positioned {
+  visibility: visible;
   animation: tooltip-in 0.15s ease-in-out;
-}
-
-/* Center on the anchor point set by computeTooltipPosition. */
-.tooltip_bubble.tooltip_bottom {
-  transform: translateX(-50%);
-}
-
-.tooltip_bubble.tooltip_top {
-  transform: translate(-50%, -100%);
-}
-
-.tooltip_bubble.tooltip_right {
-  transform: translateY(-50%);
-}
-
-.tooltip_bubble.tooltip_left {
-  transform: translate(-100%, -50%);
 }
 
 .tooltip_bubble .tooltip_hotkey {
@@ -64,7 +53,7 @@
 
 /* Respect users who prefer reduced motion: appear without fading. */
 @media (prefers-reduced-motion: reduce) {
-  .tooltip_bubble {
+  .tooltip_bubble.positioned {
     animation: none;
   }
 }

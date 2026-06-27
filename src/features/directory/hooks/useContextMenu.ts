@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { ENTRY_KIND, type EntryKind } from "@/shared/constants";
+import { ENTRY_KIND, KEY, type EntryKind } from "@/shared/constants";
 
 // Gap (px) kept between the menu and the viewport edges when clamping.
 const VIEWPORT_PADDING = 8;
@@ -34,6 +34,21 @@ export const useContextMenu = () => {
       window.clearTimeout(id);
       document.removeEventListener("mousedown", handleClose);
     };
+  }, [visible]);
+
+  // Close on Escape. Capture phase + stopPropagation so the menu closes without also
+  // triggering the directory's Escape handler (which clears the selection).
+  useEffect(() => {
+    if (!visible) return;
+
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key !== KEY.ESCAPE) return;
+      e.stopPropagation();
+      setVisible(false);
+    };
+
+    document.addEventListener("keydown", handleEscape, true);
+    return () => document.removeEventListener("keydown", handleEscape, true);
   }, [visible]);
 
   // Keep the menu inside the viewport. Runs after the menu (re)renders with its final

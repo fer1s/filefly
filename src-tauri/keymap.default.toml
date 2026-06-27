@@ -1,5 +1,14 @@
 # Default keybindings. Each table is an action; `keys` are KeyboardEvent.key values, `mod`
 # means Cmd (macOS) / Ctrl (Windows/Linux). This file is the source of truth loaded at startup.
+#
+# Per-OS overrides: add a `[action.macos]` / `[action.windows]` / `[action.linux]` sub-table
+# to fully replace the base binding on that platform, e.g.
+#   [new_window]
+#   keys = ["n"]
+#   mod = true
+#   [new_window.macos]
+#   keys = ["e"]
+#   mod = true
 
 [copy]
 keys = ["c"]
@@ -17,11 +26,53 @@ mod = true
 keys = ["Backspace", "Delete"]
 mod = true
 
+[rename]
+keys = ["F2"]
+
+[nav_back]
+keys = ["ArrowLeft"]
+alt = true
+
+[nav_forward]
+keys = ["ArrowRight"]
+alt = true
+
+[nav_up]
+keys = ["ArrowUp"]
+alt = true
+
+[toggle_view]
+keys = ["g"]
+mod = true
+shift = true
+
+# Jump to a pinned folder by its position in the sidebar (1 = first). mod = Cmd / Ctrl.
+[pinned_1]
+keys = ["1"]
+mod = true
+
+[pinned_2]
+keys = ["2"]
+mod = true
+
+[pinned_3]
+keys = ["3"]
+mod = true
+
+[pinned_4]
+keys = ["4"]
+mod = true
+
+[pinned_5]
+keys = ["5"]
+mod = true
+
+[pinned_6]
+keys = ["6"]
+mod = true
+
 [preview_prev]
 keys = ["ArrowLeft"]
 
 [preview_next]
 keys = ["ArrowRight"]
-
-[preview_close]
-keys = ["Escape"]

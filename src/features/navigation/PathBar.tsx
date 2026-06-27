@@ -6,7 +6,10 @@ import IconButton, {
   ICON_BUTTON_VARIANT,
 } from "@/shared/components/elements/IconButton";
 import { KEY, VIEW_MODE } from "@/shared/constants";
+import { useKeymap, formatBinding, KEYMAP_ACTION } from "@/shared/keymap";
 import { t } from "@/lang";
+
+import { usePathBarShortcuts } from "./hooks/usePathBarShortcuts";
 
 import {
   faArrowLeft,
@@ -44,6 +47,9 @@ const PathBar = () => {
   const switchView = () =>
     setView(view === VIEW_MODE.GRID ? VIEW_MODE.LIST : VIEW_MODE.GRID);
 
+  const { keymap } = useKeymap();
+  usePathBarShortcuts({ goBack, goForward, goUp, toggleView: switchView });
+
   return (
     <div className="PathBar">
       <IconButton
@@ -64,6 +70,7 @@ const PathBar = () => {
           variant={ICON_BUTTON_VARIANT.BOXED}
           size={ICON_BUTTON_SIZE.LG}
           tooltip={t.pathbar.back}
+          hotkey={formatBinding(keymap[KEYMAP_ACTION.NAV_BACK])}
           aria-label={t.pathbar.back}
         />
         <IconButton
@@ -73,6 +80,7 @@ const PathBar = () => {
           variant={ICON_BUTTON_VARIANT.BOXED}
           size={ICON_BUTTON_SIZE.LG}
           tooltip={t.pathbar.forward}
+          hotkey={formatBinding(keymap[KEYMAP_ACTION.NAV_FORWARD])}
           aria-label={t.pathbar.forward}
         />
         <IconButton
@@ -82,6 +90,7 @@ const PathBar = () => {
           variant={ICON_BUTTON_VARIANT.BOXED}
           size={ICON_BUTTON_SIZE.LG}
           tooltip={t.pathbar.up}
+          hotkey={formatBinding(keymap[KEYMAP_ACTION.NAV_UP])}
           aria-label={t.pathbar.up}
         />
       </div>
@@ -94,6 +103,7 @@ const PathBar = () => {
         variant={ICON_BUTTON_VARIANT.BOXED}
         size={ICON_BUTTON_SIZE.LG}
         tooltip={t.pathbar.toggleView}
+        hotkey={formatBinding(keymap[KEYMAP_ACTION.TOGGLE_VIEW])}
         aria-label={t.pathbar.toggleView}
         className="shadow"
       />

@@ -3,7 +3,13 @@ import { classNames } from "@/shared/utils";
 
 import type { FolderItemProps } from "./types";
 
-const FolderItem = ({ item, setPath, collapsed, active }: FolderItemProps) => {
+const FolderItem = ({
+  item,
+  setPath,
+  collapsed,
+  active,
+  hotkey,
+}: FolderItemProps) => {
   return (
     <div
       className={classNames("folder_item", active && "active")}
@@ -12,6 +18,7 @@ const FolderItem = ({ item, setPath, collapsed, active }: FolderItemProps) => {
     >
       <Icon icon={item.icon} />
       <p>{item.name}</p>
+      {hotkey && <span className="folder_hotkey">{hotkey}</span>}
     </div>
   );
 };

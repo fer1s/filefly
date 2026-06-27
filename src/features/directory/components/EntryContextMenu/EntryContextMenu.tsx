@@ -4,7 +4,7 @@ import {
 } from "@/shared/components/patterns/ContextMenu";
 import Icon from "@/shared/components/elements/Icon";
 import { useStateContext } from "@/shared/providers/StateProvider";
-import { ACCEPTED_PREVIEW_FORMATS, ENTRY_KIND } from "@/shared/constants";
+import { ACCEPTED_PREVIEW_FORMATS, ENTRY_KIND, KEY } from "@/shared/constants";
 import { useKeymap, formatBinding, KEYMAP_ACTION } from "@/shared/keymap";
 import { t } from "@/lang";
 
@@ -21,6 +21,9 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 import type { EntryContextMenuProps } from "./types";
+
+// Open is bound to Enter via keyboard nav (fixed, not user-configurable); show its glyph.
+const OPEN_HOTKEY = formatBinding({ keys: [KEY.ENTER] });
 
 // Right-click menu for the directory: the current directory (empty area), a folder, or a
 // file. Each action acts on the clicked item (or the whole selection when it's part of it)
@@ -129,6 +132,7 @@ const EntryContextMenu = ({
           <ContextMenuItem
             text={t.contextMenu.open}
             icon={<Icon icon={faArrowUpRightFromSquare} />}
+            hotkey={OPEN_HOTKEY}
             onClick={handleOpen}
           />
           <ContextMenuItem
@@ -151,6 +155,7 @@ const EntryContextMenu = ({
           <ContextMenuItem
             text={t.contextMenu.rename}
             icon={<Icon icon={faFilePen} />}
+            hotkey={formatBinding(keymap[KEYMAP_ACTION.RENAME])}
             onClick={handleRename}
           />
           <ContextMenuItem
@@ -167,6 +172,7 @@ const EntryContextMenu = ({
           <ContextMenuItem
             text={t.contextMenu.open}
             icon={<Icon icon={faArrowUpRightFromSquare} />}
+            hotkey={OPEN_HOTKEY}
             onClick={handleOpen}
           />
           {canPreview && (
@@ -191,6 +197,7 @@ const EntryContextMenu = ({
           <ContextMenuItem
             text={t.contextMenu.rename}
             icon={<Icon icon={faFilePen} />}
+            hotkey={formatBinding(keymap[KEYMAP_ACTION.RENAME])}
             onClick={handleRename}
           />
           <ContextMenuItem

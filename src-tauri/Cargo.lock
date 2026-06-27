@@ -3399,6 +3399,27 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "56199f7ddabf13fe5074ce809e7d3f42b42ae711800501b5b16ea82ad029c39d"
 
 [[package]]
+name = "sito-file-browser"
+version = "0.0.0"
+dependencies = [
+ "image",
+ "jwalk",
+ "markdown",
+ "serde",
+ "serde_json",
+ "sysinfo",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-dialog",
+ "tauri-plugin-fs",
+ "tauri-plugin-opener",
+ "tauri-plugin-window-state",
+ "toml 0.8.2",
+ "trash",
+ "window-vibrancy 0.5.3",
+]
+
+[[package]]
 name = "slab"
 version = "0.4.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3848,27 +3869,6 @@ dependencies = [
  "tauri",
  "tauri-plugin",
  "thiserror 2.0.18",
-]
-
-[[package]]
-name = "tauri-react-template"
-version = "0.0.0"
-dependencies = [
- "image",
- "jwalk",
- "markdown",
- "serde",
- "serde_json",
- "sysinfo",
- "tauri",
- "tauri-build",
- "tauri-plugin-dialog",
- "tauri-plugin-fs",
- "tauri-plugin-opener",
- "tauri-plugin-window-state",
- "toml 0.8.2",
- "trash",
- "window-vibrancy 0.5.3",
 ]
 
 [[package]]

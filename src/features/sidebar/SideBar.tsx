@@ -4,10 +4,16 @@ import IconButton, {
   ICON_BUTTON_VARIANT,
 } from "@/shared/components/elements/IconButton";
 import { TOOLTIP_PLACEMENT } from "@/shared/components/elements/Tooltip";
+import {
+  useKeymap,
+  formatBinding,
+  PINNED_ACTIONS,
+} from "@/shared/keymap";
 import { classNames } from "@/shared/utils";
 import { t } from "@/lang";
 
 import { usePinnedFolders } from "./hooks/usePinnedFolders";
+import { usePinnedShortcuts } from "./hooks/usePinnedShortcuts";
 import { useHostName } from "./hooks/useHostName";
 import SidebarSection from "./components/SidebarSection";
 import VolumeItem from "./components/VolumeItem";
@@ -23,8 +29,10 @@ import type { SideBarProps } from "./types";
 const SideBar = ({ collapsed, onToggle, visitedPaths }: SideBarProps) => {
   const { fs, path, volumes, setPath } = useStateContext();
 
+  const { keymap } = useKeymap();
   const hostName = useHostName(fs);
   const pinned = usePinnedFolders();
+  usePinnedShortcuts({ pinned, setPath });
   const recentPaths = getRecentPaths(path, visitedPaths);
   const recent = recentPaths.map((recentPath) => ({
     name: getPathLabel(recentPath),
@@ -61,13 +69,18 @@ const SideBar = ({ collapsed, onToggle, visitedPaths }: SideBarProps) => {
       </SidebarSection>
 
       <SidebarSection title={t.sidebar.pinned}>
-        {pinned.map((item) => (
+        {pinned.map((item, i) => (
           <FolderItem
             key={item.path}
             item={item}
             setPath={setPath}
             collapsed={collapsed}
             active={item.path === path}
+            hotkey={
+              i < PINNED_ACTIONS.length
+                ? formatBinding(keymap[PINNED_ACTIONS[i]])
+                : undefined
+            }
           />
         ))}
       </SidebarSection>

@@ -83,6 +83,10 @@ const Directory = () => {
     onCut: fileOps.cut,
     onPaste: fileOps.paste,
     onDelete: fileOps.remove,
+    // Rename only makes sense for a single entry.
+    onRename: (ids) => {
+      if (ids.length === 1) setRenamingID(ids[0]);
+    },
   });
 
   // The empty floor of the entries area represents the directory currently being viewed.

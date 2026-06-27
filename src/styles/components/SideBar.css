@@ -46,6 +46,7 @@
 }
 
 .SideBar.collapsed section .section_content .folder_item p,
+.SideBar.collapsed section .section_content .folder_item .folder_hotkey,
 .SideBar.collapsed section .section_content .drive_item .details {
   display: none;
 }
@@ -76,6 +77,13 @@
   color: var(--color-text-tertiary);
   user-select: none;
   transition: all 0.2s ease-in-out;
+}
+
+.SideBar section .section_content .folder_item .folder_hotkey {
+  margin-left: auto;
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  user-select: none;
 }
 
 .SideBar section .section_content .folder_item:hover,

@@ -7,6 +7,7 @@ import Spinner from "@/shared/components/elements/Spinner";
 import {
   AUDIO_FORMATS,
   IMAGE_FORMATS,
+  KEY,
   MARKDOWN_FORMAT,
 } from "@/shared/constants";
 import {
@@ -73,8 +74,8 @@ const Preview = ({
     const handleKeyDown = (e: KeyboardEvent) => {
       if (matchesBinding(e, keymap[KEYMAP_ACTION.PREVIEW_PREV])) onPrev();
       else if (matchesBinding(e, keymap[KEYMAP_ACTION.PREVIEW_NEXT])) onNext();
-      else if (matchesBinding(e, keymap[KEYMAP_ACTION.PREVIEW_CLOSE]))
-        setPreviewVisible(false);
+      // Close is fixed to Escape (not user-configurable), like other universal cancels.
+      else if (e.key === KEY.ESCAPE) setPreviewVisible(false);
     };
 
     document.addEventListener("keydown", handleKeyDown);
@@ -126,7 +127,7 @@ const Preview = ({
               icon={faXmark}
               onClick={() => setPreviewVisible(false)}
               tooltip={t.common.close}
-              hotkey={formatBinding(keymap[KEYMAP_ACTION.PREVIEW_CLOSE])}
+              hotkey={formatBinding({ keys: [KEY.ESCAPE] })}
               aria-label={t.common.close}
             />
           </div>
