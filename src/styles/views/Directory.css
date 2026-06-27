@@ -248,7 +248,8 @@ body.is-marqueeing .directory_page .dir_entry_item {
   width: 100%;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  /* Text columns align left; numeric columns (Size) align right — see override below. */
+  justify-content: flex-start;
   gap: var(--space-1);
   min-width: 0;
   padding: var(--space-0-5) var(--space-1);
@@ -360,7 +361,7 @@ body.is-marqueeing .directory_page .dir_entry_item {
 .directory_page .list .dir_entry_item .date_modified,
 .directory_page .list .dir_entry_item .date_created {
   min-width: 0;
-  text-align: right;
+  text-align: left;
 }
 
 .directory_page .list .dir_entry_item .date_modified h3,
@@ -395,7 +396,7 @@ body.is-marqueeing .directory_page .dir_entry_item {
 
 .directory_page .list .dir_entry_item .kind {
   display: flex;
-  justify-content: flex-end;
+  justify-content: flex-start;
   align-items: center;
   min-width: 0;
 }
