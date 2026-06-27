@@ -87,6 +87,7 @@ const Directory = () => {
     onRename: (ids) => {
       if (ids.length === 1) setRenamingID(ids[0]);
     },
+    onSelectAll: () => setSelectedIDs(sorted.map((entry) => entry.path)),
   });
 
   // The empty floor of the entries area represents the directory currently being viewed.

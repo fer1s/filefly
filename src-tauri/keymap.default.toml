@@ -26,6 +26,10 @@ mod = true
 keys = ["Backspace", "Delete"]
 mod = true
 
+[select_all]
+keys = ["a"]
+mod = true
+
 [rename]
 keys = ["F2"]
 

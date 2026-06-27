@@ -4,6 +4,7 @@ export const KEYMAP_ACTION = {
   CUT: "cut",
   PASTE: "paste",
   TRASH: "trash",
+  SELECT_ALL: "select_all",
   RENAME: "rename",
   NAV_BACK: "nav_back",
   NAV_FORWARD: "nav_forward",
