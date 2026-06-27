@@ -7,17 +7,44 @@
   margin-bottom: var(--space-0);
 }
 
-.SideBar .SidebarSection h2 {
+/* Accordion header: clickable, full-width, styled like the old section title. */
+.SideBar .SidebarSection .section_header {
+  width: 100%;
   height: var(--size-control-medium);
   margin-bottom: var(--space-2-5);
   padding: var(--space-0) var(--space-2-5);
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: var(--space-2-5);
-  font-size: 0.8rem;
-  font-weight: 500;
+  background-color: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
   color: var(--color-text-muted);
   user-select: none;
+  transition: background-color 0.25s ease-in-out;
+}
+
+.SideBar .SidebarSection .section_header:hover {
+  background-color: var(--color-overlay-hover);
+}
+
+.SideBar .SidebarSection .section_header h2 {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: inherit;
+}
+
+/* Chevron points down when open, right when collapsed. */
+.SideBar .SidebarSection .section_header svg {
+  font-size: 0.65rem;
+  color: var(--color-text-muted);
+  transition: transform 0.15s ease-in-out;
+}
+
+.SideBar .SidebarSection.closed .section_header svg {
+  transform: rotate(-90deg);
 }
 
 .SideBar.collapsed .SidebarSection {
@@ -28,12 +55,28 @@
   display: none;
 }
 
-.SideBar.collapsed .SidebarSection h2 {
+/* In the icon rail the header is hidden and the accordion state is ignored. */
+.SideBar.collapsed .SidebarSection .section_header {
   display: none;
 }
 
+/* Smoothly animate the content height with the grid 1fr -> 0fr trick (no fixed height needed).
+   The inner wrapper clips the overflow as the row collapses. */
 .SideBar .SidebarSection .section_content {
   width: 100%;
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 0.3s ease-in-out;
+}
+
+.SideBar .SidebarSection .section_content_inner {
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Collapse the content only in the expanded sidebar; the rail always shows it. */
+.SideBar:not(.collapsed) .SidebarSection.closed .section_content {
+  grid-template-rows: 0fr;
 }
 
 .SideBar .SidebarSection .section_todo {
@@ -44,4 +87,13 @@
 
 .SideBar.collapsed .SidebarSection .section_todo {
   display: none;
+}
+
+/* Respect users who prefer reduced motion: toggle instantly, no chevron spin or height slide. */
+@media (prefers-reduced-motion: reduce) {
+  .SideBar .SidebarSection .section_header,
+  .SideBar .SidebarSection .section_header svg,
+  .SideBar .SidebarSection .section_content {
+    transition: none;
+  }
 }
