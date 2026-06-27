@@ -72,10 +72,15 @@
 }
 
 .SideBar section .section_content .folder_item p {
+  min-width: 0;
   font-size: 0.8rem;
   font-weight: 400;
   color: var(--color-text-tertiary);
   user-select: none;
+  /* Stay on one line (clip, don't wrap) while the sidebar width animates open. */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   transition: all 0.2s ease-in-out;
 }
 
@@ -142,10 +147,15 @@
 }
 
 .SideBar section .section_content .drive_item .details p {
+  width: 100%;
   font-size: 0.7rem;
   font-weight: 400;
   color: var(--color-text-tertiary);
   user-select: none;
+  /* Stay on one line (clip, don't wrap) while the sidebar width animates open. */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   transition: all 0.2s ease-in-out;
 }
 
