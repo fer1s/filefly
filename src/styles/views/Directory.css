@@ -413,3 +413,40 @@
   border-bottom-left-radius: var(--radius-sm);
   border-bottom-right-radius: var(--radius-sm);
 }
+
+/* Metadata hover card rendered inside the shared Tooltip (.tooltip_bubble.rich). */
+.entry_metadata {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1-5);
+  max-width: 18rem;
+}
+
+.entry_metadata_title {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.entry_metadata_rows {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  column-gap: var(--space-3);
+  row-gap: var(--space-0-5);
+  align-items: baseline;
+}
+
+.entry_metadata_key {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.entry_metadata_value {
+  min-width: 0;
+  font-size: 0.72rem;
+  color: var(--color-text-tertiary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

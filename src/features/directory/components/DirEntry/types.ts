@@ -16,10 +16,6 @@ export type DirEntryItemProps = {
   onRename: (path: string, newName: string) => void;
   onCancelRename: () => void;
 
-  setHighlitedElementID: (id: string) => void;
-  setHighlitedElementType: (type: EntryKind) => void;
-  setDetailsPopupVisible: (visible: boolean) => void;
-
   setContextMenuVisible: (visible: boolean) => void;
   setContextMenuElementID: (id: string) => void;
   setContextMenuElementType: (type: EntryKind) => void;

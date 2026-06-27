@@ -14,13 +14,11 @@ import { useDirectoryEntries } from "./hooks/useDirectoryEntries";
 import { useFileOperations } from "./hooks/useFileOperations";
 import { usePreview } from "./hooks/usePreview";
 import { useProperties } from "./hooks/useProperties";
-import { useDetailsPopup } from "./hooks/useDetailsPopup";
 
 import ListHeader from "./components/ListHeader";
 import EntriesView from "./components/EntriesView";
 import AccessDeniedNotice from "./components/AccessDeniedNotice";
 import EntryContextMenu from "./components/EntryContextMenu";
-import DetailsPopup from "./components/DetailsPopup";
 import StatusBar from "./components/StatusBar";
 import TypeaheadPopup from "./components/TypeaheadPopup";
 import Preview from "./components/Preview";
@@ -48,7 +46,6 @@ const Directory = () => {
     setSelectedIDs,
   });
 
-  const details = useDetailsPopup();
   const preview = usePreview(previewables);
   const properties = useProperties();
   const fileOps = useFileOperations({ path, refreshDir, setSelectedIDs });
@@ -144,11 +141,6 @@ const Directory = () => {
           onSelect={handleSelect}
           onRename={fileOps.rename}
           onCancelRename={handleCancelRename}
-          details={{
-            setVisible: details.setVisible,
-            setId: details.setId,
-            setType: details.setType,
-          }}
           menu={{
             setVisible: menu.setVisible,
             setId: menu.setElementID,
@@ -177,12 +169,6 @@ const Directory = () => {
         onStartRename={setRenamingID}
         onPreview={preview.open}
         onProperties={properties.open}
-      />
-
-      <DetailsPopup
-        visible={details.visible}
-        id={details.id}
-        type={details.type}
       />
 
       <TypeaheadPopup query={typeaheadQuery} />

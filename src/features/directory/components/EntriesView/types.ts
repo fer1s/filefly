@@ -12,11 +12,6 @@ export type EntriesViewProps = {
   onSelect: (path: string, e: MouseEvent) => void;
   onRename: (path: string, newName: string) => void;
   onCancelRename: () => void;
-  details: {
-    setVisible: (visible: boolean) => void;
-    setId: (id: string) => void;
-    setType: (type: EntryKind) => void;
-  };
   menu: {
     setVisible: (visible: boolean) => void;
     setId: (id: string) => void;

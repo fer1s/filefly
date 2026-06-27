@@ -3,6 +3,11 @@
   display: inline-flex;
 }
 
+/* No box of its own — the wrapped trigger keeps its place in the parent flex/grid layout. */
+.Tooltip.contents {
+  display: contents;
+}
+
 /* Rendered in a portal on document.body. Positioned via inline top/left (viewport coords)
    computed in JS after measuring, so it's clamped inside the viewport. Hidden until then. */
 .tooltip_bubble {
@@ -24,6 +29,14 @@
   white-space: nowrap;
   pointer-events: none;
   visibility: hidden;
+}
+
+/* Rich bubble (arbitrary content, e.g. a metadata card): let the content own its layout. */
+.tooltip_bubble.rich {
+  display: block;
+  align-items: stretch;
+  padding: var(--space-2) var(--space-2-5);
+  white-space: normal;
 }
 
 .tooltip_bubble.positioned {

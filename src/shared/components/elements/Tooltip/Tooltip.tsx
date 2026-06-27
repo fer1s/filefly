@@ -10,32 +10,45 @@ import { TOOLTIP_GAP, TOOLTIP_PLACEMENT } from "./constants";
 import { computeTooltipPosition } from "./utils";
 import type { TooltipCoords, TooltipProps } from "./types";
 
-// Wraps a trigger and shows a floating hint (label + optional hotkey) on hover/focus.
-// The bubble renders in a portal on document.body so it can't be clipped by overflow or
-// trapped inside a stacking context, then is measured and clamped to the viewport. Purely
-// visual — the bubble is aria-hidden; the trigger keeps its own aria-label for screen readers.
+// Wraps a trigger and shows a floating hint on hover/focus. The body is either a simple
+// label + optional hotkey, or arbitrary `content` (e.g. a metadata card). The bubble renders
+// in a portal on document.body so it can't be clipped by overflow or trapped inside a stacking
+// context, then is measured and clamped to the viewport. Purely visual — the bubble is
+// aria-hidden; the trigger keeps its own aria-label for screen readers.
 const Tooltip = ({
   label,
   hotkey,
+  content,
+  contents = false,
+  delay = 0,
   placement = TOOLTIP_PLACEMENT.BOTTOM,
   className,
   children,
 }: TooltipProps) => {
   const triggerRef = useRef<HTMLSpanElement>(null);
   const bubbleRef = useRef<HTMLSpanElement>(null);
+  const showTimerRef = useRef<number | null>(null);
   const [open, setOpen] = useState(false);
   const [coords, setCoords] = useState<TooltipCoords | null>(null);
 
   // Once open, measure the (already-rendered) bubble and the trigger to place + clamp it.
+  // In `contents` mode the wrapper has no box, so fall back to its child's rect.
   useLayoutEffect(() => {
     if (!open) return;
     const trigger = triggerRef.current;
     const bubble = bubbleRef.current;
     if (!trigger || !bubble) return;
 
+    const wrapperRect = trigger.getBoundingClientRect();
+    const triggerRect =
+      wrapperRect.width || wrapperRect.height
+        ? wrapperRect
+        : trigger.firstElementChild?.getBoundingClientRect();
+    if (!triggerRect) return;
+
     setCoords(
       computeTooltipPosition(
-        trigger.getBoundingClientRect(),
+        triggerRect,
         bubble.getBoundingClientRect(),
         placement,
         TOOLTIP_GAP,
@@ -43,8 +56,21 @@ const Tooltip = ({
     );
   }, [open, placement]);
 
-  const show = () => setOpen(true);
+  const clearShowTimer = () => {
+    if (showTimerRef.current) {
+      clearTimeout(showTimerRef.current);
+      showTimerRef.current = null;
+    }
+  };
+
+  const show = () => {
+    if (delay <= 0) return setOpen(true);
+    clearShowTimer();
+    showTimerRef.current = window.setTimeout(() => setOpen(true), delay);
+  };
+
   const hide = useCallback(() => {
+    clearShowTimer();
     setOpen(false);
     setCoords(null);
   }, []);
@@ -60,10 +86,13 @@ const Tooltip = ({
     return () => document.removeEventListener("keydown", handleKey);
   }, [open, hide]);
 
+  // Drop any pending show timer when the trigger unmounts.
+  useEffect(() => clearShowTimer, []);
+
   return (
     <span
       ref={triggerRef}
-      className={classNames("Tooltip", className)}
+      className={classNames("Tooltip", contents && "contents", className)}
       onMouseEnter={show}
       onMouseLeave={hide}
       onFocus={show}
@@ -75,13 +104,21 @@ const Tooltip = ({
         createPortal(
           <span
             ref={bubbleRef}
-            className={classNames("tooltip_bubble", coords && "positioned")}
+            className={classNames(
+              "tooltip_bubble",
+              !!content && "rich",
+              coords && "positioned",
+            )}
             style={coords ? { top: coords.top, left: coords.left } : undefined}
             role="tooltip"
             aria-hidden="true"
           >
-            <span className="tooltip_label">{label}</span>
-            {hotkey && <kbd className="tooltip_hotkey">{hotkey}</kbd>}
+            {content ?? (
+              <>
+                {label && <span className="tooltip_label">{label}</span>}
+                {hotkey && <kbd className="tooltip_hotkey">{hotkey}</kbd>}
+              </>
+            )}
           </span>,
           document.body,
         )}

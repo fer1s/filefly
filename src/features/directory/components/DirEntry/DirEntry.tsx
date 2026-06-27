@@ -9,6 +9,7 @@ import {
 } from "@/shared/utils";
 import { ENTRY_KIND, IMAGE_FORMATS, KEY } from "@/shared/constants";
 import Icon from "@/shared/components/elements/Icon";
+import Tooltip from "@/shared/components/elements/Tooltip";
 import {
   imagePreviewLoad,
   acquireImageSlot,
@@ -21,6 +22,10 @@ import type { DirEntryItemProps } from "./types";
 
 // Max thumbnail edge in px. Sized for a retina grid icon; the backend caches at this size.
 const THUMBNAIL_SIZE = 160;
+
+// Hover dwell before the metadata tooltip appears, in ms — long enough not to flash while
+// the pointer sweeps across the grid.
+const METADATA_TOOLTIP_DELAY = 600;
 
 const DirEntryItemComponent = ({
   entry,
@@ -35,10 +40,6 @@ const DirEntryItemComponent = ({
   renaming,
   onRename,
   onCancelRename,
-
-  setHighlitedElementID,
-  setHighlitedElementType,
-  setDetailsPopupVisible,
 
   setContextMenuVisible,
   setContextMenuElementID,
@@ -82,48 +83,6 @@ const DirEntryItemComponent = ({
     setContextMenuElementID,
     setContextMenuElementType,
     setContextMenuVisible,
-  ]);
-
-  // handle details popup
-  useEffect(() => {
-    const item = itemRef.current;
-    let timer: number | null = null;
-
-    const handleMouseEnter = () => {
-      timer = setTimeout(() => {
-        if (!itemRef.current) return;
-
-        setHighlitedElementID(itemRef.current.id);
-        if (entry.metadata.isDir) setHighlitedElementType(ENTRY_KIND.DIRECTORY);
-        else if (entry.metadata.isFile)
-          setHighlitedElementType(ENTRY_KIND.FILE);
-        else setHighlitedElementType(ENTRY_KIND.NONE);
-
-        setTimeout(() => {
-          if (!itemRef.current) return;
-          setDetailsPopupVisible(true);
-        }, 1000);
-      }, 1000);
-    };
-
-    const handleMouseLeave = () => {
-      setDetailsPopupVisible(false);
-      if (timer) clearTimeout(timer);
-    };
-
-    item?.addEventListener("mouseenter", handleMouseEnter);
-    item?.addEventListener("mouseleave", handleMouseLeave);
-
-    return () => {
-      item?.removeEventListener("mouseenter", handleMouseEnter);
-      item?.removeEventListener("mouseleave", handleMouseLeave);
-    };
-  }, [
-    entry.metadata.isDir,
-    entry.metadata.isFile,
-    setDetailsPopupVisible,
-    setHighlitedElementID,
-    setHighlitedElementType,
   ]);
 
   // Move keyboard focus to the entry when it becomes the selected one.
@@ -254,61 +213,91 @@ const DirEntryItemComponent = ({
     if (imgSrc && imgRef.current?.complete) finishLoad();
   }, [imgSrc]);
 
-  // One DOM for both views; .grid / .list on the container arranges it via CSS, so toggling
-  // the view never rebuilds these subtrees (which is what made the switch laggy).
-  return (
-    <div
-      className={classNames("dir_entry_item", selected && "selected")}
-      id={id}
-      tabIndex={0}
-      onClick={(e) => onSelect(entry.path, e)}
-      onDoubleClick={() =>
-        entry.metadata.isDir
-          ? navigateToPath(entry, setPath)
-          : fs.open(entry.path)
-      }
-      ref={itemRef}
-    >
-      {/* Grid-only extension badge (hidden in list). */}
-      {extension && name && <div className="extension">{extension}</div>}
-
-      <div className="name">
-        <div className="icon">
-          {isImage && imgSrc ? (
-            <img
-              ref={imgRef}
-              src={imgSrc}
-              decoding="async"
-              onLoad={finishLoad}
-              onError={finishLoad}
-            />
-          ) : (
-            <Icon icon={entry.metadata.isDir ? faFolder : faFile} />
-          )}
-        </div>
-        {renaming ? renameInput : <h3>{name || extension}</h3>}
-      </div>
-
-      {/* List-only columns (hidden in grid). */}
-      <div className="date_modified">
-        <h3>{formatDate(entry.metadata.modified.secs_since_epoch)}</h3>
-      </div>
-      <div className="date_created">
-        <h3>{formatDate(entry.metadata.created.secs_since_epoch)}</h3>
-      </div>
-      <div className="size">
-        {entry.size > 0 && <h3>{formatBytes(entry.size)}</h3>}
-      </div>
-      <div className="kind">
-        <h3>
-          {entry.metadata.isDir
-            ? t.common.directory
-            : name && extension
-              ? extension.toUpperCase()
-              : t.common.file}
-        </h3>
+  // Hover card with the entry's metadata, shown via the shared Tooltip (Finder/Explorer-style).
+  const metadataContent = (
+    <div className="entry_metadata">
+      <span className="entry_metadata_title">{t.details.title}</span>
+      <div className="entry_metadata_rows">
+        <span className="entry_metadata_key">{t.details.type}</span>
+        <span className="entry_metadata_value">
+          {entry.metadata.isDir ? t.common.directory : t.common.file}
+        </span>
+        <span className="entry_metadata_key">{t.details.path}</span>
+        <span className="entry_metadata_value">{entry.path}</span>
+        {entry.metadata.isFile && (
+          <>
+            <span className="entry_metadata_key">{t.details.extension}</span>
+            <span className="entry_metadata_value">
+              {extension || t.common.unknown}
+            </span>
+            <span className="entry_metadata_key">{t.details.size}</span>
+            <span className="entry_metadata_value">
+              {formatBytes(entry.size)}
+            </span>
+          </>
+        )}
       </div>
     </div>
+  );
+
+  // One DOM for both views; .grid / .list on the container arranges it via CSS, so toggling
+  // the view never rebuilds these subtrees (which is what made the switch laggy). The Tooltip
+  // wrapper renders as `display: contents` so the entry keeps its slot in the flex layout.
+  return (
+    <Tooltip contents delay={METADATA_TOOLTIP_DELAY} content={metadataContent}>
+      <div
+        className={classNames("dir_entry_item", selected && "selected")}
+        id={id}
+        tabIndex={0}
+        onClick={(e) => onSelect(entry.path, e)}
+        onDoubleClick={() =>
+          entry.metadata.isDir
+            ? navigateToPath(entry, setPath)
+            : fs.open(entry.path)
+        }
+        ref={itemRef}
+      >
+        {/* Grid-only extension badge (hidden in list). */}
+        {extension && name && <div className="extension">{extension}</div>}
+
+        <div className="name">
+          <div className="icon">
+            {isImage && imgSrc ? (
+              <img
+                ref={imgRef}
+                src={imgSrc}
+                decoding="async"
+                onLoad={finishLoad}
+                onError={finishLoad}
+              />
+            ) : (
+              <Icon icon={entry.metadata.isDir ? faFolder : faFile} />
+            )}
+          </div>
+          {renaming ? renameInput : <h3>{name || extension}</h3>}
+        </div>
+
+        {/* List-only columns (hidden in grid). */}
+        <div className="date_modified">
+          <h3>{formatDate(entry.metadata.modified.secs_since_epoch)}</h3>
+        </div>
+        <div className="date_created">
+          <h3>{formatDate(entry.metadata.created.secs_since_epoch)}</h3>
+        </div>
+        <div className="size">
+          {entry.size > 0 && <h3>{formatBytes(entry.size)}</h3>}
+        </div>
+        <div className="kind">
+          <h3>
+            {entry.metadata.isDir
+              ? t.common.directory
+              : name && extension
+                ? extension.toUpperCase()
+                : t.common.file}
+          </h3>
+        </div>
+      </div>
+    </Tooltip>
   );
 };
 

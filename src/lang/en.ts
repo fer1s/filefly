@@ -39,6 +39,7 @@ export const en = {
     type: "Type",
     path: "Path",
     extension: "Extension",
+    size: "Size",
   },
   sidebar: {
     recent: "Recent",
