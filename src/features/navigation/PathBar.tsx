@@ -51,6 +51,8 @@ const PathBar = () => {
         onClick={goHome}
         variant={ICON_BUTTON_VARIANT.BOXED}
         size={ICON_BUTTON_SIZE.LG}
+        tooltip={t.pathbar.home}
+        aria-label={t.pathbar.home}
         className="shadow"
       />
 
@@ -61,6 +63,8 @@ const PathBar = () => {
           disabled={!canGoBack}
           variant={ICON_BUTTON_VARIANT.BOXED}
           size={ICON_BUTTON_SIZE.LG}
+          tooltip={t.pathbar.back}
+          aria-label={t.pathbar.back}
         />
         <IconButton
           icon={faArrowRight}
@@ -68,6 +72,8 @@ const PathBar = () => {
           disabled={!canGoForward}
           variant={ICON_BUTTON_VARIANT.BOXED}
           size={ICON_BUTTON_SIZE.LG}
+          tooltip={t.pathbar.forward}
+          aria-label={t.pathbar.forward}
         />
         <IconButton
           icon={faArrowUp}
@@ -75,6 +81,8 @@ const PathBar = () => {
           disabled={path === ""}
           variant={ICON_BUTTON_VARIANT.BOXED}
           size={ICON_BUTTON_SIZE.LG}
+          tooltip={t.pathbar.up}
+          aria-label={t.pathbar.up}
         />
       </div>
 
@@ -85,6 +93,8 @@ const PathBar = () => {
         onClick={switchView}
         variant={ICON_BUTTON_VARIANT.BOXED}
         size={ICON_BUTTON_SIZE.LG}
+        tooltip={t.pathbar.toggleView}
+        aria-label={t.pathbar.toggleView}
         className="shadow"
       />
     </div>

@@ -3,6 +3,7 @@ import IconButton, {
   ICON_BUTTON_SIZE,
   ICON_BUTTON_VARIANT,
 } from "@/shared/components/elements/IconButton";
+import { TOOLTIP_PLACEMENT } from "@/shared/components/elements/Tooltip";
 import { classNames } from "@/shared/utils";
 import { t } from "@/lang";
 
@@ -39,8 +40,9 @@ const SideBar = ({ collapsed, onToggle, visitedPaths }: SideBarProps) => {
           variant={ICON_BUTTON_VARIANT.BOXED}
           size={ICON_BUTTON_SIZE.MD}
           className="collapse_toggle"
+          tooltip={collapsed ? t.sidebar.expand : t.sidebar.collapse}
+          tooltipPlacement={TOOLTIP_PLACEMENT.RIGHT}
           onClick={onToggle}
-          title={collapsed ? t.sidebar.expand : t.sidebar.collapse}
           aria-label={collapsed ? t.sidebar.expand : t.sidebar.collapse}
         />
         <span className="host_name">{hostName}</span>

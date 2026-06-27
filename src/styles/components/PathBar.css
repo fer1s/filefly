@@ -15,18 +15,19 @@
   height: var(--size-control-large);
 }
 
-/* Grouped controls: flatten the inner edges so they read as one segmented control. */
-.PathBar .controls .IconButton:first-child {
+/* Grouped controls: flatten the inner edges so they read as one segmented control.
+   Each button is wrapped in a Tooltip, so target the wrapper's position in the row. */
+.PathBar .controls .Tooltip:first-child .IconButton {
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
 }
 
-.PathBar .controls .IconButton:last-child {
+.PathBar .controls .Tooltip:last-child .IconButton {
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
 }
 
-.PathBar .controls .IconButton:not(:first-child):not(:last-child) {
+.PathBar .controls .Tooltip:not(:first-child):not(:last-child) .IconButton {
   border-radius: 0;
 }
 

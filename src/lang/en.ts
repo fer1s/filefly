@@ -59,6 +59,11 @@ export const en = {
   },
   pathbar: {
     pathPlaceholder: "Directory path",
+    home: "Home",
+    back: "Back",
+    forward: "Forward",
+    up: "Up",
+    toggleView: "Toggle view",
   },
   volumes: {
     title: "Volumes",

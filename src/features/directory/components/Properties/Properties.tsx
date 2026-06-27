@@ -41,7 +41,7 @@ const Properties = ({ entry, visible, onClose }: PropertiesProps) => {
         <IconButton
           icon={faXmark}
           onClick={onClose}
-          title={t.common.close}
+          tooltip={t.common.close}
           aria-label={t.common.close}
         />
       </div>

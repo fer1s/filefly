@@ -7,6 +7,7 @@ import Spinner from "@/shared/components/elements/Spinner";
 import {
   AUDIO_FORMATS,
   IMAGE_FORMATS,
+  KEY_HINT,
   MARKDOWN_FORMAT,
 } from "@/shared/constants";
 import { classNames } from "@/shared/utils";
@@ -100,12 +101,16 @@ const Preview = ({
                 icon={faChevronLeft}
                 onClick={onPrev}
                 disabled={!hasPrev}
+                tooltip={t.common.previous}
+                hotkey={KEY_HINT.ARROW_LEFT}
                 aria-label={t.common.previous}
               />
               <IconButton
                 icon={faChevronRight}
                 onClick={onNext}
                 disabled={!hasNext}
+                tooltip={t.common.next}
+                hotkey={KEY_HINT.ARROW_RIGHT}
                 aria-label={t.common.next}
               />
             </div>
@@ -113,7 +118,8 @@ const Preview = ({
             <IconButton
               icon={faXmark}
               onClick={() => setPreviewVisible(false)}
-              title={t.common.close}
+              tooltip={t.common.close}
+              hotkey={KEY_HINT.ESC}
               aria-label={t.common.close}
             />
           </div>

@@ -24,6 +24,7 @@ const SearchBar = () => {
           icon={faXmark}
           size={ICON_BUTTON_SIZE.SM}
           className="clear"
+          tooltip={t.sidebar.clearSearch}
           onClick={() => setSearch("")}
           aria-label={t.sidebar.clearSearch}
         />

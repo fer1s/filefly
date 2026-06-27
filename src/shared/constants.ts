@@ -39,6 +39,14 @@ export const SORT_DIRECTION = {
 export type SortDirection =
   (typeof SORT_DIRECTION)[keyof typeof SORT_DIRECTION];
 
+// Display glyphs for keyboard hints shown in tooltips. Placeholder until the keymapping
+// plan lands; replace with the real bindings then.
+export const KEY_HINT = {
+  ESC: "Esc",
+  ARROW_LEFT: "←",
+  ARROW_RIGHT: "→",
+} as const;
+
 // Marker the Rust `read_directory` command returns when a folder is blocked by OS privacy
 // protection (e.g. macOS TCC on ~/.Trash). Matched in the UI to prompt for Full Disk Access.
 export const ACCESS_DENIED_ERROR = "ACCESS_DENIED";
