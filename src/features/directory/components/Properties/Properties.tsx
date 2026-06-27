@@ -1,6 +1,9 @@
+import { useEffect } from "react";
+
 import { formatBytes } from "@/shared/utils";
 import IconButton from "@/shared/components/elements/IconButton";
 import Dialog from "@/shared/components/patterns/Dialog";
+import { notify, TOAST_TYPE } from "@/shared/toast";
 import { t } from "@/lang";
 
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
@@ -12,6 +15,20 @@ import { formatDate } from "./utils";
 import type { PropertiesProps } from "./types";
 
 const Properties = ({ entry, visible, onClose }: PropertiesProps) => {
+  // Confirm with a toast when the user copies selected text from the popup. The native copy
+  // does the actual clipboard write; this only surfaces the feedback.
+  useEffect(() => {
+    if (!visible) return;
+
+    const handleCopy = () => {
+      const selection = window.getSelection()?.toString().trim();
+      if (selection) notify(t.common.copied, TOAST_TYPE.SUCCESS);
+    };
+
+    document.addEventListener("copy", handleCopy);
+    return () => document.removeEventListener("copy", handleCopy);
+  }, [visible]);
+
   return (
     <Dialog
       visible={visible}

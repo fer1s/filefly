@@ -6,6 +6,7 @@ export const en = {
   common: {
     close: "Close",
     dismiss: "Dismiss",
+    copied: "Copied",
     preview: "Preview",
     previous: "Previous",
     next: "Next",

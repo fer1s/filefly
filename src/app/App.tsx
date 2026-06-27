@@ -10,6 +10,8 @@ import { StateProvider } from "@/shared/providers/StateProvider";
 
 import SideBar from "@/features/sidebar";
 import ToastStack, {
+  TOAST_VISIBLE_MS,
+  TOAST_EXIT_MS,
   type ToastData,
 } from "@/shared/components/patterns/ToastStack";
 
@@ -79,20 +81,31 @@ const App = () => {
     localStorage.setItem("sidebarCollapsed", String(sidebarCollapsed));
   }, [sidebarCollapsed]);
 
+  // Dismiss a toast: first flag it as leaving so it animates out, then drop it once the exit
+  // animation has finished.
+  const dismissToast = useCallback((id: number) => {
+    setToasts((prev) =>
+      prev.map((toast) =>
+        toast.id === id ? { ...toast, leaving: true } : toast,
+      ),
+    );
+    setTimeout(
+      () => setToasts((prev) => prev.filter((toast) => toast.id !== id)),
+      TOAST_EXIT_MS,
+    );
+  }, []);
+
   // Register the global notifier so any module can push a toast; auto-dismiss after a few seconds.
   useEffect(() => {
     const addToast = (message: string, type: ToastType) => {
       const id = ++toastId.current;
       setToasts((prev) => [...prev, { id, message, type }]);
-      setTimeout(
-        () => setToasts((prev) => prev.filter((t) => t.id !== id)),
-        4000,
-      );
+      setTimeout(() => dismissToast(id), TOAST_VISIBLE_MS);
     };
 
     setNotifier(addToast);
     return () => setNotifier(null);
-  }, []);
+  }, [dismissToast]);
 
   // Single domain manager instance for the whole app, provided through context.
   const fs = useMemo(() => new FileSystemManager(), []);
@@ -194,7 +207,7 @@ const App = () => {
       </div>
       <ToastStack
         toasts={toasts}
-        onDismiss={(id) => setToasts((prev) => prev.filter((t) => t.id !== id))}
+        onDismiss={dismissToast}
       />
     </StateProvider>
   );

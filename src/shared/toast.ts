@@ -2,6 +2,7 @@
 // message in the UI. App registers the real notifier on mount; until then we fall back to console.
 
 export const TOAST_TYPE = {
+  SUCCESS: "success",
   ERROR: "error",
   INFO: "info",
 } as const;

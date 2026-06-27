@@ -75,7 +75,9 @@ const Directory = () => {
   });
 
   useClipboardShortcuts({
-    enabled: !preview.visible,
+    // Disabled while the Properties popup is open so Cmd/Ctrl+C copies the selected text
+    // instead of triggering the file-copy shortcut.
+    enabled: !preview.visible && !properties.visible,
     selectedIDs,
     onCopy: fileOps.copy,
     onCut: fileOps.cut,

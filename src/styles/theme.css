@@ -99,6 +99,8 @@
   --color-danger-hover: rgb(255, 38, 38);
   --color-danger-surface: rgba(120, 30, 30, 0.95);
   --color-danger-border: rgba(255, 80, 80, 0.5);
+  --color-success-surface: rgba(30, 90, 50, 0.95);
+  --color-success-border: rgba(80, 220, 130, 0.5);
   --color-link: #4ba3f5;
 
   --color-scrollbar-thumb: #494949;
