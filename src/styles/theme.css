@@ -59,8 +59,10 @@
   --font-size-icon-large: 20px;
 
   --color-background-window: rgba(0, 0, 0, 0.25);
-  --color-background-app: rgb(18, 18, 18);
-  --color-background-sidebar: rgba(18, 18, 18, 0.8);
+  /* Sidebar sits darker/translucent (lets the window vibrancy through); the main content
+     panel is a touch lighter and solid, so the two read as distinct surfaces (Finder-style). */
+  --color-background-app: rgb(32, 32, 34);
+  --color-background-sidebar: rgba(16, 16, 18, 0.85);
 
   --color-surface-solid: rgb(0, 0, 0);
   --color-surface-input: rgba(0, 0, 0, 0.06);

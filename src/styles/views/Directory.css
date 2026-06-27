@@ -14,6 +14,18 @@
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
+  /* Empty gutters around the entries (no padding-top so the sticky list header stays
+     flush). These bands give the rubber-band selection somewhere to start on every side,
+     not just the floor below the entries. Header and rows inset together, so list columns
+     stay aligned. */
+  padding: 0 var(--space-2-5) var(--space-2-5);
+}
+
+/* While rubber-band selecting, entries ignore the pointer so their hover tooltip doesn't
+   pop up mid-drag. The marquee hit-test uses geometry (getBoundingClientRect), not events,
+   so selection still works. */
+body.is-marqueeing .directory_page .dir_entry_item {
+  pointer-events: none;
 }
 
 .directory_page .marquee_box {
@@ -62,6 +74,12 @@
   color: var(--color-text-muted);
   -webkit-user-select: none;
   user-select: none;
+}
+
+/* Top gutter so the rubber-band can start above the first row too (sides/bottom come from
+   .directory_content's padding). */
+.directory_page .grid {
+  padding-top: var(--space-2-5);
 }
 
 .directory_page .grid .dir_entry_item {
@@ -182,6 +200,8 @@
 }
 
 .directory_page .list {
+  /* Top gutter below the sticky header so the rubber-band can start there. */
+  padding-top: var(--space-2-5);
   padding-bottom: var(--space-2-5);
 }
 

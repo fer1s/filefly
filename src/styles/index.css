@@ -56,7 +56,7 @@ body {
   height: 100vh;
   overflow-x: hidden;
   padding-top: var(--space-4);
-  padding-left: var(--space-4);
+  padding-left: var(--space-1);
   padding-right: var(--space-4);
   padding-bottom: var(--space-4);
 }
