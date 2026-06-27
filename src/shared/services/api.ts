@@ -34,6 +34,22 @@ export const setFolderView = async (
   view: string,
 ): Promise<void> => await invoke("set_folder_view", { path, view });
 
+// Saved column sort for a folder (null when the user hasn't sorted it).
+export const getFolderSort = async (
+  path: string,
+): Promise<{ key: string; direction: string } | null> =>
+  (await invoke("get_folder_sort", { path })) as {
+    key: string;
+    direction: string;
+  } | null;
+
+// Persist the column sort for a folder to the central config file.
+export const setFolderSort = async (
+  path: string,
+  key: string,
+  direction: string,
+): Promise<void> => await invoke("set_folder_sort", { path, key, direction });
+
 // Get the user's disks (volumes)
 export const getVolumes = async (): Promise<Volume[]> =>
   await invoke("get_volumes");

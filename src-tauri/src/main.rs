@@ -49,6 +49,8 @@ fn main() {
             functions::folder_columns::set_folder_columns,
             functions::folder_columns::get_folder_view,
             functions::folder_columns::set_folder_view,
+            functions::folder_columns::get_folder_sort,
+            functions::folder_columns::set_folder_sort,
         ])
         .on_window_event(|window, event| match event {
             tauri::WindowEvent::CloseRequested { api, .. } => {

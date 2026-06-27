@@ -7,14 +7,23 @@ use tauri::{AppHandle, Manager};
 // All list columns, in display order. Mirrors SORT_KEY on the frontend.
 const ALL_COLUMNS: [&str; 5] = ["name", "modified", "created", "size", "kind"];
 
-// Per-folder view settings persisted centrally: which list columns are visible and whether the
-// folder is shown as a grid or a list. Empty/absent fields are omitted from the file.
+// A saved column sort: which column and the direction ("asc"/"desc").
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct SortSetting {
+    key: String,
+    direction: String,
+}
+
+// Per-folder view settings persisted centrally: which list columns are visible, whether the
+// folder is shown as a grid or a list, and its column sort. Empty/absent fields are omitted.
 #[derive(Debug, Deserialize, Serialize, Clone, Default)]
 struct FolderSettings {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     columns: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     view: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    sort: Option<SortSetting>,
 }
 
 // path -> settings. A BTreeMap keeps the file stably ordered (nicer diffs / AI-friendly).
@@ -101,5 +110,24 @@ pub fn get_folder_view(app: AppHandle, path: String) -> Option<String> {
 pub fn set_folder_view(app: AppHandle, path: String, view: String) -> Result<(), String> {
     let mut config = read_config(&app);
     config.entry(path).or_default().view = Some(view);
+    write_config(&app, &config)
+}
+
+// Saved column sort for a folder (None when the user hasn't sorted it).
+#[tauri::command]
+pub fn get_folder_sort(app: AppHandle, path: String) -> Option<SortSetting> {
+    read_config(&app).get(&path).and_then(|s| s.sort.clone())
+}
+
+// Persist the column sort for a folder, preserving its other settings.
+#[tauri::command]
+pub fn set_folder_sort(
+    app: AppHandle,
+    path: String,
+    key: String,
+    direction: String,
+) -> Result<(), String> {
+    let mut config = read_config(&app);
+    config.entry(path).or_default().sort = Some(SortSetting { key, direction });
     write_config(&app, &config)
 }
