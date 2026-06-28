@@ -1,6 +1,7 @@
 import { useStateContext } from "@/shared/providers/StateProvider";
 import IconButton from "@/shared/components/elements/IconButton";
 import { ZOOM_MAX, ZOOM_MIN } from "@/shared/constants";
+import { useKeymap, formatBinding, KEYMAP_ACTION } from "@/shared/keymap";
 import { t } from "@/lang";
 import { QuickActions } from "@/features/directory";
 
@@ -15,6 +16,7 @@ import "@/styles/components/QuickBar.css";
 // read-only slider that indicates the current zoom percentage of the directory view.
 const QuickBar = () => {
   const { zoom, zoomIn, zoomOut } = useStateContext();
+  const { keymap } = useKeymap();
 
   const percent = Math.round(zoom * 100);
 
@@ -27,6 +29,7 @@ const QuickBar = () => {
           onClick={zoomOut}
           disabled={zoom <= ZOOM_MIN}
           tooltip={t.quickbar.zoomOut}
+          hotkey={formatBinding(keymap[KEYMAP_ACTION.ZOOM_OUT])}
           aria-label={t.quickbar.zoomOut}
         />
         <input
@@ -45,6 +48,7 @@ const QuickBar = () => {
           onClick={zoomIn}
           disabled={zoom >= ZOOM_MAX}
           tooltip={t.quickbar.zoomIn}
+          hotkey={formatBinding(keymap[KEYMAP_ACTION.ZOOM_IN])}
           aria-label={t.quickbar.zoomIn}
         />
       </div>

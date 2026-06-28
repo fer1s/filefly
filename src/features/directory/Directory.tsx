@@ -13,6 +13,7 @@ import { useFolderView } from "./hooks/useFolderView";
 import { useMarqueeSelection } from "./hooks/useMarqueeSelection";
 import { useKeyboardNav } from "./hooks/useKeyboardNav";
 import { useClipboardShortcuts } from "./hooks/useClipboardShortcuts";
+import { useZoomShortcuts } from "./hooks/useZoomShortcuts";
 import { useContextMenu } from "./hooks/useContextMenu";
 import { useDirectory } from "./providers/DirectoryProvider";
 
@@ -117,6 +118,8 @@ const Directory = () => {
     onNewFolder: handleNewFolder,
     onSelectAll: () => setSelectedIDs(sorted.map((entry) => entry.path)),
   });
+
+  useZoomShortcuts(!preview.visible && !properties.visible);
 
   // The empty floor of the entries area represents the directory currently being viewed.
   // Restrict the menu to that area: not the list header, the status bar, or an entry row.

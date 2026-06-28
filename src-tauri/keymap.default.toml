@@ -64,6 +64,16 @@ keys = ["."]
 mod = true
 shift = true
 
+# Zoom the directory view. "=" matches Cmd/Ctrl + the (unshifted) plus key; "+" matches the
+# numpad plus. The "+" listed first is what the UI shows as the glyph.
+[zoom_in]
+keys = ["+", "="]
+mod = true
+
+[zoom_out]
+keys = ["-"]
+mod = true
+
 # Jump to a pinned folder by its position in the sidebar (1 = first). mod = Cmd / Ctrl.
 [pinned_1]
 keys = ["1"]
