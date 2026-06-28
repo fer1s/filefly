@@ -9,22 +9,26 @@ import {
 
 import "@/styles/components/ZoomControl.css";
 
+import { PERCENT_FACTOR, DEFAULT_SLIDER_STEP } from "./constants";
 import type { ZoomControlProps } from "./types";
 
-// Minus / read-only percentage slider / plus. Shared by the QuickBar (directory zoom) and the
-// image Preview (zoom into the image). The +/- buttons drive the value; the slider only
-// indicates the current percentage.
+// Minus / percentage slider / plus. Shared by the QuickBar (directory zoom) and the image
+// Preview (zoom into the image). The +/- buttons step the value; when `onZoomTo` is provided the
+// slider is interactive and drives the zoom directly, otherwise it's a read-only indicator.
 const ZoomControl = ({
   value,
   min,
   max,
   onZoomIn,
   onZoomOut,
+  onZoomTo,
+  step = DEFAULT_SLIDER_STEP,
   zoomInHotkey,
   zoomOutHotkey,
   className,
 }: ZoomControlProps) => {
-  const percent = Math.round(value * 100);
+  const percent = Math.round(value * PERCENT_FACTOR);
+  const interactive = Boolean(onZoomTo);
 
   return (
     <div className={classNames("zoom_control", className)}>
@@ -38,12 +42,18 @@ const ZoomControl = ({
       />
       <input
         type="range"
-        className="zoom_slider"
-        min={min * 100}
-        max={max * 100}
+        className={classNames("zoom_slider", interactive && "interactive")}
+        min={min * PERCENT_FACTOR}
+        max={max * PERCENT_FACTOR}
+        step={step}
         value={percent}
-        readOnly
-        tabIndex={-1}
+        onChange={
+          onZoomTo
+            ? (event) => onZoomTo(Number(event.target.value) / PERCENT_FACTOR)
+            : undefined
+        }
+        readOnly={!interactive}
+        tabIndex={interactive ? 0 : -1}
         aria-label={t.quickbar.zoomLevel(percent)}
       />
       <span className="zoom_percent">{percent}%</span>

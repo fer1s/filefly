@@ -62,15 +62,15 @@ export const ZoomableImage = ({
     dragRef.current = null;
   };
 
-  const stepZoom = (delta: number) => {
-    const next = Math.min(
-      IMAGE_ZOOM_MAX,
-      Math.max(IMAGE_ZOOM_MIN, zoomRef.current + delta),
-    );
+  // Set the zoom to an absolute multiplier (clamped). Resets pan when back at 1x.
+  const zoomTo = (value: number) => {
+    const next = Math.min(IMAGE_ZOOM_MAX, Math.max(IMAGE_ZOOM_MIN, value));
     zoomRef.current = next;
     setZoom(next);
     if (next === IMAGE_ZOOM_MIN) setPan({ x: 0, y: 0 });
   };
+
+  const stepZoom = (delta: number) => zoomTo(zoomRef.current + delta);
 
   const zoomed = zoom > IMAGE_ZOOM_MIN;
 
@@ -100,6 +100,7 @@ export const ZoomableImage = ({
         max={IMAGE_ZOOM_MAX}
         onZoomIn={() => stepZoom(IMAGE_ZOOM_BUTTON_STEP)}
         onZoomOut={() => stepZoom(-IMAGE_ZOOM_BUTTON_STEP)}
+        onZoomTo={zoomTo}
       />
     </>
   );

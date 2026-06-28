@@ -4,7 +4,7 @@
   gap: var(--space-1-5);
 }
 
-/* Read-only percentage indicator; the +/- buttons drive the zoom, not the slider. */
+/* Percentage indicator. Read-only by default; gains pointer interaction in `.interactive`. */
 .zoom_control .zoom_slider {
   width: var(--space-20);
   height: var(--size-progress-track);
@@ -13,6 +13,16 @@
   background-color: var(--color-range-track);
   border-radius: var(--radius-pill);
   pointer-events: none;
+}
+
+/* Interactive slider: the user can drag it to set the zoom directly. */
+.zoom_control .zoom_slider.interactive {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.zoom_control .zoom_slider.interactive::-webkit-slider-thumb {
+  cursor: pointer;
 }
 
 .zoom_control .zoom_slider::-webkit-slider-thumb {

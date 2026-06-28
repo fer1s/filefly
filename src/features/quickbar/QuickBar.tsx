@@ -9,7 +9,7 @@ import "@/styles/components/QuickBar.css";
 // Secondary bar under the PathBar. Quick actions on the left; the directory zoom control on
 // the right.
 const QuickBar = () => {
-  const { zoom, zoomIn, zoomOut } = useStateContext();
+  const { zoom, zoomIn, zoomOut, setZoomTo } = useStateContext();
   const { keymap } = useKeymap();
 
   return (
@@ -21,6 +21,7 @@ const QuickBar = () => {
         max={ZOOM_MAX}
         onZoomIn={zoomIn}
         onZoomOut={zoomOut}
+        onZoomTo={setZoomTo}
         zoomInHotkey={formatBinding(keymap[KEYMAP_ACTION.ZOOM_IN])}
         zoomOutHotkey={formatBinding(keymap[KEYMAP_ACTION.ZOOM_OUT])}
       />

@@ -179,24 +179,45 @@ const App = () => {
     };
   }, [fs, path]);
 
-  // Step the zoom and persist it for the current folder. Persisting only on explicit zoom
+  // Clamp to the allowed range and round to whole percents.
+  const clampZoom = (value: number) =>
+    Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Math.round(value * 100) / 100));
+
+  // Persist the folder's zoom when it actually changed. Persisting only on explicit zoom
   // (not in an effect watching `zoom`) avoids a load -> save loop.
+  const persistZoom = useCallback(
+    (next: number, current: number) => {
+      if (next !== current)
+        fs.setFolderZoom(path, next).catch((err) =>
+          console.error("Failed to persist zoom preference:\n" + err),
+        );
+    },
+    [fs, path],
+  );
+
+  // Set the zoom to an absolute multiplier (used by the slider).
+  const setZoomTo = useCallback(
+    (value: number) => {
+      if (path === "") return;
+      setZoom((current) => {
+        const next = clampZoom(value);
+        persistZoom(next, current);
+        return next;
+      });
+    },
+    [path, persistZoom],
+  );
+
   const stepZoom = useCallback(
     (delta: number) => {
       if (path === "") return;
       setZoom((current) => {
-        const next = Math.min(
-          ZOOM_MAX,
-          Math.max(ZOOM_MIN, Math.round((current + delta) * 100) / 100),
-        );
-        if (next !== current)
-          fs.setFolderZoom(path, next).catch((err) =>
-            console.error("Failed to persist zoom preference:\n" + err),
-          );
+        const next = clampZoom(current + delta);
+        persistZoom(next, current);
         return next;
       });
     },
-    [fs, path],
+    [path, persistZoom],
   );
 
   const zoomIn = useCallback(() => stepZoom(ZOOM_STEP), [stepZoom]);
@@ -301,6 +322,7 @@ const App = () => {
         zoom,
         zoomIn,
         zoomOut,
+        setZoomTo,
         search,
         setSearch,
         refreshDir,

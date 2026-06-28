@@ -26,6 +26,8 @@ export type State = {
   zoom: number;
   zoomIn: () => void;
   zoomOut: () => void;
+  // Set the directory zoom to an absolute multiplier (driven by the slider).
+  setZoomTo: (zoom: number) => void;
   search: string;
   setSearch: (search: string) => void;
   refreshDir: () => void;

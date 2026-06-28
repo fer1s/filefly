@@ -24,6 +24,7 @@ export const initialState: State = {
   zoom: ZOOM_DEFAULT,
   zoomIn: () => {},
   zoomOut: () => {},
+  setZoomTo: () => {},
   search: "",
   setSearch: () => {},
   refreshDir: () => {},
