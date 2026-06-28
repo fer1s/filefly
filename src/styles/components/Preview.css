@@ -166,7 +166,8 @@
 }
 
 .preview_container .preview_content.image,
-.preview_container .preview_content.video {
+.preview_container .preview_content.video,
+.preview_container .preview_content.pdf {
   overflow: hidden;
   padding: var(--space-0);
   width: 100%;
@@ -178,6 +179,12 @@
   width: 100%;
   height: 100%;
   object-fit: contain;
+}
+
+.preview_container .preview_content.pdf iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
 }
 
 .preview_container.image {

@@ -7,7 +7,13 @@ import {
   formatBytes,
   formatDate,
 } from "@/shared/utils";
-import { ENTRY_KIND, IMAGE_FORMATS, VIDEO_FORMATS, KEY } from "@/shared/constants";
+import {
+  ENTRY_KIND,
+  IMAGE_FORMATS,
+  VIDEO_FORMATS,
+  PDF_FORMAT,
+  KEY,
+} from "@/shared/constants";
 import Icon from "@/shared/components/elements/Icon";
 import Tooltip from "@/shared/components/elements/Tooltip";
 import {
@@ -143,9 +149,10 @@ const DirEntryItemComponent = ({
 
   const ext = extension.toLowerCase().trim();
   const isImage = entry.metadata.isFile && IMAGE_FORMATS.includes(ext);
-  // Videos get a frame thumbnail too (macOS); loaded through the same lazy/throttled path.
+  // Videos and PDFs get a thumbnail too (macOS QuickLook); same lazy/throttled path.
   const isVideo = entry.metadata.isFile && VIDEO_FORMATS.includes(ext);
-  const isThumbnail = isImage || isVideo;
+  const isPdf = entry.metadata.isFile && ext === PDF_FORMAT;
+  const isThumbnail = isImage || isVideo || isPdf;
 
   // Dotfiles are hidden on macOS/Unix; dim them to set them apart (Finder-style).
   const isHidden = entry.name.startsWith(".");

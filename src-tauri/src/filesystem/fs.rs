@@ -79,35 +79,40 @@ pub async fn get_dir_size(path: String) -> u64 {
     .unwrap_or(0)
 }
 
-// Extensions we can produce a video frame thumbnail for (matches the previewable video set).
-const VIDEO_THUMB_EXTS: &[&str] = &["mp4", "mov", "m4v", "webm", "ogv"];
+// Extensions whose thumbnail comes from QuickLook rather than the image decoder (videos and
+// PDFs). Matches the previewable video/pdf sets.
+const QUICKLOOK_EXTS: &[&str] = &["mp4", "mov", "m4v", "webm", "ogv", "pdf"];
 
-fn is_video(path: &str) -> bool {
+fn needs_quicklook(path: &str) -> bool {
     Path::new(path)
         .extension()
         .and_then(|ext| ext.to_str())
-        .map(|ext| VIDEO_THUMB_EXTS.contains(&ext.to_lowercase().as_str()))
+        .map(|ext| QUICKLOOK_EXTS.contains(&ext.to_lowercase().as_str()))
         .unwrap_or(false)
 }
 
-// Decode the source image used to build a thumbnail: the image file itself, or a single
-// frame extracted from a video.
+// Decode the source image used to build a thumbnail: the image file itself, or a frame/page
+// rendered by QuickLook for videos and PDFs.
 fn thumbnail_source(
     path: &str,
     size: u32,
     tmp_dir: &Path,
 ) -> Result<image::DynamicImage, String> {
-    if is_video(path) {
-        video_frame(path, size, tmp_dir)
+    if needs_quicklook(path) {
+        quicklook_thumbnail(path, size, tmp_dir)
     } else {
         image::open(path).map_err(|e| e.to_string())
     }
 }
 
-// Extract a frame from a video via QuickLook (`qlmanage`), which writes "<name>.png" into the
-// output dir. macOS-only; other platforms fall back to the generic icon.
+// Render a thumbnail (video frame / PDF first page) via QuickLook (`qlmanage`), which writes
+// "<name>.png" into the output dir. macOS-only; other platforms fall back to the generic icon.
 #[cfg(target_os = "macos")]
-fn video_frame(path: &str, size: u32, tmp_dir: &Path) -> Result<image::DynamicImage, String> {
+fn quicklook_thumbnail(
+    path: &str,
+    size: u32,
+    tmp_dir: &Path,
+) -> Result<image::DynamicImage, String> {
     use std::process::Command;
 
     fs::create_dir_all(tmp_dir).map_err(|e| e.to_string())?;
@@ -130,12 +135,16 @@ fn video_frame(path: &str, size: u32, tmp_dir: &Path) -> Result<image::DynamicIm
     Ok(img)
 }
 
-// TODO(windows/linux): extract a video frame on non-macOS platforms — e.g. the Windows Shell
-// thumbnail API (IShellItemImageFactory) on Windows, or bundling/using ffmpeg elsewhere. Until
-// then these fall back to the generic file icon.
+// TODO(windows/linux): render video/PDF thumbnails on non-macOS platforms — e.g. the Windows
+// Shell thumbnail API (IShellItemImageFactory) on Windows, or bundling/using ffmpeg + a PDF
+// rasterizer elsewhere. Until then these fall back to the generic file icon.
 #[cfg(not(target_os = "macos"))]
-fn video_frame(_path: &str, _size: u32, _tmp_dir: &Path) -> Result<image::DynamicImage, String> {
-    Err("Video thumbnails are only supported on macOS".to_string())
+fn quicklook_thumbnail(
+    _path: &str,
+    _size: u32,
+    _tmp_dir: &Path,
+) -> Result<image::DynamicImage, String> {
+    Err("QuickLook thumbnails are only supported on macOS".to_string())
 }
 
 // Generate (and cache) a downscaled thumbnail for an image file, returning the path to the

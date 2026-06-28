@@ -10,6 +10,7 @@ import {
   VIDEO_FORMATS,
   KEY,
   MARKDOWN_FORMAT,
+  PDF_FORMAT,
 } from "@/shared/constants";
 import {
   useKeymap,
@@ -110,7 +111,8 @@ const Preview = ({
             "preview_container",
             "shadow",
             (IMAGE_FORMATS.includes(fileType) ||
-              VIDEO_FORMATS.includes(fileType)) &&
+              VIDEO_FORMATS.includes(fileType) ||
+              fileType === PDF_FORMAT) &&
               "image",
             previewVisible && "visible",
           )}
@@ -150,6 +152,7 @@ const Preview = ({
               fileType === MARKDOWN_FORMAT && "markdown",
               IMAGE_FORMATS.includes(fileType) && "image",
               VIDEO_FORMATS.includes(fileType) && "video",
+              fileType === PDF_FORMAT && "pdf",
             )}
           >
             {isReady ? (
@@ -164,6 +167,8 @@ const Preview = ({
                   controls
                   autoPlay
                 />
+              ) : fileType === PDF_FORMAT ? (
+                <iframe src={convertFileSrc(filePath)} title={t.common.preview} />
               ) : (
                 <div className="preview_file_not_supported">
                   <h3>{t.directory.fileTypeNotSupported}</h3>
