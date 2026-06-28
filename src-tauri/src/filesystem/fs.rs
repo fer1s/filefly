@@ -565,6 +565,63 @@ pub async fn delete_entry_permanently(path: String) -> Result<(), String> {
     .map_err(|e| e.to_string())?
 }
 
+// Permanently empty the user's Trash (~/.Trash), removing every item it contains. Irreversible.
+// Returns the number of top-level items removed. macOS guards ~/.Trash behind Full Disk Access
+// (TCC), so reading it can fail with a permission error just like listing it in the UI.
+//
+// Uses `symlink_metadata` so a symlink in the Trash is deleted as a link (never followed into the
+// target's directory). Per-volume Trashes (/Volumes/*/.Trashes) are intentionally out of scope.
+#[tauri::command]
+pub async fn empty_trash() -> Result<u32, String> {
+    tauri::async_runtime::spawn_blocking(|| {
+        let home = std::env::var("HOME").map_err(|e| e.to_string())?;
+        let trash = Path::new(&home).join(".Trash");
+        if !trash.exists() {
+            return Ok(0);
+        }
+
+        let mut removed = 0u32;
+        let mut last_err: Option<String> = None;
+        for entry in fs::read_dir(&trash).map_err(|e| e.to_string())? {
+            let path = match entry {
+                Ok(entry) => entry.path(),
+                Err(e) => {
+                    last_err = Some(e.to_string());
+                    continue;
+                }
+            };
+
+            let is_dir = match fs::symlink_metadata(&path) {
+                Ok(meta) => meta.is_dir(),
+                Err(e) => {
+                    last_err = Some(e.to_string());
+                    continue;
+                }
+            };
+
+            let result = if is_dir {
+                fs::remove_dir_all(&path)
+            } else {
+                fs::remove_file(&path)
+            };
+            match result {
+                Ok(()) => removed += 1,
+                Err(e) => last_err = Some(e.to_string()),
+            }
+        }
+
+        // Surface a failure only if nothing could be removed; a partial empty still reports its count.
+        if removed == 0 {
+            if let Some(e) = last_err {
+                return Err(e);
+            }
+        }
+        Ok(removed)
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
 // Most recent files to return (Finder-style "Recents").
 const RECENTS_LIMIT: usize = 50;
 

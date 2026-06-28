@@ -162,6 +162,10 @@ export const deleteEntry = async (path: string): Promise<void> =>
   await invoke("delete_entry", { path });
 export const deleteEntryPermanently = async (path: string): Promise<void> =>
   await invoke("delete_entry_permanently", { path });
+// Permanently empty the system Trash (~/.Trash). Resolves to the number of items removed.
+// Throws (ACCESS_DENIED-style) when the OS blocks reading the Trash.
+export const emptyTrash = async (): Promise<number> =>
+  (await invoke("empty_trash")) as number;
 
 // Open the OS privacy settings (macOS Full Disk Access) so the user can grant access to
 // protected folders like the Trash.

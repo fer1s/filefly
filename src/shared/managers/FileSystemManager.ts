@@ -123,6 +123,11 @@ export class FileSystemManager {
     return api.deleteEntryPermanently(path);
   }
 
+  // Permanently empty the system Trash; resolves to the number of items removed.
+  emptyTrash(): Promise<number> {
+    return api.emptyTrash();
+  }
+
   openFullDiskAccessSettings(): Promise<void> {
     return api.openFullDiskAccessSettings();
   }

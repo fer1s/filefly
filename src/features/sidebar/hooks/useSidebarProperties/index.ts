@@ -1,0 +1,1 @@
+export { useSidebarProperties } from "./useSidebarProperties";

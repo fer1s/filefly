@@ -9,7 +9,8 @@ export type State = {
   // Open tabs and the active one. Navigation/search below always act on the active tab.
   tabs: Tab[];
   activeTabId: string;
-  newTab: () => void;
+  // Open a new tab; defaults to the current location, or pass a path to open it there.
+  newTab: (path?: string) => void;
   closeTab: (id: string) => void;
   selectTab: (id: string) => void;
   path: string;

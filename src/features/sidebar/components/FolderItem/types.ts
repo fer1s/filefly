@@ -1,3 +1,5 @@
+import type { MouseEvent } from "react";
+
 import type { SidebarPathItem } from "../../types";
 
 export type FolderItemProps = {
@@ -6,4 +8,5 @@ export type FolderItemProps = {
   collapsed: boolean;
   active: boolean;
   hotkey?: string;
+  onContextMenu?: (e: MouseEvent) => void;
 };

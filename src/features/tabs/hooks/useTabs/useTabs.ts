@@ -62,12 +62,16 @@ export const useTabs = () => {
     [updateActiveTab],
   );
 
-  // Open a new tab cloning the current location (and panel state) and focus it.
-  const newTab = useCallback(() => {
-    const tab = makeTab(path, infoPanelOpen);
-    setTabs((prev) => [...prev, tab]);
-    setActiveTabId(tab.id);
-  }, [path, infoPanelOpen]);
+  // Open a new tab and focus it. Defaults to cloning the current location; pass a path to open
+  // the new tab there instead (e.g. the sidebar's "Open in new tab"). Panel state is inherited.
+  const newTab = useCallback(
+    (nextPath?: string) => {
+      const tab = makeTab(nextPath ?? path, infoPanelOpen);
+      setTabs((prev) => [...prev, tab]);
+      setActiveTabId(tab.id);
+    },
+    [path, infoPanelOpen],
+  );
 
   // Close a tab; always keep at least one open. When closing the active tab, activate the
   // neighbour that slides into its place.

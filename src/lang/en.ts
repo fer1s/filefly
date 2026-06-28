@@ -17,7 +17,9 @@ export const en = {
   contextMenu: {
     newFolder: "New Folder",
     open: "Open",
+    openInNewTab: "Open in New Tab",
     openInTerminal: "Open in Terminal",
+    emptyTrash: "Empty Trash",
     copy: "Copy",
     cut: "Cut",
     rename: "Rename",
@@ -62,6 +64,12 @@ export const en = {
     downloads: "Downloads",
     pictures: "Pictures",
     trash: "Trash",
+    emptyTrashTitle: "Empty Trash",
+    confirmEmptyTrash:
+      "Permanently delete all items in the Trash? This can't be undone.",
+    trashEmptied: (n: number) =>
+      `Emptied the Trash (${n} ${n === 1 ? "item" : "items"})`,
+    trashAlreadyEmpty: "The Trash is already empty",
   },
   pathbar: {
     pathPlaceholder: "Directory path",
@@ -162,6 +170,7 @@ export const en = {
     createFolder: (reason: string) => `Could not create folder: ${reason}`,
     copyImage: (reason: string) => `Could not copy image: ${reason}`,
     properties: (reason: string) => `Could not read properties: ${reason}`,
+    emptyTrash: (reason: string) => `Could not empty the Trash: ${reason}`,
   },
 };
 

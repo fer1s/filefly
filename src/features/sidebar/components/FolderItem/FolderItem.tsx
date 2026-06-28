@@ -12,6 +12,7 @@ const FolderItem = ({
   collapsed,
   active,
   hotkey,
+  onContextMenu,
 }: FolderItemProps) => {
   const open = () => setPath(item.path);
 
@@ -24,6 +25,7 @@ const FolderItem = ({
       aria-label={item.name}
       onClick={open}
       onKeyDown={activateOnKey(open)}
+      onContextMenu={onContextMenu}
     >
       <Icon icon={item.icon} />
       <p>{item.name}</p>

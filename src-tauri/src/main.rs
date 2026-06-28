@@ -52,6 +52,7 @@ fn main() {
             filesystem::fs::copy_image,
             filesystem::fs::delete_entry,
             filesystem::fs::delete_entry_permanently,
+            filesystem::fs::empty_trash,
             functions::terminal::open_in_terminal,
             functions::markdown::md_to_html,
             functions::system::open_full_disk_access_settings,

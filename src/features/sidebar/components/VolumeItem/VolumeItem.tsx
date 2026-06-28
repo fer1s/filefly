@@ -14,6 +14,7 @@ const VolumeItem = ({
   index,
   collapsed,
   active,
+  onContextMenu,
 }: VolumeItemProps) => {
   const open = () => setPath(volume.mountPoint);
 
@@ -26,6 +27,7 @@ const VolumeItem = ({
       aria-label={`${volume.mountPoint} ${volume.name}`}
       onClick={open}
       onKeyDown={activateOnKey(open)}
+      onContextMenu={onContextMenu}
       style={{ animationDelay: `${index * VOLUME_ITEM_STAGGER_MS}ms` }}
     >
       <Icon icon={volumeIcon(volume)} />

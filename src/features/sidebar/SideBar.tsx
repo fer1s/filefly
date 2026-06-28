@@ -13,11 +13,18 @@ import {
 import { classNames } from "@/shared/utils";
 import { RECENTS } from "@/shared/constants";
 import { useSettings } from "@/features/settings";
+import { Properties } from "@/features/directory";
 import { t } from "@/lang";
 
+import type { MouseEvent } from "react";
+
+import { SIDEBAR_ITEM_KIND, type SidebarItemKind } from "./constants";
 import { usePinnedFolders } from "./hooks/usePinnedFolders";
 import { usePinnedShortcuts } from "./hooks/usePinnedShortcuts";
+import { useSidebarContextMenu } from "./hooks/useSidebarContextMenu";
+import { useSidebarProperties } from "./hooks/useSidebarProperties";
 import SidebarSection from "./components/SidebarSection";
+import SidebarContextMenu from "./components/SidebarContextMenu";
 import VolumeItem from "./components/VolumeItem";
 import FolderItem from "./components/FolderItem";
 
@@ -37,6 +44,7 @@ const RECENTS_ITEM = {
   name: t.sidebar.recents,
   path: RECENTS,
   icon: faClockRotateLeft,
+  kind: SIDEBAR_ITEM_KIND.RECENTS,
 };
 
 const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
@@ -46,6 +54,16 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
   const { open: openSettings } = useSettings();
   const pinned = usePinnedFolders();
   usePinnedShortcuts({ pinned, setPath });
+
+  const menu = useSidebarContextMenu();
+  const properties = useSidebarProperties();
+
+  // Open the context menu at the cursor for a given row (path + kind).
+  const onRowContextMenu =
+    (itemPath: string, kind: SidebarItemKind) => (e: MouseEvent) => {
+      e.preventDefault();
+      menu.openAt(e.clientX, e.clientY, { path: itemPath, kind });
+    };
 
   return (
     <div className={classNames("SideBar", collapsed && "collapsed")}>
@@ -79,7 +97,7 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
           tooltip={t.tabs.newTab}
           tooltipPlacement={TOOLTIP_PLACEMENT.RIGHT}
           hotkey={formatBinding(keymap[KEYMAP_ACTION.NEW_TAB])}
-          onClick={newTab}
+          onClick={() => newTab()}
           aria-label={t.tabs.newTab}
         />
       </div>
@@ -90,6 +108,7 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
           setPath={setPath}
           collapsed={collapsed}
           active={path === RECENTS}
+          onContextMenu={onRowContextMenu(RECENTS_ITEM.path, RECENTS_ITEM.kind)}
         />
         {pinned.map((item, i) => (
           <FolderItem
@@ -103,6 +122,7 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
                 ? formatBinding(keymap[PINNED_ACTIONS[i]])
                 : undefined
             }
+            onContextMenu={onRowContextMenu(item.path, item.kind)}
           />
         ))}
       </SidebarSection>
@@ -116,6 +136,10 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
             index={i}
             collapsed={collapsed}
             active={volume.mountPoint === path}
+            onContextMenu={onRowContextMenu(
+              volume.mountPoint,
+              SIDEBAR_ITEM_KIND.VOLUME,
+            )}
           />
         ))}
       </SidebarSection>
@@ -123,6 +147,19 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
       <SidebarSection title={t.sidebar.location}>
         <p className="section_todo">{t.sidebar.todo}</p>
       </SidebarSection>
+
+      <SidebarContextMenu
+        contextMenuRef={menu.ref}
+        visible={menu.visible}
+        target={menu.target}
+        onClose={menu.close}
+        openProperties={properties.open}
+      />
+      <Properties
+        entry={properties.entry}
+        visible={properties.visible}
+        onClose={properties.close}
+      />
     </div>
   );
 };
