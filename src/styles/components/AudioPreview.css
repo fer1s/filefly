@@ -57,7 +57,7 @@
 }
 
 .audio_preview .progress span {
-  font-size: 0.7rem;
+  font-size: var(--font-size-sm);
   font-weight: 400;
   width: var(--size-control-large);
   color: var(--color-audio-time);

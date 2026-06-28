@@ -1,6 +1,7 @@
 import { useStateContext } from "@/shared/providers/StateProvider";
 import { useKeymap, formatBinding } from "@/shared/keymap";
 import IconButton from "@/shared/components/elements/IconButton";
+import { extension } from "@/shared/utils";
 import { ENTRY_KIND } from "@/shared/constants";
 
 import { useDirectory } from "../../providers/DirectoryProvider";
@@ -36,7 +37,7 @@ const QuickActions = () => {
       ? ENTRY_KIND.FILE
       : ENTRY_KIND.DIRECTORY;
   const isCurrentDirectory = !hasSelection;
-  const extension = elementId.split(".").pop() ?? "";
+  const fileExtension = extension(elementId);
 
   const ctx: EntryActionContext = {
     elementId,
@@ -56,7 +57,7 @@ const QuickActions = () => {
   const actionIds = resolveActionIds(layout, {
     isCurrentDirectory,
     elementType,
-    extension,
+    extension: fileExtension,
   }).filter((id) => id !== ACTION_SEPARATOR);
 
   if (path === "" || actionIds.length === 0) return null;

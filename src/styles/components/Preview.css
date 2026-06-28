@@ -73,7 +73,7 @@
   margin: var(--space-0);
   padding: var(--space-0);
   color: var(--color-text-primary);
-  font-size: 1.5rem;
+  font-size: var(--font-size-3xl);
   font-weight: 600;
   user-select: none;
 }

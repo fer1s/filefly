@@ -19,19 +19,19 @@
 
 .AccessDeniedNotice .access_denied_title {
   margin: 0;
-  font-size: 1rem;
+  font-size: var(--font-size-xl);
   font-weight: 600;
   color: var(--color-text-primary);
 }
 
 .AccessDeniedNotice .access_denied_description {
   margin: 0;
-  font-size: 0.85rem;
+  font-size: var(--font-size-base);
   color: var(--color-text-secondary);
 }
 
 .AccessDeniedNotice .access_denied_hint {
   margin: 0;
-  font-size: 0.8rem;
+  font-size: var(--font-size-base);
   color: var(--color-text-muted);
 }

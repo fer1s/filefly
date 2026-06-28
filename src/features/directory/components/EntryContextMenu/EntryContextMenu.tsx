@@ -4,6 +4,7 @@ import {
 } from "@/shared/components/patterns/ContextMenu";
 import Icon from "@/shared/components/elements/Icon";
 import { useStateContext } from "@/shared/providers/StateProvider";
+import { extension } from "@/shared/utils";
 import { useKeymap, formatBinding } from "@/shared/keymap";
 
 import {
@@ -41,7 +42,7 @@ const EntryContextMenu = ({
 
   // Act on the whole selection if the clicked item is part of it, otherwise just that item.
   const targets = selectedIDs.includes(elementId) ? selectedIDs : [elementId];
-  const extension = elementId.split(".").pop() ?? "";
+  const fileExtension = extension(elementId);
 
   const ctx: EntryActionContext = {
     elementId,
@@ -61,7 +62,7 @@ const EntryContextMenu = ({
   const actionIds = resolveActionIds(layout, {
     isCurrentDirectory,
     elementType,
-    extension,
+    extension: fileExtension,
   });
 
   return (

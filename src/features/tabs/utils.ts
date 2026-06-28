@@ -1,4 +1,5 @@
 import { t } from "@/lang";
+import { basename } from "@/shared/utils";
 import type { Tab } from "@/shared/models";
 
 import { TABS_STORAGE_KEY, ACTIVE_TAB_STORAGE_KEY } from "./constants";
@@ -55,9 +56,7 @@ export const canGoForward = (tab: Tab): boolean =>
 // The label shown on the tab: the folder name, or the Volumes label at the root.
 export const tabLabel = (tab: Tab): string => {
   const path = tabPath(tab);
-  if (path === "") return t.tabs.volumes;
-  const segments = path.split(/[/\\]/).filter(Boolean);
-  return segments[segments.length - 1] ?? path;
+  return path === "" ? t.tabs.volumes : basename(path);
 };
 
 // Whether a persisted value has the shape of a Tab (defensive against corrupt localStorage).

@@ -2,7 +2,7 @@ import { convertFileSrc } from "@tauri-apps/api/core";
 
 import { useStateContext } from "@/shared/providers/StateProvider";
 import IconButton from "@/shared/components/elements/IconButton";
-import { classNames } from "@/shared/utils";
+import { classNames, extension } from "@/shared/utils";
 import {
   IMAGE_FORMATS,
   VIDEO_FORMATS,
@@ -35,26 +35,24 @@ const InfoPanel = () => {
 
   const visible = infoPanelOpen;
 
-  const extension = entry
-    ? (entry.name.split(".").pop() || "").toLowerCase()
-    : "";
+  const ext = entry ? extension(entry.name) : "";
   const src = entry ? convertFileSrc(entry.path) : "";
 
   let preview = null;
   if (entry?.metadata.isFile) {
-    if (IMAGE_FORMATS.includes(extension))
+    if (IMAGE_FORMATS.includes(ext))
       preview = <img src={src} alt={entry.name} draggable={false} />;
-    else if (VIDEO_FORMATS.includes(extension))
+    else if (VIDEO_FORMATS.includes(ext))
       preview = <video src={src} controls />;
-    else if (AUDIO_FORMATS.includes(extension))
+    else if (AUDIO_FORMATS.includes(ext))
       preview = <audio src={src} controls />;
-    else if (extension === PDF_FORMAT)
+    else if (ext === PDF_FORMAT)
       preview = <iframe src={src} title={entry.name} />;
   }
 
   return (
     <aside className={classNames("InfoPanel", !visible && "closed")}>
-      <div className="info_header">
+      <div className="panel_header">
         <h4>{t.infoPanel.title}</h4>
         <IconButton
           icon={faXmark}

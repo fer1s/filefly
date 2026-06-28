@@ -13,7 +13,7 @@
 
 .IconButton > svg {
   pointer-events: none;
-  font-size: 0.85rem;
+  font-size: var(--font-size-base);
 }
 
 .Button.IconButton:hover {

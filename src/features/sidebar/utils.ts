@@ -1,11 +1,8 @@
+import { basename } from "@/shared/utils";
+
 import { MAX_RECENT_PATHS } from "./constants";
 
-export const getPathLabel = (path: string): string => {
-  const normalizedPath = path.replace(/[\\/]+$/, "");
-  const segments = normalizedPath.split(/[\\/]/);
-
-  return segments[segments.length - 1] || path;
-};
+export const getPathLabel = (path: string): string => basename(path);
 
 export const getRecentPaths = (
   currentPath: string,

@@ -36,7 +36,7 @@
 
 .zoom_control .zoom_percent {
   min-width: var(--space-10);
-  font-size: 0.7rem;
+  font-size: var(--font-size-sm);
   font-weight: 500;
   color: var(--color-text-tertiary);
   text-align: center;

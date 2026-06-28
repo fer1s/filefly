@@ -3,10 +3,11 @@ import { ask } from "@tauri-apps/plugin-dialog";
 
 import { useStateContext } from "@/shared/providers/StateProvider";
 import { notify, TOAST_TYPE } from "@/shared/toast";
+import { basename } from "@/shared/utils";
 import { t } from "@/lang";
 import { CLIPBOARD_MODE } from "@/shared/constants";
 
-import { basename, withName, entryLabel } from "./utils";
+import { withName, entryLabel } from "./utils";
 import type {
   Clipboard,
   OperationProgress,

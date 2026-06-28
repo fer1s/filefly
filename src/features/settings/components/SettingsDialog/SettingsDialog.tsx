@@ -2,13 +2,14 @@ import Dialog from "@/shared/components/patterns/Dialog";
 import IconButton from "@/shared/components/elements/IconButton";
 import { useStateContext } from "@/shared/providers/StateProvider";
 import { useCloseOnEscape } from "@/shared/hooks/useCloseOnEscape";
+import { ESCAPE_HOTKEY } from "@/shared/keymap";
 import { t } from "@/lang";
 
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 
 import "@/styles/components/SettingsDialog.css";
 
-import { SETTINGS_TITLE_ID, ZOOM_OPTIONS, CLOSE_HOTKEY } from "./constants";
+import { SETTINGS_TITLE_ID, ZOOM_OPTIONS } from "./constants";
 import SettingsRow from "./SettingsRow";
 import type { SettingsDialogProps } from "./types";
 
@@ -27,13 +28,13 @@ const SettingsDialog = ({ visible, onClose }: SettingsDialogProps) => {
       className="settings_modal"
       labelledBy={SETTINGS_TITLE_ID}
     >
-      <div className="settings_header">
+      <div className="panel_header">
         <h4 id={SETTINGS_TITLE_ID}>{t.settings.title}</h4>
         <IconButton
           icon={faXmark}
           onClick={onClose}
           tooltip={t.common.close}
-          hotkey={CLOSE_HOTKEY}
+          hotkey={ESCAPE_HOTKEY}
           aria-label={t.common.close}
         />
       </div>

@@ -1,7 +1,5 @@
+import { basename } from "@/shared/utils";
 import { t } from "@/lang";
-
-// File/folder name from a full path.
-export const basename = (p: string) => p.split("/").pop() || p;
 
 // Replace the final segment of a path with `newName`, keeping its parent folder. Handles both
 // "/" and "\" separators.

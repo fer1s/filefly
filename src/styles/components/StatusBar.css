@@ -3,7 +3,7 @@
   display: flex;
   gap: var(--space-4);
   padding: var(--space-1-5) var(--space-2);
-  font-size: 0.7rem;
+  font-size: var(--font-size-sm);
   color: var(--color-text-muted);
   background-color: var(--color-background-app);
   border-top: var(--border-width-default) solid var(--color-border-soft);

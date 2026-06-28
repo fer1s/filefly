@@ -50,14 +50,14 @@
 }
 
 .SideBar section .section_content .folder_item svg {
-  font-size: 0.8rem;
+  font-size: var(--font-size-base);
   color: var(--color-text-tertiary);
   transition: all 0.2s ease-in-out;
 }
 
 .SideBar section .section_content .folder_item p {
   min-width: 0;
-  font-size: 0.8rem;
+  font-size: var(--font-size-base);
   font-weight: 400;
   color: var(--color-text-tertiary);
   user-select: none;
@@ -70,7 +70,7 @@
 
 .SideBar section .section_content .folder_item .folder_hotkey {
   margin-left: auto;
-  font-size: 0.7rem;
+  font-size: var(--font-size-sm);
   color: var(--color-text-muted);
   user-select: none;
 }
@@ -116,7 +116,7 @@
 }
 
 .SideBar section .section_content .drive_item svg {
-  font-size: 0.8rem;
+  font-size: var(--font-size-base);
   color: var(--color-text-tertiary);
   transition: all 0.2s ease-in-out;
 }
@@ -132,7 +132,7 @@
 
 .SideBar section .section_content .drive_item .details p {
   width: 100%;
-  font-size: 0.7rem;
+  font-size: var(--font-size-sm);
   font-weight: 400;
   color: var(--color-text-tertiary);
   user-select: none;
@@ -147,18 +147,9 @@
   font-weight: 600;
 }
 
+/* Base bar styling lives in UsageBar.css; only the width is sidebar-specific. */
 .SideBar section .section_content .drive_item .details .usage {
   width: 90%;
-  height: var(--size-progress-track);
-  border-radius: var(--radius-sm);
-  background-color: var(--color-progress-track);
-  overflow: hidden;
-}
-
-.SideBar section .section_content .drive_item .details .usage .usage_bar {
-  height: 100%;
-  border-radius: var(--space-0) var(--radius-sm) var(--radius-sm) var(--space-0);
-  background-color: var(--color-progress-fill);
 }
 
 .SideBar section .section_content .drive_item:hover,

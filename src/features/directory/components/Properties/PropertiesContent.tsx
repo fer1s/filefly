@@ -1,9 +1,8 @@
-import { formatBytes } from "@/shared/utils";
+import { formatBytes, formatDate } from "@/shared/utils";
 import { t } from "@/lang";
 
 import "@/styles/components/Properties.css";
 
-import { formatDate } from "./utils";
 import { useEntrySize } from "./useEntrySize";
 import PropertyRow from "./PropertyRow";
 import type { PropertiesContentProps } from "./types";

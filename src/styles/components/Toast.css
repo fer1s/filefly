@@ -5,7 +5,7 @@
   max-width: var(--size-toast-max-width);
   padding: var(--space-2-5) var(--space-3-5);
   border-radius: var(--radius-md);
-  font-size: 0.78rem;
+  font-size: var(--font-size-md);
   font-weight: 400;
   color: var(--color-text-primary);
   background-color: var(--color-surface-toast);

@@ -24,7 +24,7 @@
   border-radius: var(--radius-sm);
   box-shadow: var(--shadow-popover);
   color: var(--color-text-primary);
-  font-size: 0.72rem;
+  font-size: var(--font-size-sm);
   font-weight: 400;
   white-space: nowrap;
   pointer-events: none;
@@ -50,7 +50,7 @@
   border: var(--border-width-default) solid var(--color-border-soft);
   border-radius: var(--radius-xs);
   font-family: inherit;
-  font-size: 0.68rem;
+  font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
   line-height: 1;
 }

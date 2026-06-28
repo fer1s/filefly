@@ -10,6 +10,7 @@ import {
   type ViewMode,
 } from "@/shared/constants";
 import * as api from "@/shared/services/api";
+import { extension } from "@/shared/utils";
 import { FEATURE_FLAGS } from "@/shared/featureFlags";
 import { sortEntries, type Sort } from "../sort";
 import { useDirSizes } from "./useDirSizes";
@@ -101,9 +102,7 @@ export const useDirectoryEntries = (view: ViewMode) => {
       sorted.filter(
         (e) =>
           e.metadata.isFile &&
-          ACCEPTED_PREVIEW_FORMATS.includes(
-            (e.name.split(".").pop() || "").toLowerCase(),
-          ),
+          ACCEPTED_PREVIEW_FORMATS.includes(extension(e.name)),
       ),
     [sorted],
   );

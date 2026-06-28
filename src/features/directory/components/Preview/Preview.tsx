@@ -23,6 +23,7 @@ import {
   matchesBinding,
   formatBinding,
   KEYMAP_ACTION,
+  ESCAPE_HOTKEY,
 } from "@/shared/keymap";
 import { classNames } from "@/shared/utils";
 import { notify, TOAST_TYPE } from "@/shared/toast";
@@ -175,7 +176,7 @@ const Preview = ({
               icon={faXmark}
               onClick={() => setPreviewVisible(false)}
               tooltip={t.common.close}
-              hotkey={formatBinding({ keys: [KEY.ESCAPE] })}
+              hotkey={ESCAPE_HOTKEY}
               aria-label={t.common.close}
             />
           </div>

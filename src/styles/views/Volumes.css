@@ -21,7 +21,7 @@
 }
 
 .volumes_page .grid .volume_item svg {
-  font-size: 1.2rem;
+  font-size: var(--font-size-2xl);
   color: var(--color-text-muted);
 }
 
@@ -35,7 +35,7 @@
 }
 
 .volumes_page .grid .volume_item .volume_info h3 {
-  font-size: 0.8rem;
+  font-size: var(--font-size-base);
   font-weight: 700;
   color: var(--color-text-primary);
   display: flex;
@@ -50,22 +50,9 @@
   color: var(--color-text-muted);
 }
 
-.volumes_page .grid .volume_item .volume_info .usage {
-  width: 100%;
-  height: var(--size-progress-track);
-  border-radius: var(--radius-sm);
-  background-color: var(--color-progress-track);
-  overflow: hidden;
-}
-
-.volumes_page .grid .volume_item .volume_info .usage .usage_bar {
-  height: 100%;
-  border-radius: var(--space-0) var(--radius-sm) var(--radius-sm) var(--space-0);
-  background-color: var(--color-progress-fill);
-}
 
 .volumes_page .grid .volume_item .volume_info p {
-  font-size: 0.6rem;
+  font-size: var(--font-size-xs);
   font-weight: 300;
   color: var(--color-text-muted);
 }
@@ -99,7 +86,7 @@
   background-color: var(--color-overlay-faint);
   border-bottom: var(--border-width-default) solid var(--color-border-default);
   color: var(--color-text-muted);
-  font-size: 0.68rem;
+  font-size: var(--font-size-sm);
   font-weight: 500;
   text-align: left;
   user-select: none;
@@ -141,7 +128,7 @@
   padding: var(--space-2) var(--space-2-5);
   border-bottom: var(--border-width-default) solid var(--color-border-faint);
   color: var(--color-text-secondary);
-  font-size: 0.72rem;
+  font-size: var(--font-size-sm);
   font-weight: 400;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -162,7 +149,7 @@
 .volumes_page .volumes_list .volume_identity svg {
   flex: 0 0 auto;
   color: var(--color-text-muted);
-  font-size: 0.9rem;
+  font-size: var(--font-size-lg);
 }
 
 .volumes_page .volumes_list .volume_summary {
@@ -185,23 +172,14 @@
   color: var(--color-text-muted);
 }
 
+/* Base bar styling lives in UsageBar.css; the list caps the width. */
 .volumes_page .volumes_list .volume_usage .usage {
   width: min(100%, var(--size-volume-usage-max-width));
-  height: var(--size-progress-track);
-  overflow: hidden;
-  border-radius: var(--radius-sm);
-  background-color: var(--color-progress-track);
-}
-
-.volumes_page .volumes_list .volume_usage .usage_bar {
-  height: 100%;
-  border-radius: var(--space-0) var(--radius-sm) var(--radius-sm) var(--space-0);
-  background-color: var(--color-progress-fill);
 }
 
 .volumes_page .volumes_list .volume_usage span {
   min-width: var(--size-control-large);
   color: var(--color-text-muted);
-  font-size: 0.65rem;
+  font-size: var(--font-size-xs);
   text-align: right;
 }

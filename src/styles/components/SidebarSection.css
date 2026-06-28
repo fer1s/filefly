@@ -31,14 +31,14 @@
 }
 
 .SideBar .SidebarSection .section_header h2 {
-  font-size: 0.8rem;
+  font-size: var(--font-size-base);
   font-weight: 500;
   color: inherit;
 }
 
 /* Chevron points down when open, right when collapsed. */
 .SideBar .SidebarSection .section_header svg {
-  font-size: 0.65rem;
+  font-size: var(--font-size-xs);
   color: var(--color-text-muted);
   transition: transform 0.15s ease-in-out;
 }
@@ -81,7 +81,7 @@
 
 .SideBar .SidebarSection .section_todo {
   padding: var(--space-2-5);
-  font-size: 0.7rem;
+  font-size: var(--font-size-sm);
   color: var(--color-text-muted);
 }
 

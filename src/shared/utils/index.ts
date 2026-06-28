@@ -1,4 +1,7 @@
-import { DirEntry } from "@/shared/models";
+import { faHardDrive } from "@fortawesome/free-solid-svg-icons";
+import { faUsb } from "@fortawesome/free-brands-svg-icons";
+
+import { DirEntry, Volume } from "@/shared/models";
 import { classNames } from "./classNames";
 import { activateOnKey } from "./activateOnKey";
 
@@ -33,5 +36,19 @@ export const formatBytes = (bytes: number, decimals: number = 2) => {
 // Format a Unix epoch (seconds) as a locale date-time string.
 export const formatDate = (secs: number) =>
   new Date(secs * 1000).toLocaleString();
+
+// Last segment of a path (the file/folder name), handling "/" and "\" and trailing separators.
+export const basename = (path: string) => {
+  const segments = path.replace(/[\\/]+$/, "").split(/[\\/]/);
+  return segments[segments.length - 1] || path;
+};
+
+// Lowercased file extension (no dot). Returns the whole name for dotless files.
+export const extension = (name: string) =>
+  (name.split(".").pop() || "").toLowerCase();
+
+// Icon for a volume: USB glyph for removable drives, hard-drive otherwise.
+export const volumeIcon = (volume: Volume) =>
+  volume.isRemovable ? faUsb : faHardDrive;
 
 export { classNames, activateOnKey };

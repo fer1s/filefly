@@ -63,9 +63,16 @@
   --size-tab-max-width: 180px;
   --font-size-tab: 12px;
   --font-size-icon-large: 20px;
-  --font-size-sm: 0.75rem;
-  --font-size-md: 0.85rem;
-  --font-size-lg: 1rem;
+  /* Type scale (T-shirt sizes). Every CSS font-size references one of these — no literals. */
+  --font-size-2xs: 0.5rem; /* 8px */
+  --font-size-xs: 0.625rem; /* 10px */
+  --font-size-sm: 0.6875rem; /* 11px */
+  --font-size-md: 0.75rem; /* 12px */
+  --font-size-base: 0.8125rem; /* 13px */
+  --font-size-lg: 0.875rem; /* 14px */
+  --font-size-xl: 1rem; /* 16px */
+  --font-size-2xl: 1.25rem; /* 20px */
+  --font-size-3xl: 1.5rem; /* 24px */
 
   /* Hidden entries (dotfiles) are dimmed to set them apart from regular files. */
   --opacity-hidden-entry: 0.55;

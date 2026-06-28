@@ -84,20 +84,20 @@ body.is-marqueeing .directory_page .dir_entry_item {
   border-radius: var(--radius-sm);
   color: var(--color-text-primary);
   font-family: "Inter", sans-serif;
-  font-size: 0.7rem;
+  font-size: var(--font-size-sm);
   font-weight: 400;
   text-align: center;
   outline: none;
 }
 
 .directory_page .list .dir_entry_item .name .rename_input {
-  font-size: 0.8rem;
+  font-size: var(--font-size-base);
   text-align: left;
 }
 
 .directory_page .no_results {
   margin-top: var(--space-5);
-  font-size: 0.85rem;
+  font-size: var(--font-size-base);
   font-weight: 400;
   color: var(--color-text-muted);
   -webkit-user-select: none;
@@ -138,7 +138,7 @@ body.is-marqueeing .directory_page .dir_entry_item {
   top: var(--space-0);
   right: var(--space-0);
   z-index: 998;
-  font-size: 0.6rem;
+  font-size: var(--font-size-xs);
   font-weight: 400;
   -webkit-user-select: none;
   user-select: none;
@@ -166,7 +166,7 @@ body.is-marqueeing .directory_page .dir_entry_item {
 }
 
 .directory_page .grid .dir_entry_item .icon svg {
-  font-size: calc(1.4rem * var(--zoom, 1));
+  font-size: calc(var(--font-size-3xl) * var(--zoom, 1));
   color: var(--color-text-muted);
 }
 
@@ -184,7 +184,7 @@ body.is-marqueeing .directory_page .dir_entry_item {
   transform: translateX(-50%);
   width: 100%;
   text-align: center;
-  font-size: 0.7rem;
+  font-size: var(--font-size-sm);
   font-weight: 400;
   color: var(--color-text-subtle);
   -webkit-user-select: none;
@@ -287,7 +287,7 @@ body.is-marqueeing .directory_page .dir_entry_item {
 }
 
 .directory_page .list_header button span {
-  font-size: 0.65rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   color: var(--color-text-tertiary);
   letter-spacing: 0.03em;
@@ -299,7 +299,7 @@ body.is-marqueeing .directory_page .dir_entry_item {
 }
 
 .directory_page .list_header button svg {
-  font-size: 0.5rem;
+  font-size: var(--font-size-2xs);
   flex-shrink: 0;
   color: var(--color-text-secondary);
 }
@@ -344,7 +344,7 @@ body.is-marqueeing .directory_page .dir_entry_item {
 }
 
 .directory_page .list .dir_entry_item .icon svg {
-  font-size: calc(0.9rem * var(--zoom, 1));
+  font-size: calc(var(--font-size-lg) * var(--zoom, 1));
   color: var(--color-text-muted);
 }
 
@@ -364,7 +364,7 @@ body.is-marqueeing .directory_page .dir_entry_item {
 .directory_page .list .dir_entry_item .name h3 {
   -webkit-user-select: none;
   user-select: none;
-  font-size: 0.8rem;
+  font-size: var(--font-size-base);
   font-weight: 400;
   color: var(--color-text-secondary);
   min-width: 0;
@@ -381,7 +381,7 @@ body.is-marqueeing .directory_page .dir_entry_item {
 
 .directory_page .list .dir_entry_item .date_modified h3,
 .directory_page .list .dir_entry_item .date_created h3 {
-  font-size: 0.7rem;
+  font-size: var(--font-size-sm);
   font-weight: 400;
   color: var(--color-text-tertiary);
   white-space: nowrap;
@@ -398,7 +398,7 @@ body.is-marqueeing .directory_page .dir_entry_item {
 }
 
 .directory_page .list .dir_entry_item .size h3 {
-  font-size: 0.6rem;
+  font-size: var(--font-size-xs);
   font-weight: 400;
   color: var(--color-text-tertiary);
   background-color: var(--color-surface-popover);
@@ -417,7 +417,7 @@ body.is-marqueeing .directory_page .dir_entry_item {
 }
 
 .directory_page .list .dir_entry_item .kind h3 {
-  font-size: 0.7rem;
+  font-size: var(--font-size-sm);
   font-weight: 400;
   color: var(--color-text-tertiary);
   white-space: nowrap;
@@ -482,7 +482,7 @@ body.is-marqueeing .directory_page .dir_entry_item {
 }
 
 .entry_metadata_title {
-  font-size: 0.78rem;
+  font-size: var(--font-size-md);
   font-weight: 600;
   color: var(--color-text-primary);
 }
@@ -496,14 +496,14 @@ body.is-marqueeing .directory_page .dir_entry_item {
 }
 
 .entry_metadata_key {
-  font-size: 0.72rem;
+  font-size: var(--font-size-sm);
   font-weight: 600;
   color: var(--color-text-secondary);
 }
 
 .entry_metadata_value {
   min-width: 0;
-  font-size: 0.72rem;
+  font-size: var(--font-size-sm);
   color: var(--color-text-tertiary);
   overflow: hidden;
   text-overflow: ellipsis;
