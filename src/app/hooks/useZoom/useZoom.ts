@@ -3,14 +3,17 @@ import { useCallback, useEffect, useState } from "react";
 import { FileSystemManager } from "@/shared/managers/FileSystemManager";
 import { ZOOM_DEFAULT, ZOOM_STEP } from "@/shared/constants";
 
-import { DEFAULT_ZOOM_STORAGE_KEY } from "./constants";
-import { clampZoom, loadDefaultZoom } from "./utils";
+import { clampZoom } from "./utils";
 
 // Per-folder zoom: loads the active folder's saved zoom (or the configurable default) on
 // navigation, and persists on every explicit zoom. `path` is the active folder ("" = Volumes).
-export const useZoom = (fs: FileSystemManager, path: string) => {
+// `defaultZoom` is the app-wide fallback (owned by app settings, not this hook).
+export const useZoom = (
+  fs: FileSystemManager,
+  path: string,
+  defaultZoom: number,
+) => {
   const [zoom, setZoom] = useState<number>(ZOOM_DEFAULT);
-  const [defaultZoom, setDefaultZoomState] = useState<number>(loadDefaultZoom);
 
   // Load the folder's saved zoom on navigation, falling back to the configurable default.
   useEffect(() => {
@@ -23,13 +26,6 @@ export const useZoom = (fs: FileSystemManager, path: string) => {
       cancelled = true;
     };
   }, [fs, path, defaultZoom]);
-
-  // Set and persist the default zoom for folders without their own saved value.
-  const setDefaultZoom = useCallback((value: number) => {
-    const next = clampZoom(value);
-    setDefaultZoomState(next);
-    localStorage.setItem(DEFAULT_ZOOM_STORAGE_KEY, String(next));
-  }, []);
 
   // Persist the folder's zoom when it actually changed. Persisting only on explicit zoom
   // (not in an effect watching `zoom`) avoids a load -> save loop.
@@ -71,5 +67,5 @@ export const useZoom = (fs: FileSystemManager, path: string) => {
   const zoomIn = useCallback(() => stepZoom(ZOOM_STEP), [stepZoom]);
   const zoomOut = useCallback(() => stepZoom(-ZOOM_STEP), [stepZoom]);
 
-  return { zoom, zoomIn, zoomOut, setZoomTo, defaultZoom, setDefaultZoom };
+  return { zoom, zoomIn, zoomOut, setZoomTo };
 };

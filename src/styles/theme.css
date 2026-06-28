@@ -81,7 +81,9 @@
   /* Sidebar sits darker/translucent (lets the window vibrancy through); the main content
      panel is a touch lighter and solid, so the two read as distinct surfaces (Finder-style). */
   --color-background-app: rgb(32, 32, 34);
-  --color-background-sidebar: rgba(16, 16, 18, 0.85);
+  /* Sidebar background alpha is user-adjustable (Settings); overridden inline on .SideBar. */
+  --sidebar-opacity: 0.85;
+  --color-background-sidebar: rgba(16, 16, 18, var(--sidebar-opacity));
 
   --color-surface-solid: rgb(0, 0, 0);
   --color-surface-input: rgba(0, 0, 0, 0.06);

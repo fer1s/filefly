@@ -3,6 +3,11 @@ import IconButton from "@/shared/components/elements/IconButton";
 import { useStateContext } from "@/shared/providers/StateProvider";
 import { useCloseOnEscape } from "@/shared/hooks/useCloseOnEscape";
 import { ESCAPE_HOTKEY } from "@/shared/keymap";
+import {
+  SIDEBAR_OPACITY_MIN,
+  SIDEBAR_OPACITY_MAX,
+  SIDEBAR_OPACITY_STEP,
+} from "@/shared/constants";
 import { t } from "@/lang";
 
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
@@ -17,8 +22,14 @@ import type { SettingsDialogProps } from "./types";
 // App settings. A shell for now with a couple of real controls; add more rows under the
 // relevant section as settings grow.
 const SettingsDialog = ({ visible, onClose }: SettingsDialogProps) => {
-  const { showHidden, toggleShowHidden, defaultZoom, setDefaultZoom } =
-    useStateContext();
+  const {
+    showHidden,
+    toggleShowHidden,
+    defaultZoom,
+    setDefaultZoom,
+    sidebarOpacity,
+    setSidebarOpacity,
+  } = useStateContext();
 
   useCloseOnEscape(visible, onClose);
 
@@ -74,6 +85,28 @@ const SettingsDialog = ({ visible, onClose }: SettingsDialogProps) => {
           </SettingsRow>
 
           <DateFormatRow />
+
+          <SettingsRow
+            label={t.settings.sidebarOpacity}
+            hint={t.settings.sidebarOpacityHint}
+          >
+            <span className="settings_range_control">
+              <input
+                type="range"
+                className="settings_range"
+                min={SIDEBAR_OPACITY_MIN}
+                max={SIDEBAR_OPACITY_MAX}
+                step={SIDEBAR_OPACITY_STEP}
+                value={sidebarOpacity}
+                onChange={(event) =>
+                  setSidebarOpacity(Number(event.target.value))
+                }
+              />
+              <span className="settings_range_value">
+                {t.settings.zoomPercent(Math.round(sidebarOpacity * 100))}
+              </span>
+            </span>
+          </SettingsRow>
         </section>
       </div>
     </Dialog>

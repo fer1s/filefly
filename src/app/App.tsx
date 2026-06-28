@@ -14,7 +14,7 @@ import { useToasts } from "./hooks/useToasts";
 import { useZoom } from "./hooks/useZoom";
 import { useDirectoryContents } from "./hooks/useDirectoryContents";
 import { useSidebarCollapsed } from "./hooks/useSidebarCollapsed";
-import { useDateFormat } from "./hooks/useDateFormat";
+import { useAppSettings } from "./hooks/useAppSettings";
 
 import { notify, TOAST_TYPE } from "@/shared/toast";
 import { FileSystemManager } from "@/shared/managers/FileSystemManager";
@@ -38,21 +38,21 @@ const App = () => {
     navigate,
     locationPathname: location.pathname,
   });
-  const zoom = useZoom(fs, tabs.path);
+  // App-wide settings persisted in settings.toml; hydrated on launch.
+  const { settings, update } = useAppSettings();
+  const zoom = useZoom(fs, tabs.path, settings.defaultZoom);
   const { toasts, dismissToast } = useToasts();
   const sidebar = useSidebarCollapsed();
-  const { dateFormat, setDateFormat } = useDateFormat();
 
   const [view, setView] = useState<ViewMode>(VIEW_MODE.GRID);
-  const [showHidden, setShowHidden] = useState<boolean>(false);
   const toggleShowHidden = useCallback(() => {
-    const next = !showHidden;
-    setShowHidden(next);
+    const next = !settings.showHidden;
+    update({ showHidden: next });
     notify(
       next ? t.directory.showingHidden : t.directory.hidingHidden,
       TOAST_TYPE.INFO,
     );
-  }, [showHidden]);
+  }, [settings.showHidden, update]);
 
   // The OS/webview context menu is replaced by the app's own; suppress it everywhere.
   useEffect(() => {
@@ -84,16 +84,18 @@ const App = () => {
         accessDenied: directory.accessDenied,
         view,
         setView,
-        showHidden,
+        showHidden: settings.showHidden,
         toggleShowHidden,
         zoom: zoom.zoom,
         zoomIn: zoom.zoomIn,
         zoomOut: zoom.zoomOut,
         setZoomTo: zoom.setZoomTo,
-        defaultZoom: zoom.defaultZoom,
-        setDefaultZoom: zoom.setDefaultZoom,
-        dateFormat,
-        setDateFormat,
+        defaultZoom: settings.defaultZoom,
+        setDefaultZoom: (defaultZoom) => update({ defaultZoom }),
+        dateFormat: settings.dateFormat,
+        setDateFormat: (dateFormat) => update({ dateFormat }),
+        sidebarOpacity: settings.sidebarOpacity,
+        setSidebarOpacity: (sidebarOpacity) => update({ sidebarOpacity }),
         search: tabs.search,
         setSearch: tabs.setSearch,
         refreshDir: directory.refreshDir,

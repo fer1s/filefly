@@ -7,6 +7,23 @@ import { Volume, DirEntry, ContextMenuLayout } from "@/shared/models";
 import { ACCESS_DENIED_ERROR } from "@/shared/constants";
 import type { Keymap } from "@/shared/keymap/types";
 
+// App-wide user settings, persisted in settings.toml (Rust is the source of truth; the frontend
+// hydrates from this on launch). Mirrors the AppSettings struct in functions/settings.rs.
+export type AppSettings = {
+  showHidden: boolean;
+  defaultZoom: number;
+  dateFormat: string;
+  sidebarOpacity: number;
+};
+
+// Load the persisted app settings (falls back to defaults when settings.toml is absent).
+export const getSettings = async (): Promise<AppSettings> =>
+  (await invoke("get_settings")) as AppSettings;
+
+// Persist the whole app-settings struct to settings.toml.
+export const setSettings = async (settings: AppSettings): Promise<void> =>
+  await invoke("set_settings", { settings });
+
 // Load the keybindings (reads keymap.toml, falling back to bundled defaults).
 export const getKeymap = async (): Promise<Keymap> =>
   (await invoke("get_keymap")) as Keymap;

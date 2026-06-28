@@ -15,6 +15,13 @@ export const ZOOM_MAX = 3;
 export const ZOOM_STEP = 0.25;
 export const ZOOM_DEFAULT = 1;
 
+// User-adjustable sidebar background opacity (alpha of --color-background-sidebar). Floored above
+// zero so the sidebar never becomes invisible.
+export const SIDEBAR_OPACITY_MIN = 0.2;
+export const SIDEBAR_OPACITY_MAX = 1;
+export const SIDEBAR_OPACITY_STEP = 0.05;
+export const DEFAULT_SIDEBAR_OPACITY = 0.85;
+
 // Sentinel date-format value meaning "use the OS locale's date-time string" (Date.toLocaleString).
 // Any other value is a token pattern (YYYY, MM, DD, HH, …) interpreted by formatDate.
 export const DATE_FORMAT_LOCALE = "locale";

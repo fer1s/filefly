@@ -58,6 +58,8 @@ fn main() {
             functions::system::open_full_disk_access_settings,
             functions::keymap::get_keymap,
             functions::context_menu::get_context_menu,
+            functions::settings::get_settings,
+            functions::settings::set_settings,
             functions::folder_columns::get_folder_columns,
             functions::folder_columns::set_folder_columns,
             functions::folder_columns::get_folder_view,

@@ -3,6 +3,7 @@ import {
   VIEW_MODE,
   ZOOM_DEFAULT,
   DEFAULT_DATE_FORMAT,
+  DEFAULT_SIDEBAR_OPACITY,
 } from "@/shared/constants";
 
 import type { State } from "./types";
@@ -38,6 +39,8 @@ export const initialState: State = {
   setDefaultZoom: () => {},
   dateFormat: DEFAULT_DATE_FORMAT,
   setDateFormat: () => {},
+  sidebarOpacity: DEFAULT_SIDEBAR_OPACITY,
+  setSidebarOpacity: () => {},
   search: "",
   setSearch: () => {},
   refreshDir: () => {},

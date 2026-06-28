@@ -41,6 +41,9 @@ export type State = {
   // The date format used wherever dates are shown (a token pattern or the locale sentinel).
   dateFormat: string;
   setDateFormat: (format: string) => void;
+  // Sidebar background opacity (alpha of --color-background-sidebar), 0..1.
+  sidebarOpacity: number;
+  setSidebarOpacity: (opacity: number) => void;
   search: string;
   setSearch: (search: string) => void;
   refreshDir: () => void;

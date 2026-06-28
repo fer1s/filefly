@@ -106,6 +106,8 @@ export const en = {
     dateFormatCustom: "Custom…",
     dateFormatPlaceholder: "e.g. YYYY-MM-DD HH:mm",
     dateFormatPreview: (sample: string) => `Preview: ${sample}`,
+    sidebarOpacity: "Sidebar opacity",
+    sidebarOpacityHint: "How opaque the sidebar background is.",
   },
   infoPanel: {
     title: "Info",
