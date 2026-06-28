@@ -41,6 +41,7 @@ export const en = {
   },
   details: {
     title: "Metadata",
+    name: "Name",
     type: "Type",
     path: "Path",
     extension: "Extension",

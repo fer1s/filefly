@@ -126,7 +126,11 @@ const PathBar = () => {
         size={ICON_BUTTON_SIZE.LG}
         tooltip={t.pathbar.toggleInfo}
         aria-label={t.pathbar.toggleInfo}
-        className={classNames("shadow", "info_toggle", infoPanelOpen && "active")}
+        className={classNames(
+          "shadow",
+          "info_toggle",
+          infoPanelOpen && "active",
+        )}
       />
     </div>
   );

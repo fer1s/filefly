@@ -7,16 +7,15 @@ import {
   formatDate,
 } from "@/shared/utils";
 import { IMAGE_FORMATS, VIDEO_FORMATS, PDF_FORMAT } from "@/shared/constants";
-import Icon from "@/shared/components/elements/Icon";
 import Tooltip from "@/shared/components/elements/Tooltip";
 import { t } from "@/lang";
-
-import { faFile, faFolder } from "@fortawesome/free-solid-svg-icons";
 
 import { METADATA_TOOLTIP_DELAY } from "./constants";
 import { useEntryThumbnail } from "./useEntryThumbnail";
 import { useInlineRename } from "./useInlineRename";
 import { useEntryContextMenu } from "./useEntryContextMenu";
+import { EntryMetadata } from "./EntryMetadata";
+import { EntryIcon } from "./EntryIcon";
 import type { DirEntryItemProps } from "./types";
 
 const DirEntryItemComponent = ({
@@ -106,6 +105,8 @@ const DirEntryItemComponent = ({
     <div className="entry_metadata">
       <span className="entry_metadata_title">{t.details.title}</span>
       <div className="entry_metadata_rows">
+        <span className="entry_metadata_key">{t.details.name}</span>
+        <span className="entry_metadata_value">{entry.name}</span>
         <span className="entry_metadata_key">{t.details.type}</span>
         <span className="entry_metadata_value">
           {entry.metadata.isDir ? t.common.directory : t.common.file}

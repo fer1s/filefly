@@ -31,7 +31,10 @@ export type EntryActionContext = {
   onClose: () => void;
   onStartRename: (id: string) => void;
   onPreview: (id: string) => void;
-  onProperties: (id: string, isCurrentDirectory: boolean) => void | Promise<void>;
+  onProperties: (
+    id: string,
+    isCurrentDirectory: boolean,
+  ) => void | Promise<void>;
 };
 
 // A predefined, reusable context-menu action. Presentation (label/icon/hotkey/color) is

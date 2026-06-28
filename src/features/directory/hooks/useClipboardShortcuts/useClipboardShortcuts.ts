@@ -49,9 +49,7 @@ export const useClipboardShortcuts = ({
       } else if (matchesBinding(e, keymap[KEYMAP_ACTION.PASTE])) {
         e.preventDefault();
         onPaste();
-      } else if (
-        matchesBinding(e, keymap[KEYMAP_ACTION.DELETE_PERMANENTLY])
-      ) {
+      } else if (matchesBinding(e, keymap[KEYMAP_ACTION.DELETE_PERMANENTLY])) {
         e.preventDefault();
         onDeletePermanently(selectedIDs);
       } else if (matchesBinding(e, keymap[KEYMAP_ACTION.TRASH])) {

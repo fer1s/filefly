@@ -207,7 +207,10 @@ const Preview = ({
                   autoPlay
                 />
               ) : fileType === PDF_FORMAT ? (
-                <iframe src={convertFileSrc(filePath)} title={t.common.preview} />
+                <iframe
+                  src={convertFileSrc(filePath)}
+                  title={t.common.preview}
+                />
               ) : (
                 <div className="preview_file_not_supported">
                   <h3>{t.directory.fileTypeNotSupported}</h3>

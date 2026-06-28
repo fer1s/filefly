@@ -16,7 +16,9 @@ export const useContextMenuLayout = (): ContextMenuLayout => {
       .then((next) => {
         if (!cancelled) setLayout(next);
       })
-      .catch((err) => console.error("Failed to load context menu layout:\n" + err));
+      .catch((err) =>
+        console.error("Failed to load context menu layout:\n" + err),
+      );
     return () => {
       cancelled = true;
     };

@@ -7,7 +7,11 @@ import { t } from "@/lang";
 import { CLIPBOARD_MODE } from "@/shared/constants";
 
 import { basename, withName, entryLabel } from "./utils";
-import type { Clipboard, OperationProgress, UseFileOperationsArgs } from "./types";
+import type {
+  Clipboard,
+  OperationProgress,
+  UseFileOperationsArgs,
+} from "./types";
 
 // Core filesystem operations on a list of paths, shared by the context menu and the
 // keyboard shortcuts. Owns the internal copy/cut clipboard and the batch progress.
