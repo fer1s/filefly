@@ -100,6 +100,12 @@ export const en = {
     defaultZoom: "Default zoom",
     defaultZoomHint: "Zoom level for folders you haven't zoomed yet.",
     zoomPercent: (percent: number) => `${percent}%`,
+    dateFormat: "Date format",
+    dateFormatHint: "How dates are shown in folders and properties.",
+    dateFormatLocale: "System default",
+    dateFormatCustom: "Custom…",
+    dateFormatPlaceholder: "e.g. YYYY-MM-DD HH:mm",
+    dateFormatPreview: (sample: string) => `Preview: ${sample}`,
   },
   infoPanel: {
     title: "Info",

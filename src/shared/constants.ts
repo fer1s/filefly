@@ -15,6 +15,13 @@ export const ZOOM_MAX = 3;
 export const ZOOM_STEP = 0.25;
 export const ZOOM_DEFAULT = 1;
 
+// Sentinel date-format value meaning "use the OS locale's date-time string" (Date.toLocaleString).
+// Any other value is a token pattern (YYYY, MM, DD, HH, …) interpreted by formatDate.
+export const DATE_FORMAT_LOCALE = "locale";
+
+// Default date format before the user picks one: the system locale (preserves prior behavior).
+export const DEFAULT_DATE_FORMAT = DATE_FORMAT_LOCALE;
+
 export const ENTRY_KIND = {
   FILE: "file",
   DIRECTORY: "dir",

@@ -1,5 +1,9 @@
 import { FileSystemManager } from "@/shared/managers/FileSystemManager";
-import { VIEW_MODE, ZOOM_DEFAULT } from "@/shared/constants";
+import {
+  VIEW_MODE,
+  ZOOM_DEFAULT,
+  DEFAULT_DATE_FORMAT,
+} from "@/shared/constants";
 
 import type { State } from "./types";
 
@@ -32,6 +36,8 @@ export const initialState: State = {
   setZoomTo: () => {},
   defaultZoom: ZOOM_DEFAULT,
   setDefaultZoom: () => {},
+  dateFormat: DEFAULT_DATE_FORMAT,
+  setDateFormat: () => {},
   search: "",
   setSearch: () => {},
   refreshDir: () => {},

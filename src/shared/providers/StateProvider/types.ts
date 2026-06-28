@@ -38,6 +38,9 @@ export type State = {
   // Configurable default zoom for folders without their own saved zoom.
   defaultZoom: number;
   setDefaultZoom: (zoom: number) => void;
+  // The date format used wherever dates are shown (a token pattern or the locale sentinel).
+  dateFormat: string;
+  setDateFormat: (format: string) => void;
   search: string;
   setSearch: (search: string) => void;
   refreshDir: () => void;

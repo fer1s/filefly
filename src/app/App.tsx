@@ -14,6 +14,7 @@ import { useToasts } from "./hooks/useToasts";
 import { useZoom } from "./hooks/useZoom";
 import { useDirectoryContents } from "./hooks/useDirectoryContents";
 import { useSidebarCollapsed } from "./hooks/useSidebarCollapsed";
+import { useDateFormat } from "./hooks/useDateFormat";
 
 import { notify, TOAST_TYPE } from "@/shared/toast";
 import { FileSystemManager } from "@/shared/managers/FileSystemManager";
@@ -40,6 +41,7 @@ const App = () => {
   const zoom = useZoom(fs, tabs.path);
   const { toasts, dismissToast } = useToasts();
   const sidebar = useSidebarCollapsed();
+  const { dateFormat, setDateFormat } = useDateFormat();
 
   const [view, setView] = useState<ViewMode>(VIEW_MODE.GRID);
   const [showHidden, setShowHidden] = useState<boolean>(false);
@@ -90,6 +92,8 @@ const App = () => {
         setZoomTo: zoom.setZoomTo,
         defaultZoom: zoom.defaultZoom,
         setDefaultZoom: zoom.setDefaultZoom,
+        dateFormat,
+        setDateFormat,
         search: tabs.search,
         setSearch: tabs.setSearch,
         refreshDir: directory.refreshDir,

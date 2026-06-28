@@ -11,6 +11,7 @@ import "@/styles/components/SettingsDialog.css";
 
 import { SETTINGS_TITLE_ID, ZOOM_OPTIONS } from "./constants";
 import SettingsRow from "./SettingsRow";
+import DateFormatRow from "./DateFormatRow";
 import type { SettingsDialogProps } from "./types";
 
 // App settings. A shell for now with a couple of real controls; add more rows under the
@@ -71,6 +72,8 @@ const SettingsDialog = ({ visible, onClose }: SettingsDialogProps) => {
               ))}
             </select>
           </SettingsRow>
+
+          <DateFormatRow />
         </section>
       </div>
     </Dialog>

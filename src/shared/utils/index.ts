@@ -4,6 +4,7 @@ import { faUsb } from "@fortawesome/free-brands-svg-icons";
 import { DirEntry, Volume } from "@/shared/models";
 import { classNames } from "./classNames";
 import { activateOnKey } from "./activateOnKey";
+import { formatDate, formatWithPattern } from "./date";
 
 export const navigateToPath = (
   entry: DirEntry,
@@ -33,10 +34,6 @@ export const formatBytes = (bytes: number, decimals: number = 2) => {
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
 };
 
-// Format a Unix epoch (seconds) as a locale date-time string.
-export const formatDate = (secs: number) =>
-  new Date(secs * 1000).toLocaleString();
-
 // Last segment of a path (the file/folder name), handling "/" and "\" and trailing separators.
 export const basename = (path: string) => {
   const segments = path.replace(/[\\/]+$/, "").split(/[\\/]/);
@@ -51,4 +48,4 @@ export const extension = (name: string) =>
 export const volumeIcon = (volume: Volume) =>
   volume.isRemovable ? faUsb : faHardDrive;
 
-export { classNames, activateOnKey };
+export { classNames, activateOnKey, formatDate, formatWithPattern };

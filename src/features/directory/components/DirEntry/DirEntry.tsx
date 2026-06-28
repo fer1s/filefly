@@ -22,6 +22,7 @@ const DirEntryItemComponent = ({
   entry,
   fs,
   setPath,
+  dateFormat,
   contextMenuRef,
   id,
 
@@ -143,10 +144,14 @@ const DirEntryItemComponent = ({
 
         {/* List-only columns (hidden in grid). */}
         <div className="date_modified">
-          <h3>{formatDate(entry.metadata.modified.secs_since_epoch)}</h3>
+          <h3>
+            {formatDate(entry.metadata.modified.secs_since_epoch, dateFormat)}
+          </h3>
         </div>
         <div className="date_created">
-          <h3>{formatDate(entry.metadata.created.secs_since_epoch)}</h3>
+          <h3>
+            {formatDate(entry.metadata.created.secs_since_epoch, dateFormat)}
+          </h3>
         </div>
         <div className="size">
           {entry.size > 0 && <h3>{formatBytes(entry.size)}</h3>}

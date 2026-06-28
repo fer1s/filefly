@@ -25,7 +25,7 @@ const EntriesView = ({
   onCancelRename,
   menu,
 }: EntriesViewProps) => {
-  const { fs, setPath } = useStateContext();
+  const { fs, setPath, dateFormat } = useStateContext();
   const [renderCount, setRenderCount] = useState(RENDER_BATCH_SIZE);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
@@ -70,6 +70,7 @@ const EntriesView = ({
             entry={entry}
             fs={fs}
             setPath={setPath}
+            dateFormat={dateFormat}
             contextMenuRef={contextMenuRef}
             id={entry.path}
             selected={selectedIDs.includes(entry.path)}

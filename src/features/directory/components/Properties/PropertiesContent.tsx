@@ -1,4 +1,5 @@
 import { formatBytes, formatDate } from "@/shared/utils";
+import { useStateContext } from "@/shared/providers/StateProvider";
 import { t } from "@/lang";
 
 import "@/styles/components/Properties.css";
@@ -9,6 +10,7 @@ import type { PropertiesContentProps } from "./types";
 
 // The metadata rows for an entry. Shared by the Properties dialog and the info side panel.
 export const PropertiesContent = ({ entry }: PropertiesContentProps) => {
+  const { dateFormat } = useStateContext();
   // Files report their size directly; folders are computed (null while calculating).
   const size = useEntrySize(entry);
 
@@ -32,15 +34,15 @@ export const PropertiesContent = ({ entry }: PropertiesContentProps) => {
       )}
       <PropertyRow
         label={t.properties.created}
-        value={formatDate(entry.metadata.created.secs_since_epoch)}
+        value={formatDate(entry.metadata.created.secs_since_epoch, dateFormat)}
       />
       <PropertyRow
         label={t.properties.modified}
-        value={formatDate(entry.metadata.modified.secs_since_epoch)}
+        value={formatDate(entry.metadata.modified.secs_since_epoch, dateFormat)}
       />
       <PropertyRow
         label={t.properties.accessed}
-        value={formatDate(entry.metadata.accessed.secs_since_epoch)}
+        value={formatDate(entry.metadata.accessed.secs_since_epoch, dateFormat)}
       />
     </div>
   );
