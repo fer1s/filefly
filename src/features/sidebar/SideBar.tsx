@@ -1,5 +1,3 @@
-import { useCallback, useEffect } from "react";
-
 import { useStateContext } from "@/shared/providers/StateProvider";
 import IconButton, {
   ICON_BUTTON_SIZE,
@@ -9,11 +7,11 @@ import { TOOLTIP_PLACEMENT } from "@/shared/components/elements/Tooltip";
 import {
   useKeymap,
   formatBinding,
-  matchesBinding,
   KEYMAP_ACTION,
   PINNED_ACTIONS,
 } from "@/shared/keymap";
 import { classNames } from "@/shared/utils";
+import { useSettings } from "@/features/settings";
 import { t } from "@/lang";
 
 import { usePinnedFolders } from "./hooks/usePinnedFolders";
@@ -38,23 +36,9 @@ const SideBar = ({ collapsed, onToggle, visitedPaths }: SideBarProps) => {
   const { path, volumes, setPath, newTab } = useStateContext();
 
   const { keymap } = useKeymap();
+  const { open: openSettings } = useSettings();
   const pinned = usePinnedFolders();
   usePinnedShortcuts({ pinned, setPath });
-
-  // Single entry point shared by the gear button and the VS Code-style shortcut (Cmd/Ctrl + ,).
-  // TODO: open a settings view here once one exists.
-  const openSettings = useCallback(() => {}, []);
-
-  useEffect(() => {
-    const handler = (event: KeyboardEvent) => {
-      if (matchesBinding(event, keymap[KEYMAP_ACTION.OPEN_SETTINGS])) {
-        event.preventDefault();
-        openSettings();
-      }
-    };
-    document.addEventListener("keydown", handler);
-    return () => document.removeEventListener("keydown", handler);
-  }, [keymap, openSettings]);
   const recentPaths = getRecentPaths(path, visitedPaths);
   const recent = recentPaths.map((recentPath) => ({
     name: getPathLabel(recentPath),

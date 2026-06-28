@@ -82,6 +82,12 @@ export const en = {
     newTab: "New tab",
     closeTab: "Close tab",
   },
+  settings: {
+    title: "Settings",
+    general: "General",
+    showHidden: "Show hidden files",
+    showHiddenHint: "Display dotfiles and other hidden entries in folders.",
+  },
   infoPanel: {
     title: "Info",
     selectSingle: "Select a single item to see its details.",

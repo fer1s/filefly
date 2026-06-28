@@ -63,6 +63,9 @@
   --size-tab-max-width: 180px;
   --font-size-tab: 12px;
   --font-size-icon-large: 20px;
+  --font-size-sm: 0.75rem;
+  --font-size-md: 0.85rem;
+  --font-size-lg: 1rem;
 
   /* Hidden entries (dotfiles) are dimmed to set them apart from regular files. */
   --opacity-hidden-entry: 0.55;

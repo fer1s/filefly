@@ -10,6 +10,7 @@ import { StateProvider } from "@/shared/providers/StateProvider";
 import { KeymapProvider } from "@/shared/keymap";
 
 import SideBar from "@/features/sidebar";
+import { SettingsProvider } from "@/features/settings";
 import ToastStack, {
   TOAST_VISIBLE_MS,
   TOAST_EXIT_MS,
@@ -380,14 +381,16 @@ const App = () => {
       }}
     >
       <KeymapProvider>
-        <div className={classNames("App", sidebarCollapsed && "collapsed")}>
-          <SideBar
-            collapsed={sidebarCollapsed}
-            onToggle={() => setSidebarCollapsed((c) => !c)}
-            visitedPaths={activeTab.history.stack}
-          />
-          <AppContent />
-        </div>
+        <SettingsProvider>
+          <div className={classNames("App", sidebarCollapsed && "collapsed")}>
+            <SideBar
+              collapsed={sidebarCollapsed}
+              onToggle={() => setSidebarCollapsed((c) => !c)}
+              visitedPaths={activeTab.history.stack}
+            />
+            <AppContent />
+          </div>
+        </SettingsProvider>
         <ToastStack toasts={toasts} onDismiss={dismissToast} />
       </KeymapProvider>
     </StateProvider>
