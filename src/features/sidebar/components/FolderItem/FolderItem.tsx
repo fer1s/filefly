@@ -2,7 +2,7 @@ import Icon from "@/shared/components/elements/Icon";
 import Tooltip, {
   TOOLTIP_PLACEMENT,
 } from "@/shared/components/elements/Tooltip";
-import { classNames } from "@/shared/utils";
+import { classNames, activateOnKey } from "@/shared/utils";
 
 import type { FolderItemProps } from "./types";
 
@@ -13,10 +13,17 @@ const FolderItem = ({
   active,
   hotkey,
 }: FolderItemProps) => {
+  const open = () => setPath(item.path);
+
   const row = (
     <div
       className={classNames("folder_item", active && "active")}
-      onClick={() => setPath(item.path)}
+      role="button"
+      tabIndex={0}
+      aria-current={active ? "true" : undefined}
+      aria-label={item.name}
+      onClick={open}
+      onKeyDown={activateOnKey(open)}
     >
       <Icon icon={item.icon} />
       <p>{item.name}</p>

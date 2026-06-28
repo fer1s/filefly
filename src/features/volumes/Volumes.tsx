@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, type KeyboardEvent } from "react";
 
 import { useStateContext } from "@/shared/providers/StateProvider";
 import { Volume } from "@/shared/models";
 import { classNames } from "@/shared/utils";
-import { VIEW_MODE } from "@/shared/constants";
+import { VIEW_MODE, KEY } from "@/shared/constants";
 import Icon from "@/shared/components/elements/Icon";
 import { t } from "@/lang";
 
@@ -78,6 +78,19 @@ type VolumeItemProps = {
   onSelect: () => void;
 };
 
+// Keyboard parity with the mouse: Enter opens (like double-click), Space selects (like click).
+const handleVolumeKey =
+  (open: () => void, select: () => void) =>
+  (event: KeyboardEvent<HTMLElement>) => {
+    if (event.key === KEY.ENTER) {
+      event.preventDefault();
+      open();
+    } else if (event.key === KEY.SPACE) {
+      event.preventDefault();
+      select();
+    }
+  };
+
 const VolumeCard = ({
   volume,
   setPath,
@@ -87,8 +100,13 @@ const VolumeCard = ({
   return (
     <div
       className={classNames("volume_item", selected && "selected")}
+      role="button"
+      tabIndex={0}
+      aria-pressed={selected}
+      aria-label={`${volume.mountPoint} ${volume.name}`}
       onClick={onSelect}
       onDoubleClick={() => setPath(volume.mountPoint)}
+      onKeyDown={handleVolumeKey(() => setPath(volume.mountPoint), onSelect)}
     >
       <Icon icon={volume.isRemovable ? faUsb : faHardDrive} />
       <div className="volume_info">
@@ -116,8 +134,11 @@ const VolumeListRow = ({
   return (
     <tr
       className={classNames("volume_item", selected && "selected")}
+      tabIndex={0}
+      aria-label={`${volume.mountPoint} ${volume.name}`}
       onClick={onSelect}
       onDoubleClick={() => setPath(volume.mountPoint)}
+      onKeyDown={handleVolumeKey(() => setPath(volume.mountPoint), onSelect)}
     >
       <td>
         <div className="volume_identity">

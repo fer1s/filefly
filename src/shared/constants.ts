@@ -53,6 +53,7 @@ export const KEY = {
   ESCAPE: "Escape",
   BACKSPACE: "Backspace",
   SPACE: " ",
+  TAB: "Tab",
   ARROW_UP: "ArrowUp",
   ARROW_DOWN: "ArrowDown",
   ARROW_LEFT: "ArrowLeft",

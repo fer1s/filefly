@@ -2,7 +2,7 @@ import Icon from "@/shared/components/elements/Icon";
 import Tooltip, {
   TOOLTIP_PLACEMENT,
 } from "@/shared/components/elements/Tooltip";
-import { classNames } from "@/shared/utils";
+import { classNames, activateOnKey } from "@/shared/utils";
 import { faHardDrive } from "@fortawesome/free-solid-svg-icons";
 import { faUsb } from "@fortawesome/free-brands-svg-icons";
 
@@ -16,10 +16,17 @@ const VolumeItem = ({
   collapsed,
   active,
 }: VolumeItemProps) => {
+  const open = () => setPath(volume.mountPoint);
+
   const row = (
     <div
       className={classNames("drive_item", active && "active")}
-      onClick={() => setPath(volume.mountPoint)}
+      role="button"
+      tabIndex={0}
+      aria-current={active ? "true" : undefined}
+      aria-label={`${volume.mountPoint} ${volume.name}`}
+      onClick={open}
+      onKeyDown={activateOnKey(open)}
       style={{ animationDelay: `${index * VOLUME_ITEM_STAGGER_MS}ms` }}
     >
       <Icon icon={volume.isRemovable ? faUsb : faHardDrive} />

@@ -1,5 +1,6 @@
 import { DirEntry } from "@/shared/models";
 import { classNames } from "./classNames";
+import { activateOnKey } from "./activateOnKey";
 
 export const navigateToPath = (
   entry: DirEntry,
@@ -33,4 +34,4 @@ export const formatBytes = (bytes: number, decimals: number = 2) => {
 export const formatDate = (secs: number) =>
   new Date(secs * 1000).toLocaleString();
 
-export { classNames };
+export { classNames, activateOnKey };
