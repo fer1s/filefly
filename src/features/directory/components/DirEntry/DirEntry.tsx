@@ -7,7 +7,7 @@ import {
   formatBytes,
   formatDate,
 } from "@/shared/utils";
-import { ENTRY_KIND, IMAGE_FORMATS, KEY } from "@/shared/constants";
+import { ENTRY_KIND, IMAGE_FORMATS, VIDEO_FORMATS, KEY } from "@/shared/constants";
 import Icon from "@/shared/components/elements/Icon";
 import Tooltip from "@/shared/components/elements/Tooltip";
 import {
@@ -141,9 +141,11 @@ const DirEntryItemComponent = ({
     ? entry.name.split(".")[entry.name.split(".").length - 1]
     : "";
 
-  const isImage =
-    entry.metadata.isFile &&
-    IMAGE_FORMATS.includes(extension.toLowerCase().trim());
+  const ext = extension.toLowerCase().trim();
+  const isImage = entry.metadata.isFile && IMAGE_FORMATS.includes(ext);
+  // Videos get a frame thumbnail too (macOS); loaded through the same lazy/throttled path.
+  const isVideo = entry.metadata.isFile && VIDEO_FORMATS.includes(ext);
+  const isThumbnail = isImage || isVideo;
 
   // Dotfiles are hidden on macOS/Unix; dim them to set them apart (Finder-style).
   const isHidden = entry.name.startsWith(".");
@@ -169,7 +171,7 @@ const DirEntryItemComponent = ({
   };
 
   useEffect(() => {
-    if (!isImage) return;
+    if (!isThumbnail) return;
     const el = itemRef.current;
     if (!el) return;
 
@@ -185,7 +187,7 @@ const DirEntryItemComponent = ({
 
     io.observe(el);
     return () => io.disconnect();
-  }, [isImage]);
+  }, [isThumbnail]);
 
   // Once wanted, count it as loading and queue for a slot; when granted, ask the backend
   // for a small cached thumbnail (decoded/resized off the UI thread) and load that — never
@@ -269,7 +271,7 @@ const DirEntryItemComponent = ({
 
         <div className="name">
           <div className="icon">
-            {isImage && imgSrc ? (
+            {isThumbnail && imgSrc ? (
               <img
                 ref={imgRef}
                 src={imgSrc}

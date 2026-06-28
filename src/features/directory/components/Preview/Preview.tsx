@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { convertFileSrc } from "@tauri-apps/api/core";
 
 import { useStateContext } from "@/shared/providers/StateProvider";
@@ -7,6 +7,7 @@ import Spinner from "@/shared/components/elements/Spinner";
 import {
   AUDIO_FORMATS,
   IMAGE_FORMATS,
+  VIDEO_FORMATS,
   KEY,
   MARKDOWN_FORMAT,
 } from "@/shared/constants";
@@ -43,6 +44,15 @@ const Preview = ({
 }: PreviewProps) => {
   const { fs } = useStateContext();
   const { keymap } = useKeymap();
+
+  // The preview container stays mounted (just hidden) when closed, so a playing video keeps
+  // going. Pause and rewind it whenever the preview isn't visible.
+  const videoRef = useRef<HTMLVideoElement>(null);
+  useEffect(() => {
+    if (previewVisible || !videoRef.current) return;
+    videoRef.current.pause();
+    videoRef.current.currentTime = 0;
+  }, [previewVisible]);
 
   const [markdownPreview, setMarkdownPreview] = useState<{
     filePath: string;
@@ -99,7 +109,9 @@ const Preview = ({
           className={classNames(
             "preview_container",
             "shadow",
-            IMAGE_FORMATS.includes(fileType) && "image",
+            (IMAGE_FORMATS.includes(fileType) ||
+              VIDEO_FORMATS.includes(fileType)) &&
+              "image",
             previewVisible && "visible",
           )}
         >
@@ -137,6 +149,7 @@ const Preview = ({
               !isReady && "loading",
               fileType === MARKDOWN_FORMAT && "markdown",
               IMAGE_FORMATS.includes(fileType) && "image",
+              VIDEO_FORMATS.includes(fileType) && "video",
             )}
           >
             {isReady ? (
@@ -144,6 +157,13 @@ const Preview = ({
                 <div dangerouslySetInnerHTML={{ __html: previewContent }}></div>
               ) : IMAGE_FORMATS.includes(fileType) ? (
                 <img src={convertFileSrc(filePath)} alt={filePath} />
+              ) : VIDEO_FORMATS.includes(fileType) ? (
+                <video
+                  ref={videoRef}
+                  src={convertFileSrc(filePath)}
+                  controls
+                  autoPlay
+                />
               ) : (
                 <div className="preview_file_not_supported">
                   <h3>{t.directory.fileTypeNotSupported}</h3>

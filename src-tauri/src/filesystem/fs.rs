@@ -79,6 +79,65 @@ pub async fn get_dir_size(path: String) -> u64 {
     .unwrap_or(0)
 }
 
+// Extensions we can produce a video frame thumbnail for (matches the previewable video set).
+const VIDEO_THUMB_EXTS: &[&str] = &["mp4", "mov", "m4v", "webm", "ogv"];
+
+fn is_video(path: &str) -> bool {
+    Path::new(path)
+        .extension()
+        .and_then(|ext| ext.to_str())
+        .map(|ext| VIDEO_THUMB_EXTS.contains(&ext.to_lowercase().as_str()))
+        .unwrap_or(false)
+}
+
+// Decode the source image used to build a thumbnail: the image file itself, or a single
+// frame extracted from a video.
+fn thumbnail_source(
+    path: &str,
+    size: u32,
+    tmp_dir: &Path,
+) -> Result<image::DynamicImage, String> {
+    if is_video(path) {
+        video_frame(path, size, tmp_dir)
+    } else {
+        image::open(path).map_err(|e| e.to_string())
+    }
+}
+
+// Extract a frame from a video via QuickLook (`qlmanage`), which writes "<name>.png" into the
+// output dir. macOS-only; other platforms fall back to the generic icon.
+#[cfg(target_os = "macos")]
+fn video_frame(path: &str, size: u32, tmp_dir: &Path) -> Result<image::DynamicImage, String> {
+    use std::process::Command;
+
+    fs::create_dir_all(tmp_dir).map_err(|e| e.to_string())?;
+    Command::new("qlmanage")
+        .args(["-t", "-s", &size.to_string(), "-o"])
+        .arg(tmp_dir)
+        .arg(path)
+        .output()
+        .map_err(|e| e.to_string())?;
+
+    let frame = fs::read_dir(tmp_dir)
+        .map_err(|e| e.to_string())?
+        .flatten()
+        .map(|entry| entry.path())
+        .find(|p| p.extension().and_then(|e| e.to_str()) == Some("png"))
+        .ok_or_else(|| "qlmanage produced no thumbnail".to_string())?;
+
+    let img = image::open(&frame).map_err(|e| e.to_string())?;
+    let _ = fs::remove_dir_all(tmp_dir);
+    Ok(img)
+}
+
+// TODO(windows/linux): extract a video frame on non-macOS platforms — e.g. the Windows Shell
+// thumbnail API (IShellItemImageFactory) on Windows, or bundling/using ffmpeg elsewhere. Until
+// then these fall back to the generic file icon.
+#[cfg(not(target_os = "macos"))]
+fn video_frame(_path: &str, _size: u32, _tmp_dir: &Path) -> Result<image::DynamicImage, String> {
+    Err("Video thumbnails are only supported on macOS".to_string())
+}
+
 // Generate (and cache) a downscaled thumbnail for an image file, returning the path to the
 // cached thumbnail. The full-resolution decode + resize runs on a worker thread
 // (spawn_blocking) so it never blocks the UI thread, and the result is cached on disk keyed
@@ -108,13 +167,16 @@ pub async fn get_thumbnail(app: AppHandle, path: String, size: u32) -> Result<St
         path.hash(&mut hasher);
         mtime.hash(&mut hasher);
         size.hash(&mut hasher);
-        let out = cache_dir.join(format!("{:x}.jpg", hasher.finish()));
+        let hash = hasher.finish();
+        let out = cache_dir.join(format!("{:x}.jpg", hash));
 
         if out.exists() {
             return Ok(out.to_string_lossy().into_owned());
         }
 
-        let img = image::open(&path).map_err(|e| e.to_string())?;
+        // Per-call scratch dir for the video frame extractor (cleaned up inside).
+        let tmp_dir = cache_dir.join("video").join(format!("{:x}", hash));
+        let img = thumbnail_source(&path, size, &tmp_dir)?;
         // JPEG can't encode alpha, so flatten to RGB. `thumbnail` keeps the aspect ratio and
         // fits within size x size.
         let thumb = image::DynamicImage::ImageRgb8(img.thumbnail(size, size).to_rgb8());

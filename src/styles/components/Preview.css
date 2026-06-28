@@ -165,14 +165,16 @@
   border-radius: var(--radius-sm);
 }
 
-.preview_container .preview_content.image {
+.preview_container .preview_content.image,
+.preview_container .preview_content.video {
   overflow: hidden;
   padding: var(--space-0);
   width: 100%;
   height: 100%;
 }
 
-.preview_container .preview_content.image img {
+.preview_container .preview_content.image img,
+.preview_container .preview_content.video video {
   width: 100%;
   height: 100%;
   object-fit: contain;

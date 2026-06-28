@@ -101,7 +101,7 @@ actions = [
 ]
 
 [file_type.video]
-extensions = ["mp4", "mov", "mkv", "webm", "avi"]
+extensions = ["mp4", "webm", "mov", "m4v", "ogv"]
 actions = [
   "open",
   "preview",
