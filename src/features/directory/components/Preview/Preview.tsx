@@ -4,10 +4,16 @@ import { convertFileSrc } from "@tauri-apps/api/core";
 import { useStateContext } from "@/shared/providers/StateProvider";
 import IconButton from "@/shared/components/elements/IconButton";
 import Spinner from "@/shared/components/elements/Spinner";
+import Icon from "@/shared/components/elements/Icon";
+import {
+  ContextMenu,
+  ContextMenuItem,
+} from "@/shared/components/patterns/ContextMenu";
 import {
   AUDIO_FORMATS,
   IMAGE_FORMATS,
   VIDEO_FORMATS,
+  ENTRY_KIND,
   KEY,
   MARKDOWN_FORMAT,
   PDF_FORMAT,
@@ -19,14 +25,19 @@ import {
   KEYMAP_ACTION,
 } from "@/shared/keymap";
 import { classNames } from "@/shared/utils";
+import { notify, TOAST_TYPE } from "@/shared/toast";
 import { t } from "@/lang";
 
 import AudioPreview from "../AudioPreview";
+import { useContextMenu } from "../../hooks/useContextMenu";
+
+import { ZoomableImage } from "./ZoomableImage";
 
 import {
   faChevronLeft,
   faChevronRight,
   faXmark,
+  faCopy,
 } from "@fortawesome/free-solid-svg-icons";
 
 import "@/styles/components/Preview.css";
@@ -45,6 +56,29 @@ const Preview = ({
 }: PreviewProps) => {
   const { fs } = useStateContext();
   const { keymap } = useKeymap();
+  const {
+    ref: imageMenuRef,
+    visible: imageMenuVisible,
+    openAt: openImageMenu,
+    setVisible: setImageMenuVisible,
+  } = useContextMenu();
+
+  // Right-click an image → custom menu to copy it to the clipboard. (The webview's native menu
+  // is blocked app-wide and would only show "Inspect Element" in dev anyway.)
+  const handleImageContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    openImageMenu(e.clientX, e.clientY, filePath, ENTRY_KIND.FILE);
+  };
+
+  const handleCopyImage = async () => {
+    setImageMenuVisible(false);
+    try {
+      await fs.copyImage(filePath);
+      notify(t.common.copied, TOAST_TYPE.SUCCESS);
+    } catch (err) {
+      notify(t.errors.copyImage(String(err)), TOAST_TYPE.ERROR);
+    }
+  };
 
   // The preview container stays mounted (just hidden) when closed, so a playing video keeps
   // going. Pause and rewind it whenever the preview isn't visible.
@@ -159,7 +193,12 @@ const Preview = ({
               fileType === MARKDOWN_FORMAT ? (
                 <div dangerouslySetInnerHTML={{ __html: previewContent }}></div>
               ) : IMAGE_FORMATS.includes(fileType) ? (
-                <img src={convertFileSrc(filePath)} alt={filePath} />
+                <ZoomableImage
+                  key={filePath}
+                  src={convertFileSrc(filePath)}
+                  alt={filePath}
+                  onContextMenu={handleImageContextMenu}
+                />
               ) : VIDEO_FORMATS.includes(fileType) ? (
                 <video
                   ref={videoRef}
@@ -180,6 +219,14 @@ const Preview = ({
           </div>
         </div>
       )}
+
+      <ContextMenu contextMenuVisible={imageMenuVisible} ref={imageMenuRef}>
+        <ContextMenuItem
+          text={t.contextMenu.copyImage}
+          icon={<Icon icon={faCopy} />}
+          onClick={handleCopyImage}
+        />
+      </ContextMenu>
     </>
   );
 };

@@ -19,20 +19,21 @@
   user-select: none;
 }
 
-.properties_modal .properties_content {
+/* Shared by the Properties dialog and the info side panel. */
+.properties_content {
   padding: var(--space-4);
   display: flex;
   flex-direction: column;
   gap: var(--space-2-5);
 }
 
-.properties_modal .properties_content .row {
+.properties_content .row {
   display: flex;
   gap: var(--space-4);
   align-items: baseline;
 }
 
-.properties_modal .properties_content .row .label {
+.properties_content .row .label {
   flex: 0 0 var(--space-20);
   font-size: 0.78rem;
   font-weight: 600;
@@ -43,7 +44,7 @@
   cursor: text;
 }
 
-.properties_modal .properties_content .row .value {
+.properties_content .row .value {
   flex: 1;
   font-size: 0.78rem;
   font-weight: 400;

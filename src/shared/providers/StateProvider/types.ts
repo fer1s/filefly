@@ -29,4 +29,7 @@ export type State = {
   search: string;
   setSearch: (search: string) => void;
   refreshDir: () => void;
+  // Whether the right info panel (preview + properties of the single selected entry) is shown.
+  infoPanelOpen: boolean;
+  toggleInfoPanel: () => void;
 };

@@ -15,6 +15,12 @@
   height: var(--size-control-large);
 }
 
+/* Info-panel toggle: highlight the button while the panel is open. */
+.PathBar .info_toggle.active .IconButton {
+  color: var(--color-text-primary);
+  background-color: var(--color-overlay-active);
+}
+
 /* Grouped controls: flatten the inner edges so they read as one segmented control.
    Each button is wrapped in a Tooltip, so target the wrapper's position in the row. */
 .PathBar .controls .Tooltip:first-child .IconButton {

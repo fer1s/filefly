@@ -56,6 +56,8 @@
   --size-audio-volume: 100px;
   --size-toast-max-width: 320px;
   --size-properties-width: 400px;
+  --size-info-panel-width: 300px;
+  --size-info-preview-height: 240px;
   --font-size-icon-large: 20px;
 
   /* Hidden entries (dotfiles) are dimmed to set them apart from regular files. */

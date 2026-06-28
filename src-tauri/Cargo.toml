@@ -27,6 +27,7 @@ jwalk = "0.8.1"
 markdown = "0.3.0"
 trash = "5"
 image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp", "gif", "bmp"] }
+arboard = "3"
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem

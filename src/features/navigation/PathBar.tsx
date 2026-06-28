@@ -7,6 +7,7 @@ import IconButton, {
 } from "@/shared/components/elements/IconButton";
 import { KEY, VIEW_MODE } from "@/shared/constants";
 import { useKeymap, formatBinding, KEYMAP_ACTION } from "@/shared/keymap";
+import { classNames } from "@/shared/utils";
 import { t } from "@/lang";
 
 import { usePathBarShortcuts } from "./hooks/usePathBarShortcuts";
@@ -18,6 +19,7 @@ import {
   faHouse,
   faList,
   faTableCellsLarge,
+  faCircleInfo,
 } from "@fortawesome/free-solid-svg-icons";
 
 import "@/styles/components/PathBar.css";
@@ -33,6 +35,8 @@ const PathBar = () => {
     view,
     setView,
     toggleShowHidden,
+    infoPanelOpen,
+    toggleInfoPanel,
   } = useStateContext();
 
   const goHome = () => setPath("");
@@ -113,6 +117,16 @@ const PathBar = () => {
         hotkey={formatBinding(keymap[KEYMAP_ACTION.TOGGLE_VIEW])}
         aria-label={t.pathbar.toggleView}
         className="shadow"
+      />
+
+      <IconButton
+        icon={faCircleInfo}
+        onClick={toggleInfoPanel}
+        variant={ICON_BUTTON_VARIANT.BOXED}
+        size={ICON_BUTTON_SIZE.LG}
+        tooltip={t.pathbar.toggleInfo}
+        aria-label={t.pathbar.toggleInfo}
+        className={classNames("shadow", "info_toggle", infoPanelOpen && "active")}
       />
     </div>
   );

@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 
-import { formatBytes } from "@/shared/utils";
 import IconButton from "@/shared/components/elements/IconButton";
 import Dialog from "@/shared/components/patterns/Dialog";
 import { notify, TOAST_TYPE } from "@/shared/toast";
@@ -13,7 +12,7 @@ import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import "@/styles/components/Properties.css";
 
 import { PROPERTIES_TITLE_ID } from "./constants";
-import { formatDate } from "./utils";
+import { PropertiesContent } from "./PropertiesContent";
 import type { PropertiesProps } from "./types";
 
 // Close is fixed to Escape (not user-configurable), like other universal cancels.
@@ -63,48 +62,7 @@ const Properties = ({ entry, visible, onClose }: PropertiesProps) => {
           aria-label={t.common.close}
         />
       </div>
-      {entry && (
-        <div className="properties_content">
-          <div className="row">
-            <span className="label">{t.properties.name}</span>
-            <span className="value">{entry.name}</span>
-          </div>
-          <div className="row">
-            <span className="label">{t.properties.type}</span>
-            <span className="value">
-              {entry.metadata.isDir ? t.common.directory : t.common.file}
-            </span>
-          </div>
-          <div className="row">
-            <span className="label">{t.properties.path}</span>
-            <span className="value">{entry.path}</span>
-          </div>
-          {entry.metadata.isFile && (
-            <div className="row">
-              <span className="label">{t.properties.size}</span>
-              <span className="value">{formatBytes(entry.size)}</span>
-            </div>
-          )}
-          <div className="row">
-            <span className="label">{t.properties.created}</span>
-            <span className="value">
-              {formatDate(entry.metadata.created.secs_since_epoch)}
-            </span>
-          </div>
-          <div className="row">
-            <span className="label">{t.properties.modified}</span>
-            <span className="value">
-              {formatDate(entry.metadata.modified.secs_since_epoch)}
-            </span>
-          </div>
-          <div className="row">
-            <span className="label">{t.properties.accessed}</span>
-            <span className="value">
-              {formatDate(entry.metadata.accessed.secs_since_epoch)}
-            </span>
-          </div>
-        </div>
-      )}
+      {entry && <PropertiesContent entry={entry} />}
     </Dialog>
   );
 };

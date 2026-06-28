@@ -48,6 +48,7 @@ fn main() {
             filesystem::fs::move_entry,
             filesystem::fs::rename_entry,
             filesystem::fs::create_folder,
+            filesystem::fs::copy_image,
             filesystem::fs::delete_entry,
             filesystem::fs::delete_entry_permanently,
             functions::terminal::open_in_terminal,

@@ -23,6 +23,7 @@ export const en = {
     rename: "Rename",
     delete: "Move to trash",
     deletePermanently: "Destroy",
+    copyImage: "Copy image",
     paste: "Paste",
     properties: "Properties",
   },
@@ -67,11 +68,16 @@ export const en = {
     forward: "Forward",
     up: "Up",
     toggleView: "Toggle view",
+    toggleInfo: "Toggle info panel",
   },
   quickbar: {
     zoomIn: "Zoom in",
     zoomOut: "Zoom out",
     zoomLevel: (percent: number) => `Zoom: ${percent}%`,
+  },
+  infoPanel: {
+    title: "Info",
+    selectSingle: "Select a single item to see its details.",
   },
   volumes: {
     title: "Volumes",
@@ -125,6 +131,7 @@ export const en = {
       `Could not paste ${name}: ${reason}`,
     rename: (reason: string) => `Could not rename: ${reason}`,
     createFolder: (reason: string) => `Could not create folder: ${reason}`,
+    copyImage: (reason: string) => `Could not copy image: ${reason}`,
     properties: (reason: string) => `Could not read properties: ${reason}`,
   },
 };

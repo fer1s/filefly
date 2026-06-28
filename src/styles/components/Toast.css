@@ -12,7 +12,7 @@
   border: var(--border-width-default) solid var(--color-border-toast);
   box-shadow: var(--shadow-toast);
   backdrop-filter: blur(var(--blur-medium));
-  cursor: pointer;
+  cursor: default;
   pointer-events: auto;
   word-break: break-word;
   animation: toast-enter 0.2s ease-out;

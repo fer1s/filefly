@@ -55,6 +55,9 @@ const App = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(
     () => localStorage.getItem("sidebarCollapsed") === "true",
   );
+  const [infoPanelOpen, setInfoPanelOpen] = useState<boolean>(
+    () => localStorage.getItem("infoPanelOpen") === "true",
+  );
 
   const [toasts, setToasts] = useState<ToastData[]>([]);
   const toastId = useRef(0);
@@ -91,6 +94,13 @@ const App = () => {
   useEffect(() => {
     localStorage.setItem("sidebarCollapsed", String(sidebarCollapsed));
   }, [sidebarCollapsed]);
+
+  // Persist the info-panel toggle across sessions.
+  useEffect(() => {
+    localStorage.setItem("infoPanelOpen", String(infoPanelOpen));
+  }, [infoPanelOpen]);
+
+  const toggleInfoPanel = useCallback(() => setInfoPanelOpen((v) => !v), []);
 
   // Dismiss a toast: first flag it as leaving so it animates out, then drop it once the exit
   // animation has finished.
@@ -294,6 +304,8 @@ const App = () => {
         search,
         setSearch,
         refreshDir,
+        infoPanelOpen,
+        toggleInfoPanel,
       }}
     >
       <KeymapProvider>

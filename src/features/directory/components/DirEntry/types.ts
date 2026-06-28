@@ -10,6 +10,9 @@ export type DirEntryItemProps = {
   setPath: (path: string) => void;
 
   selected: boolean;
+  // The single selected entry that should take keyboard focus (and scroll into view). Distinct
+  // from `selected` so bulk selections (Shift / Ctrl+A) don't yank focus to the last item.
+  focused: boolean;
   onSelect: (id: string, e: MouseEvent) => void;
 
   renaming: boolean;

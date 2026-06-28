@@ -28,6 +28,16 @@ export const useClipboardShortcuts = ({
         (target.tagName === "INPUT" || target.tagName === "TEXTAREA")
       )
         return;
+
+      // Always swallow select-all so the webview's native "select everything" never fires
+      // (it would highlight the whole page / image Live Text). Only select entries when active
+      // (e.g. not while a preview/properties popup is open).
+      if (matchesBinding(e, keymap[KEYMAP_ACTION.SELECT_ALL])) {
+        e.preventDefault();
+        if (enabled) onSelectAll();
+        return;
+      }
+
       if (!enabled) return;
 
       if (matchesBinding(e, keymap[KEYMAP_ACTION.COPY])) {
@@ -53,10 +63,6 @@ export const useClipboardShortcuts = ({
       } else if (matchesBinding(e, keymap[KEYMAP_ACTION.NEW_FOLDER])) {
         e.preventDefault();
         onNewFolder();
-      } else if (matchesBinding(e, keymap[KEYMAP_ACTION.SELECT_ALL])) {
-        // Prevent the browser's native "select all text" so it selects the entries instead.
-        e.preventDefault();
-        onSelectAll();
       }
     };
 

@@ -1,0 +1,91 @@
+.InfoPanel {
+  flex: 0 0 auto;
+  width: var(--size-info-panel-width);
+  margin-left: var(--space-2-5);
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-surface-floating);
+  border: var(--border-width-default) solid var(--color-border-default);
+  border-radius: var(--radius-sm);
+  transition:
+    width 0.2s ease-in-out,
+    margin 0.2s ease-in-out,
+    opacity 0.2s ease-in-out;
+}
+
+/* Collapsed: slides out like the sidebar (width + margin animate to zero). */
+.InfoPanel.closed {
+  width: 0;
+  margin-left: 0;
+  border-width: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.InfoPanel .info_header {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: var(--border-width-default) solid var(--color-border-default);
+}
+
+.InfoPanel .info_header h4 {
+  margin: var(--space-0);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.InfoPanel .info_body {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.InfoPanel .info_empty {
+  padding: var(--space-4);
+  font-size: 0.78rem;
+  color: var(--color-text-dim);
+  text-align: center;
+}
+
+.InfoPanel .info_preview {
+  width: 100%;
+  height: var(--size-info-preview-height);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  border-bottom: var(--border-width-default) solid var(--color-border-default);
+  background-color: var(--color-overlay-active);
+}
+
+.InfoPanel .info_preview img,
+.InfoPanel .info_preview video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* No drag and no Live Text/OCR overlay on the small image preview (pointer-events: none stops
+   both); the full Preview keeps OCR. */
+.InfoPanel .info_preview img {
+  pointer-events: none;
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+.InfoPanel .info_preview iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.InfoPanel .info_preview audio {
+  width: 90%;
+}

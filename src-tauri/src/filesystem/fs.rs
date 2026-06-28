@@ -107,6 +107,12 @@ fn thumbnail_source(
 
 // Render a thumbnail (video frame / PDF first page) via QuickLook (`qlmanage`), which writes
 // "<name>.png" into the output dir. macOS-only; other platforms fall back to the generic icon.
+//
+// TODO: each call spawns the `qlmanage` process, which macOS briefly registers as a launching
+// app — so scrolling a folder full of (uncached) videos/PDFs makes the Dock divider jump. It's
+// only the first pass (thumbnails are cached afterwards). If anyone complains, replace this
+// with the in-process QuickLookThumbnailing framework (QLThumbnailGenerator via objc2): no
+// subprocess, no Dock activity, faster, async. See chat for the full pros/cons.
 #[cfg(target_os = "macos")]
 fn quicklook_thumbnail(
     path: &str,
@@ -371,6 +377,23 @@ pub fn create_folder(parent: String) -> Result<String, String> {
 
     fs::create_dir(&candidate).map_err(|e| e.to_string())?;
     Ok(candidate.to_string_lossy().into_owned())
+}
+
+// Copy an image file to the system clipboard (as a bitmap), so it can be pasted into other
+// apps. Decodes to RGBA8 and hands it to the OS clipboard.
+#[tauri::command]
+pub fn copy_image(path: String) -> Result<(), String> {
+    let rgba = image::open(&path).map_err(|e| e.to_string())?.to_rgba8();
+    let (width, height) = rgba.dimensions();
+
+    let mut clipboard = arboard::Clipboard::new().map_err(|e| e.to_string())?;
+    clipboard
+        .set_image(arboard::ImageData {
+            width: width as usize,
+            height: height as usize,
+            bytes: std::borrow::Cow::Owned(rgba.into_raw()),
+        })
+        .map_err(|e| e.to_string())
 }
 
 // Rename an entry in place within its parent directory.

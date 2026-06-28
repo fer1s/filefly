@@ -1,0 +1,36 @@
+.zoom_control {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1-5);
+}
+
+/* Read-only percentage indicator; the +/- buttons drive the zoom, not the slider. */
+.zoom_control .zoom_slider {
+  width: var(--space-20);
+  height: var(--size-progress-track);
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: var(--color-range-track);
+  border-radius: var(--radius-pill);
+  pointer-events: none;
+}
+
+.zoom_control .zoom_slider::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: var(--size-slider-thumb);
+  height: var(--size-slider-thumb);
+  border-radius: var(--radius-pill);
+  background-color: var(--color-control-thumb);
+}
+
+.zoom_control .zoom_percent {
+  min-width: var(--space-10);
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--color-text-tertiary);
+  text-align: center;
+  -webkit-user-select: none;
+  user-select: none;
+  font-variant-numeric: tabular-nums;
+}

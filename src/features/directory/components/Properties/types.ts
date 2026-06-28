@@ -5,3 +5,7 @@ export type PropertiesProps = {
   visible: boolean;
   onClose: () => void;
 };
+
+export type PropertiesContentProps = {
+  entry: DirEntry;
+};

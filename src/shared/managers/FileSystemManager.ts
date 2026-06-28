@@ -100,6 +100,11 @@ export class FileSystemManager {
     return api.createFolder(parent);
   }
 
+  // Copy an image file to the system clipboard.
+  copyImage(path: string): Promise<void> {
+    return api.copyImage(path);
+  }
+
   trash(path: string): Promise<void> {
     return api.deleteEntry(path);
   }

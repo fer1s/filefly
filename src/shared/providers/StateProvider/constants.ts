@@ -27,4 +27,6 @@ export const initialState: State = {
   search: "",
   setSearch: () => {},
   refreshDir: () => {},
+  infoPanelOpen: false,
+  toggleInfoPanel: () => {},
 };

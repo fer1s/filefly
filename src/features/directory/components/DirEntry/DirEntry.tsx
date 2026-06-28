@@ -41,6 +41,7 @@ const DirEntryItemComponent = ({
   id,
 
   selected,
+  focused,
   onSelect,
 
   renaming,
@@ -91,10 +92,11 @@ const DirEntryItemComponent = ({
     setContextMenuVisible,
   ]);
 
-  // Move keyboard focus to the entry when it becomes the selected one.
+  // Move keyboard focus to the entry only when it's the single focused one (keyboard nav),
+  // never on bulk selection — focusing every item on Ctrl+A would scroll to the last one.
   useEffect(() => {
-    if (selected) itemRef.current?.focus();
-  }, [selected]);
+    if (focused) itemRef.current?.focus();
+  }, [focused]);
 
   // Inline rename: focus the input and preselect the base name (without extension) when editing starts.
   const renameInputRef = useRef<HTMLInputElement>(null);

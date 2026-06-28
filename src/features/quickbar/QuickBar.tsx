@@ -1,57 +1,29 @@
 import { useStateContext } from "@/shared/providers/StateProvider";
-import IconButton from "@/shared/components/elements/IconButton";
+import ZoomControl from "@/shared/components/patterns/ZoomControl";
 import { ZOOM_MAX, ZOOM_MIN } from "@/shared/constants";
 import { useKeymap, formatBinding, KEYMAP_ACTION } from "@/shared/keymap";
-import { t } from "@/lang";
 import { QuickActions } from "@/features/directory";
-
-import {
-  faMagnifyingGlassMinus,
-  faMagnifyingGlassPlus,
-} from "@fortawesome/free-solid-svg-icons";
 
 import "@/styles/components/QuickBar.css";
 
-// Secondary bar under the PathBar. Hosts the zoom control: a minus/plus pair around a
-// read-only slider that indicates the current zoom percentage of the directory view.
+// Secondary bar under the PathBar. Quick actions on the left; the directory zoom control on
+// the right.
 const QuickBar = () => {
   const { zoom, zoomIn, zoomOut } = useStateContext();
   const { keymap } = useKeymap();
 
-  const percent = Math.round(zoom * 100);
-
   return (
     <div className="QuickBar">
       <QuickActions />
-      <div className="zoom_control">
-        <IconButton
-          icon={faMagnifyingGlassMinus}
-          onClick={zoomOut}
-          disabled={zoom <= ZOOM_MIN}
-          tooltip={t.quickbar.zoomOut}
-          hotkey={formatBinding(keymap[KEYMAP_ACTION.ZOOM_OUT])}
-          aria-label={t.quickbar.zoomOut}
-        />
-        <input
-          type="range"
-          className="zoom_slider"
-          min={ZOOM_MIN * 100}
-          max={ZOOM_MAX * 100}
-          value={percent}
-          readOnly
-          tabIndex={-1}
-          aria-label={t.quickbar.zoomLevel(percent)}
-        />
-        <span className="zoom_percent">{percent}%</span>
-        <IconButton
-          icon={faMagnifyingGlassPlus}
-          onClick={zoomIn}
-          disabled={zoom >= ZOOM_MAX}
-          tooltip={t.quickbar.zoomIn}
-          hotkey={formatBinding(keymap[KEYMAP_ACTION.ZOOM_IN])}
-          aria-label={t.quickbar.zoomIn}
-        />
-      </div>
+      <ZoomControl
+        value={zoom}
+        min={ZOOM_MIN}
+        max={ZOOM_MAX}
+        onZoomIn={zoomIn}
+        onZoomOut={zoomOut}
+        zoomInHotkey={formatBinding(keymap[KEYMAP_ACTION.ZOOM_IN])}
+        zoomOutHotkey={formatBinding(keymap[KEYMAP_ACTION.ZOOM_OUT])}
+      />
     </div>
   );
 };

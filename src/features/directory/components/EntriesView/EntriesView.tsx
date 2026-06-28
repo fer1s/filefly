@@ -61,6 +61,7 @@ const EntriesView = ({
           contextMenuRef={contextMenuRef}
           id={entry.path}
           selected={selectedIDs.includes(entry.path)}
+          focused={selectedIDs.length === 1 && selectedIDs[0] === entry.path}
           onSelect={onSelect}
           renaming={renamingID === entry.path}
           onRename={onRename}
