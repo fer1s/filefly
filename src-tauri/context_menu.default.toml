@@ -1,0 +1,122 @@
+# Default context-menu layout. Each table lists the actions (in display order) shown when
+# right-clicking a given kind of entry. This file is the source of truth loaded at startup;
+# a user copy in the app config dir overrides it.
+#
+# Action ids map to the predefined actions in the app:
+#   open               open a file with the OS default app, or enter a folder
+#   open_in_terminal   open a terminal at the folder (folders / a file's parent)
+#   preview            in-app preview (images, markdown, pdf, video, audio)
+#   copy               copy to the internal clipboard
+#   cut                cut to the internal clipboard
+#   paste              paste the clipboard into the current directory
+#   rename             inline rename
+#   trash              move to the system Trash (reversible)
+#   destroy            permanently delete (irreversible)
+#   properties         open the properties panel
+#
+# Use the literal "separator" to draw a divider between groups. Order here is display order.
+
+# Right-click on the empty floor of the current directory.
+[directory]
+actions = ["paste", "separator", "open_in_terminal", "separator", "properties"]
+
+# A sub-folder entry.
+[folder]
+actions = [
+  "open",
+  "open_in_terminal",
+  "copy",
+  "cut",
+  "rename",
+  "trash",
+  "destroy",
+  "separator",
+  "properties",
+]
+
+# Any file with no more specific type below (the fallback).
+[file]
+actions = [
+  "open",
+  "copy",
+  "cut",
+  "rename",
+  "trash",
+  "destroy",
+  "separator",
+  "properties",
+]
+
+# ── File types (matched by extension, case-insensitive) ──
+# A file whose extension matches one of these uses that type's actions instead of [file].
+# Each adds `preview` to the generic file set.
+
+[file_type.image]
+extensions = ["png", "jpg", "jpeg", "webp", "gif"]
+actions = [
+  "open",
+  "preview",
+  "copy",
+  "cut",
+  "rename",
+  "trash",
+  "destroy",
+  "separator",
+  "properties",
+]
+
+[file_type.markdown]
+extensions = ["md", "markdown"]
+actions = [
+  "open",
+  "preview",
+  "copy",
+  "cut",
+  "rename",
+  "trash",
+  "destroy",
+  "separator",
+  "properties",
+]
+
+[file_type.pdf]
+extensions = ["pdf"]
+actions = [
+  "open",
+  "preview",
+  "copy",
+  "cut",
+  "rename",
+  "trash",
+  "destroy",
+  "separator",
+  "properties",
+]
+
+[file_type.video]
+extensions = ["mp4", "mov", "mkv", "webm", "avi"]
+actions = [
+  "open",
+  "preview",
+  "copy",
+  "cut",
+  "rename",
+  "trash",
+  "destroy",
+  "separator",
+  "properties",
+]
+
+[file_type.audio]
+extensions = ["mp3", "wav", "ogg", "flac", "m4a"]
+actions = [
+  "open",
+  "preview",
+  "copy",
+  "cut",
+  "rename",
+  "trash",
+  "destroy",
+  "separator",
+  "properties",
+]

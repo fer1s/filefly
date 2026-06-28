@@ -1,0 +1,19 @@
+// Stable identifiers for the generic context-menu actions. Used as keys, never shown to the
+// user (labels come from i18n).
+export const ENTRY_ACTION = {
+  OPEN: "open",
+  OPEN_IN_TERMINAL: "open_in_terminal",
+  PREVIEW: "preview",
+  COPY: "copy",
+  CUT: "cut",
+  PASTE: "paste",
+  RENAME: "rename",
+  TRASH: "trash",
+  DESTROY: "destroy",
+  PROPERTIES: "properties",
+} as const;
+
+export type EntryActionId = (typeof ENTRY_ACTION)[keyof typeof ENTRY_ACTION];
+
+// Token in an action list that renders a divider between groups (not a real action).
+export const ACTION_SEPARATOR = "separator";

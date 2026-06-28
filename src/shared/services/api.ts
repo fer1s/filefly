@@ -3,7 +3,7 @@ import { watchImmediate } from "@tauri-apps/plugin-fs";
 
 import { notify, TOAST_TYPE } from "@/shared/toast";
 import { t } from "@/lang";
-import { Volume, DirEntry } from "@/shared/models";
+import { Volume, DirEntry, ContextMenuLayout } from "@/shared/models";
 import { ACCESS_DENIED_ERROR } from "@/shared/constants";
 import type { Keymap } from "@/shared/keymap/types";
 
@@ -13,6 +13,10 @@ export const getHostName = async (): Promise<string | null> =>
 // Load the keybindings (reads keymap.toml, falling back to bundled defaults).
 export const getKeymap = async (): Promise<Keymap> =>
   (await invoke("get_keymap")) as Keymap;
+
+// Load the context-menu layout (reads context_menu.toml, falling back to bundled defaults).
+export const getContextMenu = async (): Promise<ContextMenuLayout> =>
+  (await invoke("get_context_menu")) as ContextMenuLayout;
 
 // Visible list columns for a folder (saved preference, or a well-known-folder default).
 export const getFolderColumns = async (path: string): Promise<string[]> =>

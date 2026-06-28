@@ -46,6 +46,7 @@ fn main() {
             functions::markdown::md_to_html,
             functions::system::open_full_disk_access_settings,
             functions::keymap::get_keymap,
+            functions::context_menu::get_context_menu,
             functions::folder_columns::get_folder_columns,
             functions::folder_columns::set_folder_columns,
             functions::folder_columns::get_folder_view,

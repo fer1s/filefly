@@ -4,36 +4,22 @@ import {
 } from "@/shared/components/patterns/ContextMenu";
 import Icon from "@/shared/components/elements/Icon";
 import { useStateContext } from "@/shared/providers/StateProvider";
-import {
-  ACCEPTED_PREVIEW_FORMATS,
-  ENTRY_KIND,
-  KEY,
-  UI_COLOR,
-} from "@/shared/constants";
-import { useKeymap, formatBinding, KEYMAP_ACTION } from "@/shared/keymap";
-import { t } from "@/lang";
+import { useKeymap, formatBinding } from "@/shared/keymap";
 
 import {
-  faArrowUpRightFromSquare,
-  faCircleInfo,
-  faCopy,
-  faEye,
-  faFilePen,
-  faPaste,
-  faScissors,
-  faTerminal,
-  faTrash,
-  faXmark
-} from "@fortawesome/free-solid-svg-icons";
+  ENTRY_ACTIONS,
+  ACTION_SEPARATOR,
+  resolveActionIds,
+  type EntryActionContext,
+  type EntryActionId,
+} from "../../actions";
+import { useContextMenuLayout } from "../../hooks/useContextMenuLayout";
 
 import type { EntryContextMenuProps } from "./types";
 
-// Open is bound to Enter via keyboard nav (fixed, not user-configurable); show its glyph.
-const OPEN_HOTKEY = formatBinding({ keys: [KEY.ENTER] });
-
 // Right-click menu for the directory: the current directory (empty area), a folder, or a
-// file. Each action acts on the clicked item (or the whole selection when it's part of it)
-// and closes the menu.
+// file. The visible actions per context come from context_menu.toml (loaded once); each id
+// resolves to a predefined action descriptor that owns its label, icon, hotkey and behavior.
 const EntryContextMenu = ({
   contextMenuRef,
   visible,
@@ -50,203 +36,60 @@ const EntryContextMenu = ({
 }: EntryContextMenuProps) => {
   const { fs, setPath } = useStateContext();
   const { keymap } = useKeymap();
+  const layout = useContextMenuLayout();
 
-  // The whole selection if the clicked item is part of it, otherwise just the clicked item.
-  const actionTargets = () =>
-    selectedIDs.includes(elementId) ? selectedIDs : [elementId];
+  // Act on the whole selection if the clicked item is part of it, otherwise just that item.
+  const targets = selectedIDs.includes(elementId) ? selectedIDs : [elementId];
+  const extension = elementId.split(".").pop() ?? "";
 
-  const canPreview = ACCEPTED_PREVIEW_FORMATS.includes(
-    elementId.split(".").pop() || "",
-  );
-
-  const handleOpen = () => {
-    if (elementType === ENTRY_KIND.FILE) fs.open(elementId);
-    else if (elementType === ENTRY_KIND.DIRECTORY) setPath(elementId);
-    onClose();
+  const ctx: EntryActionContext = {
+    elementId,
+    elementType,
+    targets,
+    isCurrentDirectory,
+    canPaste,
+    fs,
+    fileOps,
+    setPath,
+    onClose,
+    onStartRename,
+    onPreview,
+    onProperties,
   };
 
-  const handleOpenInTerminal = () => {
-    if (elementType === ENTRY_KIND.DIRECTORY) fs.openInTerminal(elementId);
-    else if (elementType === ENTRY_KIND.FILE)
-      fs.openInTerminal(elementId.split("/").slice(0, -1).join("/"));
-    onClose();
-  };
-
-  const handlePreview = () => {
-    onPreview(elementId);
-    onClose();
-  };
-
-  const handleCopy = () => {
-    fileOps.copy(actionTargets());
-    onClose();
-  };
-
-  const handleCut = () => {
-    fileOps.cut(actionTargets());
-    onClose();
-  };
-
-  const handleDelete = async () => {
-    const targets = actionTargets();
-    onClose();
-    await fileOps.remove(targets);
-  };
-
-  const handleDeletePermanently = async () => {
-    const targets = actionTargets();
-    onClose();
-    await fileOps.removePermanently(targets);
-  };
-
-  const handlePaste = async () => {
-    onClose();
-    await fileOps.paste();
-  };
-
-  const handleRename = () => {
-    onStartRename(elementId);
-    onClose();
-  };
-
-  const handleProperties = async () => {
-    onClose();
-    await onProperties(elementId, isCurrentDirectory);
-  };
+  const actionIds = resolveActionIds(layout, {
+    isCurrentDirectory,
+    elementType,
+    extension,
+  });
 
   return (
     <ContextMenu contextMenuVisible={visible} ref={contextMenuRef}>
-      {isCurrentDirectory && (
-        <>
-          <ContextMenuItem
-            text={t.contextMenu.paste}
-            icon={<Icon icon={faPaste} />}
-            hotkey={formatBinding(keymap[KEYMAP_ACTION.PASTE])}
-            onClick={canPaste ? handlePaste : undefined}
-          />
-          <ContextMenuItem isSeparator />
-          <ContextMenuItem
-            text={t.contextMenu.openInTerminal}
-            icon={<Icon icon={faTerminal} />}
-            onClick={handleOpenInTerminal}
-          />
-          <ContextMenuItem isSeparator />
-          <ContextMenuItem
-            text={t.contextMenu.properties}
-            icon={<Icon icon={faCircleInfo} />}
-            onClick={handleProperties}
-          />
-        </>
-      )}
+      {actionIds.map((id, index) => {
+        if (id === ACTION_SEPARATOR)
+          return <ContextMenuItem key={`separator-${index}`} isSeparator />;
 
-      {elementType === ENTRY_KIND.DIRECTORY && !isCurrentDirectory && (
-        <>
-          <ContextMenuItem
-            text={t.contextMenu.open}
-            icon={<Icon icon={faArrowUpRightFromSquare} />}
-            hotkey={OPEN_HOTKEY}
-            onClick={handleOpen}
-          />
-          <ContextMenuItem
-            text={t.contextMenu.openInTerminal}
-            icon={<Icon icon={faTerminal} />}
-            onClick={handleOpenInTerminal}
-          />
-          <ContextMenuItem
-            text={t.contextMenu.copy}
-            icon={<Icon icon={faCopy} />}
-            hotkey={formatBinding(keymap[KEYMAP_ACTION.COPY])}
-            onClick={handleCopy}
-          />
-          <ContextMenuItem
-            text={t.contextMenu.cut}
-            icon={<Icon icon={faScissors} />}
-            hotkey={formatBinding(keymap[KEYMAP_ACTION.CUT])}
-            onClick={handleCut}
-          />
-          <ContextMenuItem
-            text={t.contextMenu.rename}
-            icon={<Icon icon={faFilePen} />}
-            hotkey={formatBinding(keymap[KEYMAP_ACTION.RENAME])}
-            onClick={handleRename}
-          />
-          <ContextMenuItem
-            text={t.contextMenu.delete}
-            icon={<Icon icon={faTrash} />}
-            hotkey={formatBinding(keymap[KEYMAP_ACTION.TRASH])}
-            onClick={handleDelete}
-          />
-          <ContextMenuItem
-            color={UI_COLOR.DANGER}
-            text={t.contextMenu.deletePermanently}
-            icon={<Icon icon={faXmark} />}
-            hotkey={formatBinding(keymap[KEYMAP_ACTION.DELETE_PERMANENTLY])}
-            onClick={handleDeletePermanently}
-          />
-        </>
-      )}
+        const action = ENTRY_ACTIONS[id as EntryActionId];
+        if (!action) return null;
 
-      {elementType === ENTRY_KIND.FILE && (
-        <>
-          <ContextMenuItem
-            text={t.contextMenu.open}
-            icon={<Icon icon={faArrowUpRightFromSquare} />}
-            hotkey={OPEN_HOTKEY}
-            onClick={handleOpen}
-          />
-          {canPreview && (
-            <ContextMenuItem
-              text={t.common.preview}
-              icon={<Icon icon={faEye} />}
-              onClick={handlePreview}
-            />
-          )}
-          <ContextMenuItem
-            text={t.contextMenu.copy}
-            icon={<Icon icon={faCopy} />}
-            hotkey={formatBinding(keymap[KEYMAP_ACTION.COPY])}
-            onClick={handleCopy}
-          />
-          <ContextMenuItem
-            text={t.contextMenu.cut}
-            icon={<Icon icon={faScissors} />}
-            hotkey={formatBinding(keymap[KEYMAP_ACTION.CUT])}
-            onClick={handleCut}
-          />
-          <ContextMenuItem
-            text={t.contextMenu.rename}
-            icon={<Icon icon={faFilePen} />}
-            hotkey={formatBinding(keymap[KEYMAP_ACTION.RENAME])}
-            onClick={handleRename}
-          />
-          <ContextMenuItem
-            text={t.contextMenu.delete}
-            icon={<Icon icon={faTrash} />}
-            hotkey={formatBinding(keymap[KEYMAP_ACTION.TRASH])}
-            onClick={handleDelete}
-          />
-          <ContextMenuItem
-            color={UI_COLOR.DANGER}
-            text={t.contextMenu.deletePermanently}
-            icon={<Icon icon={faXmark} />}
-            hotkey={formatBinding(keymap[KEYMAP_ACTION.DELETE_PERMANENTLY])}
-            onClick={handleDeletePermanently}
-          />
-        </>
-      )}
+        const enabled = action.isEnabled ? action.isEnabled(ctx) : true;
+        const hotkey =
+          action.hotkey ??
+          (action.keymapAction
+            ? formatBinding(keymap[action.keymapAction])
+            : undefined);
 
-      {(elementType === ENTRY_KIND.DIRECTORY ||
-        elementType === ENTRY_KIND.FILE) &&
-        !isCurrentDirectory && (
-          <>
-            <ContextMenuItem isSeparator />
-            <ContextMenuItem
-              text={t.contextMenu.properties}
-              icon={<Icon icon={faCircleInfo} />}
-              onClick={handleProperties}
-            />
-          </>
-        )}
+        return (
+          <ContextMenuItem
+            key={action.id}
+            text={action.label()}
+            icon={<Icon icon={action.icon} />}
+            hotkey={hotkey}
+            color={action.color}
+            onClick={enabled ? () => action.run(ctx) : undefined}
+          />
+        );
+      })}
     </ContextMenu>
   );
 };

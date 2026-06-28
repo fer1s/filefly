@@ -32,4 +32,23 @@ type DirEntry = {
   metadata: DirMetadata;
 };
 
-export type { TimeSince, DirEntry, DirMetadata, DiskUsage, Volume };
+// Context-menu layout loaded from context_menu.toml: which actions appear per entry kind.
+type ActionList = { actions: string[] };
+type FileTypeRule = { extensions: string[]; actions: string[] };
+type ContextMenuLayout = {
+  directory: ActionList;
+  folder: ActionList;
+  file: ActionList;
+  file_type: Record<string, FileTypeRule>;
+};
+
+export type {
+  TimeSince,
+  DirEntry,
+  DirMetadata,
+  DiskUsage,
+  Volume,
+  ActionList,
+  FileTypeRule,
+  ContextMenuLayout,
+};
