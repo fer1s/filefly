@@ -77,13 +77,18 @@
   /* Hidden entries (dotfiles) are dimmed to set them apart from regular files. */
   --opacity-hidden-entry: 0.55;
 
-  --color-background-window: rgba(0, 0, 0, 0.25);
+  /* Window backdrop is fully transparent so the sidebar's own opacity (below) is the sole control
+     over how much shows through; the content panel is solid, so only the sidebar is translucent. */
+  --color-background-window: transparent;
   /* Sidebar sits darker/translucent (lets the window vibrancy through); the main content
      panel is a touch lighter and solid, so the two read as distinct surfaces (Finder-style). */
   --color-background-app: rgb(32, 32, 34);
-  /* Sidebar background alpha is user-adjustable (Settings); overridden inline on .SideBar. */
+  /* Sidebar background colour as raw RGB channels + a user-adjustable alpha. They are composed
+     directly in SideBar.css (not pre-mixed here) so the inline --sidebar-opacity override on
+     .SideBar actually takes effect — a nested var() inside a :root token resolves against :root,
+     ignoring the per-element override. */
+  --color-background-sidebar-rgb: 16, 16, 18;
   --sidebar-opacity: 0.85;
-  --color-background-sidebar: rgba(16, 16, 18, var(--sidebar-opacity));
 
   --color-surface-solid: rgb(0, 0, 0);
   --color-surface-input: rgba(0, 0, 0, 0.06);

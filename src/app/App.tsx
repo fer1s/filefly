@@ -39,7 +39,7 @@ const App = () => {
     locationPathname: location.pathname,
   });
   // App-wide settings persisted in settings.toml; hydrated on launch.
-  const { settings, update } = useAppSettings();
+  const { settings, update, saving: savingSettings } = useAppSettings();
   const zoom = useZoom(fs, tabs.path, settings.defaultZoom);
   const { toasts, dismissToast } = useToasts();
   const sidebar = useSidebarCollapsed();
@@ -96,6 +96,7 @@ const App = () => {
         setDateFormat: (dateFormat) => update({ dateFormat }),
         sidebarOpacity: settings.sidebarOpacity,
         setSidebarOpacity: (sidebarOpacity) => update({ sidebarOpacity }),
+        savingSettings,
         search: tabs.search,
         setSearch: tabs.setSearch,
         refreshDir: directory.refreshDir,

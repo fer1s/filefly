@@ -41,6 +41,7 @@ export const initialState: State = {
   setDateFormat: () => {},
   sidebarOpacity: DEFAULT_SIDEBAR_OPACITY,
   setSidebarOpacity: () => {},
+  savingSettings: false,
   search: "",
   setSearch: () => {},
   refreshDir: () => {},

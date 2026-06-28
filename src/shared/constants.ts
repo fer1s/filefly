@@ -15,9 +15,9 @@ export const ZOOM_MAX = 3;
 export const ZOOM_STEP = 0.25;
 export const ZOOM_DEFAULT = 1;
 
-// User-adjustable sidebar background opacity (alpha of --color-background-sidebar). Floored above
-// zero so the sidebar never becomes invisible.
-export const SIDEBAR_OPACITY_MIN = 0.2;
+// User-adjustable sidebar background opacity (alpha of --color-background-sidebar). 0 = fully
+// transparent (the window/material shows through), 1 = opaque.
+export const SIDEBAR_OPACITY_MIN = 0;
 export const SIDEBAR_OPACITY_MAX = 1;
 export const SIDEBAR_OPACITY_STEP = 0.05;
 export const DEFAULT_SIDEBAR_OPACITY = 0.85;

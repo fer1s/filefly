@@ -29,7 +29,7 @@ import Properties from "./components/Properties";
 import "@/styles/views/Directory.css";
 
 const Directory = () => {
-  const { fs, path, setPath, view, search, accessDenied, zoom } =
+  const { fs, path, setPath, view, search, accessDenied, zoom, savingSettings } =
     useStateContext();
 
   const [typeaheadQuery, setTypeaheadQuery] = useState("");
@@ -210,6 +210,7 @@ const Directory = () => {
         total={filtered.length}
         selected={selectedIDs.length}
         computingSizes={computingSizes}
+        savingSettings={savingSettings}
         progress={fileOps.progress}
       />
 

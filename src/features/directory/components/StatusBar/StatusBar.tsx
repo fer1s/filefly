@@ -16,6 +16,7 @@ const StatusBar = ({
   total,
   selected,
   computingSizes,
+  savingSettings,
   progress,
 }: StatusBarProps) => {
   const loadingPreviews = useImagePreviewLoading();
@@ -41,6 +42,11 @@ const StatusBar = ({
       {loadingPreviews > 0 && (
         <span className="count busy">
           <Icon icon={faSpinner} spin /> {t.directory.loadingPreviews}
+        </span>
+      )}
+      {savingSettings && (
+        <span className="count busy">
+          <Icon icon={faSpinner} spin /> {t.settings.saving}
         </span>
       )}
       {progress && (

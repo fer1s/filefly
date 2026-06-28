@@ -44,6 +44,8 @@ export type State = {
   // Sidebar background opacity (alpha of --color-background-sidebar), 0..1.
   sidebarOpacity: number;
   setSidebarOpacity: (opacity: number) => void;
+  // True while a settings change is being written to settings.toml (drives the StatusBar spinner).
+  savingSettings: boolean;
   search: string;
   setSearch: (search: string) => void;
   refreshDir: () => void;

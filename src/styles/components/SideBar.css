@@ -2,7 +2,11 @@
   height: 100vh;
   overflow-y: auto;
   overflow-x: hidden;
-  background-color: var(--color-background-sidebar);
+  /* Composed here (not via a :root token) so the inline --sidebar-opacity override applies. */
+  background-color: rgba(
+    var(--color-background-sidebar-rgb),
+    var(--sidebar-opacity)
+  );
 }
 
 .SideBar .sidebar_header {

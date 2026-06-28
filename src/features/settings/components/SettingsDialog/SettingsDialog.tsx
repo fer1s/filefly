@@ -87,9 +87,11 @@ const SettingsDialog = ({ visible, onClose }: SettingsDialogProps) => {
           <DateFormatRow />
 
           <SettingsRow
-            label={t.settings.sidebarOpacity}
-            hint={t.settings.sidebarOpacityHint}
+            label={t.settings.sidebarTransparency}
+            hint={t.settings.sidebarTransparencyHint}
           >
+            {/* UI is transparency (0 = solid, 1 = fully see-through); stored value is the inverse
+                opacity, so convert both ways here. */}
             <span className="settings_range_control">
               <input
                 type="range"
@@ -97,13 +99,17 @@ const SettingsDialog = ({ visible, onClose }: SettingsDialogProps) => {
                 min={SIDEBAR_OPACITY_MIN}
                 max={SIDEBAR_OPACITY_MAX}
                 step={SIDEBAR_OPACITY_STEP}
-                value={sidebarOpacity}
+                value={SIDEBAR_OPACITY_MAX - sidebarOpacity}
                 onChange={(event) =>
-                  setSidebarOpacity(Number(event.target.value))
+                  setSidebarOpacity(
+                    SIDEBAR_OPACITY_MAX - Number(event.target.value),
+                  )
                 }
               />
               <span className="settings_range_value">
-                {t.settings.zoomPercent(Math.round(sidebarOpacity * 100))}
+                {t.settings.zoomPercent(
+                  Math.round((SIDEBAR_OPACITY_MAX - sidebarOpacity) * 100),
+                )}
               </span>
             </span>
           </SettingsRow>
