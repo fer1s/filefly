@@ -21,6 +21,7 @@ export const KEYMAP_ACTION = {
   CLOSE_TAB: "close_tab",
   NEXT_TAB: "next_tab",
   PREV_TAB: "prev_tab",
+  OPEN_SETTINGS: "open_settings",
   PINNED_1: "pinned_1",
   PINNED_2: "pinned_2",
   PINNED_3: "pinned_3",

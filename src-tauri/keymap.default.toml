@@ -124,3 +124,8 @@ alt = true
 keys = ["ArrowLeft"]
 mod = true
 alt = true
+
+# Open settings. Matches VS Code's Cmd/Ctrl + comma.
+[open_settings]
+keys = [","]
+mod = true

@@ -55,6 +55,7 @@ export const en = {
     clearSearch: "Clear search",
     collapse: "Collapse sidebar",
     expand: "Expand sidebar",
+    settings: "Settings",
     home: "Home",
     desktop: "Desktop",
     documents: "Documents",
