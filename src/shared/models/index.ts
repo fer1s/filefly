@@ -29,6 +29,7 @@ type DirEntry = {
   name: string;
   path: string;
   size: number;
+  sizeOnDisk: number;
   metadata: DirMetadata;
 };
 

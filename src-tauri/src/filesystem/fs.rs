@@ -3,6 +3,8 @@ use std::collections::hash_map::DefaultHasher;
 use std::ffi::OsStr;
 use std::fs;
 use std::hash::{Hash, Hasher};
+#[cfg(unix)]
+use std::os::unix::fs::MetadataExt;
 use std::path::{Path, PathBuf};
 use std::time::SystemTime;
 use tauri::{AppHandle, Manager};
@@ -23,6 +25,9 @@ pub struct DirEntry {
     name: String,
     path: PathBuf,
     size: u64,
+    // Actual space the file occupies on disk (allocated blocks), which differs from `size` due
+    // to filesystem block rounding / sparse files.
+    size_on_disk: u64,
     metadata: DirMetadata,
 }
 
@@ -37,10 +42,18 @@ fn build_dir_entry(path: PathBuf) -> Result<DirEntry, String> {
         .to_string_lossy()
         .into_owned();
 
+    // On Unix, blocks are 512 bytes each. No portable equivalent on Windows, so fall back to
+    // the apparent size there.
+    #[cfg(unix)]
+    let size_on_disk = metadata.blocks() * 512;
+    #[cfg(not(unix))]
+    let size_on_disk = metadata.len();
+
     Ok(DirEntry {
         name,
         path,
         size: metadata.len(),
+        size_on_disk,
         metadata: DirMetadata {
             is_dir: metadata.is_dir(),
             is_file: metadata.is_file(),

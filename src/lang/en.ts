@@ -33,6 +33,7 @@ export const en = {
     type: "Type",
     path: "Path",
     size: "Size",
+    sizeOnDisk: "Size on disk",
     created: "Created",
     modified: "Modified",
     accessed: "Accessed",

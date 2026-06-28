@@ -24,10 +24,16 @@ export const PropertiesContent = ({ entry }: PropertiesContentProps) => (
       <span className="value">{entry.path}</span>
     </div>
     {entry.metadata.isFile && (
-      <div className="row">
-        <span className="label">{t.properties.size}</span>
-        <span className="value">{formatBytes(entry.size)}</span>
-      </div>
+      <>
+        <div className="row">
+          <span className="label">{t.properties.size}</span>
+          <span className="value">{formatBytes(entry.size)}</span>
+        </div>
+        <div className="row">
+          <span className="label">{t.properties.sizeOnDisk}</span>
+          <span className="value">{formatBytes(entry.sizeOnDisk)}</span>
+        </div>
+      </>
     )}
     <div className="row">
       <span className="label">{t.properties.created}</span>
