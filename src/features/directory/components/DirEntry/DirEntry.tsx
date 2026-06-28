@@ -100,40 +100,15 @@ const DirEntryItemComponent = ({
     />
   );
 
-  // Hover card with the entry's metadata, shown via the shared Tooltip (Finder/Explorer-style).
-  const metadataContent = (
-    <div className="entry_metadata">
-      <span className="entry_metadata_title">{t.details.title}</span>
-      <div className="entry_metadata_rows">
-        <span className="entry_metadata_key">{t.details.name}</span>
-        <span className="entry_metadata_value">{entry.name}</span>
-        <span className="entry_metadata_key">{t.details.type}</span>
-        <span className="entry_metadata_value">
-          {entry.metadata.isDir ? t.common.directory : t.common.file}
-        </span>
-        <span className="entry_metadata_key">{t.details.path}</span>
-        <span className="entry_metadata_value">{entry.path}</span>
-        {entry.metadata.isFile && (
-          <>
-            <span className="entry_metadata_key">{t.details.extension}</span>
-            <span className="entry_metadata_value">
-              {extension || t.common.unknown}
-            </span>
-            <span className="entry_metadata_key">{t.details.size}</span>
-            <span className="entry_metadata_value">
-              {formatBytes(entry.size)}
-            </span>
-          </>
-        )}
-      </div>
-    </div>
-  );
-
   // One DOM for both views; .grid / .list on the container arranges it via CSS, so toggling
   // the view never rebuilds these subtrees (which is what made the switch laggy). The Tooltip
   // wrapper renders as `display: contents` so the entry keeps its slot in the flex layout.
   return (
-    <Tooltip contents delay={METADATA_TOOLTIP_DELAY} content={metadataContent}>
+    <Tooltip
+      contents
+      delay={METADATA_TOOLTIP_DELAY}
+      content={<EntryMetadata entry={entry} extension={extension} />}
+    >
       <div
         className={classNames(
           "dir_entry_item",
@@ -157,19 +132,12 @@ const DirEntryItemComponent = ({
         {extension && name && <div className="extension">{extension}</div>}
 
         <div className="name">
-          <div className="icon">
-            {isThumbnail && imgSrc ? (
-              <img
-                ref={imgRef}
-                src={imgSrc}
-                decoding="async"
-                onLoad={finishLoad}
-                onError={finishLoad}
-              />
-            ) : (
-              <Icon icon={entry.metadata.isDir ? faFolder : faFile} />
-            )}
-          </div>
+          <EntryIcon
+            isDir={entry.metadata.isDir}
+            imgSrc={imgSrc}
+            imgRef={imgRef}
+            finishLoad={finishLoad}
+          />
           {renaming ? renameInput : <h3>{name || extension}</h3>}
         </div>
 
