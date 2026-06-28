@@ -5,6 +5,7 @@
   justify-content: center;
   align-items: center;
   gap: var(--space-2-5);
+  padding-left: var(--space-2);
 }
 
 .PathBar .controls {

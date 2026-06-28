@@ -33,6 +33,21 @@ type DirEntry = {
   metadata: DirMetadata;
 };
 
+// A browser tab: its own back/forward navigation history and its own search query. The current
+// path is the entry at `history.index` in `history.stack`.
+type NavHistory = {
+  stack: string[];
+  index: number;
+};
+
+type Tab = {
+  id: string;
+  history: NavHistory;
+  search: string;
+  // Whether the right info panel is open in this tab (each tab keeps its own state).
+  infoPanelOpen: boolean;
+};
+
 // Context-menu layout loaded from context_menu.toml: which actions appear per entry kind.
 type ActionList = { actions: string[] };
 type FileTypeRule = { extensions: string[]; actions: string[] };
@@ -49,6 +64,8 @@ export type {
   DirMetadata,
   DiskUsage,
   Volume,
+  NavHistory,
+  Tab,
   ActionList,
   FileTypeRule,
   ContextMenuLayout,

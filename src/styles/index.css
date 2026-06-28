@@ -45,6 +45,19 @@ body {
   grid-template-columns: var(--size-sidebar-expanded) 1fr;
   grid-template-rows: 1fr;
   transition: grid-template-columns 0.2s ease-in-out;
+  /* The UI chrome is not text: a click-drag (incl. right-click) must not rubber-band-select it,
+     like a native file manager. Editable fields opt back in below. */
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.App input,
+.App textarea,
+.App [contenteditable="true"],
+/* Keep macOS Live Text working on previewed images (ZoomableImage). */
+.App img {
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 .App.collapsed {

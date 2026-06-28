@@ -13,29 +13,13 @@
   gap: var(--space-2-5);
 }
 
-.SideBar .sidebar_header .host_name {
-  min-width: var(--space-0);
-  overflow: hidden;
-  color: var(--color-text-tertiary);
-  font-size: 0.8rem;
-  font-weight: 500;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+/* Collapsed: icon-only rail. Stack the header buttons. */
+.SideBar.collapsed .sidebar_header {
+  flex-direction: column;
 }
 
-/* Look comes from IconButton (boxed); only the auto-margin alignment is component-specific. */
-.SideBar .collapse_toggle {
-  margin-left: auto;
-}
-
-/* Collapsed: icon-only rail. Center icons and hide text. */
-.SideBar.collapsed .collapse_toggle {
-  margin-right: auto;
-  margin-left: auto;
-}
-
-.SideBar.collapsed .sidebar_header .host_name {
-  display: none;
+.SideBar.collapsed .sidebar_header .new_tab_toggle {
+  margin-left: var(--space-0);
 }
 
 .SideBar.collapsed section .section_content .folder_item,

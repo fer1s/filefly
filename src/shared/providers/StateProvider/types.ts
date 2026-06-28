@@ -1,4 +1,4 @@
-import { Volume, DirEntry } from "@/shared/models";
+import { Volume, DirEntry, Tab } from "@/shared/models";
 import { FileSystemManager } from "@/shared/managers/FileSystemManager";
 import { type ViewMode } from "@/shared/constants";
 
@@ -6,6 +6,12 @@ export type State = {
   fs: FileSystemManager;
   volumes: Volume[];
   setVolumes: (volumes: Volume[]) => void;
+  // Open tabs and the active one. Navigation/search below always act on the active tab.
+  tabs: Tab[];
+  activeTabId: string;
+  newTab: () => void;
+  closeTab: (id: string) => void;
+  selectTab: (id: string) => void;
   path: string;
   setPath: (path: string) => void;
   canGoBack: boolean;

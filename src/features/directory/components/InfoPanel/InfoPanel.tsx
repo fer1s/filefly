@@ -17,23 +17,23 @@ import { useDirectory } from "../../providers/DirectoryProvider";
 import { PropertiesContent } from "../Properties/PropertiesContent";
 
 import "@/styles/components/InfoPanel.css";
-import { CLOSE_HOTKEY } from "./constants";
 
 // Right side panel: an inline preview (when possible) plus the same metadata as the Properties
 // dialog, for the single selected entry. Slides in/out (like the sidebar); shown only when the
 // toggle is on and exactly one entry is selected. Always mounted so the transition can play.
 const InfoPanel = () => {
-  const { infoPanelOpen } = useStateContext();
-  const { selectedIDs, sorted, clearSelection } = useDirectory();
+  const { infoPanelOpen, toggleInfoPanel } = useStateContext();
+  const { selectedIDs, sorted } = useDirectory();
 
-  // Only details a single entry: hidden when the toggle is off, nothing is selected, or more
-  // than one is selected (e.g. Ctrl+A).
+  // Details a single entry: undefined when nothing is selected, or more than one is (e.g.
+  // Ctrl+A). The panel stays open regardless (showing an empty state) so it doesn't slide
+  // open/closed as the selection — or the active tab's folder — changes.
   const entry =
     selectedIDs.length === 1
       ? sorted.find((item) => item.path === selectedIDs[0])
       : undefined;
 
-  const visible = infoPanelOpen && !!entry;
+  const visible = infoPanelOpen;
 
   const extension = entry
     ? (entry.name.split(".").pop() || "").toLowerCase()
@@ -58,18 +58,19 @@ const InfoPanel = () => {
         <h4>{t.infoPanel.title}</h4>
         <IconButton
           icon={faXmark}
-          onClick={clearSelection}
+          onClick={toggleInfoPanel}
           tooltip={t.common.close}
-          hotkey={CLOSE_HOTKEY}
           aria-label={t.common.close}
         />
       </div>
       <div className="info_body">
-        {entry && (
+        {entry ? (
           <>
             {preview && <div className="info_preview">{preview}</div>}
             <PropertiesContent entry={entry} />
           </>
+        ) : (
+          <p className="info_empty">{t.infoPanel.selectSingle}</p>
         )}
       </div>
     </aside>

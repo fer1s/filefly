@@ -1,5 +1,8 @@
+import { useCallback } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 
+import { useStateContext } from "@/shared/providers/StateProvider";
+import { TabBar, useTabsShortcuts } from "@/features/tabs";
 import PathBar from "@/features/navigation";
 import QuickBar from "@/features/quickbar";
 
@@ -10,14 +13,33 @@ import { ROUTES } from "./routes";
 
 function AppContent() {
   const location = useLocation();
+  const { tabs, activeTabId, newTab, closeTab, selectTab } = useStateContext();
 
   const onDirectory = location.pathname === ROUTES.directory;
+  // A single tab is just "the current location" — no point showing a one-tab strip.
+  const showTabs = tabs.length > 1;
+
+  // Tab keyboard shortcuts live here (always mounted) so Cmd+T works even with the strip hidden.
+  const closeActiveTab = useCallback(
+    () => closeTab(activeTabId),
+    [closeTab, activeTabId],
+  );
+  const cycleTab = useCallback(
+    (direction: number) => {
+      const index = tabs.findIndex((tab) => tab.id === activeTabId);
+      const next = (index + direction + tabs.length) % tabs.length;
+      selectTab(tabs[next].id);
+    },
+    [tabs, activeTabId, selectTab],
+  );
+  useTabsShortcuts({ newTab, closeActiveTab, cycleTab });
 
   return (
     // The directory state (selection, clipboard, preview…) is shared by the directory view,
     // the QuickBar's quick actions and the info panel, so the provider wraps them all.
     <DirectoryProvider>
       <div className="AppContent">
+        {showTabs && <TabBar />}
         <PathBar />
         {/* Zoom only applies to the directory view, so the quick bar is hidden on Volumes. */}
         {onDirectory && <QuickBar />}

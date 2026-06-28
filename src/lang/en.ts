@@ -76,6 +76,11 @@ export const en = {
     zoomOut: "Zoom out",
     zoomLevel: (percent: number) => `Zoom: ${percent}%`,
   },
+  tabs: {
+    volumes: "Volumes",
+    newTab: "New tab",
+    closeTab: "Close tab",
+  },
   infoPanel: {
     title: "Info",
     selectSingle: "Select a single item to see its details.",

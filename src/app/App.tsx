@@ -21,7 +21,19 @@ import AppContent from "./AppContent";
 import { setNotifier, notify, TOAST_TYPE, ToastType } from "@/shared/toast";
 import { ROUTES } from "./routes";
 import { FileSystemManager } from "@/shared/managers/FileSystemManager";
-import { Volume, DirEntry } from "@/shared/models";
+import { Volume, DirEntry, Tab } from "@/shared/models";
+import {
+  makeTab,
+  tabPath,
+  navigateTab,
+  backTab,
+  forwardTab,
+  canGoBack,
+  canGoForward,
+  loadTabs,
+  loadActiveTabId,
+  saveTabs,
+} from "@/features/tabs";
 import { classNames } from "@/shared/utils";
 import { t } from "@/lang";
 import {
@@ -42,65 +54,97 @@ const App = () => {
   const location: Location = useLocation();
 
   const [volumes, setVolumes] = useState<Volume[]>([]);
-  const [pathHistory, setPathHistory] = useState<{
-    stack: string[];
-    index: number;
-  }>({ stack: [""], index: 0 });
+  const [tabs, setTabs] = useState<Tab[]>(loadTabs);
+  const [activeTabId, setActiveTabId] = useState<string>(() =>
+    loadActiveTabId(tabs),
+  );
   const [dirContent, setDirContent] = useState<DirEntry[]>([]);
   const [accessDenied, setAccessDenied] = useState<boolean>(false);
   const [view, setView] = useState<ViewMode>(VIEW_MODE.GRID);
   const [showHidden, setShowHidden] = useState<boolean>(false);
   const [zoom, setZoom] = useState<number>(ZOOM_DEFAULT);
-  const [search, setSearch] = useState<string>("");
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(
     () => localStorage.getItem("sidebarCollapsed") === "true",
-  );
-  const [infoPanelOpen, setInfoPanelOpen] = useState<boolean>(
-    () => localStorage.getItem("infoPanelOpen") === "true",
   );
 
   const [toasts, setToasts] = useState<ToastData[]>([]);
   const toastId = useRef(0);
 
-  const path = pathHistory.stack[pathHistory.index];
+  // The active tab drives the current location, history and search. Fall back to the first tab
+  // if the active id ever goes stale.
+  const activeTab = tabs.find((tab) => tab.id === activeTabId) ?? tabs[0];
+  const path = tabPath(activeTab);
+  const search = activeTab.search;
+  const infoPanelOpen = activeTab.infoPanelOpen;
 
-  const setPath = useCallback((nextPath: string) => {
-    setSearch("");
-    setPathHistory((history) => {
-      if (history.stack[history.index] === nextPath) return history;
+  // Apply a transform to the active tab only.
+  const updateActiveTab = useCallback(
+    (transform: (tab: Tab) => Tab) =>
+      setTabs((prev) =>
+        prev.map((tab) => (tab.id === activeTabId ? transform(tab) : tab)),
+      ),
+    [activeTabId],
+  );
 
-      const stack = [...history.stack.slice(0, history.index + 1), nextPath];
-      return { stack, index: stack.length - 1 };
-    });
-  }, []);
+  const setPath = useCallback(
+    (nextPath: string) => updateActiveTab((tab) => navigateTab(tab, nextPath)),
+    [updateActiveTab],
+  );
 
-  const goBack = useCallback(() => {
-    setSearch("");
-    setPathHistory((history) =>
-      history.index === 0 ? history : { ...history, index: history.index - 1 },
-    );
-  }, []);
+  const goBack = useCallback(
+    () => updateActiveTab(backTab),
+    [updateActiveTab],
+  );
 
-  const goForward = useCallback(() => {
-    setSearch("");
-    setPathHistory((history) =>
-      history.index >= history.stack.length - 1
-        ? history
-        : { ...history, index: history.index + 1 },
-    );
-  }, []);
+  const goForward = useCallback(
+    () => updateActiveTab(forwardTab),
+    [updateActiveTab],
+  );
+
+  const setSearch = useCallback(
+    (nextSearch: string) =>
+      updateActiveTab((tab) => ({ ...tab, search: nextSearch })),
+    [updateActiveTab],
+  );
+
+  const toggleInfoPanel = useCallback(
+    () =>
+      updateActiveTab((tab) => ({ ...tab, infoPanelOpen: !tab.infoPanelOpen })),
+    [updateActiveTab],
+  );
+
+  // Open a new tab cloning the current location (and panel state) and focus it.
+  const newTab = useCallback(() => {
+    const tab = makeTab(path, infoPanelOpen);
+    setTabs((prev) => [...prev, tab]);
+    setActiveTabId(tab.id);
+  }, [path, infoPanelOpen]);
+
+  // Close a tab; always keep at least one open. When closing the active tab, activate the
+  // neighbour that slides into its place.
+  const closeTab = useCallback(
+    (id: string) => {
+      if (tabs.length <= 1) return;
+      const index = tabs.findIndex((tab) => tab.id === id);
+      const remaining = tabs.filter((tab) => tab.id !== id);
+      setTabs(remaining);
+      if (id === activeTabId)
+        setActiveTabId(remaining[Math.min(index, remaining.length - 1)].id);
+    },
+    [tabs, activeTabId],
+  );
+
+  const selectTab = useCallback((id: string) => setActiveTabId(id), []);
+
+  // Persist the tab session whenever it changes.
+  useEffect(() => {
+    saveTabs(tabs, activeTabId);
+  }, [tabs, activeTabId]);
 
   // Persist the collapsed state across sessions.
   useEffect(() => {
     localStorage.setItem("sidebarCollapsed", String(sidebarCollapsed));
   }, [sidebarCollapsed]);
-
-  // Persist the info-panel toggle across sessions.
-  useEffect(() => {
-    localStorage.setItem("infoPanelOpen", String(infoPanelOpen));
-  }, [infoPanelOpen]);
-
-  const toggleInfoPanel = useCallback(() => setInfoPanelOpen((v) => !v), []);
 
   // Dismiss a toast: first flag it as leaving so it animates out, then drop it once the exit
   // animation has finished.
@@ -306,10 +350,15 @@ const App = () => {
         fs,
         volumes,
         setVolumes,
+        tabs,
+        activeTabId,
+        newTab,
+        closeTab,
+        selectTab,
         path,
         setPath,
-        canGoBack: pathHistory.index > 0,
-        canGoForward: pathHistory.index < pathHistory.stack.length - 1,
+        canGoBack: canGoBack(activeTab),
+        canGoForward: canGoForward(activeTab),
         goBack,
         goForward,
         dirContent,
@@ -335,7 +384,7 @@ const App = () => {
           <SideBar
             collapsed={sidebarCollapsed}
             onToggle={() => setSidebarCollapsed((c) => !c)}
-            visitedPaths={pathHistory.stack}
+            visitedPaths={activeTab.history.stack}
           />
           <AppContent />
         </div>

@@ -4,29 +4,32 @@ import IconButton, {
   ICON_BUTTON_VARIANT,
 } from "@/shared/components/elements/IconButton";
 import { TOOLTIP_PLACEMENT } from "@/shared/components/elements/Tooltip";
-import { useKeymap, formatBinding, PINNED_ACTIONS } from "@/shared/keymap";
+import {
+  useKeymap,
+  formatBinding,
+  KEYMAP_ACTION,
+  PINNED_ACTIONS,
+} from "@/shared/keymap";
 import { classNames } from "@/shared/utils";
 import { t } from "@/lang";
 
 import { usePinnedFolders } from "./hooks/usePinnedFolders";
 import { usePinnedShortcuts } from "./hooks/usePinnedShortcuts";
-import { useHostName } from "./hooks/useHostName";
 import SidebarSection from "./components/SidebarSection";
 import VolumeItem from "./components/VolumeItem";
 import FolderItem from "./components/FolderItem";
 import { getPathLabel, getRecentPaths } from "./utils";
 
-import { faBars, faFolder } from "@fortawesome/free-solid-svg-icons";
+import { faBars, faFolder, faPlus } from "@fortawesome/free-solid-svg-icons";
 
 import "@/styles/components/SideBar.css";
 
 import type { SideBarProps } from "./types";
 
 const SideBar = ({ collapsed, onToggle, visitedPaths }: SideBarProps) => {
-  const { fs, path, volumes, setPath } = useStateContext();
+  const { path, volumes, setPath, newTab } = useStateContext();
 
   const { keymap } = useKeymap();
-  const hostName = useHostName(fs);
   const pinned = usePinnedFolders();
   usePinnedShortcuts({ pinned, setPath });
   const recentPaths = getRecentPaths(path, visitedPaths);
@@ -49,7 +52,17 @@ const SideBar = ({ collapsed, onToggle, visitedPaths }: SideBarProps) => {
           onClick={onToggle}
           aria-label={collapsed ? t.sidebar.expand : t.sidebar.collapse}
         />
-        <span className="host_name">{hostName}</span>
+        <IconButton
+          icon={faPlus}
+          variant={ICON_BUTTON_VARIANT.BOXED}
+          size={ICON_BUTTON_SIZE.MD}
+          className="new_tab_toggle"
+          tooltip={t.tabs.newTab}
+          tooltipPlacement={TOOLTIP_PLACEMENT.RIGHT}
+          hotkey={formatBinding(keymap[KEYMAP_ACTION.NEW_TAB])}
+          onClick={newTab}
+          aria-label={t.tabs.newTab}
+        />
       </div>
 
       <SidebarSection title={t.sidebar.recent} hideWhenCollapsed>

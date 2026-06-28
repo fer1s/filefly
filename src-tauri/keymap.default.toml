@@ -104,3 +104,23 @@ keys = ["ArrowLeft"]
 
 [preview_next]
 keys = ["ArrowRight"]
+
+# Tabs. mod = Cmd / Ctrl. Next/prev cycle uses mod+alt+arrows to avoid clashing with the
+# alt+arrow history navigation.
+[new_tab]
+keys = ["t"]
+mod = true
+
+[close_tab]
+keys = ["w"]
+mod = true
+
+[next_tab]
+keys = ["ArrowRight"]
+mod = true
+alt = true
+
+[prev_tab]
+keys = ["ArrowLeft"]
+mod = true
+alt = true
