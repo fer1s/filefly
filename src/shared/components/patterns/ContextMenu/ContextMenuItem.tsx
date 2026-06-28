@@ -2,6 +2,7 @@ import Button from "@/shared/components/elements/Button";
 import { classNames } from "@/shared/utils";
 import { UI_COLOR } from "@/shared/constants";
 
+import { MENU_ITEM_ROLE } from "./constants";
 import type { ContextMenuItemProps } from "./types";
 
 export const ContextMenuItem = ({
@@ -19,13 +20,16 @@ export const ContextMenuItem = ({
   const isDisabled = disabled ?? !onClick;
 
   return isSeparator ? (
-    <div className="context_menu_item separator"></div>
+    <div className="context_menu_item separator" role="separator"></div>
   ) : (
     <Button
       className={classNames(
         "context_menu_item ctx_button",
         color !== UI_COLOR.DEFAULT && `ctx_${color}`,
       )}
+      role={MENU_ITEM_ROLE}
+      // Roving focus: items aren't individual Tab stops; arrow keys move focus (see ContextMenu).
+      tabIndex={-1}
       onClick={onClick}
       disabled={isDisabled}
     >

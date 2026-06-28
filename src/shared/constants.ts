@@ -57,6 +57,8 @@ export const KEY = {
   ARROW_DOWN: "ArrowDown",
   ARROW_LEFT: "ArrowLeft",
   ARROW_RIGHT: "ArrowRight",
+  HOME: "Home",
+  END: "End",
 } as const;
 
 // Marker the Rust `read_directory` command returns when a folder is blocked by OS privacy
