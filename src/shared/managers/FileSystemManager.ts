@@ -99,6 +99,11 @@ export class FileSystemManager {
     return api.deleteEntry(path);
   }
 
+  // Permanently delete, bypassing the Trash (irreversible).
+  deletePermanently(path: string): Promise<void> {
+    return api.deleteEntryPermanently(path);
+  }
+
   openFullDiskAccessSettings(): Promise<void> {
     return api.openFullDiskAccessSettings();
   }

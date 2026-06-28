@@ -6,6 +6,7 @@ export type FileOps = {
   copy: (targets: string[]) => void;
   cut: (targets: string[]) => void;
   remove: (targets: string[]) => Promise<void>;
+  removePermanently: (targets: string[]) => Promise<void>;
   paste: () => Promise<void>;
 };
 

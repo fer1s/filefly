@@ -62,6 +62,15 @@ export const KEY = {
 // protection (e.g. macOS TCC on ~/.Trash). Matched in the UI to prompt for Full Disk Access.
 export const ACCESS_DENIED_ERROR = "ACCESS_DENIED";
 
+// Semantic UI colors for elements that support a color variant (e.g. menu items, buttons).
+// Values double as CSS modifier class names.
+export const UI_COLOR = {
+  DEFAULT: "default",
+  DANGER: "danger",
+} as const;
+
+export type UiColor = (typeof UI_COLOR)[keyof typeof UI_COLOR];
+
 export const MARKDOWN_FORMAT = "md";
 export const IMAGE_FORMATS: readonly string[] = ["png", "jpg", "jpeg", "webp"];
 export const AUDIO_FORMATS: readonly string[] = ["mp3", "wav", "ogg"];

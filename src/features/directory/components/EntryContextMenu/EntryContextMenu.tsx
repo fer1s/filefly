@@ -4,7 +4,12 @@ import {
 } from "@/shared/components/patterns/ContextMenu";
 import Icon from "@/shared/components/elements/Icon";
 import { useStateContext } from "@/shared/providers/StateProvider";
-import { ACCEPTED_PREVIEW_FORMATS, ENTRY_KIND, KEY } from "@/shared/constants";
+import {
+  ACCEPTED_PREVIEW_FORMATS,
+  ENTRY_KIND,
+  KEY,
+  UI_COLOR,
+} from "@/shared/constants";
 import { useKeymap, formatBinding, KEYMAP_ACTION } from "@/shared/keymap";
 import { t } from "@/lang";
 
@@ -18,6 +23,7 @@ import {
   faScissors,
   faTerminal,
   faTrash,
+  faXmark
 } from "@fortawesome/free-solid-svg-icons";
 
 import type { EntryContextMenuProps } from "./types";
@@ -85,6 +91,12 @@ const EntryContextMenu = ({
     const targets = actionTargets();
     onClose();
     await fileOps.remove(targets);
+  };
+
+  const handleDeletePermanently = async () => {
+    const targets = actionTargets();
+    onClose();
+    await fileOps.removePermanently(targets);
   };
 
   const handlePaste = async () => {
@@ -164,6 +176,13 @@ const EntryContextMenu = ({
             hotkey={formatBinding(keymap[KEYMAP_ACTION.TRASH])}
             onClick={handleDelete}
           />
+          <ContextMenuItem
+            color={UI_COLOR.DANGER}
+            text={t.contextMenu.deletePermanently}
+            icon={<Icon icon={faXmark} />}
+            hotkey={formatBinding(keymap[KEYMAP_ACTION.DELETE_PERMANENTLY])}
+            onClick={handleDeletePermanently}
+          />
         </>
       )}
 
@@ -205,6 +224,13 @@ const EntryContextMenu = ({
             icon={<Icon icon={faTrash} />}
             hotkey={formatBinding(keymap[KEYMAP_ACTION.TRASH])}
             onClick={handleDelete}
+          />
+          <ContextMenuItem
+            color={UI_COLOR.DANGER}
+            text={t.contextMenu.deletePermanently}
+            icon={<Icon icon={faXmark} />}
+            hotkey={formatBinding(keymap[KEYMAP_ACTION.DELETE_PERMANENTLY])}
+            onClick={handleDeletePermanently}
           />
         </>
       )}

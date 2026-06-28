@@ -5,6 +5,7 @@ export type UseClipboardShortcutsArgs = {
   onCut: (targets: string[]) => void;
   onPaste: () => void;
   onDelete: (targets: string[]) => void;
+  onDeletePermanently: (targets: string[]) => void;
   onRename: (targets: string[]) => void;
   onSelectAll: () => void;
 };

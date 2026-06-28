@@ -273,3 +273,17 @@ pub fn delete_entry(path: String) -> Result<(), String> {
     #[cfg(not(target_os = "macos"))]
     trash::delete(&path).map_err(|e| e.to_string())
 }
+
+// Permanently delete a file or directory, bypassing the Trash (irreversible). Backs the
+// Shift+Delete shortcut. Directories are removed recursively.
+#[tauri::command]
+pub fn delete_entry_permanently(path: String) -> Result<(), String> {
+    println!("[delete_entry_permanently] deleting: {}", path);
+
+    let p = Path::new(&path);
+    if p.is_dir() {
+        fs::remove_dir_all(p).map_err(|e| e.to_string())
+    } else {
+        fs::remove_file(p).map_err(|e| e.to_string())
+    }
+}

@@ -23,6 +23,8 @@ export const useFileOperations = ({
 }: Args) => {
   const { fs } = useStateContext();
   const [clipboard, setClipboard] = useState<Clipboard>(null);
+  // True while a trash operation is in flight, so the UI can show a spinner for slow deletes.
+  const [deleting, setDeleting] = useState(false);
 
   // All wrapped in useCallback so they're stable props for memoized entry rows.
   const copy = useCallback((targets: string[]) => {
@@ -35,35 +37,53 @@ export const useFileOperations = ({
       setClipboard({ paths: targets, mode: CLIPBOARD_MODE.CUT });
   }, []);
 
-  const remove = useCallback(
-    async (targets: string[]) => {
+  // Trash (reversible) or permanent delete, sharing the confirm + spinner + error handling.
+  const deleteTargets = useCallback(
+    async (targets: string[], permanent: boolean) => {
       if (!targets.length || !targets[0]) return;
 
       const label =
         targets.length === 1
           ? `"${targets[0].split("/").pop()}"`
           : t.directory.items(targets.length);
-      const confirmed = await ask(t.directory.confirmDelete(label), {
-        title: t.directory.deleteTitle,
-        kind: "warning",
-      });
+      const confirmed = await ask(
+        permanent
+          ? t.directory.confirmDeletePermanently(label)
+          : t.directory.confirmDelete(label),
+        { title: t.directory.deleteTitle, kind: "warning" },
+      );
       if (!confirmed) return;
 
-      for (const target of targets) {
-        try {
-          await fs.trash(target);
-        } catch (err) {
-          notify(
-            t.errors.delete(target.split("/").pop() || target, String(err)),
-            TOAST_TYPE.ERROR,
-          );
+      setDeleting(true);
+      try {
+        for (const target of targets) {
+          try {
+            await (permanent ? fs.deletePermanently(target) : fs.trash(target));
+          } catch (err) {
+            notify(
+              t.errors.delete(target.split("/").pop() || target, String(err)),
+              TOAST_TYPE.ERROR,
+            );
+          }
         }
+      } finally {
+        setDeleting(false);
       }
 
       setSelectedIDs([]);
       refreshDir();
     },
     [fs, refreshDir, setSelectedIDs],
+  );
+
+  const remove = useCallback(
+    (targets: string[]) => deleteTargets(targets, false),
+    [deleteTargets],
+  );
+
+  const removePermanently = useCallback(
+    (targets: string[]) => deleteTargets(targets, true),
+    [deleteTargets],
   );
 
   const paste = useCallback(async () => {
@@ -98,5 +118,14 @@ export const useFileOperations = ({
     [fs, refreshDir],
   );
 
-  return { clipboard, copy, cut, remove, paste, rename };
+  return {
+    clipboard,
+    copy,
+    cut,
+    remove,
+    removePermanently,
+    paste,
+    rename,
+    deleting,
+  };
 };

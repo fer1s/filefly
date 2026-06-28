@@ -1,4 +1,6 @@
 import Button from "@/shared/components/elements/Button";
+import { classNames } from "@/shared/utils";
+import { UI_COLOR } from "@/shared/constants";
 
 import type { ContextMenuItemProps } from "./types";
 
@@ -9,6 +11,7 @@ export const ContextMenuItem = ({
   icon,
   hotkey,
   disabled,
+  color = UI_COLOR.DEFAULT,
 }: ContextMenuItemProps) => {
   isSeparator = isSeparator || false;
 
@@ -19,7 +22,10 @@ export const ContextMenuItem = ({
     <div className="context_menu_item separator"></div>
   ) : (
     <Button
-      className="context_menu_item ctx_button"
+      className={classNames(
+        "context_menu_item ctx_button",
+        color !== UI_COLOR.DEFAULT && `ctx_${color}`,
+      )}
       onClick={onClick}
       disabled={isDisabled}
     >

@@ -26,6 +26,11 @@ mod = true
 keys = ["Backspace", "Delete"]
 mod = true
 
+# Permanently delete the selection, bypassing the Trash (irreversible).
+[delete_permanently]
+keys = ["Backspace", "Delete"]
+shift = true
+
 [select_all]
 keys = ["a"]
 mod = true

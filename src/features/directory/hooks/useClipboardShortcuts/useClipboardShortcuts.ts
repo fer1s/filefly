@@ -13,6 +13,7 @@ export const useClipboardShortcuts = ({
   onCut,
   onPaste,
   onDelete,
+  onDeletePermanently,
   onRename,
   onSelectAll,
 }: UseClipboardShortcutsArgs) => {
@@ -37,6 +38,11 @@ export const useClipboardShortcuts = ({
       } else if (matchesBinding(e, keymap[KEYMAP_ACTION.PASTE])) {
         e.preventDefault();
         onPaste();
+      } else if (
+        matchesBinding(e, keymap[KEYMAP_ACTION.DELETE_PERMANENTLY])
+      ) {
+        e.preventDefault();
+        onDeletePermanently(selectedIDs);
       } else if (matchesBinding(e, keymap[KEYMAP_ACTION.TRASH])) {
         e.preventDefault();
         onDelete(selectedIDs);
@@ -59,6 +65,7 @@ export const useClipboardShortcuts = ({
     onCut,
     onPaste,
     onDelete,
+    onDeletePermanently,
     onRename,
     onSelectAll,
     keymap,

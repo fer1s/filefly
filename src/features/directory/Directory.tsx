@@ -94,6 +94,7 @@ const Directory = () => {
     onCut: fileOps.cut,
     onPaste: fileOps.paste,
     onDelete: fileOps.remove,
+    onDeletePermanently: fileOps.removePermanently,
     // Rename only makes sense for a single entry.
     onRename: (ids) => {
       if (ids.length === 1) setRenamingID(ids[0]);
@@ -189,6 +190,7 @@ const Directory = () => {
         total={filtered.length}
         selected={selectedIDs.length}
         computingSizes={computingSizes}
+        deleting={fileOps.deleting}
       />
 
       <EntryContextMenu

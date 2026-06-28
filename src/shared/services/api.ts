@@ -135,6 +135,8 @@ export const renameEntry = async (
 ): Promise<void> => await invoke("rename_entry", { path, newName });
 export const deleteEntry = async (path: string): Promise<void> =>
   await invoke("delete_entry", { path });
+export const deleteEntryPermanently = async (path: string): Promise<void> =>
+  await invoke("delete_entry_permanently", { path });
 
 // Open the OS privacy settings (macOS Full Disk Access) so the user can grant access to
 // protected folders like the Trash.
