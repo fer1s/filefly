@@ -2,6 +2,7 @@ import { useStateContext } from "@/shared/providers/StateProvider";
 import IconButton from "@/shared/components/elements/IconButton";
 import { ZOOM_MAX, ZOOM_MIN } from "@/shared/constants";
 import { t } from "@/lang";
+import { QuickActions } from "@/features/directory";
 
 import {
   faMagnifyingGlassMinus,
@@ -19,6 +20,7 @@ const QuickBar = () => {
 
   return (
     <div className="QuickBar">
+      <QuickActions />
       <div className="zoom_control">
         <IconButton
           icon={faMagnifyingGlassMinus}

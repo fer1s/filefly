@@ -48,8 +48,19 @@ export type EntryAction = {
   hotkey?: string;
   // Color variant (defaults to neutral); e.g. UI_COLOR.DANGER for destroy.
   color?: UiColor;
+  // Whether the action makes sense for more than one target. When false (e.g. rename), it is
+  // hidden once multiple entries are selected. Defaults to true.
+  multiple?: boolean;
   // Whether the action is runnable in the given context (e.g. paste needs a clipboard).
   // Absent means always enabled.
   isEnabled?: (ctx: EntryActionContext) => boolean;
   run: (ctx: EntryActionContext) => void | Promise<void>;
+};
+
+// Inputs for resolving which actions apply to an entry (see resolveActionIds).
+export type ResolveArgs = {
+  isCurrentDirectory: boolean;
+  elementType: EntryKind;
+  // Lowercased file extension (no dot); ignored for folders.
+  extension: string;
 };

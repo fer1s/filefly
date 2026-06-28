@@ -12,6 +12,7 @@ export const renameAction: EntryAction = {
   label: () => t.contextMenu.rename,
   icon: faFilePen,
   keymapAction: KEYMAP_ACTION.RENAME,
+  multiple: false,
   run: ({ elementId, onStartRename, onClose }) => {
     onStartRename(elementId);
     onClose();

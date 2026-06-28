@@ -1,12 +1,11 @@
-import { ENTRY_KIND, type EntryKind } from "@/shared/constants";
+import { ENTRY_KIND } from "@/shared/constants";
 import type { ContextMenuLayout } from "@/shared/models";
 
-type ResolveArgs = {
-  isCurrentDirectory: boolean;
-  elementType: EntryKind;
-  // Lowercased file extension (no dot); ignored for folders.
-  extension: string;
-};
+import type {
+  EntryAction,
+  EntryActionContext,
+  ResolveArgs,
+} from "./types";
 
 // Resolve the ordered action-id list for a given context: the current directory background,
 // a folder, or a file (matched to a file-type rule by extension, falling back to [file]).
@@ -23,3 +22,10 @@ export const resolveActionIds = (
   }
   return layout.file.actions;
 };
+
+// Whether an action should be shown in the current context. Single-target actions (multiple
+// === false, e.g. rename) are hidden once more than one entry is selected.
+export const isActionVisible = (
+  action: EntryAction,
+  ctx: EntryActionContext,
+): boolean => action.multiple !== false || ctx.targets.length <= 1;

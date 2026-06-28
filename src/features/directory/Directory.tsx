@@ -3,21 +3,18 @@ import { useCallback, useRef, useState, type CSSProperties } from "react";
 import { useStateContext } from "@/shared/providers/StateProvider";
 import { ENTRY_KIND, VIEW_MODE } from "@/shared/constants";
 import { classNames } from "@/shared/utils";
+import { notify, TOAST_TYPE } from "@/shared/toast";
 import { t } from "@/lang";
 import { DirEntry } from "@/shared/models";
 
 import { COLUMN_KEYS, buildListGrid } from "./columns";
-import { useSelection } from "./hooks/useSelection";
 import { useColumnVisibility } from "./hooks/useColumnVisibility";
 import { useFolderView } from "./hooks/useFolderView";
 import { useMarqueeSelection } from "./hooks/useMarqueeSelection";
 import { useKeyboardNav } from "./hooks/useKeyboardNav";
 import { useClipboardShortcuts } from "./hooks/useClipboardShortcuts";
 import { useContextMenu } from "./hooks/useContextMenu";
-import { useDirectoryEntries } from "./hooks/useDirectoryEntries";
-import { useFileOperations } from "./hooks/useFileOperations";
-import { usePreview } from "./hooks/usePreview";
-import { useProperties } from "./hooks/useProperties";
+import { useDirectory } from "./providers/DirectoryProvider";
 
 import ListHeader from "./components/ListHeader";
 import EntriesView from "./components/EntriesView";
@@ -31,19 +28,28 @@ import Properties from "./components/Properties";
 import "@/styles/views/Directory.css";
 
 const Directory = () => {
-  const { fs, path, setPath, view, search, refreshDir, accessDenied, zoom } =
+  const { fs, path, setPath, view, search, accessDenied, zoom } =
     useStateContext();
 
-  // Path of the entry currently being renamed inline (empty when none).
-  const [renamingID, setRenamingID] = useState("");
   const [typeaheadQuery, setTypeaheadQuery] = useState("");
 
-  const { filtered, sorted, previewables, sort, handleSort, computingSizes } =
-    useDirectoryEntries(view);
-
-  const { selectedIDs, setSelectedIDs, handleSelect } = useSelection(
-    sorted.map((entry) => entry.path),
-  );
+  // Directory domain state (entries, selection, clipboard ops, preview/properties, inline
+  // rename) lives in the provider so the QuickBar's quick actions share it.
+  const {
+    filtered,
+    sorted,
+    sort,
+    handleSort,
+    computingSizes,
+    selectedIDs,
+    setSelectedIDs,
+    handleSelect,
+    renamingID,
+    setRenamingID,
+    fileOps,
+    preview,
+    properties,
+  } = useDirectory();
 
   // Rubber-band selection over the empty floor of the directory.
   const directoryRef = useRef<HTMLDivElement>(null);
@@ -60,10 +66,6 @@ const Directory = () => {
     (key) => !visibleColumns.includes(key),
   );
 
-  const preview = usePreview(previewables);
-  const properties = useProperties();
-  const fileOps = useFileOperations({ path, refreshDir, setSelectedIDs });
-
   const menu = useContextMenu();
   const isCurrentDirectory =
     menu.elementType === ENTRY_KIND.DIRECTORY && menu.elementID === path;
@@ -74,7 +76,20 @@ const Directory = () => {
     [fs, setPath],
   );
 
-  const handleCancelRename = useCallback(() => setRenamingID(""), []);
+  const handleCancelRename = useCallback(
+    () => setRenamingID(""),
+    [setRenamingID],
+  );
+
+  // Create a folder in the current directory and start renaming it inline.
+  const handleNewFolder = useCallback(async () => {
+    try {
+      const created = await fs.createFolder(path);
+      setRenamingID(created);
+    } catch (err) {
+      notify(t.errors.createFolder(String(err)), TOAST_TYPE.ERROR);
+    }
+  }, [fs, path, setRenamingID]);
 
   useKeyboardNav({
     items: sorted,
@@ -99,6 +114,7 @@ const Directory = () => {
     onRename: (ids) => {
       if (ids.length === 1) setRenamingID(ids[0]);
     },
+    onNewFolder: handleNewFolder,
     onSelectAll: () => setSelectedIDs(sorted.map((entry) => entry.path)),
   });
 

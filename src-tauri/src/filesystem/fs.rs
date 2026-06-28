@@ -239,6 +239,24 @@ pub fn move_entry(source: String, dest_dir: String) -> Result<(), String> {
     }
 }
 
+// Create a new folder inside `parent`, picking a unique "untitled folder" name. Returns the
+// created folder's path so the frontend can start an inline rename on it.
+#[tauri::command]
+pub fn create_folder(parent: String) -> Result<String, String> {
+    let dir = Path::new(&parent);
+    let base = "untitled folder";
+
+    let mut candidate = dir.join(base);
+    let mut i = 2;
+    while candidate.exists() {
+        candidate = dir.join(format!("{} {}", base, i));
+        i += 1;
+    }
+
+    fs::create_dir(&candidate).map_err(|e| e.to_string())?;
+    Ok(candidate.to_string_lossy().into_owned())
+}
+
 // Rename an entry in place within its parent directory.
 #[tauri::command]
 pub fn rename_entry(path: String, new_name: String) -> Result<(), String> {

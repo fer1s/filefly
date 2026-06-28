@@ -15,6 +15,7 @@ export const useClipboardShortcuts = ({
   onDelete,
   onDeletePermanently,
   onRename,
+  onNewFolder,
   onSelectAll,
 }: UseClipboardShortcutsArgs) => {
   const { keymap } = useKeymap();
@@ -49,6 +50,9 @@ export const useClipboardShortcuts = ({
       } else if (matchesBinding(e, keymap[KEYMAP_ACTION.RENAME])) {
         e.preventDefault();
         onRename(selectedIDs);
+      } else if (matchesBinding(e, keymap[KEYMAP_ACTION.NEW_FOLDER])) {
+        e.preventDefault();
+        onNewFolder();
       } else if (matchesBinding(e, keymap[KEYMAP_ACTION.SELECT_ALL])) {
         // Prevent the browser's native "select all text" so it selects the entries instead.
         e.preventDefault();
@@ -67,6 +71,7 @@ export const useClipboardShortcuts = ({
     onDelete,
     onDeletePermanently,
     onRename,
+    onNewFolder,
     onSelectAll,
     keymap,
   ]);

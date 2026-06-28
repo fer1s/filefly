@@ -1,6 +1,7 @@
 // Stable identifiers for the generic context-menu actions. Used as keys, never shown to the
 // user (labels come from i18n).
 export const ENTRY_ACTION = {
+  NEW_FOLDER: "new_folder",
   OPEN: "open",
   OPEN_IN_TERMINAL: "open_in_terminal",
   PREVIEW: "preview",

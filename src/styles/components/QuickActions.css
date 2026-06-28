@@ -1,0 +1,11 @@
+/* Quick-actions toolbar on the left of the QuickBar. */
+.QuickBar .quick_actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+/* Danger-colored action (destroy). */
+.QuickBar .quick_actions .qa_danger svg {
+  color: var(--color-danger);
+}

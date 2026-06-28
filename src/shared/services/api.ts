@@ -137,6 +137,9 @@ export const renameEntry = async (
   path: string,
   newName: string,
 ): Promise<void> => await invoke("rename_entry", { path, newName });
+// Create a new folder in `parent`; returns the created folder's path.
+export const createFolder = async (parent: string): Promise<string> =>
+  (await invoke("create_folder", { parent })) as string;
 export const deleteEntry = async (path: string): Promise<void> =>
   await invoke("delete_entry", { path });
 export const deleteEntryPermanently = async (path: string): Promise<void> =>

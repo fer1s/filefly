@@ -7,5 +7,6 @@ export type UseClipboardShortcutsArgs = {
   onDelete: (targets: string[]) => void;
   onDeletePermanently: (targets: string[]) => void;
   onRename: (targets: string[]) => void;
+  onNewFolder: () => void;
   onSelectAll: () => void;
 };

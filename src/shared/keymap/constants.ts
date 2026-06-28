@@ -7,6 +7,7 @@ export const KEYMAP_ACTION = {
   DELETE_PERMANENTLY: "delete_permanently",
   SELECT_ALL: "select_all",
   RENAME: "rename",
+  NEW_FOLDER: "new_folder",
   NAV_BACK: "nav_back",
   NAV_FORWARD: "nav_forward",
   NAV_UP: "nav_up",

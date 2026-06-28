@@ -18,7 +18,14 @@
 
 # Right-click on the empty floor of the current directory.
 [directory]
-actions = ["paste", "separator", "open_in_terminal", "separator", "properties"]
+actions = [
+  "new_folder",
+  "paste",
+  "separator",
+  "open_in_terminal",
+  "separator",
+  "properties",
+]
 
 # A sub-folder entry.
 [folder]

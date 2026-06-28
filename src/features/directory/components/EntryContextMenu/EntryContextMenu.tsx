@@ -10,6 +10,7 @@ import {
   ENTRY_ACTIONS,
   ACTION_SEPARATOR,
   resolveActionIds,
+  isActionVisible,
   type EntryActionContext,
   type EntryActionId,
 } from "../../actions";
@@ -70,7 +71,7 @@ const EntryContextMenu = ({
           return <ContextMenuItem key={`separator-${index}`} isSeparator />;
 
         const action = ENTRY_ACTIONS[id as EntryActionId];
-        if (!action) return null;
+        if (!action || !isActionVisible(action, ctx)) return null;
 
         const enabled = action.isEnabled ? action.isEnabled(ctx) : true;
         const hotkey =

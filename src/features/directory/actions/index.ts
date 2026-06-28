@@ -6,8 +6,9 @@ export type { EntryActionId } from "./constants";
 export type { EntryAction, EntryActionContext, FileActions } from "./types";
 
 export { ENTRY_ACTIONS } from "./registry";
-export { resolveActionIds } from "./utils";
+export { resolveActionIds, isActionVisible } from "./utils";
 
+export { newFolderAction } from "./newFolder";
 export { openAction } from "./open";
 export { openInTerminalAction } from "./openInTerminal";
 export { previewAction } from "./preview";

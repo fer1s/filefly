@@ -15,6 +15,7 @@ export const en = {
     unknown: "?",
   },
   contextMenu: {
+    newFolder: "New Folder",
     open: "Open",
     openInTerminal: "Open in Terminal",
     copy: "Copy",
@@ -123,6 +124,7 @@ export const en = {
     paste: (name: string, reason: string) =>
       `Could not paste ${name}: ${reason}`,
     rename: (reason: string) => `Could not rename: ${reason}`,
+    createFolder: (reason: string) => `Could not create folder: ${reason}`,
     properties: (reason: string) => `Could not read properties: ${reason}`,
   },
 };

@@ -95,6 +95,11 @@ export class FileSystemManager {
     return api.renameEntry(path, newName);
   }
 
+  // Create a new folder inside `parent`; resolves to the created folder's path.
+  createFolder(parent: string): Promise<string> {
+    return api.createFolder(parent);
+  }
+
   trash(path: string): Promise<void> {
     return api.deleteEntry(path);
   }

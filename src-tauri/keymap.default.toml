@@ -38,6 +38,10 @@ mod = true
 [rename]
 keys = ["F2"]
 
+[new_folder]
+keys = ["n"]
+mod = true
+
 [nav_back]
 keys = ["ArrowLeft"]
 alt = true
