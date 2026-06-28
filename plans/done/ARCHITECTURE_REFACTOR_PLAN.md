@@ -1,5 +1,12 @@
 # Architecture Refactor Plan (Feature-Sliced)
 
+## Estado final (28 de junio de 2026): ✅ COMPLETADO
+
+Las 6 fases están hechas. `src/` quedó con `app/ + shared/ + features/ + lang/ + styles/` (sin
+`lib/`, `views/`, `components/`, `hooks/`, `providers/` top-level), cumpliendo
+`ARCHITECTURE_RULES.md`. Refactors posteriores (App como shell de wiring, hooks extraídos,
+`index.ts` públicos por feature) reforzaron estas reglas.
+
 ## Objetivo
 
 Alinear el frontend con `ARCHITECTURE_RULES.md` (estructura feature-sliced): `app/` (composition root),

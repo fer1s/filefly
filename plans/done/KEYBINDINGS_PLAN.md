@@ -1,10 +1,33 @@
 # Keybindings Plan (atajos configurables)
 
+## Estado final (28 de junio de 2026): ✅ IMPLEMENTADO (diseño distinto al original)
+
+El objetivo se cumplió, pero con un diseño **distinto (y mejor)** que el de este documento (que
+queda abajo como histórico). En vez de `src/keybindings.ts` + localStorage, se implementó en
+**`src/shared/keymap/`** con defaults en **Rust/TOML**:
+
+- `KEYMAP_ACTION` (const-object, no el union `ActionId`) — `src/shared/keymap/constants.ts`.
+- Defaults bundled en `src-tauri/keymap.default.toml`; override de usuario en `keymap.toml`
+  (app config dir), leído por el comando Rust `get_keymap`. (No localStorage.)
+- `KeymapManager`, `KeymapProvider` / `useKeymap`, `matchesBinding`, `formatBinding`.
+- Consumido en ~12 lugares: `usePathBarShortcuts`, `useClipboardShortcuts`, `useTabsShortcuts`,
+  `useSettingsShortcut`, `usePinnedShortcuts`, `useZoomShortcuts`, `Preview`, y las `actions/*`
+  del directorio (copy/cut/paste/trash/destroy/rename/newFolder).
+
+Cumplido: keymap central, sin atajos-con-modificador sueltos en componentes, configurable
+editando `keymap.toml`. Hardcodeado a propósito (como preveía este plan): type-to-find y teclas
+de interacción universal no rebindables (Enter/Espacio activar, Escape cerrar, flechas de
+menú/tabs, Backspace→atrás), vía las constantes `KEY`.
+
+**Pendiente (era "Futuro", Fase 5)**: UI in-app para reasignar teclas. Hoy se edita el TOML.
+
+> Lo que sigue es el diseño **original/histórico**. El esquema real difiere; ver arriba.
+
 ## Objetivo
 
 Pasar de atajos de teclado hardcodeados a un **keymap central**: un mapeo `accion -> tecla(s)` del que salen todos los atajos. A futuro ese mapeo sera configurable por el usuario (overrides persistidos), pero el diseno se introduce sin cambiar el comportamiento actual.
 
-Plan creado el 20 de junio de 2026. Estado global: pendiente (no implementado; los atajos siguen hardcodeados a proposito).
+Plan creado el 20 de junio de 2026.
 
 ## Inventario actual (hardcodeado)
 
