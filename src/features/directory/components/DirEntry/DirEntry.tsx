@@ -266,6 +266,9 @@ const DirEntryItemComponent = ({
           isHidden && "hidden",
         )}
         id={id}
+        role="option"
+        aria-selected={selected}
+        aria-label={entry.name}
         tabIndex={0}
         onClick={(e) => onSelect(entry.path, e)}
         onDoubleClick={() =>

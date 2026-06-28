@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { useStateContext } from "@/shared/providers/StateProvider";
+import { t } from "@/lang";
 import { DirEntryItem } from "../DirEntry";
 
 import { RENDER_BATCH_SIZE, RENDER_PREFETCH_PX } from "./constants";
@@ -51,7 +52,12 @@ const EntriesView = ({
   }, [entries.length]);
 
   return (
-    <div className={view}>
+    <div
+      className={view}
+      role="listbox"
+      aria-multiselectable="true"
+      aria-label={t.directory.entriesLabel}
+    >
       {entries.slice(0, renderCount).map((entry) => (
         <DirEntryItem
           key={`${entry.name}#${entry.path}`}

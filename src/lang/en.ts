@@ -98,6 +98,7 @@ export const en = {
     freeOf: (free: string, total: string) => `${free} free of ${total}`,
   },
   directory: {
+    entriesLabel: "Files and folders",
     find: "Find",
     columns: {
       name: "Name",
