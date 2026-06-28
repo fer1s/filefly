@@ -51,6 +51,10 @@ const EntriesView = ({
     return () => io.disconnect();
   }, [entries.length]);
 
+  // Exactly one entry is focused when there's a single selection; that one is the Tab stop,
+  // otherwise the first entry is, so the grid always has one reachable tabindex (roving).
+  const hasFocused = selectedIDs.length === 1;
+
   return (
     <div
       className={view}
@@ -58,25 +62,29 @@ const EntriesView = ({
       aria-multiselectable="true"
       aria-label={t.directory.entriesLabel}
     >
-      {entries.slice(0, renderCount).map((entry) => (
-        <DirEntryItem
-          key={`${entry.name}#${entry.path}`}
-          entry={entry}
-          fs={fs}
-          setPath={setPath}
-          contextMenuRef={contextMenuRef}
-          id={entry.path}
-          selected={selectedIDs.includes(entry.path)}
-          focused={selectedIDs.length === 1 && selectedIDs[0] === entry.path}
-          onSelect={onSelect}
-          renaming={renamingID === entry.path}
-          onRename={onRename}
-          onCancelRename={onCancelRename}
-          setContextMenuVisible={menu.setVisible}
-          setContextMenuElementID={menu.setId}
-          setContextMenuElementType={menu.setType}
-        />
-      ))}
+      {entries.slice(0, renderCount).map((entry, index) => {
+        const focused = hasFocused && selectedIDs[0] === entry.path;
+        return (
+          <DirEntryItem
+            key={`${entry.name}#${entry.path}`}
+            entry={entry}
+            fs={fs}
+            setPath={setPath}
+            contextMenuRef={contextMenuRef}
+            id={entry.path}
+            selected={selectedIDs.includes(entry.path)}
+            focused={focused}
+            tabbable={focused || (!hasFocused && index === 0)}
+            onSelect={onSelect}
+            renaming={renamingID === entry.path}
+            onRename={onRename}
+            onCancelRename={onCancelRename}
+            setContextMenuVisible={menu.setVisible}
+            setContextMenuElementID={menu.setId}
+            setContextMenuElementType={menu.setType}
+          />
+        );
+      })}
       {hasMore && <div ref={sentinelRef} className="entries_sentinel" />}
     </div>
   );

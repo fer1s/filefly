@@ -42,6 +42,7 @@ const DirEntryItemComponent = ({
 
   selected,
   focused,
+  tabbable,
   onSelect,
 
   renaming,
@@ -269,7 +270,7 @@ const DirEntryItemComponent = ({
         role="option"
         aria-selected={selected}
         aria-label={entry.name}
-        tabIndex={0}
+        tabIndex={tabbable ? 0 : -1}
         onClick={(e) => onSelect(entry.path, e)}
         onDoubleClick={() =>
           entry.metadata.isDir

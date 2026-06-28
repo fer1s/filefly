@@ -13,6 +13,9 @@ export type DirEntryItemProps = {
   // The single selected entry that should take keyboard focus (and scroll into view). Distinct
   // from `selected` so bulk selections (Shift / Ctrl+A) don't yank focus to the last item.
   focused: boolean;
+  // Whether this entry is the listbox's single Tab stop (roving tabindex). Exactly one entry is
+  // tabbable at a time: the focused one, or the first entry when nothing is focused.
+  tabbable: boolean;
   onSelect: (id: string, e: MouseEvent) => void;
 
   renaming: boolean;

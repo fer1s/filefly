@@ -8,9 +8,19 @@ const VIEWPORT_PADDING = 8;
 // Closes itself when clicking outside.
 export const useContextMenu = () => {
   const ref = useRef<HTMLDivElement>(null);
+  // What had focus before the menu opened, so it can be restored when the menu closes (the menu
+  // moves focus to its first item while open — see ContextMenu).
+  const triggerRef = useRef<HTMLElement | null>(null);
   const [visible, setVisible] = useState(false);
   const [elementID, setElementID] = useState("");
   const [elementType, setElementType] = useState<EntryKind>(ENTRY_KIND.NONE);
+
+  // Restore focus to the trigger whenever the menu goes from open to closed.
+  useEffect(() => {
+    if (visible) return;
+    triggerRef.current?.focus?.();
+    triggerRef.current = null;
+  }, [visible]);
 
   // Close on a press outside the menu. Registered only while open and deferred a tick so
   // the very gesture that opened the menu (whose trailing click/mousedown lands outside)
@@ -72,6 +82,7 @@ export const useContextMenu = () => {
 
   // Open the menu at a screen position for a given element.
   const openAt = (x: number, y: number, id: string, type: EntryKind) => {
+    triggerRef.current = document.activeElement as HTMLElement | null;
     setElementID(id);
     setElementType(type);
     if (ref.current) {
