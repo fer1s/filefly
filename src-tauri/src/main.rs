@@ -6,7 +6,6 @@ mod utils;
 mod filesystem;
 mod functions;
 
-#[cfg(target_os = "windows")]
 use tauri::Manager;
 #[cfg(target_os = "windows")]
 use window_vibrancy::apply_acrylic;
@@ -19,6 +18,14 @@ fn main() {
         .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             tray::create_tray(app.handle())?;
+
+            // Trim the thumbnail cache to its size budget, off the UI thread.
+            if let Ok(cache_dir) = app.path().app_cache_dir() {
+                let thumbnails = cache_dir.join("thumbnails");
+                std::thread::spawn(move || {
+                    filesystem::fs::prune_thumbnail_cache(&thumbnails)
+                });
+            }
 
             #[cfg(target_os = "windows")]
             {

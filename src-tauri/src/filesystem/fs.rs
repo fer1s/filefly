@@ -180,6 +180,11 @@ pub async fn get_thumbnail(app: AppHandle, path: String, size: u32) -> Result<St
         let out = cache_dir.join(format!("{:x}.jpg", hash));
 
         if out.exists() {
+            // Bump mtime so eviction treats this as recently used (cheap LRU proxy).
+            let _ = std::fs::OpenOptions::new()
+                .write(true)
+                .open(&out)
+                .and_then(|f| f.set_modified(SystemTime::now()));
             return Ok(out.to_string_lossy().into_owned());
         }
 
@@ -197,6 +202,46 @@ pub async fn get_thumbnail(app: AppHandle, path: String, size: u32) -> Result<St
     })
     .await
     .map_err(|e| e.to_string())?
+}
+
+// Max size of the on-disk thumbnail cache before least-recently-used entries are evicted.
+const MAX_THUMBNAIL_CACHE_BYTES: u64 = 200 * 1024 * 1024;
+
+// Evict least-recently-used thumbnails when the cache grows past the limit. get_thumbnail bumps
+// each file's mtime on a cache hit, so the oldest mtime ≈ least recently used. Best-effort:
+// any IO error just leaves that file in place. Run off the UI thread (e.g. at startup).
+pub fn prune_thumbnail_cache(cache_dir: &Path) {
+    let mut files: Vec<(PathBuf, SystemTime, u64)> = match fs::read_dir(cache_dir) {
+        Ok(entries) => entries
+            .flatten()
+            .filter_map(|entry| {
+                let path = entry.path();
+                if path.extension().and_then(|e| e.to_str()) != Some("jpg") {
+                    return None;
+                }
+                let metadata = entry.metadata().ok()?;
+                Some((path, metadata.modified().ok()?, metadata.len()))
+            })
+            .collect(),
+        Err(_) => return,
+    };
+
+    let mut total: u64 = files.iter().map(|(_, _, len)| len).sum();
+    if total <= MAX_THUMBNAIL_CACHE_BYTES {
+        return;
+    }
+
+    // Oldest (least recently used) first.
+    files.sort_by_key(|(_, mtime, _)| *mtime);
+
+    for (path, _, len) in files {
+        if total <= MAX_THUMBNAIL_CACHE_BYTES {
+            break;
+        }
+        if fs::remove_file(&path).is_ok() {
+            total = total.saturating_sub(len);
+        }
+    }
 }
 
 // Marker returned when a directory cannot be read due to OS privacy/permission protection
