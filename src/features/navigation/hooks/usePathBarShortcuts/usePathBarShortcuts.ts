@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 
 import { useKeymap, matchesBinding, KEYMAP_ACTION } from "@/shared/keymap";
+import { KEY } from "@/shared/constants";
 
 import type { UsePathBarShortcutsArgs } from "./types";
 
@@ -23,6 +24,14 @@ export const usePathBarShortcuts = ({
         (target.tagName === "INPUT" || target.tagName === "TEXTAREA")
       )
         return;
+
+      // Plain Backspace goes back in history (and we preventDefault so the webview doesn't do
+      // its own "navigate back", which flashed the Volumes view).
+      if (e.key === KEY.BACKSPACE && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        e.preventDefault();
+        goBack();
+        return;
+      }
 
       if (matchesBinding(e, keymap[KEYMAP_ACTION.NAV_BACK])) {
         e.preventDefault();

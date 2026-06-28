@@ -1,35 +1,24 @@
-import { useEffect } from "react";
-
 import Dialog from "@/shared/components/patterns/Dialog";
 import IconButton from "@/shared/components/elements/IconButton";
 import { useStateContext } from "@/shared/providers/StateProvider";
-import { KEY } from "@/shared/constants";
-import { formatBinding } from "@/shared/keymap";
+import { useCloseOnEscape } from "@/shared/hooks/useCloseOnEscape";
 import { t } from "@/lang";
 
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 
 import "@/styles/components/SettingsDialog.css";
 
-import { SETTINGS_TITLE_ID } from "./constants";
+import { SETTINGS_TITLE_ID, ZOOM_OPTIONS, CLOSE_HOTKEY } from "./constants";
+import SettingsRow from "./SettingsRow";
 import type { SettingsDialogProps } from "./types";
 
-// Universal-cancel close, like the other dialogs.
-const CLOSE_HOTKEY = formatBinding({ keys: [KEY.ESCAPE] });
-
-// App settings. A shell for now with a single real toggle (show hidden files); add more rows
-// under the relevant section as settings grow.
+// App settings. A shell for now with a couple of real controls; add more rows under the
+// relevant section as settings grow.
 const SettingsDialog = ({ visible, onClose }: SettingsDialogProps) => {
-  const { showHidden, toggleShowHidden } = useStateContext();
+  const { showHidden, toggleShowHidden, defaultZoom, setDefaultZoom } =
+    useStateContext();
 
-  useEffect(() => {
-    if (!visible) return;
-    const handleKey = (event: KeyboardEvent) => {
-      if (event.key === KEY.ESCAPE) onClose();
-    };
-    document.addEventListener("keydown", handleKey);
-    return () => document.removeEventListener("keydown", handleKey);
-  }, [visible, onClose]);
+  useCloseOnEscape(visible, onClose);
 
   return (
     <Dialog
@@ -53,22 +42,34 @@ const SettingsDialog = ({ visible, onClose }: SettingsDialogProps) => {
         <section className="settings_section">
           <h5 className="settings_section_title">{t.settings.general}</h5>
 
-          <label className="settings_row">
-            <span className="settings_row_text">
-              <span className="settings_row_label">
-                {t.settings.showHidden}
-              </span>
-              <span className="settings_row_hint">
-                {t.settings.showHiddenHint}
-              </span>
-            </span>
+          <SettingsRow
+            label={t.settings.showHidden}
+            hint={t.settings.showHiddenHint}
+          >
             <input
               type="checkbox"
               className="settings_switch"
               checked={showHidden}
               onChange={toggleShowHidden}
             />
-          </label>
+          </SettingsRow>
+
+          <SettingsRow
+            label={t.settings.defaultZoom}
+            hint={t.settings.defaultZoomHint}
+          >
+            <select
+              className="settings_select"
+              value={defaultZoom}
+              onChange={(event) => setDefaultZoom(Number(event.target.value))}
+            >
+              {ZOOM_OPTIONS.map((zoom) => (
+                <option key={zoom} value={zoom}>
+                  {t.settings.zoomPercent(Math.round(zoom * 100))}
+                </option>
+              ))}
+            </select>
+          </SettingsRow>
         </section>
       </div>
     </Dialog>

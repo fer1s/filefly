@@ -83,12 +83,20 @@ export class FileSystemManager {
     return api.generateMarkdownPreview(path);
   }
 
-  copy(source: string, destDir: string): Promise<void> {
-    return api.copyEntry(source, destDir);
+  copy(
+    source: string,
+    destDir: string,
+    onProgress?: (progress: api.CopyProgress) => void,
+  ): Promise<void> {
+    return api.copyEntry(source, destDir, onProgress);
   }
 
-  move(source: string, destDir: string): Promise<void> {
-    return api.moveEntry(source, destDir);
+  move(
+    source: string,
+    destDir: string,
+    onProgress?: (progress: api.CopyProgress) => void,
+  ): Promise<void> {
+    return api.moveEntry(source, destDir, onProgress);
   }
 
   rename(path: string, newName: string): Promise<void> {

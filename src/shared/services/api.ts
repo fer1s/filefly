@@ -1,4 +1,4 @@
-import { invoke } from "@tauri-apps/api/core";
+import { invoke, Channel } from "@tauri-apps/api/core";
 import { watchImmediate } from "@tauri-apps/plugin-fs";
 
 import { notify, TOAST_TYPE } from "@/shared/toast";
@@ -124,15 +124,29 @@ export const openInTerminal = async (path: string): Promise<void> => {
 export const generateMarkdownPreview = async (path: string): Promise<string> =>
   (await invokeWithPathArg("md_to_html", path)) as string;
 
+// Byte progress streamed from a copy/move while it runs.
+export type CopyProgress = { processed: number; total: number };
+
 // Filesystem operations. These throw on error (the Rust command returns a Result) so callers can surface it.
+// copy/move stream byte progress over an IPC Channel; pass `onProgress` to observe it.
 export const copyEntry = async (
   source: string,
   destDir: string,
-): Promise<void> => await invoke("copy_entry", { source, destDir });
+  onProgress?: (progress: CopyProgress) => void,
+): Promise<void> => {
+  const channel = new Channel<CopyProgress>();
+  if (onProgress) channel.onmessage = onProgress;
+  await invoke("copy_entry", { source, destDir, onProgress: channel });
+};
 export const moveEntry = async (
   source: string,
   destDir: string,
-): Promise<void> => await invoke("move_entry", { source, destDir });
+  onProgress?: (progress: CopyProgress) => void,
+): Promise<void> => {
+  const channel = new Channel<CopyProgress>();
+  if (onProgress) channel.onmessage = onProgress;
+  await invoke("move_entry", { source, destDir, onProgress: channel });
+};
 export const renameEntry = async (
   path: string,
   newName: string,

@@ -7,6 +7,7 @@ use std::hash::{Hash, Hasher};
 use std::os::unix::fs::MetadataExt;
 use std::path::{Path, PathBuf};
 use std::time::SystemTime;
+use tauri::ipc::Channel;
 use tauri::{AppHandle, Manager};
 
 #[derive(Debug, Serialize)]
@@ -324,54 +325,155 @@ fn unique_dest(dir: &Path, name: &OsStr) -> PathBuf {
     }
 }
 
-fn copy_dir_recursive(src: &Path, dest: &Path) -> std::io::Result<()> {
+// Streamed copy/move progress, sent to the frontend over an IPC Channel as bytes are processed.
+#[derive(Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ProgressPayload {
+    processed: u64,
+    total: u64,
+}
+
+// Total bytes a copy will move: the file's own length, or the recursive sum for a directory.
+fn entry_total_bytes(path: &Path) -> u64 {
+    if path.is_dir() {
+        jwalk::WalkDir::new(path)
+            .skip_hidden(false)
+            .into_iter()
+            .filter_map(|entry| entry.ok())
+            .filter(|entry| entry.file_type().is_file())
+            .filter_map(|entry| entry.metadata().ok())
+            .map(|metadata| metadata.len())
+            .sum()
+    } else {
+        fs::metadata(path).map(|m| m.len()).unwrap_or(0)
+    }
+}
+
+// Emit progress only when the whole-percent figure changes, so a folder with thousands of files
+// produces at most ~100 messages instead of one per file.
+fn emit_progress(
+    processed: u64,
+    total: u64,
+    last_percent: &mut i32,
+    channel: &Channel<ProgressPayload>,
+) {
+    let percent = if total == 0 {
+        100
+    } else {
+        ((processed.min(total) * 100) / total) as i32
+    };
+    if percent != *last_percent {
+        *last_percent = percent;
+        channel.send(ProgressPayload { processed, total }).ok();
+    }
+}
+
+// Recursive directory copy that accumulates copied bytes and reports progress per file.
+fn copy_dir_with_progress(
+    src: &Path,
+    dest: &Path,
+    processed: &mut u64,
+    total: u64,
+    last_percent: &mut i32,
+    channel: &Channel<ProgressPayload>,
+) -> std::io::Result<()> {
     fs::create_dir_all(dest)?;
     for entry in fs::read_dir(src)? {
         let entry = entry?;
         let path = entry.path();
         let target = dest.join(entry.file_name());
         if path.is_dir() {
-            copy_dir_recursive(&path, &target)?;
+            copy_dir_with_progress(&path, &target, processed, total, last_percent, channel)?;
         } else {
+            let len = entry.metadata().map(|m| m.len()).unwrap_or(0);
             fs::copy(&path, &target)?;
+            *processed += len;
+            emit_progress(*processed, total, last_percent, channel);
         }
     }
     Ok(())
 }
 
-// Copy a file or directory into dest_dir (recursively for dirs), avoiding name collisions.
-#[tauri::command]
-pub fn copy_entry(source: String, dest_dir: String) -> Result<(), String> {
-    let src = Path::new(&source);
-    let name = src.file_name().ok_or_else(|| "Invalid source path".to_string())?;
-    let dest = unique_dest(Path::new(&dest_dir), name);
+// Copy `src` into `dest` (file or directory), reporting byte progress over `channel`.
+fn copy_with_progress(
+    src: &Path,
+    dest: &Path,
+    channel: &Channel<ProgressPayload>,
+) -> std::io::Result<()> {
+    let total = entry_total_bytes(src);
+    channel.send(ProgressPayload { processed: 0, total }).ok();
 
-    let result = if src.is_dir() {
-        copy_dir_recursive(src, &dest)
+    let mut processed = 0u64;
+    let mut last_percent = 0i32;
+    if src.is_dir() {
+        copy_dir_with_progress(src, dest, &mut processed, total, &mut last_percent, channel)?;
     } else {
-        fs::copy(src, &dest).map(|_| ())
-    };
-    result.map_err(|e| e.to_string())
+        fs::copy(src, dest)?;
+    }
+
+    // Always finish at 100% (covers single files and the rounding tail).
+    channel.send(ProgressPayload { processed: total, total }).ok();
+    Ok(())
+}
+
+// Copy a file or directory into dest_dir (recursively for dirs), avoiding name collisions.
+// async + spawn_blocking so a large recursive copy runs on a blocking-thread-pool thread instead
+// of Tauri's main thread — otherwise the whole webview freezes until the copy finishes.
+#[tauri::command]
+pub async fn copy_entry(
+    source: String,
+    dest_dir: String,
+    on_progress: Channel<ProgressPayload>,
+) -> Result<(), String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let src = Path::new(&source);
+        let name = src
+            .file_name()
+            .ok_or_else(|| "Invalid source path".to_string())?;
+        let dest = unique_dest(Path::new(&dest_dir), name);
+
+        copy_with_progress(src, &dest, &on_progress).map_err(|e| e.to_string())
+    })
+    .await
+    .map_err(|e| e.to_string())?
 }
 
 // Move a file or directory into dest_dir. Fast rename when possible, copy + delete across volumes.
+// Runs on a blocking thread (cross-volume moves copy the whole tree) to keep the UI responsive.
 #[tauri::command]
-pub fn move_entry(source: String, dest_dir: String) -> Result<(), String> {
-    let src = Path::new(&source);
-    let name = src.file_name().ok_or_else(|| "Invalid source path".to_string())?;
-    let dest = unique_dest(Path::new(&dest_dir), name);
+pub async fn move_entry(
+    source: String,
+    dest_dir: String,
+    on_progress: Channel<ProgressPayload>,
+) -> Result<(), String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let src = Path::new(&source);
+        let name = src
+            .file_name()
+            .ok_or_else(|| "Invalid source path".to_string())?;
+        let dest = unique_dest(Path::new(&dest_dir), name);
 
-    if fs::rename(src, &dest).is_ok() {
-        return Ok(());
-    }
+        // Same-volume move is an instant rename — report it as immediately complete.
+        if fs::rename(src, &dest).is_ok() {
+            on_progress
+                .send(ProgressPayload {
+                    processed: 1,
+                    total: 1,
+                })
+                .ok();
+            return Ok(());
+        }
 
-    if src.is_dir() {
-        copy_dir_recursive(src, &dest).map_err(|e| e.to_string())?;
-        fs::remove_dir_all(src).map_err(|e| e.to_string())
-    } else {
-        fs::copy(src, &dest).map_err(|e| e.to_string())?;
-        fs::remove_file(src).map_err(|e| e.to_string())
-    }
+        // Cross-volume: copy with progress, then remove the source.
+        copy_with_progress(src, &dest, &on_progress).map_err(|e| e.to_string())?;
+        if src.is_dir() {
+            fs::remove_dir_all(src).map_err(|e| e.to_string())
+        } else {
+            fs::remove_file(src).map_err(|e| e.to_string())
+        }
+    })
+    .await
+    .map_err(|e| e.to_string())?
 }
 
 // Create a new folder inside `parent`, picking a unique "untitled folder" name. Returns the
@@ -447,13 +549,18 @@ pub fn delete_entry(path: String) -> Result<(), String> {
 // Permanently delete a file or directory, bypassing the Trash (irreversible). Backs the
 // Shift+Delete shortcut. Directories are removed recursively.
 #[tauri::command]
-pub fn delete_entry_permanently(path: String) -> Result<(), String> {
+pub async fn delete_entry_permanently(path: String) -> Result<(), String> {
     println!("[delete_entry_permanently] deleting: {}", path);
 
-    let p = Path::new(&path);
-    if p.is_dir() {
-        fs::remove_dir_all(p).map_err(|e| e.to_string())
-    } else {
-        fs::remove_file(p).map_err(|e| e.to_string())
-    }
+    // Recursive removal of a large tree can take a while — run it off the main thread.
+    tauri::async_runtime::spawn_blocking(move || {
+        let p = Path::new(&path);
+        if p.is_dir() {
+            fs::remove_dir_all(p).map_err(|e| e.to_string())
+        } else {
+            fs::remove_file(p).map_err(|e| e.to_string())
+        }
+    })
+    .await
+    .map_err(|e| e.to_string())?
 }

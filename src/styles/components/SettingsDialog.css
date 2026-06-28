@@ -64,6 +64,17 @@
   color: var(--color-text-dim);
 }
 
+.settings_modal .settings_select {
+  flex-shrink: 0;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  border: var(--border-width-default) solid var(--color-border-default);
+  background-color: var(--color-surface-input);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-md);
+  cursor: pointer;
+}
+
 /* Pill toggle built from the native checkbox (keeps it keyboard/screen-reader accessible). */
 .settings_modal .settings_switch {
   appearance: none;

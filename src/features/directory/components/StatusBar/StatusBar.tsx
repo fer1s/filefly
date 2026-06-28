@@ -16,9 +16,14 @@ const StatusBar = ({
   total,
   selected,
   computingSizes,
-  deleting,
+  progress,
 }: StatusBarProps) => {
   const loadingPreviews = useImagePreviewLoading();
+
+  const progressPercent =
+    progress && progress.total
+      ? Math.round((progress.done / progress.total) * 100)
+      : 0;
 
   return (
     <div className="status_bar">
@@ -38,9 +43,15 @@ const StatusBar = ({
           <Icon icon={faSpinner} spin /> {t.directory.loadingPreviews}
         </span>
       )}
-      {deleting && (
-        <span className="count busy">
-          <Icon icon={faSpinner} spin /> {t.directory.deleting}
+      {progress && (
+        <span className="count busy progress">
+          {progress.label}
+          <span className="progress_track">
+            <span
+              className="progress_bar"
+              style={{ width: `${progressPercent}%` }}
+            />
+          </span>
         </span>
       )}
     </div>

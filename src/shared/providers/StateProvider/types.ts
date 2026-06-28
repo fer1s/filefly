@@ -34,6 +34,9 @@ export type State = {
   zoomOut: () => void;
   // Set the directory zoom to an absolute multiplier (driven by the slider).
   setZoomTo: (zoom: number) => void;
+  // Configurable default zoom for folders without their own saved zoom.
+  defaultZoom: number;
+  setDefaultZoom: (zoom: number) => void;
   search: string;
   setSearch: (search: string) => void;
   refreshDir: () => void;

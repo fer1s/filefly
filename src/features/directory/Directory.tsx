@@ -96,6 +96,7 @@ const Directory = () => {
     items: sorted,
     view,
     enabled: !preview.visible && !properties.visible,
+    selectedIDs,
     setSelectedIDs,
     onOpen: handleKeyboardOpen,
     onTypeaheadChange: setTypeaheadQuery,
@@ -209,7 +210,7 @@ const Directory = () => {
         total={filtered.length}
         selected={selectedIDs.length}
         computingSizes={computingSizes}
-        deleting={fileOps.deleting}
+        progress={fileOps.progress}
       />
 
       <EntryContextMenu

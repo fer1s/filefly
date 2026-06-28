@@ -30,6 +30,8 @@ export const initialState: State = {
   zoomIn: () => {},
   zoomOut: () => {},
   setZoomTo: () => {},
+  defaultZoom: ZOOM_DEFAULT,
+  setDefaultZoom: () => {},
   search: "",
   setSearch: () => {},
   refreshDir: () => {},

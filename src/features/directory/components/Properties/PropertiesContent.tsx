@@ -4,54 +4,45 @@ import { t } from "@/lang";
 import "@/styles/components/Properties.css";
 
 import { formatDate } from "./utils";
+import { useEntrySize } from "./useEntrySize";
+import PropertyRow from "./PropertyRow";
 import type { PropertiesContentProps } from "./types";
 
 // The metadata rows for an entry. Shared by the Properties dialog and the info side panel.
-export const PropertiesContent = ({ entry }: PropertiesContentProps) => (
-  <div className="properties_content">
-    <div className="row">
-      <span className="label">{t.properties.name}</span>
-      <span className="value">{entry.name}</span>
+export const PropertiesContent = ({ entry }: PropertiesContentProps) => {
+  // Files report their size directly; folders are computed (null while calculating).
+  const size = useEntrySize(entry);
+
+  return (
+    <div className="properties_content">
+      <PropertyRow label={t.properties.name} value={entry.name} />
+      <PropertyRow
+        label={t.properties.type}
+        value={entry.metadata.isDir ? t.common.directory : t.common.file}
+      />
+      <PropertyRow label={t.properties.path} value={entry.path} />
+      <PropertyRow
+        label={t.properties.size}
+        value={size === null ? t.properties.calculating : formatBytes(size)}
+      />
+      {entry.metadata.isFile && (
+        <PropertyRow
+          label={t.properties.sizeOnDisk}
+          value={formatBytes(entry.sizeOnDisk)}
+        />
+      )}
+      <PropertyRow
+        label={t.properties.created}
+        value={formatDate(entry.metadata.created.secs_since_epoch)}
+      />
+      <PropertyRow
+        label={t.properties.modified}
+        value={formatDate(entry.metadata.modified.secs_since_epoch)}
+      />
+      <PropertyRow
+        label={t.properties.accessed}
+        value={formatDate(entry.metadata.accessed.secs_since_epoch)}
+      />
     </div>
-    <div className="row">
-      <span className="label">{t.properties.type}</span>
-      <span className="value">
-        {entry.metadata.isDir ? t.common.directory : t.common.file}
-      </span>
-    </div>
-    <div className="row">
-      <span className="label">{t.properties.path}</span>
-      <span className="value">{entry.path}</span>
-    </div>
-    {entry.metadata.isFile && (
-      <>
-        <div className="row">
-          <span className="label">{t.properties.size}</span>
-          <span className="value">{formatBytes(entry.size)}</span>
-        </div>
-        <div className="row">
-          <span className="label">{t.properties.sizeOnDisk}</span>
-          <span className="value">{formatBytes(entry.sizeOnDisk)}</span>
-        </div>
-      </>
-    )}
-    <div className="row">
-      <span className="label">{t.properties.created}</span>
-      <span className="value">
-        {formatDate(entry.metadata.created.secs_since_epoch)}
-      </span>
-    </div>
-    <div className="row">
-      <span className="label">{t.properties.modified}</span>
-      <span className="value">
-        {formatDate(entry.metadata.modified.secs_since_epoch)}
-      </span>
-    </div>
-    <div className="row">
-      <span className="label">{t.properties.accessed}</span>
-      <span className="value">
-        {formatDate(entry.metadata.accessed.secs_since_epoch)}
-      </span>
-    </div>
-  </div>
-);
+  );
+};

@@ -77,11 +77,16 @@ body {
 .AppContent {
   background-color: var(--color-background-app);
   overflow: hidden;
+  /* Stack the bars (tabs / path / quick) above the page and let the page take the rest, so the
+     status bar stays visible no matter how many bars are shown (a fixed % broke with tabs on). */
+  display: flex;
+  flex-direction: column;
 }
 
 .AppContent .Page {
   width: 100%;
-  height: 93.3%;
+  flex: 1;
+  min-height: 0;
   overflow: hidden;
   display: flex;
 }

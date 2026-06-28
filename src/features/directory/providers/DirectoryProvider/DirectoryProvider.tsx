@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useStateContext } from "@/shared/providers/StateProvider";
 
@@ -19,6 +19,13 @@ export const DirectoryProvider = ({ children }: DirectoryProviderProps) => {
   const entries = useDirectoryEntries(view);
   const selection = useSelection(entries.sorted.map((entry) => entry.path));
   const [renamingID, setRenamingID] = useState("");
+
+  // Navigating to a different folder starts with a clean selection — otherwise the entry we
+  // opened (or any prior selection) lingers as a stale, now-offscreen selection.
+  const { clearSelection } = selection;
+  useEffect(() => {
+    clearSelection();
+  }, [path, clearSelection]);
   const fileOps = useFileOperations({
     path,
     refreshDir,

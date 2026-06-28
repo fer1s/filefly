@@ -10,12 +10,19 @@ export const useKeyboardNav = ({
   items,
   view,
   enabled,
+  selectedIDs,
   setSelectedIDs,
   onOpen,
   onTypeaheadChange,
 }: UseKeyboardNavArgs) => {
   const searchBufferRef = useRef("");
   const searchTimerRef = useRef<number | null>(null);
+
+  // Latest selection, read inside the keydown handler without re-subscribing on every change.
+  const selectedRef = useRef(selectedIDs);
+  useEffect(() => {
+    selectedRef.current = selectedIDs;
+  }, [selectedIDs]);
 
   useEffect(() => {
     // Skip when typing in the path bar or any other text field.
@@ -124,16 +131,14 @@ export const useKeyboardNav = ({
 
       switch (e.key) {
         case KEY.ESCAPE:
-          clearTypeahead();
-          setSelectedIDs([]);
-          break;
-        case KEY.BACKSPACE:
-          if (!searchBufferRef.current) break;
-          e.preventDefault();
-          searchBufferRef.current = searchBufferRef.current.slice(0, -1);
-          onTypeaheadChange(searchBufferRef.current);
-          if (searchBufferRef.current) scheduleTypeaheadReset();
-          else clearTypeahead();
+          // Deselect first: only consume Escape (and clear) when there's a selection or an
+          // active type-to-find. With nothing to clear, let it fall through (e.g. exit
+          // fullscreen) — so the first Escape deselects, the next exits fullscreen.
+          if (searchBufferRef.current || selectedRef.current.length) {
+            e.preventDefault();
+            clearTypeahead();
+            setSelectedIDs([]);
+          }
           break;
         case KEY.ARROW_RIGHT:
           e.preventDefault();

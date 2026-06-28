@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { useStateContext } from "@/shared/providers/StateProvider";
 import { DirEntry } from "@/shared/models";
 
+import { dirSizeCache } from "./dirSizeCache";
+
 // How many folder walks run at once. Each walk is already parallel (jwalk/rayon) and runs
 // off the main thread, so a small pool overlaps IO latency without oversubscribing CPU/disk.
 const CONCURRENCY = 4;
@@ -54,6 +56,7 @@ export const useDirSizes = (entries: DirEntry[], enabled: boolean) => {
         if (!folder) return;
         try {
           const size = await fs.getDirSize(folder.path);
+          dirSizeCache.set(folder.path, size);
           if (!cancelled) {
             pending[folder.path] = size;
             scheduleFlush();
