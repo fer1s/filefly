@@ -28,12 +28,21 @@ export const KEYMAP_ACTION = {
   PINNED_4: "pinned_4",
   PINNED_5: "pinned_5",
   PINNED_6: "pinned_6",
+  TAB_1: "tab_1",
+  TAB_2: "tab_2",
+  TAB_3: "tab_3",
+  TAB_4: "tab_4",
+  TAB_5: "tab_5",
+  TAB_6: "tab_6",
+  TAB_7: "tab_7",
+  TAB_8: "tab_8",
+  TAB_9: "tab_9",
 } as const;
 
 export type KeymapAction = (typeof KEYMAP_ACTION)[keyof typeof KEYMAP_ACTION];
 
-// Pinned-folder slots in order; index 0 is the first pinned item (Cmd/Ctrl+1). Its length
-// also caps how many pinned hotkeys exist. TODO: make the count configurable (see sidebar).
+// Pinned-folder slots in order; index 0 is the first pinned item (Opt/Alt+1). Its length
+// also caps how many pinned hotkeys exist.
 export const PINNED_ACTIONS = [
   KEYMAP_ACTION.PINNED_1,
   KEYMAP_ACTION.PINNED_2,
@@ -41,6 +50,19 @@ export const PINNED_ACTIONS = [
   KEYMAP_ACTION.PINNED_4,
   KEYMAP_ACTION.PINNED_5,
   KEYMAP_ACTION.PINNED_6,
+] as const;
+
+// Tab slots in order; index 0 = first tab (Cmd/Ctrl+1). Selecting a slot with no tab is a no-op.
+export const TAB_ACTIONS = [
+  KEYMAP_ACTION.TAB_1,
+  KEYMAP_ACTION.TAB_2,
+  KEYMAP_ACTION.TAB_3,
+  KEYMAP_ACTION.TAB_4,
+  KEYMAP_ACTION.TAB_5,
+  KEYMAP_ACTION.TAB_6,
+  KEYMAP_ACTION.TAB_7,
+  KEYMAP_ACTION.TAB_8,
+  KEYMAP_ACTION.TAB_9,
 ] as const;
 
 // Pretty glyphs for common keys when rendering a binding (keyed by lowercased KeyboardEvent.key).

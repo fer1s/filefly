@@ -11,6 +11,7 @@ import {
   PINNED_ACTIONS,
 } from "@/shared/keymap";
 import { classNames } from "@/shared/utils";
+import { RECENTS } from "@/shared/constants";
 import { useSettings } from "@/features/settings";
 import { t } from "@/lang";
 
@@ -19,11 +20,10 @@ import { usePinnedShortcuts } from "./hooks/usePinnedShortcuts";
 import SidebarSection from "./components/SidebarSection";
 import VolumeItem from "./components/VolumeItem";
 import FolderItem from "./components/FolderItem";
-import { getPathLabel, getRecentPaths } from "./utils";
 
 import {
   faBars,
-  faFolder,
+  faClockRotateLeft,
   faPlus,
   faGear,
 } from "@fortawesome/free-solid-svg-icons";
@@ -32,19 +32,20 @@ import "@/styles/components/SideBar.css";
 
 import type { SideBarProps } from "./types";
 
-const SideBar = ({ collapsed, onToggle, visitedPaths }: SideBarProps) => {
+// Finder-style "Recents" — a pinned entry that opens the virtual recent-files listing.
+const RECENTS_ITEM = {
+  name: t.sidebar.recents,
+  path: RECENTS,
+  icon: faClockRotateLeft,
+};
+
+const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
   const { path, volumes, setPath, newTab } = useStateContext();
 
   const { keymap } = useKeymap();
   const { open: openSettings } = useSettings();
   const pinned = usePinnedFolders();
   usePinnedShortcuts({ pinned, setPath });
-  const recentPaths = getRecentPaths(path, visitedPaths);
-  const recent = recentPaths.map((recentPath) => ({
-    name: getPathLabel(recentPath),
-    path: recentPath,
-    icon: faFolder,
-  }));
 
   return (
     <div className={classNames("SideBar", collapsed && "collapsed")}>
@@ -83,19 +84,13 @@ const SideBar = ({ collapsed, onToggle, visitedPaths }: SideBarProps) => {
         />
       </div>
 
-      <SidebarSection title={t.sidebar.recent} hideWhenCollapsed>
-        {recent.map((item) => (
-          <FolderItem
-            key={item.path}
-            item={item}
-            setPath={setPath}
-            collapsed={collapsed}
-            active={item.path === path}
-          />
-        ))}
-      </SidebarSection>
-
       <SidebarSection title={t.sidebar.pinned}>
+        <FolderItem
+          item={RECENTS_ITEM}
+          setPath={setPath}
+          collapsed={collapsed}
+          active={path === RECENTS}
+        />
         {pinned.map((item, i) => (
           <FolderItem
             key={item.path}

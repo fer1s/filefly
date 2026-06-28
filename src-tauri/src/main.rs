@@ -41,6 +41,7 @@ fn main() {
             filesystem::volumes::get_volumes,
             filesystem::fs::get_entry,
             filesystem::fs::get_dir_size,
+            filesystem::fs::get_recent_files,
             filesystem::fs::get_thumbnail,
             filesystem::fs::read_directory,
             filesystem::fs::open_file,

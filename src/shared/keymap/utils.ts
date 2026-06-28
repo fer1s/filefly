@@ -14,9 +14,15 @@ export const matchesBinding = (
   if (!!binding.mod !== (event.metaKey || event.ctrlKey)) return false;
   if (!!binding.shift !== event.shiftKey) return false;
   if (!!binding.alt !== event.altKey) return false;
-  return binding.keys.some(
-    (key) => key.toLowerCase() === event.key.toLowerCase(),
-  );
+  return binding.keys.some((key) => {
+    if (key.toLowerCase() === event.key.toLowerCase()) return true;
+    // Modifiers change the produced character for digit keys — on macOS Option+1 yields "¡",
+    // not "1" — so match digits by physical code too (keeps Opt+N / Cmd+N reliable).
+    return (
+      /^[0-9]$/.test(key) &&
+      (event.code === `Digit${key}` || event.code === `Numpad${key}`)
+    );
+  });
 };
 
 // Human-readable representation of a binding's primary key (e.g. "⌘C", "Ctrl+C", "←").

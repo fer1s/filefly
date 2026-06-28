@@ -57,3 +57,18 @@
   background-color: var(--color-surface-interactive);
   border: var(--border-width-default) solid var(--color-border-default);
 }
+
+/* Read-only stand-in for the path input in virtual views (e.g. Recents), which have no path. */
+.PathBar .path_label {
+  width: 100%;
+  height: var(--size-control-large);
+  padding: var(--space-1-5) var(--space-2-5);
+  display: flex;
+  align-items: center;
+  background-color: var(--color-overlay-faint);
+  border: var(--border-width-default) solid var(--color-border-faint);
+  color: var(--color-text-secondary);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-base);
+  user-select: none;
+}

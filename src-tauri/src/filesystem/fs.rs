@@ -564,3 +564,37 @@ pub async fn delete_entry_permanently(path: String) -> Result<(), String> {
     .await
     .map_err(|e| e.to_string())?
 }
+
+// Most recent files to return (Finder-style "Recents").
+const RECENTS_LIMIT: usize = 50;
+
+// Recently modified files in the user's home, à la Finder's Recents smart folder. Backed by
+// Spotlight (`mdfind`), so it only works on macOS with indexing enabled. Returns files newest
+// first; directories are excluded (Finder shows documents).
+#[tauri::command]
+pub async fn get_recent_files() -> Result<Vec<DirEntry>, String> {
+    tauri::async_runtime::spawn_blocking(|| {
+        let home = std::env::var("HOME").map_err(|e| e.to_string())?;
+        let output = std::process::Command::new("mdfind")
+            .arg("-onlyin")
+            .arg(&home)
+            .arg("kMDItemContentModificationDate >= $time.today(-30)")
+            .output()
+            .map_err(|e| e.to_string())?;
+
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        let mut entries: Vec<DirEntry> = stdout
+            .lines()
+            .filter(|line| !line.is_empty())
+            .filter_map(|line| build_dir_entry(PathBuf::from(line)).ok())
+            .filter(|entry| entry.metadata.is_file)
+            .collect();
+
+        // Newest first, then cap.
+        entries.sort_by(|a, b| b.metadata.modified.cmp(&a.metadata.modified));
+        entries.truncate(RECENTS_LIMIT);
+        Ok(entries)
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}

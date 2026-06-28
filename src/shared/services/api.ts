@@ -7,9 +7,6 @@ import { Volume, DirEntry, ContextMenuLayout } from "@/shared/models";
 import { ACCESS_DENIED_ERROR } from "@/shared/constants";
 import type { Keymap } from "@/shared/keymap/types";
 
-export const getHostName = async (): Promise<string | null> =>
-  await invoke("get_host_name");
-
 // Load the keybindings (reads keymap.toml, falling back to bundled defaults).
 export const getKeymap = async (): Promise<Keymap> =>
   (await invoke("get_keymap")) as Keymap;
@@ -94,6 +91,10 @@ export const watchDirectory = async (
 // Recursively computed total size (bytes) of a directory.
 export const getDirSize = async (path: string): Promise<number> =>
   await invoke("get_dir_size", { path });
+
+// Recently modified files (Finder-style Recents), newest first. macOS only (Spotlight).
+export const getRecentFiles = async (): Promise<DirEntry[]> =>
+  (await invoke("get_recent_files")) as DirEntry[];
 
 // Generate (or fetch from cache) a downscaled thumbnail for an image file. Returns the
 // filesystem path to the thumbnail (load it via convertFileSrc).

@@ -3,7 +3,7 @@ import IconButton, {
   ICON_BUTTON_SIZE,
   ICON_BUTTON_VARIANT,
 } from "@/shared/components/elements/IconButton";
-import { VIEW_MODE } from "@/shared/constants";
+import { VIEW_MODE, RECENTS } from "@/shared/constants";
 import { useKeymap, formatBinding, KEYMAP_ACTION } from "@/shared/keymap";
 import { classNames } from "@/shared/utils";
 import { t } from "@/lang";
@@ -42,6 +42,7 @@ const PathBar = () => {
 
   // Go up one level to the parent directory. Uses the POSIX separator since paths come from the backend as '/'.
   const goUp = () => {
+    if (path === RECENTS) return; // Recents has no parent.
     if (path === "" || path === "/") return setPath("");
     const trimmed = path.replace(/\/+$/, "");
     const idx = trimmed.lastIndexOf("/");
@@ -96,7 +97,7 @@ const PathBar = () => {
         <IconButton
           icon={faArrowUp}
           onClick={goUp}
-          disabled={path === ""}
+          disabled={path === "" || path === RECENTS}
           variant={ICON_BUTTON_VARIANT.BOXED}
           size={ICON_BUTTON_SIZE.LG}
           tooltip={t.pathbar.up}
@@ -105,7 +106,11 @@ const PathBar = () => {
         />
       </div>
 
-      <PathInput key={path} path={path} onCommit={setPath} />
+      {path === RECENTS ? (
+        <div className="path_label shadow">{t.pathbar.recents}</div>
+      ) : (
+        <PathInput key={path} path={path} onCommit={setPath} />
+      )}
 
       <IconButton
         icon={view === VIEW_MODE.GRID ? faList : faTableCellsLarge}

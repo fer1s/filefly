@@ -3,6 +3,10 @@ export const VIEW_MODE = {
   LIST: "list",
 } as const;
 
+// Sentinel "path" for the Finder-style Recents view. Not a real directory — the directory loader
+// special-cases it to fetch recent files instead of reading a folder.
+export const RECENTS = "recents://";
+
 export type ViewMode = (typeof VIEW_MODE)[keyof typeof VIEW_MODE];
 
 // Directory zoom: a CSS `zoom` multiplier applied to the entries area. 1 = 100%.

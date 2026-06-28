@@ -100,11 +100,7 @@ const App = () => {
       <KeymapProvider>
         <SettingsProvider>
           <div className={classNames("App", sidebar.collapsed && "collapsed")}>
-            <SideBar
-              collapsed={sidebar.collapsed}
-              onToggle={sidebar.toggle}
-              visitedPaths={tabs.activeTab.history.stack}
-            />
+            <SideBar collapsed={sidebar.collapsed} onToggle={sidebar.toggle} />
             <AppContent />
           </div>
         </SettingsProvider>

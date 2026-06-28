@@ -74,30 +74,30 @@ mod = true
 keys = ["-"]
 mod = true
 
-# Jump to a pinned folder by its position in the sidebar (1 = first). mod = Cmd / Ctrl.
+# Jump to a pinned folder by its position in the sidebar (1 = first). alt = Option.
 [pinned_1]
 keys = ["1"]
-mod = true
+alt = true
 
 [pinned_2]
 keys = ["2"]
-mod = true
+alt = true
 
 [pinned_3]
 keys = ["3"]
-mod = true
+alt = true
 
 [pinned_4]
 keys = ["4"]
-mod = true
+alt = true
 
 [pinned_5]
 keys = ["5"]
-mod = true
+alt = true
 
 [pinned_6]
 keys = ["6"]
-mod = true
+alt = true
 
 [preview_prev]
 keys = ["ArrowLeft"]
@@ -124,6 +124,43 @@ alt = true
 keys = ["ArrowLeft"]
 mod = true
 alt = true
+
+# Jump to a tab by position (1 = first). mod = Cmd / Ctrl.
+[tab_1]
+keys = ["1"]
+mod = true
+
+[tab_2]
+keys = ["2"]
+mod = true
+
+[tab_3]
+keys = ["3"]
+mod = true
+
+[tab_4]
+keys = ["4"]
+mod = true
+
+[tab_5]
+keys = ["5"]
+mod = true
+
+[tab_6]
+keys = ["6"]
+mod = true
+
+[tab_7]
+keys = ["7"]
+mod = true
+
+[tab_8]
+keys = ["8"]
+mod = true
+
+[tab_9]
+keys = ["9"]
+mod = true
 
 # Open settings. Matches VS Code's Cmd/Ctrl + comma.
 [open_settings]

@@ -3,7 +3,7 @@ import type { NavigateFunction } from "react-router-dom";
 
 import { FileSystemManager } from "@/shared/managers/FileSystemManager";
 import { Volume, DirEntry } from "@/shared/models";
-import { ACCESS_DENIED_ERROR } from "@/shared/constants";
+import { ACCESS_DENIED_ERROR, RECENTS } from "@/shared/constants";
 
 import { ROUTES } from "../../routes";
 import { DIRECTORY_WATCH_DEBOUNCE_MS } from "./constants";
@@ -39,7 +39,12 @@ export const useDirectoryContents = ({
   const loadDirectory = useCallback(
     async (target: string): Promise<{ files: DirEntry[]; denied: boolean }> => {
       try {
-        return { files: await fs.readDirectory(target), denied: false };
+        // Recents is a virtual listing (Finder-style), not a real folder to read.
+        const files =
+          target === RECENTS
+            ? await fs.getRecentFiles()
+            : await fs.readDirectory(target);
+        return { files, denied: false };
       } catch (err) {
         return { files: [], denied: String(err).includes(ACCESS_DENIED_ERROR) };
       }
@@ -66,7 +71,7 @@ export const useDirectoryContents = ({
   // Watch the current directory so external changes (e.g. `mv`/`rm` from a terminal, or another
   // app) refresh the listing automatically. Debounced, and torn down when the path changes.
   useEffect(() => {
-    if (path === "") return; // Volumes view — nothing to watch.
+    if (path === "" || path === RECENTS) return; // Nothing real to watch.
 
     let cancelled = false;
     let stopWatching: (() => void) | undefined;

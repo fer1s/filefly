@@ -32,7 +32,14 @@ function AppContent() {
     },
     [tabs, activeTabId, selectTab],
   );
-  useTabsShortcuts({ newTab, closeActiveTab, cycleTab });
+  // Cmd+1..9 → the tab at that 1-based position (no-op if there's no tab there).
+  const selectTabBySlot = useCallback(
+    (slot: number) => {
+      if (tabs[slot]) selectTab(tabs[slot].id);
+    },
+    [tabs, selectTab],
+  );
+  useTabsShortcuts({ newTab, closeActiveTab, cycleTab, selectTabBySlot });
 
   return (
     // The directory state (selection, clipboard, preview…) is shared by the directory view,

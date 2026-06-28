@@ -48,13 +48,11 @@ export const en = {
     size: "Size",
   },
   sidebar: {
-    recent: "Recent",
+    recents: "Recents",
     pinned: "Pinned",
     volumes: "Volumes",
     location: "Location",
     todo: "TODO",
-    searchPlaceholder: "Search...",
-    clearSearch: "Clear search",
     collapse: "Collapse sidebar",
     expand: "Expand sidebar",
     settings: "Settings",
@@ -67,6 +65,7 @@ export const en = {
   },
   pathbar: {
     pathPlaceholder: "Directory path",
+    recents: "Recents",
     home: "Home",
     back: "Back",
     forward: "Forward",
@@ -81,6 +80,7 @@ export const en = {
   },
   tabs: {
     volumes: "Volumes",
+    recents: "Recents",
     newTab: "New tab",
     closeTab: "Close tab",
   },
