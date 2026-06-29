@@ -64,6 +64,11 @@ const DirEntryItemComponent = ({
     if (focused) itemRef.current?.focus();
   }, [focused]);
 
+  // A freshly created folder starts in rename mode, possibly off-screen — scroll it into view.
+  useEffect(() => {
+    if (renaming) itemRef.current?.scrollIntoView({ block: "nearest" });
+  }, [renaming]);
+
   // Split extension from the file name.
   const name = entry.metadata.isFile ? entry.name.split(".")[0] : entry.name;
   const extension = entry.metadata.isFile
