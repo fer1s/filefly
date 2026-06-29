@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { getSettings, setSettings, type AppSettings } from "@/shared/services/api";
+import {
+  getSettings,
+  setSettings,
+  type AppSettings,
+} from "@/shared/services/api";
 
 import { DEFAULT_SETTINGS, SETTINGS_PERSIST_DEBOUNCE_MS } from "./constants";
 

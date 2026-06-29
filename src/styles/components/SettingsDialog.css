@@ -3,7 +3,6 @@
   max-width: calc(100% - var(--space-10));
 }
 
-
 .settings_modal .settings_body {
   padding: var(--space-4);
   display: flex;

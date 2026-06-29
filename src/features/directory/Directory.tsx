@@ -31,8 +31,16 @@ import NtfsNotice from "./components/NtfsNotice";
 import "@/styles/views/Directory.css";
 
 const Directory = () => {
-  const { fs, path, setPath, view, search, accessDenied, zoom, savingSettings } =
-    useStateContext();
+  const {
+    fs,
+    path,
+    setPath,
+    view,
+    search,
+    accessDenied,
+    zoom,
+    savingSettings,
+  } = useStateContext();
 
   const [typeaheadQuery, setTypeaheadQuery] = useState("");
 

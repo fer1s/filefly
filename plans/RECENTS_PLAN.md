@@ -33,7 +33,7 @@ no aplica a un listado "sin carpeta".
    **FileSystemManager** `getRecentFiles()` (+ ordena si hace falta).
 5. **`useDirectoryContents`** (`loadDirectory`): si `target === RECENTS` → `fs.getRecentFiles()` en vez
    de `readDirectory`. El resto del flujo (setDirContent, route → Directory) igual.
-6. **Sidebar**: 
+6. **Sidebar**:
    - Quitar el `<SidebarSection title={Recent}>` y `useRecentPaths`/`getRecentPaths` (si quedan sin uso,
      limpiar). `visitedPaths` que se pasaba al SideBar puede dejar de usarse.
    - Agregar "Recents" a los pinned (con su ícono, ej. `faClockRotateLeft`) → `onClick` = `setPath(RECENTS)`.
@@ -41,7 +41,7 @@ no aplica a un listado "sin carpeta".
 
 ## Puntos del core a manejar (lo delicado)
 
-- **PathBar / PathInput**: hoy muestra `path`. Con `RECENTS` mostraría el centinela → feo. 
+- **PathBar / PathInput**: hoy muestra `path`. Con `RECENTS` mostraría el centinela → feo.
   → Mostrar vacío o un label "Recents" (no editable) cuando `path === RECENTS`.
 - **goUp**: deshabilitado en modo Recents (no hay padre). `disabled={path === "" || path === RECENTS}`.
 - **Watcher** (`useDirectoryContents`): no observar cuando `path === RECENTS` (no es dir real).

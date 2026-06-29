@@ -8,8 +8,7 @@ export const volumeForPath = (
 ): Volume | null => {
   let best: Volume | null = null;
   for (const volume of volumes) {
-    const prefix =
-      volume.mountPoint === "/" ? "/" : `${volume.mountPoint}/`;
+    const prefix = volume.mountPoint === "/" ? "/" : `${volume.mountPoint}/`;
     if (path === volume.mountPoint || path.startsWith(prefix)) {
       if (!best || volume.mountPoint.length > best.mountPoint.length)
         best = volume;

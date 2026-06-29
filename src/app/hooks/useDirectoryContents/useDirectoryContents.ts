@@ -1,22 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { NavigateFunction } from "react-router-dom";
 
-import { FileSystemManager } from "@/shared/managers/FileSystemManager";
 import { Volume, DirEntry } from "@/shared/models";
 import { ACCESS_DENIED_ERROR, RECENTS } from "@/shared/constants";
 
 import { ROUTES } from "../../routes";
 import { DIRECTORY_WATCH_DEBOUNCE_MS } from "./constants";
-
-type Args = {
-  fs: FileSystemManager;
-  // Active folder ("" = the Volumes view).
-  path: string;
-  navigate: NavigateFunction;
-  locationPathname: string;
-  // Hide this app's own background files from the Recents listing.
-  hideSystemRecents: boolean;
-};
+import type { UseDirectoryContentsArgs } from "./types";
 
 // Owns the listing for the active folder: volumes, entries and the access-denied flag. Loads on
 // navigation, syncs the route (Volumes vs Directory), and watches the folder for external
@@ -27,7 +16,7 @@ export const useDirectoryContents = ({
   navigate,
   locationPathname,
   hideSystemRecents,
-}: Args) => {
+}: UseDirectoryContentsArgs) => {
   const [volumes, setVolumes] = useState<Volume[]>([]);
   const [dirContent, setDirContent] = useState<DirEntry[]>([]);
   const [accessDenied, setAccessDenied] = useState<boolean>(false);
