@@ -17,6 +17,10 @@ export type TooltipProps = {
   contents?: boolean;
   // Hover/focus dwell before showing, in ms (0 = immediate). Avoids flashing on quick passes.
   delay?: number;
+  // Also show on keyboard focus (default true, for accessibility). Set false for tooltips that
+  // should be pointer-only — e.g. an entry's metadata card, which must not pop up as the user
+  // arrows through the list.
+  showOnFocus?: boolean;
   placement?: TooltipPlacement;
   className?: string;
   children: ReactNode;

@@ -114,6 +114,7 @@ const DirEntryItemComponent = ({
     <Tooltip
       contents
       delay={METADATA_TOOLTIP_DELAY}
+      showOnFocus={false}
       content={<EntryMetadata entry={entry} extension={extension} />}
     >
       <div

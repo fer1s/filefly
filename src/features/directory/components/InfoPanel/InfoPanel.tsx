@@ -64,7 +64,12 @@ const InfoPanel = () => {
       <div className="info_body">
         {entry ? (
           <>
-            {preview && <div className="info_preview">{preview}</div>}
+            {/* Only mount the media preview while open: a PDF/video <iframe> renders WebKit's
+                own floating controls as a native overlay that escapes the panel's clip when
+                collapsed (width:0). Not rendering it when closed avoids that leak. */}
+            {visible && preview && (
+              <div className="info_preview">{preview}</div>
+            )}
             <PropertiesContent entry={entry} />
           </>
         ) : (

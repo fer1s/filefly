@@ -27,6 +27,7 @@ const Tooltip = ({
   content,
   contents = false,
   delay = 0,
+  showOnFocus = true,
   placement = TOOLTIP_PLACEMENT.BOTTOM,
   className,
   children,
@@ -101,8 +102,8 @@ const Tooltip = ({
       className={classNames("Tooltip", contents && "contents", className)}
       onMouseEnter={show}
       onMouseLeave={hide}
-      onFocus={show}
-      onBlur={hide}
+      onFocus={showOnFocus ? show : undefined}
+      onBlur={showOnFocus ? hide : undefined}
       onClick={hide}
     >
       {children}
