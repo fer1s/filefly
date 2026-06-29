@@ -110,6 +110,45 @@ export const VIDEO_FORMATS: readonly string[] = [
   "ogv",
 ];
 
+// Format groups used only to pick a file-type glyph (see directory fileIcon registry). They are
+// not previewable — purely cosmetic icon hints — so they live apart from ACCEPTED_PREVIEW_FORMATS.
+export const ARCHIVE_FORMATS: readonly string[] = [
+  "zip",
+  "rar",
+  "7z",
+  "tar",
+  "gz",
+  "bz2",
+  "xz",
+];
+export const WORD_FORMATS: readonly string[] = ["doc", "docx", "odt"];
+export const SPREADSHEET_FORMATS: readonly string[] = ["xls", "xlsx", "ods"];
+export const CSV_FORMATS: readonly string[] = ["csv", "tsv"];
+export const PRESENTATION_FORMATS: readonly string[] = ["ppt", "pptx", "odp"];
+export const TEXT_FORMATS: readonly string[] = ["txt", "log", "rtf"];
+export const CODE_FORMATS: readonly string[] = [
+  "js",
+  "jsx",
+  "ts",
+  "tsx",
+  "json",
+  "html",
+  "css",
+  "scss",
+  "rs",
+  "py",
+  "go",
+  "java",
+  "c",
+  "cpp",
+  "h",
+  "sh",
+  "yml",
+  "yaml",
+  "toml",
+  "xml",
+];
+
 // Videos are intentionally excluded: they open in the OS's default player instead of the in-app
 // preview (the webview struggles with large/long files). Thumbnails still work (see DirEntry).
 export const ACCEPTED_PREVIEW_FORMATS: readonly string[] = [

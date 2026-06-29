@@ -142,6 +142,7 @@ const DirEntryItemComponent = ({
         <div className="name">
           <EntryIcon
             isDir={entry.metadata.isDir}
+            extension={ext}
             imgSrc={imgSrc}
             imgRef={imgRef}
             finishLoad={finishLoad}
