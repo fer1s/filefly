@@ -36,6 +36,9 @@ const Tooltip = ({
   const bubbleRef = useRef<HTMLSpanElement>(null);
   const showTimerRef = useRef<number | null>(null);
   const [open, setOpen] = useState(false);
+  // True while the open is scheduled but not yet shown (delay window). Tracked so scroll/resize
+  // can cancel a pending open too, not just an already-open bubble.
+  const [pending, setPending] = useState(false);
   const [coords, setCoords] = useState<TooltipCoords | null>(null);
 
   // Once open, measure the (already-rendered) bubble and the trigger to place + clamp it.
@@ -73,11 +76,16 @@ const Tooltip = ({
   const show = () => {
     if (delay <= 0) return setOpen(true);
     clearShowTimer();
-    showTimerRef.current = window.setTimeout(() => setOpen(true), delay);
+    setPending(true);
+    showTimerRef.current = window.setTimeout(() => {
+      setPending(false);
+      setOpen(true);
+    }, delay);
   };
 
   const hide = useCallback(() => {
     clearShowTimer();
+    setPending(false);
     setOpen(false);
     setCoords(null);
   }, []);
@@ -85,8 +93,10 @@ const Tooltip = ({
   // Dismiss on Escape, clicking, scroll and resize, so the bubble can't be left orphaned: it
   // renders in a portal with coords measured once, so any layout shift (scrolling a container,
   // resizing the window, the trigger's dialog closing) moves the trigger but not the bubble.
+  // Also runs while a show is pending: scrolling during the delay must cancel it, otherwise the
+  // bubble pops up after the pointer has already moved on (with no mouseleave to clear it).
   useEffect(() => {
-    if (!open) return;
+    if (!open && !pending) return;
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === KEY.ESCAPE) hide();
     };
@@ -99,7 +109,7 @@ const Tooltip = ({
       window.removeEventListener("scroll", hide, true);
       window.removeEventListener("resize", hide);
     };
-  }, [open, hide]);
+  }, [open, pending, hide]);
 
   // Drop any pending show timer when the trigger unmounts.
   useEffect(() => clearShowTimer, []);
