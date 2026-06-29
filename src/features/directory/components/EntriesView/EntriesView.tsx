@@ -18,6 +18,7 @@ const EntriesView = ({
   entries,
   view,
   selectedIDs,
+  cutPaths,
   renamingID,
   contextMenuRef,
   onSelect,
@@ -74,6 +75,7 @@ const EntriesView = ({
             contextMenuRef={contextMenuRef}
             id={entry.path}
             selected={selectedIDs.includes(entry.path)}
+            cut={cutPaths.has(entry.path)}
             focused={focused}
             tabbable={focused || (!hasFocused && index === 0)}
             onSelect={onSelect}

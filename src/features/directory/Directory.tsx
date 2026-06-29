@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useMemo, useRef, useState, type CSSProperties } from "react";
 
 import { useStateContext } from "@/shared/providers/StateProvider";
 import {
@@ -6,6 +6,7 @@ import {
   VIEW_MODE,
   TRASH_DIR_NAME,
   RECENTS,
+  CLIPBOARD_MODE,
 } from "@/shared/constants";
 import { classNames } from "@/shared/utils";
 import { notify, TOAST_TYPE } from "@/shared/toast";
@@ -127,6 +128,17 @@ const Directory = () => {
     fs.openInTerminal(dir);
   }, [fs, path, selectedIDs, sorted]);
 
+  // Entries on the clipboard in cut mode are dimmed until the cut is pasted or cleared.
+  const cutPaths = useMemo(
+    () =>
+      new Set(
+        fileOps.clipboard?.mode === CLIPBOARD_MODE.CUT
+          ? fileOps.clipboard.paths
+          : [],
+      ),
+    [fileOps.clipboard],
+  );
+
   // Show Properties for the single selected entry, or the current folder otherwise.
   const handleProperties = useCallback(() => {
     if (selectedIDs.length === 1) properties.open(selectedIDs[0], false);
@@ -245,6 +257,7 @@ const Directory = () => {
             entries={sorted}
             view={view}
             selectedIDs={selectedIDs}
+            cutPaths={cutPaths}
             renamingID={renamingID}
             contextMenuRef={menu.ref}
             onSelect={handleSelect}

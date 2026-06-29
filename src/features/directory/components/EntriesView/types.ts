@@ -7,6 +7,8 @@ export type EntriesViewProps = {
   entries: DirEntry[];
   view: ViewMode;
   selectedIDs: string[];
+  // Paths currently on the clipboard in cut mode, dimmed until the cut is pasted or cleared.
+  cutPaths: Set<string>;
   renamingID: string;
   contextMenuRef: RefObject<HTMLDivElement | null>;
   onSelect: (path: string, e: MouseEvent) => void;

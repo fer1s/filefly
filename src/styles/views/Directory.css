@@ -65,6 +65,11 @@ body.is-marqueeing .directory_page .dir_entry_item {
   opacity: var(--opacity-hidden-entry);
 }
 
+/* Entries cut to the clipboard are dimmed until the cut is pasted or cleared (Finder-style). */
+.directory_page .dir_entry_item.cut {
+  opacity: var(--opacity-cut-entry);
+}
+
 /* Entries are not text-selectable, and their icons/images are not draggable
    (WebKit honours only the -webkit- prefixed properties). */
 .directory_page .dir_entry_item,

@@ -32,6 +32,7 @@ const DirEntryItemComponent = ({
   id,
 
   selected,
+  cut,
   focused,
   tabbable,
   onSelect,
@@ -121,6 +122,7 @@ const DirEntryItemComponent = ({
         className={classNames(
           "dir_entry_item",
           selected && "selected",
+          cut && "cut",
           isHidden && "hidden",
         )}
         id={id}

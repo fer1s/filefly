@@ -78,6 +78,8 @@
 
   /* Hidden entries (dotfiles) are dimmed to set them apart from regular files. */
   --opacity-hidden-entry: 0.55;
+  /* Entries cut to the clipboard are dimmed to 50% until pasted or cleared. */
+  --opacity-cut-entry: 0.5;
 
   /* Window backdrop is fully transparent so the sidebar's own opacity (below) is the sole control
      over how much shows through; the content panel is solid, so only the sidebar is translucent. */

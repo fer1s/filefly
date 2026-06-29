@@ -12,6 +12,8 @@ export type DirEntryItemProps = {
   dateFormat: string;
 
   selected: boolean;
+  // On the clipboard in cut mode — dimmed to 50% until pasted or cleared.
+  cut: boolean;
   // The single selected entry that should take keyboard focus (and scroll into view). Distinct
   // from `selected` so bulk selections (Shift / Ctrl+A) don't yank focus to the last item.
   focused: boolean;
