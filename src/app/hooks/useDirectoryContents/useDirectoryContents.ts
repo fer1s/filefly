@@ -4,10 +4,7 @@ import { Volume, DirEntry } from "@/shared/models";
 import { ACCESS_DENIED_ERROR, RECENTS } from "@/shared/constants";
 
 import { ROUTES } from "../../routes";
-import {
-  DIRECTORY_WATCH_DEBOUNCE_MS,
-  VOLUMES_MOUNT_DIR,
-} from "./constants";
+import { DIRECTORY_WATCH_DEBOUNCE_MS, VOLUMES_MOUNT_DIR } from "./constants";
 import type { UseDirectoryContentsArgs } from "./types";
 
 // Owns the listing for the active folder: volumes, entries and the access-denied flag. Loads on

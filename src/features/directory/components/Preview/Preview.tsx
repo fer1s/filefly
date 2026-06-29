@@ -74,8 +74,14 @@ const Preview = ({
   const mac = isMacPlatform();
   const isImage = IMAGE_FORMATS.includes(fileType);
   // Image zoom lives here (not in ZoomableImage) so its control sits in the shared bottom bar.
-  const { zoom, pan, setPan, zoomTo, stepZoom, reset: resetZoom } =
-    useImageZoom();
+  const {
+    zoom,
+    pan,
+    setPan,
+    zoomTo,
+    stepZoom,
+    reset: resetZoom,
+  } = useImageZoom();
 
   // Navigation resets the zoom (so the next file opens at 1x) — done here rather than in an
   // effect to avoid a synchronous reset-on-prop-change.

@@ -195,7 +195,8 @@ export const useKeyboardNav = ({
       if (e.ctrlKey || e.metaKey || e.altKey) return;
 
       // Shift+Arrow extends the selection as a range; a plain arrow selects a single entry.
-      const step = (delta: number) => (e.shiftKey ? extend(delta) : move(delta));
+      const step = (delta: number) =>
+        e.shiftKey ? extend(delta) : move(delta);
 
       switch (e.key) {
         case KEY.ESCAPE:

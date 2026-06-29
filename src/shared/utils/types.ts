@@ -1,6 +1,2 @@
 export type ClassNameValue =
-  | string
-  | null
-  | undefined
-  | boolean
-  | ClassNameValue[];
+  string | null | undefined | boolean | ClassNameValue[];
