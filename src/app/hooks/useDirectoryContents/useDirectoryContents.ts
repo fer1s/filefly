@@ -4,7 +4,10 @@ import { Volume, DirEntry } from "@/shared/models";
 import { ACCESS_DENIED_ERROR, RECENTS } from "@/shared/constants";
 
 import { ROUTES } from "../../routes";
-import { DIRECTORY_WATCH_DEBOUNCE_MS } from "./constants";
+import {
+  DIRECTORY_WATCH_DEBOUNCE_MS,
+  VOLUMES_MOUNT_DIR,
+} from "./constants";
 import type { UseDirectoryContentsArgs } from "./types";
 
 // Owns the listing for the active folder: volumes, entries and the access-denied flag. Loads on
@@ -104,6 +107,33 @@ export const useDirectoryContents = ({
       cancelled = true;
     };
   }, [fs]);
+
+  // Keep the volume list in sync as external disks are attached/removed — they mount under
+  // /Volumes, so a change there means re-list. Debounced; harmless no-op where /Volumes is
+  // unwatchable (non-macOS).
+  useEffect(() => {
+    let cancelled = false;
+    let stopWatching: (() => void) | undefined;
+    let timer: number | undefined;
+
+    const onChange = () => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(fetchVolumes, DIRECTORY_WATCH_DEBOUNCE_MS);
+    };
+
+    fs.watchDirectory(VOLUMES_MOUNT_DIR, onChange)
+      .then((unwatch) => {
+        if (cancelled) unwatch();
+        else stopWatching = unwatch;
+      })
+      .catch((err) => console.error("Failed to watch volumes:\n" + err));
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+      stopWatching?.();
+    };
+  }, [fs, fetchVolumes]);
 
   // Load the folder (or route to Volumes when at the root) whenever the path changes.
   useEffect(() => {

@@ -178,9 +178,10 @@ export const en = {
     ntfs: {
       title: "Read-only NTFS drive",
       description:
-        "macOS can't write to NTFS without a driver. Install FUSE-T + ntfs-3g to enable writing.",
-      steps: "After installing, reconnect the drive, then re-check.",
-      download: "Get FUSE-T",
+        "macOS can't write to NTFS without a driver. Install macFUSE + ntfs-3g to enable writing.",
+      steps:
+        "macFUSE asks for approval in System Settings and a restart. After that, reconnect the drive and re-check.",
+      download: "Get macFUSE",
       copyCommand: "Copy install command",
       recheck: "Re-check",
     },

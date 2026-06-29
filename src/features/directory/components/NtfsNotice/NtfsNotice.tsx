@@ -8,7 +8,7 @@ import { faTriangleExclamation } from "@fortawesome/free-solid-svg-icons";
 
 import "@/styles/components/NtfsNotice.css";
 
-import { FUSE_T_URL, NTFS_INSTALL_COMMAND } from "./constants";
+import { MACFUSE_URL, NTFS_INSTALL_COMMAND } from "./constants";
 import type { NtfsNoticeProps } from "./types";
 
 // Banner shown when the active folder is on a read-only NTFS volume (macOS can't write NTFS
@@ -30,7 +30,7 @@ const NtfsNotice = ({ recheck }: NtfsNoticeProps) => {
         <p className="ntfs_hint">{t.directory.ntfs.steps}</p>
       </div>
       <div className="ntfs_actions">
-        <Button onClick={() => fs.openExternalUrl(FUSE_T_URL)}>
+        <Button onClick={() => fs.openExternalUrl(MACFUSE_URL)}>
           {t.directory.ntfs.download}
         </Button>
         <Button onClick={copyCommand}>{t.directory.ntfs.copyCommand}</Button>
