@@ -11,7 +11,13 @@ export const matchesBinding = (
   binding?: KeyBinding,
 ): boolean => {
   if (!binding) return false;
-  if (!!binding.mod !== (event.metaKey || event.ctrlKey)) return false;
+  // `ctrl` is literally the Control key (Ctrl+` style); `mod` is the Cmd/Ctrl abstraction,
+  // matched loosely as either meta or ctrl. They are mutually exclusive on a binding.
+  if (binding.ctrl) {
+    if (!event.ctrlKey || event.metaKey) return false;
+  } else if (!!binding.mod !== (event.metaKey || event.ctrlKey)) {
+    return false;
+  }
   if (!!binding.shift !== event.shiftKey) return false;
   if (!!binding.alt !== event.altKey) return false;
   return binding.keys.some((key) => {
@@ -33,6 +39,7 @@ export const formatBinding = (
   if (!binding || binding.keys.length === 0) return "";
 
   const parts: string[] = [];
+  if (binding.ctrl) parts.push(isMac ? "⌃" : "Ctrl");
   if (binding.mod) parts.push(isMac ? "⌘" : "Ctrl");
   if (binding.shift) parts.push(isMac ? "⇧" : "Shift");
   if (binding.alt) parts.push(isMac ? "⌥" : "Alt");

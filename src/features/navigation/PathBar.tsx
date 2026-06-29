@@ -57,8 +57,10 @@ const PathBar = () => {
     goBack,
     goForward,
     goUp,
+    goHome,
     toggleView: switchView,
     toggleHidden: toggleShowHidden,
+    toggleInfo: toggleInfoPanel,
   });
 
   return (
@@ -69,6 +71,7 @@ const PathBar = () => {
         variant={ICON_BUTTON_VARIANT.BOXED}
         size={ICON_BUTTON_SIZE.LG}
         tooltip={t.pathbar.home}
+        hotkey={formatBinding(keymap[KEYMAP_ACTION.GO_HOME])}
         aria-label={t.pathbar.home}
         className="shadow"
       />
@@ -129,6 +132,7 @@ const PathBar = () => {
         variant={ICON_BUTTON_VARIANT.BOXED}
         size={ICON_BUTTON_SIZE.LG}
         tooltip={t.pathbar.toggleInfo}
+        hotkey={formatBinding(keymap[KEYMAP_ACTION.TOGGLE_INFO])}
         aria-label={t.pathbar.toggleInfo}
         className={classNames(
           "shadow",

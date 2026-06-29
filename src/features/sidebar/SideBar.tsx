@@ -21,6 +21,7 @@ import type { CSSProperties, MouseEvent } from "react";
 import { SIDEBAR_ITEM_KIND, type SidebarItemKind } from "./constants";
 import { usePinnedFolders } from "./hooks/usePinnedFolders";
 import { usePinnedShortcuts } from "./hooks/usePinnedShortcuts";
+import { useSidebarShortcuts } from "./hooks/useSidebarShortcuts";
 import { useSidebarContextMenu } from "./hooks/useSidebarContextMenu";
 import { useEntryProperties } from "@/shared/hooks/useEntryProperties";
 import SidebarSection from "./components/SidebarSection";
@@ -54,6 +55,7 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
   const { open: openSettings } = useSettings();
   const pinned = usePinnedFolders();
   usePinnedShortcuts({ pinned, setPath });
+  useSidebarShortcuts({ onToggle });
 
   const menu = useSidebarContextMenu();
   const properties = useEntryProperties();
@@ -81,6 +83,7 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
           className="collapse_toggle"
           tooltip={collapsed ? t.sidebar.expand : t.sidebar.collapse}
           tooltipPlacement={TOOLTIP_PLACEMENT.RIGHT}
+          hotkey={formatBinding(keymap[KEYMAP_ACTION.TOGGLE_SIDEBAR])}
           onClick={onToggle}
           aria-label={collapsed ? t.sidebar.expand : t.sidebar.collapse}
         />

@@ -166,3 +166,35 @@ mod = true
 [open_settings]
 keys = [","]
 mod = true
+
+# Collapse / expand the sidebar. Matches the common Cmd/Ctrl + B used by editors and Finder-likes.
+[toggle_sidebar]
+keys = ["b"]
+mod = true
+
+# Jump to Home (the volumes root).
+[go_home]
+keys = ["h"]
+mod = true
+shift = true
+
+# Show properties / "Get Info" for the selection (or current folder). Matches Finder's Cmd+I.
+[properties]
+keys = ["i"]
+mod = true
+
+# Toggle the info / details panel. Shifted sibling of Properties (Cmd/Ctrl + Shift + I).
+[toggle_info]
+keys = ["i"]
+mod = true
+shift = true
+
+# Open a terminal at the selection's folder. Matches VS Code's Ctrl+` (literal Control, all OSes).
+[open_in_terminal]
+keys = ["`"]
+ctrl = true
+
+# Toggle the shortcut-help overlay (shows every actionable tooltip at once).
+[help_shortcuts]
+keys = ["/"]
+mod = true

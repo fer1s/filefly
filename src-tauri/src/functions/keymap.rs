@@ -11,6 +11,9 @@ struct RawBinding {
     keys: Vec<String>,
     #[serde(default, rename = "mod")]
     modifier: bool,
+    // Literal Control key on every platform (distinct from `mod` = Cmd/Ctrl), e.g. Ctrl+`.
+    #[serde(default)]
+    ctrl: bool,
     #[serde(default)]
     shift: bool,
     #[serde(default)]
@@ -29,6 +32,7 @@ pub struct KeyBinding {
     keys: Vec<String>,
     #[serde(rename = "mod")]
     modifier: bool,
+    ctrl: bool,
     shift: bool,
     alt: bool,
 }
@@ -48,6 +52,7 @@ fn resolve(raw: RawBinding) -> KeyBinding {
             return KeyBinding {
                 keys: over.keys,
                 modifier: over.modifier,
+                ctrl: over.ctrl,
                 shift: over.shift,
                 alt: over.alt,
             };
@@ -57,6 +62,7 @@ fn resolve(raw: RawBinding) -> KeyBinding {
     KeyBinding {
         keys: raw.keys,
         modifier: raw.modifier,
+        ctrl: raw.ctrl,
         shift: raw.shift,
         alt: raw.alt,
     }

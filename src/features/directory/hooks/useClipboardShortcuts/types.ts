@@ -9,4 +9,6 @@ export type UseClipboardShortcutsArgs = {
   onRename: (targets: string[]) => void;
   onNewFolder: () => void;
   onSelectAll: () => void;
+  onOpenInTerminal: () => void;
+  onProperties: () => void;
 };

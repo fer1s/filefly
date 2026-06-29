@@ -4,7 +4,9 @@ import type { KeymapAction } from "./constants";
 
 export type KeyBinding = {
   keys: string[];
+  // `mod` = Cmd (mac) / Ctrl (win-linux). `ctrl` = literally Control on every platform.
   mod?: boolean;
+  ctrl?: boolean;
   shift?: boolean;
   alt?: boolean;
 };

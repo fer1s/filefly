@@ -11,8 +11,10 @@ export const usePathBarShortcuts = ({
   goBack,
   goForward,
   goUp,
+  goHome,
   toggleView,
   toggleHidden,
+  toggleInfo,
 }: UsePathBarShortcutsArgs) => {
   const { keymap } = useKeymap();
 
@@ -42,16 +44,31 @@ export const usePathBarShortcuts = ({
       } else if (matchesBinding(e, keymap[KEYMAP_ACTION.NAV_UP])) {
         e.preventDefault();
         goUp();
+      } else if (matchesBinding(e, keymap[KEYMAP_ACTION.GO_HOME])) {
+        e.preventDefault();
+        goHome();
       } else if (matchesBinding(e, keymap[KEYMAP_ACTION.TOGGLE_VIEW])) {
         e.preventDefault();
         toggleView();
       } else if (matchesBinding(e, keymap[KEYMAP_ACTION.TOGGLE_HIDDEN])) {
         e.preventDefault();
         toggleHidden();
+      } else if (matchesBinding(e, keymap[KEYMAP_ACTION.TOGGLE_INFO])) {
+        e.preventDefault();
+        toggleInfo();
       }
     };
 
     document.addEventListener("keydown", handleShortcut);
     return () => document.removeEventListener("keydown", handleShortcut);
-  }, [keymap, goBack, goForward, goUp, toggleView, toggleHidden]);
+  }, [
+    keymap,
+    goBack,
+    goForward,
+    goUp,
+    goHome,
+    toggleView,
+    toggleHidden,
+    toggleInfo,
+  ]);
 };

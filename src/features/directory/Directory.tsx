@@ -1,7 +1,12 @@
 import { useCallback, useRef, useState, type CSSProperties } from "react";
 
 import { useStateContext } from "@/shared/providers/StateProvider";
-import { ENTRY_KIND, VIEW_MODE, TRASH_DIR_NAME } from "@/shared/constants";
+import {
+  ENTRY_KIND,
+  VIEW_MODE,
+  TRASH_DIR_NAME,
+  RECENTS,
+} from "@/shared/constants";
 import { classNames } from "@/shared/utils";
 import { notify, TOAST_TYPE } from "@/shared/toast";
 import { t } from "@/lang";
@@ -107,6 +112,24 @@ const Directory = () => {
     }
   }, [fs, path, setRenamingID]);
 
+  // Open a terminal at the selection's folder (a folder → itself, a file → its parent), or the
+  // current directory when the selection isn't a single entry. Skipped in the virtual views.
+  const handleOpenInTerminal = useCallback(() => {
+    if (path === "" || path === RECENTS) return;
+    const id = selectedIDs.length === 1 ? selectedIDs[0] : path;
+    const entry = sorted.find((item) => item.path === id);
+    const dir = entry?.metadata.isFile
+      ? id.split("/").slice(0, -1).join("/")
+      : id;
+    fs.openInTerminal(dir);
+  }, [fs, path, selectedIDs, sorted]);
+
+  // Show Properties for the single selected entry, or the current folder otherwise.
+  const handleProperties = useCallback(() => {
+    if (selectedIDs.length === 1) properties.open(selectedIDs[0], false);
+    else if (path !== "" && path !== RECENTS) properties.open(path, true);
+  }, [selectedIDs, path, properties]);
+
   useKeyboardNav({
     items: sorted,
     view,
@@ -133,6 +156,8 @@ const Directory = () => {
     },
     onNewFolder: handleNewFolder,
     onSelectAll: () => setSelectedIDs(sorted.map((entry) => entry.path)),
+    onOpenInTerminal: handleOpenInTerminal,
+    onProperties: handleProperties,
   });
 
   useZoomShortcuts(!preview.visible && !properties.visible);

@@ -17,6 +17,8 @@ export const useClipboardShortcuts = ({
   onRename,
   onNewFolder,
   onSelectAll,
+  onOpenInTerminal,
+  onProperties,
 }: UseClipboardShortcutsArgs) => {
   const { keymap } = useKeymap();
 
@@ -61,6 +63,12 @@ export const useClipboardShortcuts = ({
       } else if (matchesBinding(e, keymap[KEYMAP_ACTION.NEW_FOLDER])) {
         e.preventDefault();
         onNewFolder();
+      } else if (matchesBinding(e, keymap[KEYMAP_ACTION.OPEN_IN_TERMINAL])) {
+        e.preventDefault();
+        onOpenInTerminal();
+      } else if (matchesBinding(e, keymap[KEYMAP_ACTION.PROPERTIES])) {
+        e.preventDefault();
+        onProperties();
       }
     };
 
@@ -77,6 +85,8 @@ export const useClipboardShortcuts = ({
     onRename,
     onNewFolder,
     onSelectAll,
+    onOpenInTerminal,
+    onProperties,
     keymap,
   ]);
 };

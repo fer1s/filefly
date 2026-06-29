@@ -1,9 +1,12 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import IconButton, {
   ICON_BUTTON_SIZE,
 } from "@/shared/components/elements/IconButton";
+import { SPACE_HOTKEY } from "@/shared/keymap";
 import { classNames } from "@/shared/utils";
+import { KEY } from "@/shared/constants";
+import { t } from "@/lang";
 
 import {
   faPause,
@@ -27,9 +30,9 @@ const AudioPreview = ({ isVisible, filePath }: AudioPreviewProps) => {
   const [duration, setDuration] = useState<number>(0);
   const [volume, setVolume] = useState<number>(DEFAULT_VOLUME);
 
-  const togglePlay = () => {
+  const togglePlay = useCallback(() => {
     setIsPlaying((prev) => !prev);
-  };
+  }, []);
 
   const handleProgress = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!audioRef.current) return;
@@ -59,6 +62,27 @@ const AudioPreview = ({ isVisible, filePath }: AudioPreviewProps) => {
     audio.volume = volume / 100;
   }, [filePath, isPlaying, volume]);
 
+  // Space toggles play/pause while the preview is open (universal media convention). Ignored
+  // while typing in inputs, and preventDefault stops the page from scrolling on Space.
+  useEffect(() => {
+    if (!isVisible) return;
+
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key !== KEY.SPACE) return;
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === "INPUT" || target.tagName === "TEXTAREA")
+      )
+        return;
+      e.preventDefault();
+      togglePlay();
+    };
+
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [isVisible, togglePlay]);
+
   return (
     <div className={classNames("audio_preview", isVisible && "visible")}>
       <audio
@@ -70,6 +94,8 @@ const AudioPreview = ({ isVisible, filePath }: AudioPreviewProps) => {
       <IconButton
         icon={isPlaying ? faPause : faPlay}
         size={ICON_BUTTON_SIZE.LG}
+        tooltip={isPlaying ? t.common.pause : t.common.play}
+        hotkey={SPACE_HOTKEY}
         onClick={togglePlay}
       />
       <div className="progress">
