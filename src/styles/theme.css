@@ -93,7 +93,7 @@
 
   /* macOS-style dialog close button (the red traffic-light dot + its hover glyph). */
   --size-mac-close: 12px;
-  --size-mac-close-glyph: 9px;
+  --size-mac-close-glyph: 8px;
   --color-mac-close: #ff5f57;
   --color-mac-close-glyph: rgba(0, 0, 0, 0.55);
 
