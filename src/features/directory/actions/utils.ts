@@ -7,9 +7,11 @@ import type { EntryAction, EntryActionContext, ResolveArgs } from "./types";
 // a folder, or a file (matched to a file-type rule by extension, falling back to [file]).
 export const resolveActionIds = (
   layout: ContextMenuLayout,
-  { isCurrentDirectory, elementType, extension }: ResolveArgs,
+  { isCurrentDirectory, inTrash, elementType, extension }: ResolveArgs,
 ): string[] => {
   if (isCurrentDirectory) return layout.directory.actions;
+  // A trashed entry takes the [trash] layout regardless of its kind.
+  if (inTrash) return layout.trash.actions;
   if (elementType === ENTRY_KIND.DIRECTORY) return layout.folder.actions;
 
   const ext = extension.toLowerCase();

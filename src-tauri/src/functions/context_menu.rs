@@ -29,6 +29,9 @@ pub struct ContextMenu {
     folder: ActionList,
     #[serde(default)]
     file: ActionList,
+    // Entries shown while browsing the Trash (Restore / permanent delete instead of Move-to-Trash).
+    #[serde(default)]
+    trash: ActionList,
     #[serde(default)]
     file_type: HashMap<String, FileType>,
 }

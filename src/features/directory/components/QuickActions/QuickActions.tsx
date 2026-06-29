@@ -2,7 +2,7 @@ import { useStateContext } from "@/shared/providers/StateProvider";
 import { useKeymap, formatBinding } from "@/shared/keymap";
 import IconButton from "@/shared/components/elements/IconButton";
 import { extension } from "@/shared/utils";
-import { ENTRY_KIND } from "@/shared/constants";
+import { ENTRY_KIND, TRASH_DIR_NAME } from "@/shared/constants";
 
 import { useDirectory } from "../../providers/DirectoryProvider";
 import { useContextMenuLayout } from "../../hooks/useContextMenuLayout";
@@ -37,6 +37,7 @@ const QuickActions = () => {
       ? ENTRY_KIND.FILE
       : ENTRY_KIND.DIRECTORY;
   const isCurrentDirectory = !hasSelection;
+  const inTrash = path.endsWith(`/${TRASH_DIR_NAME}`);
   const fileExtension = extension(elementId);
 
   const ctx: EntryActionContext = {
@@ -56,6 +57,7 @@ const QuickActions = () => {
 
   const actionIds = resolveActionIds(layout, {
     isCurrentDirectory,
+    inTrash,
     elementType,
     extension: fileExtension,
   }).filter((id) => id !== ACTION_SEPARATOR);

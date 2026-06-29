@@ -60,6 +60,8 @@ type ContextMenuLayout = {
   directory: ActionList;
   folder: ActionList;
   file: ActionList;
+  // Entries shown while browsing the Trash (Restore / permanent delete instead of Move-to-Trash).
+  trash: ActionList;
   file_type: Record<string, FileTypeRule>;
 };
 

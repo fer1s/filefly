@@ -64,6 +64,8 @@ export type EntryAction = {
 // Inputs for resolving which actions apply to an entry (see resolveActionIds).
 export type ResolveArgs = {
   isCurrentDirectory: boolean;
+  // The entry is being browsed inside the Trash (uses the [trash] layout).
+  inTrash: boolean;
   elementType: EntryKind;
   // Lowercased file extension (no dot); ignored for folders.
   extension: string;

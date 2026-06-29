@@ -11,6 +11,7 @@
 #   paste              paste the clipboard into the current directory
 #   rename             inline rename
 #   trash              move to the system Trash (reversible)
+#   restore            restore a trashed item to where it came from (or pick a folder)
 #   destroy            permanently delete (irreversible)
 #   properties         open the properties panel
 #
@@ -49,6 +50,18 @@ actions = [
   "cut",
   "rename",
   "trash",
+  "destroy",
+  "separator",
+  "properties",
+]
+
+# Any entry (file or folder) while browsing the Trash: it's already trashed, so it offers
+# Restore and permanent delete instead of Move-to-Trash. Applies to all kinds in the Trash.
+[trash]
+actions = [
+  "open",
+  "restore",
+  "separator",
   "destroy",
   "separator",
   "properties",

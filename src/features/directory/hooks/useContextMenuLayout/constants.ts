@@ -5,5 +5,6 @@ export const EMPTY_LAYOUT: ContextMenuLayout = {
   directory: { actions: [] },
   folder: { actions: [] },
   file: { actions: [] },
+  trash: { actions: [] },
   file_type: {},
 };
