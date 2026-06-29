@@ -82,15 +82,23 @@ const Tooltip = ({
     setCoords(null);
   }, []);
 
-  // Dismiss on Escape and clicking, so the bubble can't be left orphaned when its trigger's
-  // container (e.g. a dialog) closes while the pointer is still over it.
+  // Dismiss on Escape, clicking, scroll and resize, so the bubble can't be left orphaned: it
+  // renders in a portal with coords measured once, so any layout shift (scrolling a container,
+  // resizing the window, the trigger's dialog closing) moves the trigger but not the bubble.
   useEffect(() => {
     if (!open) return;
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === KEY.ESCAPE) hide();
     };
     document.addEventListener("keydown", handleKey);
-    return () => document.removeEventListener("keydown", handleKey);
+    // Capture phase so scroll on any nested overflow container is caught, not just the window.
+    window.addEventListener("scroll", hide, true);
+    window.addEventListener("resize", hide);
+    return () => {
+      document.removeEventListener("keydown", handleKey);
+      window.removeEventListener("scroll", hide, true);
+      window.removeEventListener("resize", hide);
+    };
   }, [open, hide]);
 
   // Drop any pending show timer when the trigger unmounts.
