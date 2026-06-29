@@ -110,10 +110,11 @@ export const VIDEO_FORMATS: readonly string[] = [
   "ogv",
 ];
 
+// Videos are intentionally excluded: they open in the OS's default player instead of the in-app
+// preview (the webview struggles with large/long files). Thumbnails still work (see DirEntry).
 export const ACCEPTED_PREVIEW_FORMATS: readonly string[] = [
   MARKDOWN_FORMAT,
   PDF_FORMAT,
   ...IMAGE_FORMATS,
   ...AUDIO_FORMATS,
-  ...VIDEO_FORMATS,
 ];
