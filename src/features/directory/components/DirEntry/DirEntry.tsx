@@ -6,7 +6,12 @@ import {
   formatBytes,
   formatDate,
 } from "@/shared/utils";
-import { IMAGE_FORMATS, VIDEO_FORMATS, PDF_FORMAT } from "@/shared/constants";
+import {
+  IMAGE_FORMATS,
+  VIDEO_FORMATS,
+  PDF_FORMAT,
+  MARKDOWN_FORMATS,
+} from "@/shared/constants";
 import Tooltip from "@/shared/components/elements/Tooltip";
 import { t } from "@/lang";
 
@@ -66,10 +71,11 @@ const DirEntryItemComponent = ({
 
   const ext = extension.toLowerCase().trim();
   const isImage = entry.metadata.isFile && IMAGE_FORMATS.includes(ext);
-  // Videos and PDFs get a thumbnail too (macOS QuickLook); same lazy/throttled path.
+  // Videos, PDFs and markdown get a thumbnail too (macOS QuickLook); same lazy/throttled path.
   const isVideo = entry.metadata.isFile && VIDEO_FORMATS.includes(ext);
   const isPdf = entry.metadata.isFile && ext === PDF_FORMAT;
-  const isThumbnail = isImage || isVideo || isPdf;
+  const isMarkdown = entry.metadata.isFile && MARKDOWN_FORMATS.includes(ext);
+  const isThumbnail = isImage || isVideo || isPdf || isMarkdown;
 
   // Dotfiles are hidden on macOS/Unix; dim them to set them apart (Finder-style).
   const isHidden = entry.name.startsWith(".");

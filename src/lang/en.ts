@@ -152,7 +152,7 @@ export const en = {
     items: (n: number) => `${n} items`,
     itemCount: (n: number) => `${n} ${n === 1 ? "item" : "items"}`,
     selectedCount: (n: number) => `${n} ${n === 1 ? "item" : "items"} selected`,
-    loadingPreviews: "Loading previews…",
+    loadingPreviews: "Loading thumbnails...",
     calculatingSizes: "Calculating sizes…",
     copying: "Copying…",
     moving: "Moving…",

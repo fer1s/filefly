@@ -1,11 +1,15 @@
+use ab_glyph::{FontVec, PxScale};
+use imageproc::drawing::draw_text_mut;
 use serde::{Deserialize, Serialize};
 use std::collections::hash_map::DefaultHasher;
 use std::ffi::OsStr;
 use std::fs;
 use std::hash::{Hash, Hasher};
+use std::io::Read;
 #[cfg(unix)]
 use std::os::unix::fs::MetadataExt;
 use std::path::{Path, PathBuf};
+use std::sync::OnceLock;
 use std::time::SystemTime;
 use tauri::ipc::Channel;
 use tauri::{AppHandle, Manager};
@@ -94,29 +98,100 @@ pub async fn get_dir_size(path: String) -> u64 {
 }
 
 // Extensions whose thumbnail comes from QuickLook rather than the image decoder (videos and
-// PDFs). Matches the previewable video/pdf sets.
+// PDFs). Matches the previewable video/pdf sets. (Markdown is handled by text_thumbnail instead:
+// QuickLook has no good markdown thumbnailer and stalls the queue — see TEXT_EXTS.)
 const QUICKLOOK_EXTS: &[&str] = &["mp4", "mov", "m4v", "webm", "ogv", "pdf"];
 
 fn needs_quicklook(path: &str) -> bool {
+    has_ext(path, QUICKLOOK_EXTS)
+}
+
+// Extensions rendered as a text-document thumbnail (first lines drawn onto a card). Fast and
+// in-process, unlike QuickLook. Generic enough to extend to other text/code types later.
+const TEXT_EXTS: &[&str] = &["md", "markdown"];
+
+fn is_text(path: &str) -> bool {
+    has_ext(path, TEXT_EXTS)
+}
+
+fn has_ext(path: &str, exts: &[&str]) -> bool {
     Path::new(path)
         .extension()
         .and_then(|ext| ext.to_str())
-        .map(|ext| QUICKLOOK_EXTS.contains(&ext.to_lowercase().as_str()))
+        .map(|ext| exts.contains(&ext.to_lowercase().as_str()))
         .unwrap_or(false)
 }
 
-// Decode the source image used to build a thumbnail: the image file itself, or a frame/page
-// rendered by QuickLook for videos and PDFs.
+// Decode the source image used to build a thumbnail: a text-document render for markdown, a
+// frame/page rendered by QuickLook for videos and PDFs, or the image file itself.
 fn thumbnail_source(
     path: &str,
     size: u32,
     tmp_dir: &Path,
 ) -> Result<image::DynamicImage, String> {
-    if needs_quicklook(path) {
+    if is_text(path) {
+        text_thumbnail(path)
+    } else if needs_quicklook(path) {
         quicklook_thumbnail(path, size, tmp_dir)
     } else {
         image::open(path).map_err(|e| e.to_string())
     }
+}
+
+// A font for text-document thumbnails, loaded once from a system font (macOS ships these). None
+// if none can be read — the caller then falls back to the generic icon.
+fn text_font() -> Option<&'static FontVec> {
+    static TEXT_FONT: OnceLock<Option<FontVec>> = OnceLock::new();
+    TEXT_FONT
+        .get_or_init(|| {
+            const CANDIDATES: &[&str] = &[
+                "/System/Library/Fonts/Supplemental/Arial.ttf",
+                "/System/Library/Fonts/Supplemental/Verdana.ttf",
+                "/System/Library/Fonts/Supplemental/Courier New.ttf",
+                "/Library/Fonts/Arial.ttf",
+            ];
+            CANDIDATES
+                .iter()
+                .filter_map(|path| std::fs::read(path).ok())
+                .find_map(|bytes| FontVec::try_from_vec(bytes).ok())
+        })
+        .as_ref()
+}
+
+// Build a "document card" thumbnail for a text file: the first lines drawn as dark text on a
+// light page. Reads only a prefix of the file and runs in-process — no subprocess, fast, and
+// can't stall the thumbnail queue the way QuickLook does.
+fn text_thumbnail(path: &str) -> Result<image::DynamicImage, String> {
+    let font = text_font().ok_or_else(|| "No system font for text thumbnail".to_string())?;
+
+    // Only the start of the file is needed for the preview; avoid reading large files whole.
+    let mut buf = Vec::new();
+    fs::File::open(path)
+        .map_err(|e| e.to_string())?
+        .take(8192)
+        .read_to_end(&mut buf)
+        .map_err(|e| e.to_string())?;
+    let text = String::from_utf8_lossy(&buf);
+
+    const W: u32 = 512;
+    const H: u32 = 512;
+    const PADDING: i32 = 32;
+    const LINE_HEIGHT: i32 = 26;
+    const MAX_LINES: usize = 17;
+    const MAX_CHARS: usize = 46;
+    const FONT_PX: f32 = 21.0;
+
+    let mut canvas = image::RgbaImage::from_pixel(W, H, image::Rgba([245, 245, 247, 255]));
+    let color = image::Rgba([45, 45, 48, 255]);
+    let scale = PxScale::from(FONT_PX);
+
+    for (i, line) in text.lines().take(MAX_LINES).enumerate() {
+        let truncated: String = line.replace('\t', "    ").chars().take(MAX_CHARS).collect();
+        let y = PADDING + i as i32 * LINE_HEIGHT;
+        draw_text_mut(&mut canvas, color, PADDING, y, scale, font, &truncated);
+    }
+
+    Ok(image::DynamicImage::ImageRgba8(canvas))
 }
 
 // Render a thumbnail (video frame / PDF first page) via QuickLook (`qlmanage`), which writes
