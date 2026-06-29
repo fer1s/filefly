@@ -86,6 +86,8 @@ export const en = {
     toggleInfo: "Toggle info panel",
     search: "Search",
     searchPlaceholder: "Search in folder",
+    recentSearches: "Recent searches",
+    clearRecents: "Clear",
   },
   quickbar: {
     zoomIn: "Zoom in",

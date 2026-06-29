@@ -15,6 +15,7 @@ import { extension } from "@/shared/utils";
 import { FEATURE_FLAGS } from "@/shared/featureFlags";
 import { sortEntries, type Sort } from "../sort";
 import { useDirSizes } from "./useDirSizes";
+import { useDirectorySearch } from "./useDirectorySearch";
 
 const DEFAULT_SORT: Sort = {
   key: SORT_KEY.NAME,
@@ -43,18 +44,18 @@ const isValidSort = (
 // Owns the visible entry list: search filter, column sort, lazily computed folder
 // sizes, and the previewable subset (for prev/next navigation).
 export const useDirectoryEntries = (view: ViewMode) => {
-  const { dirContent, search, showHidden, path } = useStateContext();
+  const { dirContent, showHidden, path } = useStateContext();
 
-  // Entries visible after applying the hidden-files toggle and the sidebar search filter.
+  // While a search is active, the recursive results replace the folder's own entries (the
+  // directory content is hidden in favor of the results); otherwise show the folder as usual.
+  const { searchActive, searching, results } = useDirectorySearch();
+  const base = searchActive ? results : dirContent;
+
+  // Entries visible after applying the hidden-files toggle. (Search matching is done by the
+  // backend, so no name filter is needed here.)
   const filtered = useMemo(
-    () =>
-      dirContent.filter((e) => {
-        if (!showHidden && e.name.startsWith(".")) return false;
-        if (search && !e.name.toLowerCase().includes(search.toLowerCase()))
-          return false;
-        return true;
-      }),
-    [dirContent, search, showHidden],
+    () => base.filter((e) => showHidden || !e.name.startsWith(".")),
+    [base, showHidden],
   );
 
   // Column sort (driven by the list-view headers), loaded per folder from the config.
@@ -120,5 +121,14 @@ export const useDirectoryEntries = (view: ViewMode) => {
     [sorted],
   );
 
-  return { filtered, sorted, previewables, sort, handleSort, computingSizes };
+  return {
+    filtered,
+    sorted,
+    previewables,
+    sort,
+    handleSort,
+    computingSizes,
+    searchActive,
+    searching,
+  };
 };

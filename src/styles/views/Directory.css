@@ -509,3 +509,11 @@ body.is-marqueeing .directory_page .dir_entry_item {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* Centered spinner shown while a recursive search is loading (directory content hidden). */
+.directory_page .search_loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-12);
+}

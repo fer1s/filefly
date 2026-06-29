@@ -83,3 +83,67 @@
   background: transparent;
   border: none;
 }
+
+/* Recent-searches dropdown, portaled under the search box (so the box's overflow can't clip it). */
+.path_recents {
+  position: fixed;
+  z-index: 2500;
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-1);
+  background-color: var(--color-surface-floating);
+  border: var(--border-width-default) solid var(--color-border-default);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-popover);
+}
+
+.path_recents_header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-1-5);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.path_recents_clear {
+  padding: var(--space-0-25) var(--space-1);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-xs);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+}
+
+.path_recents_clear:hover {
+  background-color: var(--color-overlay-hover);
+  color: var(--color-text-primary);
+}
+
+.path_recents_item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-1-5) var(--space-1-5);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-xs);
+  color: var(--color-text-secondary);
+  font-family: "Inter", sans-serif;
+  font-size: var(--font-size-base);
+  text-align: left;
+  cursor: pointer;
+}
+
+.path_recents_item:hover {
+  background-color: var(--color-overlay-hover);
+  color: var(--color-text-primary);
+}
+
+.path_recents_item > .Icon {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-md);
+}

@@ -101,6 +101,13 @@ export const readDirectory = async (path: string): Promise<DirEntry[]> => {
   }
 };
 
+// Recursively search under `path` for entries whose name contains `query` (case-insensitive).
+export const searchDirectory = async (
+  path: string,
+  query: string,
+): Promise<DirEntry[]> =>
+  (await invoke("search_directory", { path, query })) as DirEntry[];
+
 export const getEntry = async (path: string): Promise<DirEntry> =>
   await invoke("get_entry", { path });
 

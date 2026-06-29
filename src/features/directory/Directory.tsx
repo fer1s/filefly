@@ -32,6 +32,7 @@ import TypeaheadPopup from "./components/TypeaheadPopup";
 import Preview from "./components/Preview";
 import Properties from "./components/Properties";
 import NtfsNotice from "./components/NtfsNotice";
+import Spinner from "@/shared/components/elements/Spinner";
 
 import "@/styles/views/Directory.css";
 
@@ -68,6 +69,8 @@ const Directory = () => {
     fileOps,
     preview,
     properties,
+    searchActive,
+    searching,
   } = useDirectory();
 
   // Rubber-band selection over the empty floor of the directory.
@@ -216,19 +219,29 @@ const Directory = () => {
           <NtfsNotice recheck={recheckWritability} />
         )}
 
-        {!accessDenied && view === VIEW_MODE.LIST && sorted.length > 0 && (
-          <ListHeader
-            key="list-header"
-            sort={sort}
-            onSort={handleSort}
-            visibleColumns={visibleColumns}
-            onToggleColumn={toggleColumn}
-          />
+        {!accessDenied &&
+          !searchActive &&
+          view === VIEW_MODE.LIST &&
+          sorted.length > 0 && (
+            <ListHeader
+              key="list-header"
+              sort={sort}
+              onSort={handleSort}
+              visibleColumns={visibleColumns}
+              onToggleColumn={toggleColumn}
+            />
+          )}
+
+        {/* Searching with nothing to show yet: a spinner stands in for the (hidden) directory. */}
+        {!accessDenied && searching && sorted.length === 0 && (
+          <div className="search_loading">
+            <Spinner />
+          </div>
         )}
 
-        {!accessDenied && (
+        {!accessDenied && !(searching && sorted.length === 0) && (
           <EntriesView
-            key={path}
+            key={searchActive ? "search" : path}
             entries={sorted}
             view={view}
             selectedIDs={selectedIDs}
@@ -245,7 +258,7 @@ const Directory = () => {
           />
         )}
 
-        {!accessDenied && search && filtered.length === 0 && (
+        {!accessDenied && searchActive && !searching && sorted.length === 0 && (
           <p className="no_results">{t.directory.noResults(search)}</p>
         )}
       </div>

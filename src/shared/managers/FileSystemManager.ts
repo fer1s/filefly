@@ -47,6 +47,11 @@ export class FileSystemManager {
     return api.getRecentFiles(hideAppFiles);
   }
 
+  // Recursively search under `path` for entries whose name contains `query`.
+  searchDirectory(path: string, query: string): Promise<DirEntry[]> {
+    return api.searchDirectory(path, query);
+  }
+
   // Eject/unmount a removable volume by its mount point.
   ejectVolume(mountPoint: string): Promise<void> {
     return api.ejectVolume(mountPoint);

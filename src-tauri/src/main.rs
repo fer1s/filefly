@@ -45,6 +45,7 @@ fn main() {
             filesystem::fs::get_recent_files,
             filesystem::fs::get_thumbnail,
             filesystem::fs::read_directory,
+            filesystem::fs::search_directory,
             filesystem::fs::can_write,
             filesystem::fs::open_file,
             filesystem::fs::copy_entry,
