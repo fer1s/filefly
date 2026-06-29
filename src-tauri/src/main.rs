@@ -39,11 +39,13 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             filesystem::volumes::get_host_name,
             filesystem::volumes::get_volumes,
+            filesystem::volumes::eject_volume,
             filesystem::fs::get_entry,
             filesystem::fs::get_dir_size,
             filesystem::fs::get_recent_files,
             filesystem::fs::get_thumbnail,
             filesystem::fs::read_directory,
+            filesystem::fs::can_write,
             filesystem::fs::open_file,
             filesystem::fs::copy_entry,
             filesystem::fs::move_entry,

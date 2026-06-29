@@ -7,7 +7,13 @@ import { handleVolumeKey } from "../utils";
 import type { VolumeItemProps } from "../types";
 
 // Grid tile for a volume. Click selects, double-click opens (keyboard parity via handleVolumeKey).
-const VolumeCard = ({ volume, setPath, selected, onSelect }: VolumeItemProps) => (
+const VolumeCard = ({
+  volume,
+  setPath,
+  selected,
+  onSelect,
+  onContextMenu,
+}: VolumeItemProps) => (
   <div
     className={classNames("volume_item", selected && "selected")}
     role="button"
@@ -17,11 +23,13 @@ const VolumeCard = ({ volume, setPath, selected, onSelect }: VolumeItemProps) =>
     onClick={onSelect}
     onDoubleClick={() => setPath(volume.mountPoint)}
     onKeyDown={handleVolumeKey(() => setPath(volume.mountPoint), onSelect)}
+    onContextMenu={onContextMenu}
   >
     <Icon icon={volumeIcon(volume)} />
     <div className="volume_info">
       <h3>
-        <span>{volume.mountPoint}</span> {volume.name}
+        <span className="volume_mount">{volume.mountPoint}</span>
+        <span className="volume_label">{volume.name}</span>
       </h3>
       <UsageBar percentage={volume.diskUsage.percentage} />
       <p>{t.volumes.freeOf(volume.availableSpace, volume.totalSpace)}</p>

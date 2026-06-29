@@ -12,11 +12,15 @@ import type { SidebarActionId } from "./constants";
 export type SidebarActionContext = {
   path: string;
   kind: SidebarItemKind;
+  // Whether the clicked row is a removable volume (drives Eject visibility). False for non-volumes.
+  isRemovable: boolean;
   currentPath: string;
   fs: FileSystemManager;
   openInNewTab: (path: string) => void;
   openProperties: (path: string) => void | Promise<void>;
   refreshDir: () => void;
+  // Re-list the volumes (used after ejecting).
+  refreshVolumes: () => void;
   onClose: () => void;
 };
 
@@ -29,5 +33,8 @@ export type SidebarAction = {
   icon: IconDefinition;
   // Color variant (defaults to neutral); e.g. UI_COLOR.DANGER for Empty Trash.
   color?: UiColor;
+  // Whether the action applies in the given context (e.g. Eject only for removable volumes).
+  // Absent means always shown.
+  isVisible?: (ctx: SidebarActionContext) => boolean;
   run: (ctx: SidebarActionContext) => void | Promise<void>;
 };

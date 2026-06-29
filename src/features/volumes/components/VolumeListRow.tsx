@@ -12,6 +12,7 @@ const VolumeListRow = ({
   setPath,
   selected,
   onSelect,
+  onContextMenu,
 }: VolumeItemProps) => (
   <tr
     className={classNames("volume_item", selected && "selected")}
@@ -20,6 +21,7 @@ const VolumeListRow = ({
     onClick={onSelect}
     onDoubleClick={() => setPath(volume.mountPoint)}
     onKeyDown={handleVolumeKey(() => setPath(volume.mountPoint), onSelect)}
+    onContextMenu={onContextMenu}
   >
     <td>
       <div className="volume_identity">

@@ -20,6 +20,7 @@ export const en = {
     openInNewTab: "Open in New Tab",
     openInTerminal: "Open in Terminal",
     emptyTrash: "Empty Trash",
+    eject: "Eject",
     copy: "Copy",
     cut: "Cut",
     rename: "Rename",
@@ -125,6 +126,7 @@ export const en = {
     removable: "Removable",
     localDrive: "Local drive",
     freeOf: (free: string, total: string) => `${free} free of ${total}`,
+    ejected: (name: string) => `Ejected ${name}`,
   },
   directory: {
     entriesLabel: "Files and folders",
@@ -167,6 +169,15 @@ export const en = {
       grant: "Open Full Disk Access settings",
       hint: "After enabling access, reopen the app.",
     },
+    ntfs: {
+      title: "Read-only NTFS drive",
+      description:
+        "macOS can't write to NTFS without a driver. Install FUSE-T + ntfs-3g to enable writing.",
+      steps: "After installing, reconnect the drive, then re-check.",
+      download: "Get FUSE-T",
+      copyCommand: "Copy install command",
+      recheck: "Re-check",
+    },
   },
   errors: {
     open: (reason: string) => `Could not open file: ${reason}`,
@@ -180,6 +191,7 @@ export const en = {
     copyImage: (reason: string) => `Could not copy image: ${reason}`,
     properties: (reason: string) => `Could not read properties: ${reason}`,
     emptyTrash: (reason: string) => `Could not empty the Trash: ${reason}`,
+    eject: (reason: string) => `Could not eject: ${reason}`,
   },
 };
 

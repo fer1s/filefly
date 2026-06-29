@@ -12,6 +12,9 @@ pub struct Volume {
     total_space: String,
     disk_usage: DiskUsage,
     is_removable: bool,
+    // Lowercased filesystem type (e.g. "ntfs", "apfs", "exfat"). Used to warn about read-only
+    // NTFS on macOS (which has no native write support).
+    file_system: String,
 }
 
 #[derive(serde::Serialize)]
@@ -34,6 +37,34 @@ fn format_disk_usage(available_space: &u64, &total_space: &u64) -> DiskUsage {
 #[tauri::command]
 pub fn get_host_name() -> Option<String> {
     System::host_name()
+}
+
+// Eject/unmount a removable volume by its mount point. macOS only (`diskutil eject`); other
+// platforms report it as unsupported. Runs off the UI thread since it spawns a process.
+#[tauri::command]
+pub async fn eject_volume(mount_point: String) -> Result<(), String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        #[cfg(target_os = "macos")]
+        {
+            let output = std::process::Command::new("diskutil")
+                .arg("eject")
+                .arg(&mount_point)
+                .output()
+                .map_err(|e| e.to_string())?;
+            if output.status.success() {
+                Ok(())
+            } else {
+                Err(String::from_utf8_lossy(&output.stderr).trim().to_string())
+            }
+        }
+        #[cfg(not(target_os = "macos"))]
+        {
+            let _ = &mount_point;
+            Err("Eject is only supported on macOS".to_string())
+        }
+    })
+    .await
+    .map_err(|e| e.to_string())?
 }
 
 #[tauri::command]
@@ -62,6 +93,7 @@ pub fn get_volumes() -> Vec<Volume> {
             total_space: format_bytes(&total_space),
             disk_usage: format_disk_usage(&available_space, &total_space),
             is_removable: disk.is_removable(),
+            file_system: disk.file_system().to_string_lossy().to_lowercase(),
         });
     }
 

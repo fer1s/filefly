@@ -15,6 +15,8 @@ type Volume = {
   totalSpace: string;
   diskUsage: DiskUsage;
   isRemovable: boolean;
+  // Lowercased filesystem type (e.g. "ntfs", "apfs", "exfat").
+  fileSystem: string;
 };
 
 type DirMetadata = {

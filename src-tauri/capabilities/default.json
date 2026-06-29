@@ -18,6 +18,7 @@
     "core:event:default",
     "opener:default",
     "opener:allow-open-path",
+    "opener:allow-open-url",
     "fs:default",
     "fs:allow-watch",
     "fs:allow-unwatch",

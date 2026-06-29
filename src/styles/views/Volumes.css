@@ -31,7 +31,9 @@
   align-items: flex-start;
   justify-content: flex-start;
   gap: var(--space-1);
-  width: 100%;
+  /* Take the row's free space and allow shrinking so the labels can ellipsize, not wrap. */
+  flex: 1;
+  min-width: 0;
 }
 
 .volumes_page .grid .volume_item .volume_info h3 {
@@ -43,15 +45,35 @@
   align-items: center;
   justify-content: flex-start;
   gap: var(--space-2);
+  /* Stay on one line; the children below truncate with an ellipsis instead of wrapping. */
+  max-width: 100%;
 }
 
-.volumes_page .grid .volume_item .volume_info h3 span {
+/* Mount point (muted, secondary): shrinks first and ellipsizes when space runs out. */
+.volumes_page .grid .volume_item .volume_info h3 .volume_mount {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-weight: 400;
   color: var(--color-text-muted);
 }
 
+/* Volume name (bold, primary identity): kept visible, ellipsizes only if itself too long. */
+.volumes_page .grid .volume_item .volume_info h3 .volume_label {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 .volumes_page .grid .volume_item .volume_info p {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: var(--font-size-xs);
   font-weight: 300;
   color: var(--color-text-muted);

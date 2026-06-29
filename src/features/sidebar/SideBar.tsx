@@ -22,7 +22,7 @@ import { SIDEBAR_ITEM_KIND, type SidebarItemKind } from "./constants";
 import { usePinnedFolders } from "./hooks/usePinnedFolders";
 import { usePinnedShortcuts } from "./hooks/usePinnedShortcuts";
 import { useSidebarContextMenu } from "./hooks/useSidebarContextMenu";
-import { useSidebarProperties } from "./hooks/useSidebarProperties";
+import { useEntryProperties } from "@/shared/hooks/useEntryProperties";
 import SidebarSection from "./components/SidebarSection";
 import SidebarContextMenu from "./components/SidebarContextMenu";
 import VolumeItem from "./components/VolumeItem";
@@ -56,13 +56,15 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
   usePinnedShortcuts({ pinned, setPath });
 
   const menu = useSidebarContextMenu();
-  const properties = useSidebarProperties();
+  const properties = useEntryProperties();
 
-  // Open the context menu at the cursor for a given row (path + kind).
+  // Open the context menu at the cursor for a given row (path + kind, plus removable flag for
+  // volumes so Eject can show only for external devices).
   const onRowContextMenu =
-    (itemPath: string, kind: SidebarItemKind) => (e: MouseEvent) => {
+    (itemPath: string, kind: SidebarItemKind, isRemovable?: boolean) =>
+    (e: MouseEvent) => {
       e.preventDefault();
-      menu.openAt(e.clientX, e.clientY, { path: itemPath, kind });
+      menu.openAt(e.clientX, e.clientY, { path: itemPath, kind, isRemovable });
     };
 
   return (
@@ -143,6 +145,7 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
             onContextMenu={onRowContextMenu(
               volume.mountPoint,
               SIDEBAR_ITEM_KIND.VOLUME,
+              volume.isRemovable,
             )}
           />
         ))}

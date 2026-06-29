@@ -15,6 +15,7 @@ import { useKeyboardNav } from "./hooks/useKeyboardNav";
 import { useClipboardShortcuts } from "./hooks/useClipboardShortcuts";
 import { useZoomShortcuts } from "./hooks/useZoomShortcuts";
 import { useContextMenu } from "./hooks/useContextMenu";
+import { useWritability } from "./hooks/useWritability";
 import { useDirectory } from "./providers/DirectoryProvider";
 
 import ListHeader from "./components/ListHeader";
@@ -25,6 +26,7 @@ import StatusBar from "./components/StatusBar";
 import TypeaheadPopup from "./components/TypeaheadPopup";
 import Preview from "./components/Preview";
 import Properties from "./components/Properties";
+import NtfsNotice from "./components/NtfsNotice";
 
 import "@/styles/views/Directory.css";
 
@@ -33,6 +35,9 @@ const Directory = () => {
     useStateContext();
 
   const [typeaheadQuery, setTypeaheadQuery] = useState("");
+
+  // Warn when the current folder is on a read-only NTFS volume (no native write support on macOS).
+  const { isNtfsReadOnly, recheck: recheckWritability } = useWritability();
 
   // Directory domain state (entries, selection, clipboard ops, preview/properties, inline
   // rename) lives in the provider so the QuickBar's quick actions share it.
@@ -171,6 +176,10 @@ const Directory = () => {
         }
       >
         {accessDenied && <AccessDeniedNotice />}
+
+        {!accessDenied && isNtfsReadOnly && (
+          <NtfsNotice recheck={recheckWritability} />
+        )}
 
         {!accessDenied && view === VIEW_MODE.LIST && sorted.length > 0 && (
           <ListHeader

@@ -46,8 +46,23 @@ export class FileSystemManager {
     return api.getRecentFiles();
   }
 
+  // Eject/unmount a removable volume by its mount point.
+  ejectVolume(mountPoint: string): Promise<void> {
+    return api.ejectVolume(mountPoint);
+  }
+
   getEntry(path: string): Promise<DirEntry> {
     return api.getEntry(path);
+  }
+
+  // Probe whether a directory is actually writable (e.g. read-only NTFS detection).
+  canWrite(path: string): Promise<boolean> {
+    return api.canWrite(path);
+  }
+
+  // Open a URL in the default browser.
+  openExternalUrl(url: string): Promise<void> {
+    return api.openExternalUrl(url);
   }
 
   // Watch a directory for external changes; returns a function that stops watching.

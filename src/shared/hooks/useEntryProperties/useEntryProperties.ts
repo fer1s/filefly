@@ -5,10 +5,10 @@ import { notify, TOAST_TYPE } from "@/shared/toast";
 import { t } from "@/lang";
 import type { DirEntry } from "@/shared/models";
 
-// State for the sidebar's Properties dialog. The sidebar lives outside the DirectoryProvider, so
-// it can't reuse the directory's properties state; it resolves the entry fresh via `fs.getEntry`
-// (works for any real path) and drives the shared Properties dialog itself.
-export const useSidebarProperties = () => {
+// Self-contained state for a Properties dialog driven from outside the DirectoryProvider (sidebar,
+// volumes view): resolves the entry fresh via `fs.getEntry` (works for any real path) and drives
+// the shared Properties dialog. Pair with the exported `Properties` component.
+export const useEntryProperties = () => {
   const { fs } = useStateContext();
   const [entry, setEntry] = useState<DirEntry | null>(null);
   const [visible, setVisible] = useState(false);

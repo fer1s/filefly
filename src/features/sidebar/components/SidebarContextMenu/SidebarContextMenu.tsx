@@ -25,18 +25,22 @@ const SidebarContextMenu = ({
   onClose,
   openProperties,
 }: SidebarContextMenuProps) => {
-  const { fs, path, newTab, refreshDir } = useStateContext();
+  const { fs, path, newTab, refreshDir, setVolumes } = useStateContext();
 
   const actionIds = target ? resolveSidebarActions(target.kind) : [];
 
   const ctx: SidebarActionContext | null = target && {
     path: target.path,
     kind: target.kind,
+    isRemovable: target.isRemovable ?? false,
     currentPath: path,
     fs,
     openInNewTab: newTab,
     openProperties,
     refreshDir,
+    refreshVolumes: () => {
+      fs.listVolumes().then(setVolumes);
+    },
     onClose,
   };
 
@@ -48,7 +52,8 @@ const SidebarContextMenu = ({
             return <ContextMenuItem key={`separator-${index}`} isSeparator />;
 
           const action = SIDEBAR_ACTIONS[id as SidebarActionId];
-          if (!action) return null;
+          if (!action || (action.isVisible && !action.isVisible(ctx)))
+            return null;
 
           return (
             <ContextMenuItem

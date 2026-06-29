@@ -524,6 +524,25 @@ pub fn rename_entry(path: String, new_name: String) -> Result<(), String> {
     fs::rename(p, dest).map_err(|e| e.to_string())
 }
 
+// Probe whether `path` (a directory) is actually writable, by creating and immediately deleting a
+// temp file in it. The reliable source of truth for read-only mounts (e.g. NTFS on macOS without a
+// write-capable driver), where the filesystem may report space but reject writes.
+#[tauri::command]
+pub fn can_write(path: String) -> bool {
+    let dir = Path::new(&path);
+    if !dir.is_dir() {
+        return false;
+    }
+    let probe = dir.join(format!(".sfb_write_probe_{}", std::process::id()));
+    match fs::File::create(&probe) {
+        Ok(_) => {
+            let _ = fs::remove_file(&probe);
+            true
+        }
+        Err(_) => false,
+    }
+}
+
 // Move an entry to the system Trash/Recycle Bin (reversible).
 //
 // On macOS the `trash` crate defaults to the Finder method (osascript "tell Finder to delete"),

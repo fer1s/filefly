@@ -6,6 +6,7 @@ export const SIDEBAR_ACTION = {
   OPEN_IN_NEW_TAB: "open_in_new_tab",
   OPEN_IN_TERMINAL: "open_in_terminal",
   EMPTY_TRASH: "empty_trash",
+  EJECT: "eject",
   PROPERTIES: "properties",
 } as const;
 
@@ -28,6 +29,8 @@ export const SIDEBAR_MENU_LAYOUT: Record<SidebarItemKind, readonly string[]> = {
     SIDEBAR_ACTION.OPEN_IN_NEW_TAB,
     SIDEBAR_ACTION.OPEN_IN_TERMINAL,
     ACTION_SEPARATOR,
+    // Eject only renders for removable volumes (see its isVisible predicate).
+    SIDEBAR_ACTION.EJECT,
     SIDEBAR_ACTION.PROPERTIES,
   ],
   // Recents is a virtual listing, not a real folder — only opening it in a tab makes sense.

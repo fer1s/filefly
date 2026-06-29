@@ -1,5 +1,6 @@
 import { invoke, Channel } from "@tauri-apps/api/core";
 import { watchImmediate } from "@tauri-apps/plugin-fs";
+import { openUrl } from "@tauri-apps/plugin-opener";
 
 import { notify, TOAST_TYPE } from "@/shared/toast";
 import { t } from "@/lang";
@@ -82,6 +83,10 @@ export const setFolderZoom = async (
 export const getVolumes = async (): Promise<Volume[]> =>
   await invoke("get_volumes");
 
+// Eject/unmount a removable volume by its mount point (macOS: diskutil eject). Throws on failure.
+export const ejectVolume = async (mountPoint: string): Promise<void> =>
+  await invoke("eject_volume", { mountPoint });
+
 // Read directory invokement method. Rethrows ACCESS_DENIED_ERROR so the UI can prompt for Full
 // Disk Access; any other failure (invalid/missing path) resolves to an empty listing.
 export const readDirectory = async (path: string): Promise<DirEntry[]> => {
@@ -96,6 +101,11 @@ export const readDirectory = async (path: string): Promise<DirEntry[]> => {
 
 export const getEntry = async (path: string): Promise<DirEntry> =>
   await invoke("get_entry", { path });
+
+// Probe whether a directory is actually writable (the truth for read-only mounts like NTFS on
+// macOS without a write driver). Returns false on any failure.
+export const canWrite = async (path: string): Promise<boolean> =>
+  (await invoke("can_write", { path })) as boolean;
 
 // Watch a directory for filesystem changes (e.g. files added/removed/renamed from the terminal).
 // Fires `onChange` on every event; returns a function that stops watching. Non-recursive — only
@@ -188,6 +198,10 @@ export const emptyTrash = async (): Promise<number> =>
 // protected folders like the Trash.
 export const openFullDiskAccessSettings = async (): Promise<void> =>
   await invoke("open_full_disk_access_settings");
+
+// Open a URL in the user's default browser (used by the NTFS driver guidance links).
+export const openExternalUrl = async (url: string): Promise<void> =>
+  await openUrl(url);
 
 // Helper function to invoke methods with a path argument
 const invokeWithPathArg = async (
