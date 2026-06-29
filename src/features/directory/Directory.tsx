@@ -1,4 +1,10 @@
-import { useCallback, useMemo, useRef, useState, type CSSProperties } from "react";
+import {
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
 
 import { useStateContext } from "@/shared/providers/StateProvider";
 import {
