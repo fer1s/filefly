@@ -9,7 +9,7 @@ import { classNames } from "@/shared/utils";
 import { t } from "@/lang";
 
 import { usePathBarShortcuts } from "./hooks/usePathBarShortcuts";
-import PathInput from "./components/PathInput";
+import PathField from "./components/PathField";
 
 import {
   faArrowLeft,
@@ -112,7 +112,7 @@ const PathBar = () => {
       {path === RECENTS ? (
         <div className="path_label shadow">{t.pathbar.recents}</div>
       ) : (
-        <PathInput key={path} path={path} onCommit={setPath} />
+        <PathField key={path} path={path} onCommit={setPath} />
       )}
 
       <IconButton
