@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useStateContext } from "@/shared/providers/StateProvider";
 import {
   ACCEPTED_PREVIEW_FORMATS,
+  RECENTS,
   SORT_DIRECTION,
   SORT_KEY,
   VIEW_MODE,
@@ -19,6 +20,17 @@ const DEFAULT_SORT: Sort = {
   key: SORT_KEY.NAME,
   direction: SORT_DIRECTION.ASC,
 };
+
+// Recents is ordered by most-recently-modified first by default — that's the whole point of the
+// view. Still overridable: a sort the user picks there is persisted and wins on the next visit.
+const RECENTS_DEFAULT_SORT: Sort = {
+  key: SORT_KEY.MODIFIED,
+  direction: SORT_DIRECTION.DESC,
+};
+
+// The fallback sort when a folder has no persisted preference yet.
+const defaultSortFor = (path: string): Sort =>
+  path === RECENTS ? RECENTS_DEFAULT_SORT : DEFAULT_SORT;
 
 // Whether a persisted sort (loaded from the folder config) is a recognised key/direction.
 const isValidSort = (
@@ -46,12 +58,13 @@ export const useDirectoryEntries = (view: ViewMode) => {
   );
 
   // Column sort (driven by the list-view headers), loaded per folder from the config.
-  const [sort, setSort] = useState<Sort>(DEFAULT_SORT);
+  const [sort, setSort] = useState<Sort>(() => defaultSortFor(path));
 
   useEffect(() => {
     let cancelled = false;
     api.getFolderSort(path).then((saved) => {
-      if (!cancelled) setSort(isValidSort(saved) ? saved : DEFAULT_SORT);
+      if (!cancelled)
+        setSort(isValidSort(saved) ? saved : defaultSortFor(path));
     });
     return () => {
       cancelled = true;

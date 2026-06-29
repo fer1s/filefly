@@ -100,7 +100,13 @@ export type UiColor = (typeof UI_COLOR)[keyof typeof UI_COLOR];
 export const MARKDOWN_FORMAT = "md";
 export const MARKDOWN_FORMATS: readonly string[] = ["md", "markdown"];
 export const PDF_FORMAT = "pdf";
-export const IMAGE_FORMATS: readonly string[] = ["png", "jpg", "jpeg", "webp"];
+export const IMAGE_FORMATS: readonly string[] = [
+  "png",
+  "jpg",
+  "jpeg",
+  "webp",
+  "gif",
+];
 export const AUDIO_FORMATS: readonly string[] = ["mp3", "wav", "ogg"];
 export const VIDEO_FORMATS: readonly string[] = [
   "mp4",

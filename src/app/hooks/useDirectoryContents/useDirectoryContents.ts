@@ -142,12 +142,19 @@ export const useDirectoryContents = ({
       return;
     }
 
+    // Guard against a stale load resolving after we've already navigated away: e.g. leaving the
+    // Trash (slow, ends denied) for Recents would otherwise leave the access-denied notice up.
+    let cancelled = false;
     loadDirectory(path).then(({ files, denied }) => {
+      if (cancelled) return;
       setDirContent(files);
       setAccessDenied(denied);
       if (locationPathname !== ROUTES.directory && path !== "")
         navigate(ROUTES.directory);
     });
+    return () => {
+      cancelled = true;
+    };
   }, [loadDirectory, locationPathname, navigate, path]);
 
   return {
