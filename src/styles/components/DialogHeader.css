@@ -1,0 +1,15 @@
+/* macOS: close dot on the left, title centred (macOS app style). The two 1fr side columns are
+   equal, so the auto-width title in the middle stays centred regardless of the dot's width. */
+.panel_header.mac {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+}
+
+.panel_header.mac .mac_close {
+  justify-self: start;
+}
+
+.panel_header.mac h4 {
+  text-align: center;
+}

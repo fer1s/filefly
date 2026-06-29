@@ -1,0 +1,41 @@
+.properties_modal {
+  width: var(--size-properties-width);
+  max-width: calc(100% - var(--space-10));
+}
+
+/* Shared by the Properties dialog and the info side panel. */
+.properties_content {
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2-5);
+}
+
+.properties_content .row {
+  display: flex;
+  gap: var(--space-4);
+  align-items: baseline;
+}
+
+.properties_content .row .label {
+  flex: 0 0 var(--space-20);
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  color: var(--color-text-high);
+  white-space: nowrap;
+  -webkit-user-select: text;
+  user-select: text;
+  cursor: text;
+}
+
+.properties_content .row .value {
+  flex: 1;
+  font-size: var(--font-size-md);
+  font-weight: 400;
+  color: var(--color-text-dim);
+  text-align: right;
+  word-break: break-word;
+  -webkit-user-select: text;
+  user-select: text;
+  cursor: text;
+}

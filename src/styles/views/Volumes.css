@@ -1,0 +1,207 @@
+.volumes_page {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.volumes_page .grid .volume_item {
+  width: var(--size-volume-card-width);
+  height: var(--size-volume-card-height);
+  background-color: var(--color-surface-row);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  border: var(--border-width-default) solid var(--color-border-default);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--space-2-5);
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.volumes_page .grid .volume_item svg {
+  font-size: var(--font-size-2xl);
+  color: var(--color-text-muted);
+}
+
+.volumes_page .grid .volume_item .volume_info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: var(--space-1);
+  /* Take the row's free space and allow shrinking so the labels can ellipsize, not wrap. */
+  flex: 1;
+  min-width: 0;
+}
+
+.volumes_page .grid .volume_item .volume_info h3 {
+  font-size: var(--font-size-base);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--space-2);
+  /* Stay on one line; the children below truncate with an ellipsis instead of wrapping. */
+  max-width: 100%;
+}
+
+/* Mount point (muted, secondary): shrinks first and ellipsizes when space runs out. */
+.volumes_page .grid .volume_item .volume_info h3 .volume_mount {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+
+/* Volume name (bold, primary identity): kept visible, ellipsizes only if itself too long. */
+.volumes_page .grid .volume_item .volume_info h3 .volume_label {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.volumes_page .grid .volume_item .volume_info p {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--font-size-xs);
+  font-weight: 300;
+  color: var(--color-text-muted);
+}
+
+.volumes_page .grid .volume_item:hover {
+  background-color: var(--color-surface-interactive);
+  border: var(--border-width-default) solid var(--color-border-strong);
+}
+
+.volumes_page .grid .volume_item.selected {
+  background-color: var(--color-selection-background);
+  border: var(--border-width-default) solid var(--color-selection-border);
+}
+
+.volumes_page .volumes_list_wrapper {
+  width: 100%;
+  overflow-x: auto;
+  border: var(--border-width-default) solid var(--color-border-default);
+  border-radius: var(--radius-sm);
+}
+
+.volumes_page .volumes_list {
+  width: 100%;
+  min-width: var(--size-volume-table-min-width);
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.volumes_page .volumes_list th {
+  padding: var(--space-2) var(--space-2-5);
+  background-color: var(--color-overlay-faint);
+  border-bottom: var(--border-width-default) solid var(--color-border-default);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  text-align: left;
+  user-select: none;
+}
+
+.volumes_page .volumes_list th:first-child {
+  width: 28%;
+}
+
+.volumes_page .volumes_list th:nth-child(2) {
+  width: 14%;
+}
+
+.volumes_page .volumes_list th:nth-child(3) {
+  width: 12%;
+}
+
+.volumes_page .volumes_list .volume_item {
+  cursor: pointer;
+  transition: background-color 0.15s ease-in-out;
+}
+
+.volumes_page .volumes_list .volume_item:nth-child(even) {
+  background-color: var(--color-surface-row);
+}
+
+.volumes_page .volumes_list .volume_item:hover {
+  background-color: var(--color-overlay-hover);
+}
+
+.volumes_page .volumes_list .volume_item.selected {
+  background-color: var(--color-selection-background);
+  box-shadow: inset var(--border-width-accent) 0 0
+    var(--color-selection-indicator);
+}
+
+.volumes_page .volumes_list td {
+  height: var(--size-volume-row-height);
+  padding: var(--space-2) var(--space-2-5);
+  border-bottom: var(--border-width-default) solid var(--color-border-faint);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  font-weight: 400;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.volumes_page .volumes_list tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.volumes_page .volumes_list .volume_identity,
+.volumes_page .volumes_list .volume_usage {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.volumes_page .volumes_list .volume_identity svg {
+  flex: 0 0 auto;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-lg);
+}
+
+.volumes_page .volumes_list .volume_summary {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.volumes_page .volumes_list .volume_name {
+  overflow: hidden;
+  color: var(--color-text-primary);
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.volumes_page .volumes_list .mount_point {
+  color: var(--color-text-muted);
+}
+
+/* Base bar styling lives in UsageBar.css; the list caps the width. */
+.volumes_page .volumes_list .volume_usage .usage {
+  width: min(100%, var(--size-volume-usage-max-width));
+}
+
+.volumes_page .volumes_list .volume_usage span {
+  min-width: var(--size-control-large);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  text-align: right;
+}

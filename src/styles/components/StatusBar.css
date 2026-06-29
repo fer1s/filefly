@@ -1,0 +1,43 @@
+.directory_page .status_bar {
+  flex-shrink: 0;
+  display: flex;
+  gap: var(--space-4);
+  padding: var(--space-1-5) var(--space-2);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  background-color: var(--color-background-app);
+  border-top: var(--border-width-default) solid var(--color-border-soft);
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.directory_page .status_bar .selected {
+  color: var(--color-text-secondary);
+}
+
+/* Right-aligned progress indicators (computing sizes, loading previews). With two present, the
+   first absorbs the free space and both sit together on the right. */
+.directory_page .status_bar .busy {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--color-text-secondary);
+}
+
+/* Item-level progress bar for copy / move / delete batches. */
+.directory_page .status_bar .progress .progress_track {
+  width: var(--space-20);
+  height: var(--size-progress-track);
+  border-radius: var(--radius-pill);
+  background-color: var(--color-progress-track);
+  overflow: hidden;
+}
+
+.directory_page .status_bar .progress .progress_bar {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background-color: var(--color-progress-fill);
+  transition: width 0.2s ease-in-out;
+}

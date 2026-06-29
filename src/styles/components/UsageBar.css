@@ -1,0 +1,15 @@
+/* Shared disk-usage bar (emitted by the UsageBar component). Width can be overridden per context
+   (e.g. narrower in the sidebar, capped in the volumes table). */
+.usage {
+  width: 100%;
+  height: var(--size-progress-track);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-progress-track);
+  overflow: hidden;
+}
+
+.usage_bar {
+  height: 100%;
+  border-radius: var(--space-0) var(--radius-sm) var(--radius-sm) var(--space-0);
+  background-color: var(--color-progress-fill);
+}

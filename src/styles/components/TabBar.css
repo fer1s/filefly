@@ -1,0 +1,72 @@
+.TabBar {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1-5);
+  margin-bottom: var(--space-4);
+}
+
+/* The scrollable strip of tabs; the "new tab" button stays pinned beside it. */
+.TabBar .tab_strip {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.TabBar .tab_strip::-webkit-scrollbar {
+  display: none;
+}
+
+.TabBar .TabItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1-5);
+  height: var(--size-tab-height);
+  min-width: var(--size-tab-min-width);
+  max-width: var(--size-tab-max-width);
+  padding: var(--space-0) var(--space-2-5);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface-row);
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.TabBar .TabItem:hover {
+  background-color: var(--color-overlay-hover);
+}
+
+/* The active tab reads as selected: brighter surface and full-strength text. */
+.TabBar .TabItem.active {
+  background-color: var(--color-overlay-active);
+  color: var(--color-text-primary);
+}
+
+.TabBar .TabItem .tab_label {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--font-size-tab);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Keep the close button reserving its slot only when present; it fades in on hover/active. */
+.TabBar .TabItem .tab_close {
+  opacity: 0;
+  flex-shrink: 0;
+}
+
+.TabBar .TabItem:hover .tab_close,
+.TabBar .TabItem.active .tab_close {
+  opacity: 1;
+}
+
+.TabBar .tab_new {
+  flex-shrink: 0;
+}

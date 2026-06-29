@@ -1,0 +1,168 @@
+# Default keybindings. Each table is an action; `keys` are KeyboardEvent.key values, `mod`
+# means Cmd (macOS) / Ctrl (Windows/Linux). This file is the source of truth loaded at startup.
+#
+# Per-OS overrides: add a `[action.macos]` / `[action.windows]` / `[action.linux]` sub-table
+# to fully replace the base binding on that platform, e.g.
+#   [new_window]
+#   keys = ["n"]
+#   mod = true
+#   [new_window.macos]
+#   keys = ["e"]
+#   mod = true
+
+[copy]
+keys = ["c"]
+mod = true
+
+[cut]
+keys = ["x"]
+mod = true
+
+[paste]
+keys = ["v"]
+mod = true
+
+[trash]
+keys = ["Backspace", "Delete"]
+mod = true
+
+# Permanently delete the selection, bypassing the Trash (irreversible).
+[delete_permanently]
+keys = ["Backspace", "Delete"]
+shift = true
+
+[select_all]
+keys = ["a"]
+mod = true
+
+[rename]
+keys = ["F2"]
+
+[new_folder]
+keys = ["n"]
+mod = true
+
+[nav_back]
+keys = ["ArrowLeft"]
+alt = true
+
+[nav_forward]
+keys = ["ArrowRight"]
+alt = true
+
+[nav_up]
+keys = ["ArrowUp"]
+alt = true
+
+[toggle_view]
+keys = ["g"]
+mod = true
+shift = true
+
+[toggle_hidden]
+keys = ["."]
+mod = true
+shift = true
+
+# Zoom the directory view. "=" matches Cmd/Ctrl + the (unshifted) plus key; "+" matches the
+# numpad plus. The "+" listed first is what the UI shows as the glyph.
+[zoom_in]
+keys = ["+", "="]
+mod = true
+
+[zoom_out]
+keys = ["-"]
+mod = true
+
+# Jump to a pinned folder by its position in the sidebar (1 = first). alt = Option.
+[pinned_1]
+keys = ["1"]
+alt = true
+
+[pinned_2]
+keys = ["2"]
+alt = true
+
+[pinned_3]
+keys = ["3"]
+alt = true
+
+[pinned_4]
+keys = ["4"]
+alt = true
+
+[pinned_5]
+keys = ["5"]
+alt = true
+
+[pinned_6]
+keys = ["6"]
+alt = true
+
+[preview_prev]
+keys = ["ArrowLeft"]
+
+[preview_next]
+keys = ["ArrowRight"]
+
+# Tabs. mod = Cmd / Ctrl. Next/prev cycle uses mod+alt+arrows to avoid clashing with the
+# alt+arrow history navigation.
+[new_tab]
+keys = ["t"]
+mod = true
+
+[close_tab]
+keys = ["w"]
+mod = true
+
+[next_tab]
+keys = ["ArrowRight"]
+mod = true
+alt = true
+
+[prev_tab]
+keys = ["ArrowLeft"]
+mod = true
+alt = true
+
+# Jump to a tab by position (1 = first). mod = Cmd / Ctrl.
+[tab_1]
+keys = ["1"]
+mod = true
+
+[tab_2]
+keys = ["2"]
+mod = true
+
+[tab_3]
+keys = ["3"]
+mod = true
+
+[tab_4]
+keys = ["4"]
+mod = true
+
+[tab_5]
+keys = ["5"]
+mod = true
+
+[tab_6]
+keys = ["6"]
+mod = true
+
+[tab_7]
+keys = ["7"]
+mod = true
+
+[tab_8]
+keys = ["8"]
+mod = true
+
+[tab_9]
+keys = ["9"]
+mod = true
+
+# Open settings. Matches VS Code's Cmd/Ctrl + comma.
+[open_settings]
+keys = [","]
+mod = true

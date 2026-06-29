@@ -1,0 +1,274 @@
+import { useCallback, useRef, useState, type CSSProperties } from "react";
+
+import { useStateContext } from "@/shared/providers/StateProvider";
+import { ENTRY_KIND, VIEW_MODE, TRASH_DIR_NAME } from "@/shared/constants";
+import { classNames } from "@/shared/utils";
+import { notify, TOAST_TYPE } from "@/shared/toast";
+import { t } from "@/lang";
+import { DirEntry } from "@/shared/models";
+
+import { COLUMN_KEYS, buildListGrid } from "./columns";
+import { useColumnVisibility } from "./hooks/useColumnVisibility";
+import { useFolderView } from "./hooks/useFolderView";
+import { useMarqueeSelection } from "./hooks/useMarqueeSelection";
+import { useKeyboardNav } from "./hooks/useKeyboardNav";
+import { useClipboardShortcuts } from "./hooks/useClipboardShortcuts";
+import { useZoomShortcuts } from "./hooks/useZoomShortcuts";
+import { useContextMenu } from "./hooks/useContextMenu";
+import { useWritability } from "./hooks/useWritability";
+import { useDirectory } from "./providers/DirectoryProvider";
+
+import ListHeader from "./components/ListHeader";
+import EntriesView from "./components/EntriesView";
+import AccessDeniedNotice from "./components/AccessDeniedNotice";
+import EntryContextMenu from "./components/EntryContextMenu";
+import StatusBar from "./components/StatusBar";
+import TypeaheadPopup from "./components/TypeaheadPopup";
+import Preview from "./components/Preview";
+import Properties from "./components/Properties";
+import NtfsNotice from "./components/NtfsNotice";
+
+import "@/styles/views/Directory.css";
+
+const Directory = () => {
+  const {
+    fs,
+    path,
+    setPath,
+    view,
+    search,
+    accessDenied,
+    zoom,
+    savingSettings,
+  } = useStateContext();
+
+  const [typeaheadQuery, setTypeaheadQuery] = useState("");
+
+  // Warn when the current folder is on a read-only NTFS volume (no native write support on macOS).
+  const { isNtfsReadOnly, recheck: recheckWritability } = useWritability();
+
+  // Directory domain state (entries, selection, clipboard ops, preview/properties, inline
+  // rename) lives in the provider so the QuickBar's quick actions share it.
+  const {
+    filtered,
+    sorted,
+    sort,
+    handleSort,
+    computingSizes,
+    selectedIDs,
+    setSelectedIDs,
+    handleSelect,
+    renamingID,
+    setRenamingID,
+    fileOps,
+    preview,
+    properties,
+  } = useDirectory();
+
+  // Rubber-band selection over the empty floor of the directory.
+  const directoryRef = useRef<HTMLDivElement>(null);
+  const { marquee, onMouseDown: onMarqueeMouseDown } = useMarqueeSelection({
+    containerRef: directoryRef,
+    setSelectedIDs,
+  });
+
+  useFolderView(path);
+
+  const { visible: visibleColumns, toggle: toggleColumn } =
+    useColumnVisibility(path);
+  const hiddenColumns = COLUMN_KEYS.filter(
+    (key) => !visibleColumns.includes(key),
+  );
+
+  const menu = useContextMenu();
+  const isCurrentDirectory =
+    menu.elementType === ENTRY_KIND.DIRECTORY && menu.elementID === path;
+  // Browsing the system Trash (~/.Trash): entries offer Restore instead of Move-to-Trash.
+  const inTrash = path.endsWith(`/${TRASH_DIR_NAME}`);
+
+  const handleKeyboardOpen = useCallback(
+    (entry: DirEntry) =>
+      entry.metadata.isDir ? setPath(entry.path) : fs.open(entry.path),
+    [fs, setPath],
+  );
+
+  const handleCancelRename = useCallback(
+    () => setRenamingID(""),
+    [setRenamingID],
+  );
+
+  // Create a folder in the current directory and start renaming it inline.
+  const handleNewFolder = useCallback(async () => {
+    try {
+      const created = await fs.createFolder(path);
+      setRenamingID(created);
+    } catch (err) {
+      notify(t.errors.createFolder(String(err)), TOAST_TYPE.ERROR);
+    }
+  }, [fs, path, setRenamingID]);
+
+  useKeyboardNav({
+    items: sorted,
+    view,
+    enabled: !preview.visible && !properties.visible,
+    selectedIDs,
+    setSelectedIDs,
+    onOpen: handleKeyboardOpen,
+    onTypeaheadChange: setTypeaheadQuery,
+  });
+
+  useClipboardShortcuts({
+    // Disabled while the Properties popup is open so Cmd/Ctrl+C copies the selected text
+    // instead of triggering the file-copy shortcut.
+    enabled: !preview.visible && !properties.visible,
+    selectedIDs,
+    onCopy: fileOps.copy,
+    onCut: fileOps.cut,
+    onPaste: fileOps.paste,
+    onDelete: fileOps.remove,
+    onDeletePermanently: fileOps.removePermanently,
+    // Rename only makes sense for a single entry.
+    onRename: (ids) => {
+      if (ids.length === 1) setRenamingID(ids[0]);
+    },
+    onNewFolder: handleNewFolder,
+    onSelectAll: () => setSelectedIDs(sorted.map((entry) => entry.path)),
+  });
+
+  useZoomShortcuts(!preview.visible && !properties.visible);
+
+  // The empty floor of the entries area represents the directory currently being viewed.
+  // Restrict the menu to that area: not the list header, the status bar, or an entry row.
+  const handleEmptyContextMenu = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (!target.closest(".directory_content")) return;
+    if (target.closest(".list_header")) return;
+    if (target.closest(".dir_entry_item")) return;
+    e.preventDefault();
+    setSelectedIDs([]);
+    menu.openAt(e.clientX, e.clientY, path, ENTRY_KIND.DIRECTORY);
+  };
+
+  return (
+    <div
+      className="directory_page"
+      ref={directoryRef}
+      onMouseDown={onMarqueeMouseDown}
+      onClick={(e) => {
+        const el = e.target as HTMLElement;
+        if (el.closest(".directory_content") && !el.closest(".dir_entry_item"))
+          setSelectedIDs([]);
+      }}
+      onContextMenu={handleEmptyContextMenu}
+    >
+      {marquee && (
+        <div
+          className="marquee_box"
+          style={{
+            left: marquee.left,
+            top: marquee.top,
+            width: marquee.width,
+            height: marquee.height,
+          }}
+        />
+      )}
+
+      <div
+        className={classNames(
+          "directory_content",
+          ...hiddenColumns.map((key) => `hide_col_${key}`),
+        )}
+        style={
+          {
+            "--list-grid": buildListGrid(visibleColumns),
+            "--zoom": zoom,
+          } as CSSProperties
+        }
+      >
+        {accessDenied && <AccessDeniedNotice />}
+
+        {!accessDenied && isNtfsReadOnly && (
+          <NtfsNotice recheck={recheckWritability} />
+        )}
+
+        {!accessDenied && view === VIEW_MODE.LIST && sorted.length > 0 && (
+          <ListHeader
+            key="list-header"
+            sort={sort}
+            onSort={handleSort}
+            visibleColumns={visibleColumns}
+            onToggleColumn={toggleColumn}
+          />
+        )}
+
+        {!accessDenied && (
+          <EntriesView
+            key={path}
+            entries={sorted}
+            view={view}
+            selectedIDs={selectedIDs}
+            renamingID={renamingID}
+            contextMenuRef={menu.ref}
+            onSelect={handleSelect}
+            onRename={fileOps.rename}
+            onCancelRename={handleCancelRename}
+            menu={{
+              setVisible: menu.setVisible,
+              setId: menu.setElementID,
+              setType: menu.setElementType,
+            }}
+          />
+        )}
+
+        {!accessDenied && search && filtered.length === 0 && (
+          <p className="no_results">{t.directory.noResults(search)}</p>
+        )}
+      </div>
+
+      <StatusBar
+        total={filtered.length}
+        selected={selectedIDs.length}
+        computingSizes={computingSizes}
+        savingSettings={savingSettings}
+        progress={fileOps.progress}
+      />
+
+      <EntryContextMenu
+        contextMenuRef={menu.ref}
+        visible={menu.visible}
+        onClose={() => menu.setVisible(false)}
+        elementId={menu.elementID}
+        elementType={menu.elementType}
+        isCurrentDirectory={isCurrentDirectory}
+        inTrash={inTrash}
+        selectedIDs={selectedIDs}
+        canPaste={!!fileOps.clipboard}
+        fileOps={fileOps}
+        onStartRename={setRenamingID}
+        onPreview={preview.open}
+        onProperties={properties.open}
+      />
+
+      <TypeaheadPopup query={typeaheadQuery} />
+
+      <Preview
+        fileType={preview.fileType}
+        filePath={preview.filePath}
+        previewVisible={preview.visible}
+        setPreviewVisible={preview.setVisible}
+        onPrev={preview.prev}
+        onNext={preview.next}
+        hasPrev={preview.hasPrev}
+        hasNext={preview.hasNext}
+      />
+
+      <Properties
+        entry={properties.entry}
+        visible={properties.visible}
+        onClose={properties.close}
+      />
+    </div>
+  );
+};
+
+export default Directory;

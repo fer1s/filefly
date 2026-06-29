@@ -1,0 +1,46 @@
+.dialog_backdrop {
+  position: fixed;
+  inset: var(--space-0);
+  z-index: 1500;
+  background-color: var(--color-surface-backdrop);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 0.2s ease-in-out,
+    visibility 0s linear 0.2s;
+}
+
+.dialog_backdrop.visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition-delay: 0s;
+}
+
+.dialog {
+  position: fixed;
+  z-index: 1501;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.9);
+  background-color: var(--color-surface-modal);
+  backdrop-filter: blur(var(--blur-medium));
+  border-radius: var(--radius-md);
+  border: var(--border-width-default) solid var(--color-border-default);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 0.2s ease-in-out,
+    transform 0.2s ease-in-out,
+    visibility 0s linear 0.2s;
+}
+
+.dialog.visible {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition-delay: 0s;
+}

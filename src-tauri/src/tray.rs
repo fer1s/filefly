@@ -1,18 +1,47 @@
-use tauri::SystemTray;
-use tauri::{CustomMenuItem, SystemTrayMenu, SystemTrayMenuItem};
+use tauri::menu::{Menu, MenuItem, PredefinedMenuItem};
+use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
+use tauri::{AppHandle, Manager, Runtime};
 
-pub fn create_tray() -> SystemTray {
-    let mut tray_menu = SystemTrayMenu::new();
+pub fn create_tray<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
+    let center_window = MenuItem::with_id(app, "center_window", "Center Window", true, None::<&str>)?;
+    let hide = MenuItem::with_id(app, "hide", "Hide", true, None::<&str>)?;
+    let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
+    let separator = PredefinedMenuItem::separator(app)?;
 
-    let quit = CustomMenuItem::new("quit".to_string(), "Quit");
-    let hide = CustomMenuItem::new("hide".to_string(), "Hide");
-    let center_window = CustomMenuItem::new("center_window".to_string(), "Center Window");
+    let menu = Menu::with_items(app, &[&center_window, &hide, &separator, &quit])?;
 
-    tray_menu = tray_menu
-        .add_item(center_window)
-        .add_item(hide)
-        .add_native_item(SystemTrayMenuItem::Separator)
-        .add_item(quit);
+    TrayIconBuilder::new()
+        .icon(app.default_window_icon().unwrap().clone())
+        .icon_as_template(true)
+        .menu(&menu)
+        .on_menu_event(|app, event| match event.id.as_ref() {
+            "quit" => app.exit(0),
+            "hide" => {
+                if let Some(window) = app.get_webview_window("main") {
+                    let _ = window.hide();
+                }
+            }
+            "center_window" => {
+                if let Some(window) = app.get_webview_window("main") {
+                    let _ = window.center();
+                }
+            }
+            _ => {}
+        })
+        .on_tray_icon_event(|tray, event| {
+            if let TrayIconEvent::Click {
+                button: MouseButton::Left,
+                button_state: MouseButtonState::Up,
+                ..
+            } = event
+            {
+                let app = tray.app_handle();
+                if let Some(window) = app.get_webview_window("main") {
+                    let _ = window.show();
+                }
+            }
+        })
+        .build(app)?;
 
-    SystemTray::new().with_menu(tray_menu)
+    Ok(())
 }

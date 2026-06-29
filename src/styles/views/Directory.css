@@ -1,0 +1,511 @@
+.directory_page {
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Scrollable entry area; the status bar stays pinned below it. */
+.directory_page .directory_content {
+  /* Shared column template so the list header and its rows stay aligned. */
+  --list-grid: minmax(0, 2.2fr) minmax(110px, 1.4fr) minmax(110px, 1.4fr) 90px
+    100px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* Empty gutters around the entries (no padding-top so the sticky list header stays
+     flush). These bands give the rubber-band selection somewhere to start on every side,
+     not just the floor below the entries. Header and rows inset together, so list columns
+     stay aligned. */
+  padding: 0 var(--space-2-5) var(--space-2-5);
+}
+
+/* Hidden columns (toggled from the list header context menu). The cell stays in the DOM but is
+   removed from the grid flow, so the dynamic --list-grid (set inline with one track per visible
+   column) keeps the header and rows aligned. Name is never hideable. */
+.directory_content.hide_col_modified .list_header .modified,
+.directory_content.hide_col_modified .list .date_modified {
+  display: none;
+}
+
+.directory_content.hide_col_created .list_header .created,
+.directory_content.hide_col_created .list .date_created {
+  display: none;
+}
+
+.directory_content.hide_col_size .list_header .size,
+.directory_content.hide_col_size .list .size {
+  display: none;
+}
+
+.directory_content.hide_col_kind .list_header .kind,
+.directory_content.hide_col_kind .list .kind {
+  display: none;
+}
+
+/* While rubber-band selecting, entries ignore the pointer so their hover tooltip doesn't
+   pop up mid-drag. The marquee hit-test uses geometry (getBoundingClientRect), not events,
+   so selection still works. */
+body.is-marqueeing .directory_page .dir_entry_item {
+  pointer-events: none;
+}
+
+.directory_page .marquee_box {
+  position: absolute;
+  z-index: 999;
+  pointer-events: none;
+  background-color: var(--color-selection-background);
+  border: var(--border-width-default) solid var(--color-selection-border);
+  border-radius: var(--radius-xs);
+}
+
+/* Hidden entries (dotfiles) are dimmed to distinguish them from regular files. */
+.directory_page .dir_entry_item.hidden {
+  opacity: var(--opacity-hidden-entry);
+}
+
+/* Entries are not text-selectable, and their icons/images are not draggable
+   (WebKit honours only the -webkit- prefixed properties). */
+.directory_page .dir_entry_item,
+.directory_page .dir_entry_item img,
+.directory_page .dir_entry_item svg {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.directory_page .rename_input {
+  width: 100%;
+  min-width: 0;
+  padding: var(--space-0-5) var(--space-1);
+  background-color: var(--color-surface-backdrop);
+  border: var(--border-width-default) solid var(--color-selection-focus);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-primary);
+  font-family: "Inter", sans-serif;
+  font-size: var(--font-size-sm);
+  font-weight: 400;
+  text-align: center;
+  outline: none;
+}
+
+.directory_page .list .dir_entry_item .name .rename_input {
+  font-size: var(--font-size-base);
+  text-align: left;
+}
+
+.directory_page .no_results {
+  margin-top: var(--space-5);
+  font-size: var(--font-size-base);
+  font-weight: 400;
+  color: var(--color-text-muted);
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Top gutter so the rubber-band can start above the first row too (sides/bottom come from
+   .directory_content's padding). */
+.directory_page .grid {
+  padding-top: var(--space-2-5);
+}
+
+/* Invisible marker at the end of the rendered slice; when it nears the viewport the next batch
+   of entries mounts. Full-width so it sits on its own row in the wrapping grid. */
+.directory_page .entries_sentinel {
+  width: 100%;
+  height: var(--border-width-default);
+  pointer-events: none;
+}
+
+.directory_page .grid .dir_entry_item {
+  /* Zoom scales the tile (and thus the icon), but not the label/badge fonts. */
+  width: calc(var(--size-directory-tile) * var(--zoom, 1));
+  height: calc(var(--size-directory-tile) * var(--zoom, 1));
+  cursor: pointer;
+  background-color: transparent;
+  border-radius: var(--radius-sm);
+  border: var(--border-width-default) solid transparent;
+  position: relative;
+  /* Only animate hover colors; geometry must change instantly on grid/list switch. */
+  transition:
+    background-color 0.1s ease-in-out,
+    border-color 0.1s ease-in-out;
+}
+
+.directory_page .grid .dir_entry_item .extension {
+  position: absolute;
+  top: var(--space-0);
+  right: var(--space-0);
+  z-index: 998;
+  font-size: var(--font-size-xs);
+  font-weight: 400;
+  -webkit-user-select: none;
+  user-select: none;
+  margin: var(--space-1);
+  background-color: var(--color-surface-solid);
+  padding: var(--space-0-5) var(--space-1);
+  border-radius: var(--radius-sm);
+}
+
+/* Dissolve the .name wrapper so its icon and label position within the tile. */
+.directory_page .grid .dir_entry_item .name {
+  display: contents;
+}
+
+.directory_page .grid .dir_entry_item .icon {
+  position: absolute;
+  top: 38%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 55%;
+  height: 55%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.directory_page .grid .dir_entry_item .icon svg {
+  font-size: calc(var(--font-size-3xl) * var(--zoom, 1));
+  color: var(--color-text-muted);
+}
+
+.directory_page .grid .dir_entry_item .icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: var(--radius-xs);
+}
+
+.directory_page .grid .dir_entry_item .name h3 {
+  position: absolute;
+  bottom: var(--space-1);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  text-align: center;
+  font-size: var(--font-size-sm);
+  font-weight: 400;
+  color: var(--color-text-subtle);
+  -webkit-user-select: none;
+  user-select: none;
+  max-width: 100%;
+  padding-inline: var(--space-1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.directory_page .grid .dir_entry_item .name .rename_input {
+  position: absolute;
+  bottom: var(--space-1);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 86%;
+}
+
+/* List-only columns are hidden in the grid. */
+.directory_page .grid .dir_entry_item .date_modified,
+.directory_page .grid .dir_entry_item .date_created,
+.directory_page .grid .dir_entry_item .size,
+.directory_page .grid .dir_entry_item .kind {
+  display: none;
+}
+
+.directory_page .grid .dir_entry_item:hover {
+  background-color: var(--color-overlay-hover);
+  border: var(--border-width-default) solid var(--color-border-default);
+}
+
+.directory_page .grid .dir_entry_item:hover .icon svg,
+.directory_page .grid .dir_entry_item:hover .name h3 {
+  color: var(--color-text-secondary);
+}
+
+.directory_page .dir_entry_item:focus {
+  outline: none;
+}
+
+.directory_page .grid .dir_entry_item.selected {
+  background-color: var(--color-selection-background);
+  border: var(--border-width-default) solid var(--color-selection-border);
+}
+
+.directory_page .grid .dir_entry_item.selected .icon svg,
+.directory_page .grid .dir_entry_item.selected .name h3 {
+  color: var(--color-text-primary);
+}
+
+.directory_page .list {
+  /* Top gutter below the sticky header so the rubber-band can start there. */
+  padding-top: var(--space-2-5);
+  padding-bottom: var(--space-2-5);
+}
+
+/* Sticky column-header row above the entries. */
+.directory_page .list_header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: var(--list-grid);
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1-5) var(--space-2-5);
+  background-color: var(--color-surface-backdrop);
+  backdrop-filter: blur(var(--blur-medium));
+  border-bottom: var(--border-width-default) solid var(--color-border-default);
+}
+
+.directory_page .list_header button {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  /* Text columns align left; numeric columns (Size) align right — see override below. */
+  justify-content: flex-start;
+  gap: var(--space-1);
+  min-width: 0;
+  padding: var(--space-0-5) var(--space-1);
+  margin: var(--space-0);
+  border: none;
+  border-radius: var(--radius-xs);
+  background-color: transparent;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+/* Short vertical divider between columns (centered in the grid gap), Finder-style. */
+.directory_page .list_header button:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  right: calc(var(--space-2) / -2);
+  top: 20%;
+  bottom: 20%;
+  width: var(--border-width-default);
+  background-color: var(--color-border-default);
+}
+
+.directory_page .list_header button span {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-text-tertiary);
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.directory_page .list_header button svg {
+  font-size: var(--font-size-2xs);
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
+}
+
+.directory_page .list_header button:hover {
+  background-color: var(--color-overlay-hover);
+}
+
+.directory_page .list_header button:hover span,
+.directory_page .list_header button.active span {
+  color: var(--color-text-secondary);
+}
+
+.directory_page .list .dir_entry_item {
+  width: 100%;
+  /* Row grows with the icon zoom so the larger icon fits; column text stays the same size. */
+  height: calc(var(--size-directory-row) * var(--zoom, 1));
+  display: grid;
+  grid-template-columns: var(--list-grid);
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-0) var(--space-2-5);
+  cursor: pointer;
+  /* Only animate hover colors; geometry must change instantly on grid/list switch. */
+  transition:
+    background-color 0.1s ease-in-out,
+    border-color 0.1s ease-in-out;
+}
+
+/* Grid-only extension badge is hidden in the list (the Kind column shows it). */
+.directory_page .list .dir_entry_item .extension {
+  display: none;
+}
+
+.directory_page .list .dir_entry_item .icon {
+  width: calc(var(--size-control-large) * var(--zoom, 1));
+  height: calc(var(--size-control-large) * var(--zoom, 1));
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.directory_page .list .dir_entry_item .icon svg {
+  font-size: calc(var(--font-size-lg) * var(--zoom, 1));
+  color: var(--color-text-muted);
+}
+
+.directory_page .list .dir_entry_item .icon img {
+  height: 80%;
+  width: 80%;
+  object-fit: contain;
+}
+
+.directory_page .list .dir_entry_item .name {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.directory_page .list .dir_entry_item .name h3 {
+  -webkit-user-select: none;
+  user-select: none;
+  font-size: var(--font-size-base);
+  font-weight: 400;
+  color: var(--color-text-secondary);
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.directory_page .list .dir_entry_item .date_modified,
+.directory_page .list .dir_entry_item .date_created {
+  min-width: 0;
+  text-align: left;
+}
+
+.directory_page .list .dir_entry_item .date_modified h3,
+.directory_page .list .dir_entry_item .date_created h3 {
+  font-size: var(--font-size-sm);
+  font-weight: 400;
+  color: var(--color-text-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.directory_page .list .dir_entry_item .size {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.directory_page .list .dir_entry_item .size h3 {
+  font-size: var(--font-size-xs);
+  font-weight: 400;
+  color: var(--color-text-tertiary);
+  background-color: var(--color-surface-popover);
+  backdrop-filter: blur(var(--blur-large));
+  border-radius: var(--radius-sm);
+  padding: var(--space-1);
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.directory_page .list .dir_entry_item .kind {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  min-width: 0;
+}
+
+.directory_page .list .dir_entry_item .kind h3 {
+  font-size: var(--font-size-sm);
+  font-weight: 400;
+  color: var(--color-text-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.directory_page .list .dir_entry_item:nth-child(odd) {
+  background-color: var(--color-overlay-faint);
+}
+
+.directory_page .list .dir_entry_item:nth-child(even) {
+  background-color: var(--color-surface-row);
+}
+
+.directory_page .list .dir_entry_item:hover {
+  background-color: var(--color-overlay-hover);
+}
+
+.directory_page .list .dir_entry_item:hover .icon svg,
+.directory_page .list .dir_entry_item:hover .name h3,
+.directory_page .list .dir_entry_item:hover .date_modified h3,
+.directory_page .list .dir_entry_item:hover .date_created h3,
+.directory_page .list .dir_entry_item:hover .size h3,
+.directory_page .list .dir_entry_item:hover .kind h3 {
+  color: var(--color-text-secondary);
+}
+
+.directory_page .list .dir_entry_item.selected {
+  background-color: var(--color-selection-background);
+  box-shadow: inset var(--border-width-accent) 0 0
+    var(--color-selection-indicator);
+}
+
+.directory_page .list .dir_entry_item.selected .icon svg,
+.directory_page .list .dir_entry_item.selected .name h3,
+.directory_page .list .dir_entry_item.selected .date_modified h3,
+.directory_page .list .dir_entry_item.selected .date_created h3,
+.directory_page .list .dir_entry_item.selected .size h3,
+.directory_page .list .dir_entry_item.selected .kind h3 {
+  color: var(--color-text-primary);
+}
+
+.directory_page .list .dir_entry_item:first-child {
+  border-top-left-radius: var(--radius-sm);
+  border-top-right-radius: var(--radius-sm);
+}
+
+.directory_page .list .dir_entry_item:last-child {
+  border-bottom-left-radius: var(--radius-sm);
+  border-bottom-right-radius: var(--radius-sm);
+}
+
+/* Metadata hover card rendered inside the shared Tooltip (.tooltip_bubble.rich). */
+.entry_metadata {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1-5);
+  max-width: 18rem;
+}
+
+.entry_metadata_title {
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.entry_metadata_rows {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  column-gap: var(--space-3);
+  row-gap: var(--space-0-5);
+  align-items: baseline;
+}
+
+.entry_metadata_key {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.entry_metadata_value {
+  min-width: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-tertiary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

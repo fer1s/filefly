@@ -1,0 +1,150 @@
+.audio_preview {
+  position: absolute;
+  z-index: 1005;
+  bottom: var(--space-0);
+  left: 50%;
+  transform: translate(-50%, 100%) scale(0.6);
+  margin-bottom: var(--space-5);
+  padding: var(--space-2-5);
+  background-color: var(--color-surface-floating);
+  backdrop-filter: blur(var(--blur-medium));
+  border: var(--border-width-default) solid var(--color-border-default);
+  border-radius: var(--radius-sm);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2-5);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 0s linear 0.3s;
+}
+
+.audio_preview.visible {
+  transform: translate(-50%, 0) scale(1);
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition-delay: 0s;
+}
+
+.audio_preview audio {
+  display: none;
+}
+
+/* Media controls use the IconButton look; only the larger icon + accent color are specific. */
+.audio_preview > .IconButton > svg,
+.audio_preview .volume_control .IconButton > svg {
+  font-size: var(--font-size-icon-large);
+  color: var(--color-text-primary);
+}
+
+.audio_preview > .IconButton:hover,
+.audio_preview .volume_control .IconButton:hover {
+  background-color: transparent;
+}
+
+.audio_preview .progress {
+  width: 100%;
+  height: var(--size-progress-track);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-1);
+}
+
+.audio_preview .progress span {
+  font-size: var(--font-size-sm);
+  font-weight: 400;
+  width: var(--size-control-large);
+  color: var(--color-audio-time);
+}
+
+.audio_preview .progress input[type="range"] {
+  width: var(--size-audio-progress);
+  height: var(--size-progress-track);
+  background-color: var(--color-range-track);
+  border: none;
+  border-radius: var(--radius-sm);
+  outline: none;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.audio_preview .progress input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: var(--size-slider-thumb);
+  height: var(--size-slider-thumb);
+  border-radius: 50%;
+  background-color: var(--color-control-thumb);
+  transition: transform 0.2s;
+}
+
+.audio_preview .progress input[type="range"]:hover::-webkit-slider-thumb {
+  transform: scale(1.5);
+}
+
+.audio_preview .volume_control .volume_extension {
+  position: absolute;
+  z-index: 1004;
+  background-color: var(--color-surface-floating);
+  backdrop-filter: blur(var(--blur-medium));
+  border: var(--border-width-default) solid var(--color-border-default);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2-5);
+  bottom: var(--space-10);
+  left: 50%;
+  transform: translateX(50%) scale(0.6);
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 0s linear 0.3s;
+}
+
+.audio_preview .volume_control .volume_extension.visible {
+  transform: translateX(-50%) scale(1);
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition-delay: 0s;
+}
+
+.audio_preview .volume_control .volume_extension input[type="range"] {
+  width: var(--size-audio-volume);
+  height: var(--size-progress-track);
+  background-color: var(--color-range-track);
+  border: none;
+  border-radius: var(--radius-sm);
+  outline: none;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.audio_preview
+  .volume_control
+  .volume_extension
+  input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: var(--size-slider-thumb);
+  height: var(--size-slider-thumb);
+  border-radius: 50%;
+  background-color: var(--color-control-thumb);
+  transition: transform 0.2s;
+}
+
+.audio_preview
+  .volume_control
+  .volume_extension
+  input[type="range"]:hover::-webkit-slider-thumb {
+  transform: scale(1.5);
+}

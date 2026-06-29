@@ -1,0 +1,110 @@
+.context_menu {
+  position: fixed;
+  z-index: 1100;
+  max-height: var(--size-context-menu-max-height);
+  max-width: var(--size-context-menu-max-width);
+  overflow-y: auto;
+  background-color: var(--color-surface-popover);
+  backdrop-filter: blur(var(--blur-medium));
+  border-radius: var(--radius-sm);
+  border: var(--border-width-default) solid var(--color-border-default);
+  box-shadow: var(--shadow-popover);
+  padding: var(--space-1);
+  margin: var(--space-0);
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: var(--space-0-25);
+  /* Appear/disappear instantly (Finder-style). Use display:none — not visibility:hidden — so the
+     backdrop-filter compositing layer is torn down immediately; visibility leaves the blurred
+     layer (and its icons) ghosting for a beat on close in WKWebView. */
+  display: none;
+}
+
+.context_menu.visible {
+  display: flex;
+}
+
+.context_menu .context_menu_item.separator {
+  width: 100%;
+  height: var(--border-width-default);
+  min-height: var(--border-width-default);
+  background-color: var(--color-overlay-active);
+  margin: var(--space-1) var(--space-0);
+}
+
+.context_menu .context_menu_item.ctx_button {
+  width: 100%;
+  min-width: 100%;
+  max-width: 100%;
+  max-height: var(--size-context-menu-item);
+  height: var(--size-context-menu-item);
+  min-height: var(--size-context-menu-item);
+  padding: var(--space-0) var(--space-2-5);
+  margin: var(--space-0);
+  border: none;
+  border-radius: var(--radius-sm);
+  background-color: transparent;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-md);
+  font-weight: 400;
+  cursor: pointer;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  gap: var(--space-2);
+  transition: all 0.2s ease-in-out;
+}
+
+.context_menu .context_menu_item.ctx_button:hover {
+  background-color: var(--color-overlay-hover);
+}
+
+/* Fixed-width icon column so every label starts at the same x. */
+.context_menu .context_menu_item.ctx_button .ctx_icon {
+  width: var(--size-icon-medium);
+  min-width: var(--size-icon-medium);
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.context_menu .context_menu_item.ctx_button .ctx_text {
+  flex: 1;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.context_menu .context_menu_item.ctx_button .ctx_hotkey {
+  flex-shrink: 0;
+  margin-left: var(--space-3);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.context_menu .context_menu_item.ctx_button svg {
+  width: var(--size-icon-small);
+  height: var(--size-icon-small);
+  color: var(--color-text-secondary);
+}
+
+.context_menu .context_menu_item.ctx_button.ctx_danger,
+.context_menu .context_menu_item.ctx_button.ctx_danger svg {
+  color: var(--color-danger);
+}
+
+.context_menu .context_menu_item.ctx_button.ctx_danger:hover {
+  background-color: var(--color-danger-surface);
+}
+
+.context_menu .context_menu_item.ctx_button:disabled {
+  cursor: not-allowed;
+  opacity: 0.35;
+}
+
+.context_menu .context_menu_item.ctx_button:disabled:hover {
+  background-color: transparent;
+}

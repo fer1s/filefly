@@ -1,0 +1,17 @@
+.popup.typeahead_popup {
+  bottom: var(--space-5);
+  right: var(--space-5);
+  left: auto;
+  margin-bottom: var(--space-0);
+  transform: translateY(100%) scale(0.7);
+  padding-top: var(--space-2);
+}
+
+.popup.typeahead_popup.visible {
+  transform: translateY(0) scale(1);
+}
+
+.popup.typeahead_popup .content p {
+  color: var(--color-text-primary);
+  font-weight: 500;
+}

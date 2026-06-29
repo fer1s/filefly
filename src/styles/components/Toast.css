@@ -1,0 +1,72 @@
+.toast {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  max-width: var(--size-toast-max-width);
+  padding: var(--space-2-5) var(--space-3-5);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-md);
+  font-weight: 400;
+  color: var(--color-text-primary);
+  background-color: var(--color-surface-toast);
+  border: var(--border-width-default) solid var(--color-border-toast);
+  box-shadow: var(--shadow-toast);
+  backdrop-filter: blur(var(--blur-medium));
+  cursor: default;
+  pointer-events: auto;
+  word-break: break-word;
+  animation: toast-enter 0.2s ease-out;
+}
+
+.toast .toast_icon {
+  flex-shrink: 0;
+}
+
+.toast .toast_message {
+  flex: 1;
+}
+
+.toast.success {
+  background-color: var(--color-success-surface);
+  border: var(--border-width-default) solid var(--color-success-border);
+}
+
+.toast.error {
+  background-color: var(--color-danger-surface);
+  border: var(--border-width-default) solid var(--color-danger-border);
+}
+
+/* Exit: fade and slide out. Duration must match TOAST_EXIT_MS in ToastStack/constants.ts. */
+.toast.leaving {
+  animation: toast-exit 0.2s ease-in forwards;
+}
+
+@keyframes toast-enter {
+  from {
+    opacity: 0;
+    transform: translateY(var(--space-2-5));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes toast-exit {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(var(--space-2-5));
+  }
+}
+
+/* Respect users who prefer reduced motion: appear/disappear without sliding or fading. */
+@media (prefers-reduced-motion: reduce) {
+  .toast,
+  .toast.leaving {
+    animation: none;
+  }
+}

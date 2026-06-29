@@ -1,0 +1,239 @@
+.preview_backdrop {
+  position: fixed;
+  z-index: 1000;
+  top: var(--space-0);
+  right: var(--space-0);
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 0.2s ease-in-out,
+    visibility 0s linear 0.2s;
+}
+
+.preview_backdrop.visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition-delay: 0s;
+}
+
+.preview_container {
+  position: fixed;
+  z-index: 1001;
+  top: var(--space-0);
+  right: var(--space-0);
+  margin: var(--space-10);
+  width: 45%;
+  height: calc(100% - var(--space-20));
+  background-color: var(--color-surface-floating);
+  backdrop-filter: blur(var(--blur-medium));
+  border: var(--border-width-default) solid var(--color-border-default);
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(100%) scale(0.6);
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 0s linear 0.3s;
+}
+
+.preview_container.visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  visibility: visible;
+  pointer-events: auto;
+  transition-delay: 0s;
+}
+
+.preview_container .preview_header,
+.preview_container .preview_content {
+  padding: var(--space-2-5);
+}
+
+.preview_container .preview_header {
+  width: 100%;
+  height: var(--size-preview-header);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: var(--border-width-default) solid var(--color-border-default);
+}
+
+.preview_container .preview_header h4 {
+  margin: var(--space-0);
+  padding: var(--space-0);
+  color: var(--color-text-primary);
+  /* Match the dialog title size (panel_header h4). */
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  user-select: none;
+}
+
+/* macOS: close dot on the left, title centred (like macOS dialogs). The two equal 1fr side
+   columns keep the auto-width title centred regardless of the dot's width. */
+.preview_container .preview_header.mac {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+}
+
+.preview_container .preview_header.mac .mac_close {
+  justify-self: start;
+}
+
+.preview_container .preview_header.mac h4 {
+  text-align: center;
+}
+
+.preview_container .preview_content {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+}
+
+.preview_container .preview_content.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.preview_container .preview_content.markdown h1 {
+  font-size: 1.5em;
+  font-weight: bold;
+  user-select: none;
+  margin-bottom: var(--space-2-5);
+}
+
+.preview_container .preview_content.markdown h2 {
+  font-size: 1.3em;
+  font-weight: bold;
+  user-select: none;
+  margin-bottom: var(--space-2-5);
+}
+
+.preview_container .preview_content.markdown h3 {
+  font-size: 1.1em;
+  font-weight: bold;
+  user-select: none;
+  margin-bottom: var(--space-2-5);
+}
+
+.preview_container .preview_content.markdown h4 {
+  font-size: 1em;
+  font-weight: bold;
+  user-select: none;
+  margin-bottom: var(--space-2-5);
+}
+
+.preview_container .preview_content.markdown h5 {
+  font-size: 0.9em;
+  font-weight: bold;
+  user-select: none;
+  margin-bottom: var(--space-2-5);
+}
+
+.preview_container .preview_content.markdown p {
+  font-size: 0.9em;
+  font-weight: 300;
+  user-select: none;
+  margin-bottom: var(--space-1);
+  opacity: 0.8;
+}
+
+.preview_container .preview_content.markdown a {
+  color: var(--color-link);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.9em;
+  user-select: none;
+}
+
+.preview_container .preview_content.markdown ul {
+  margin-left: var(--space-5);
+}
+
+.preview_container .preview_content.markdown ul li {
+  font-size: 0.9em;
+  font-weight: 300;
+  user-select: none;
+  margin-bottom: var(--space-1);
+  opacity: 0.8;
+}
+
+.preview_container .preview_content.markdown img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-sm);
+}
+
+.preview_container .preview_content.image,
+.preview_container .preview_content.video,
+.preview_container .preview_content.pdf {
+  overflow: hidden;
+  padding: var(--space-0);
+  width: 100%;
+  height: 100%;
+}
+
+/* Center the image and size the element to the rendered image itself (not the full content
+   box). object-fit: contain would keep the element box full-size and letterbox the image,
+   which makes macOS Live Text paint its selection offset from the visible text. */
+.preview_container .preview_content.image {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+/* Floating controls pill (prev · zoom · next), centred over the content at the bottom. */
+.preview_container .preview_controls {
+  position: absolute;
+  bottom: var(--space-3);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2-5);
+  background-color: var(--color-surface-popover);
+  backdrop-filter: blur(var(--blur-medium));
+  border: var(--border-width-default) solid var(--color-border-default);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-popover);
+}
+
+.preview_container .preview_content.image img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  /* Don't let the image be dragged out as a file/ghost. */
+  -webkit-user-drag: none;
+}
+
+.preview_container .preview_content.video video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.preview_container .preview_content.pdf iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.preview_container.image {
+  width: calc(100% - var(--space-20));
+  height: calc(100% - var(--space-20));
+}

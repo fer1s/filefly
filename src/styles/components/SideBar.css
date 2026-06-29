@@ -1,0 +1,180 @@
+.SideBar {
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* Composed here (not via a :root token) so the inline --sidebar-opacity override applies. */
+  background-color: rgba(
+    var(--color-background-sidebar-rgb),
+    var(--sidebar-opacity)
+  );
+}
+
+.SideBar .sidebar_header {
+  width: 100%;
+  margin-bottom: var(--space-4);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2-5);
+}
+
+/* Collapsed: icon-only rail. Stack the header buttons. */
+.SideBar.collapsed .sidebar_header {
+  flex-direction: column;
+}
+
+.SideBar.collapsed .sidebar_header .new_tab_toggle {
+  margin-left: var(--space-0);
+}
+
+.SideBar.collapsed section .section_content .folder_item,
+.SideBar.collapsed section .section_content .drive_item {
+  justify-content: center;
+  padding: var(--space-2-5) var(--space-0);
+  height: var(--size-sidebar-item);
+}
+
+.SideBar.collapsed section .section_content .folder_item p,
+.SideBar.collapsed section .section_content .folder_item .folder_hotkey,
+.SideBar.collapsed section .section_content .drive_item .details {
+  display: none;
+}
+
+.SideBar section .section_content .folder_item {
+  width: 100%;
+  height: var(--size-sidebar-item);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  border: var(--border-width-default) solid transparent;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--space-2-5);
+  padding: var(--space-2-5);
+  transition: all 0.2s ease-in-out;
+}
+
+.SideBar section .section_content .folder_item svg {
+  font-size: var(--font-size-base);
+  color: var(--color-text-tertiary);
+  transition: all 0.2s ease-in-out;
+}
+
+.SideBar section .section_content .folder_item p {
+  min-width: 0;
+  font-size: var(--font-size-base);
+  font-weight: 400;
+  color: var(--color-text-tertiary);
+  user-select: none;
+  /* Stay on one line (clip, don't wrap) while the sidebar width animates open. */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: all 0.2s ease-in-out;
+}
+
+.SideBar section .section_content .folder_item .folder_hotkey {
+  margin-left: auto;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  user-select: none;
+}
+
+.SideBar section .section_content .folder_item:hover,
+.SideBar section .section_content .folder_item.active {
+  background-color: var(--color-overlay-active);
+  border: var(--border-width-default) solid var(--color-border-default);
+}
+
+.SideBar section .section_content .folder_item:hover svg,
+.SideBar section .section_content .folder_item:hover p,
+.SideBar section .section_content .folder_item.active svg,
+.SideBar section .section_content .folder_item.active p {
+  color: var(--color-text-primary);
+}
+
+.SideBar section .section_content .drive_item {
+  width: 100%;
+  height: var(--space-10);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  border: var(--border-width-default) solid transparent;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--space-2-5);
+  padding: var(--space-2-5);
+  transition: all 0.2s ease-in-out;
+  animation: drive-item-enter 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes drive-item-enter {
+  from {
+    opacity: 0;
+    transform: translateX(-100%) scale(0.7);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+.SideBar section .section_content .drive_item svg {
+  font-size: var(--font-size-base);
+  color: var(--color-text-tertiary);
+  transition: all 0.2s ease-in-out;
+}
+
+.SideBar section .section_content .drive_item .details {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: var(--space-1);
+  width: calc(100% - var(--space-10));
+}
+
+.SideBar section .section_content .drive_item .details p {
+  width: 100%;
+  font-size: var(--font-size-sm);
+  font-weight: 400;
+  color: var(--color-text-tertiary);
+  user-select: none;
+  /* Stay on one line (clip, don't wrap) while the sidebar width animates open. */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: all 0.2s ease-in-out;
+}
+
+.SideBar section .section_content .drive_item .details p span {
+  font-weight: 600;
+}
+
+/* Base bar styling lives in UsageBar.css; only the width is sidebar-specific. */
+.SideBar section .section_content .drive_item .details .usage {
+  width: 90%;
+}
+
+.SideBar section .section_content .drive_item:hover,
+.SideBar section .section_content .drive_item.active {
+  background-color: var(--color-overlay-active);
+  border: var(--border-width-default) solid var(--color-border-default);
+}
+
+.SideBar section .section_content .drive_item:hover svg,
+.SideBar section .section_content .drive_item:hover .details p,
+.SideBar section .section_content .drive_item.active svg,
+.SideBar section .section_content .drive_item.active .details p {
+  color: var(--color-text-primary);
+}
+
+.SideBar section .section_content .folder_item,
+.SideBar section .section_content .drive_item {
+  margin-bottom: var(--space-2);
+}
+
+.SideBar section .section_content .folder_item:last-child,
+.SideBar section .section_content .drive_item:last-child {
+  margin-bottom: var(--space-0);
+}

@@ -1,0 +1,74 @@
+.PathBar {
+  width: 100%;
+  margin-bottom: var(--space-5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-2-5);
+  padding-left: var(--space-2);
+}
+
+.PathBar .controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: var(--size-path-controls);
+  height: var(--size-control-large);
+}
+
+/* Info-panel toggle: highlight the button while the panel is open. */
+.PathBar .info_toggle.active .IconButton {
+  color: var(--color-text-primary);
+  background-color: var(--color-overlay-active);
+}
+
+/* Grouped controls: flatten the inner edges so they read as one segmented control.
+   Each button is wrapped in a Tooltip, so target the wrapper's position in the row. */
+.PathBar .controls .Tooltip:first-child .IconButton {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.PathBar .controls .Tooltip:last-child .IconButton {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.PathBar .controls .Tooltip:not(:first-child):not(:last-child) .IconButton {
+  border-radius: 0;
+}
+
+.PathBar input {
+  width: 100%;
+  height: var(--size-control-large);
+  padding: var(--space-1-5) var(--space-2-5);
+  background-color: var(--color-overlay-faint);
+  border: var(--border-width-default) solid var(--color-border-faint);
+  color: var(--color-text-primary);
+  border-radius: var(--radius-sm);
+  font-family: "Inter", sans-serif;
+  font-size: var(--font-size-base);
+  font-weight: 400;
+  transition: all 0.2s ease-in-out;
+}
+
+.PathBar input:focus {
+  outline: none;
+  background-color: var(--color-surface-interactive);
+  border: var(--border-width-default) solid var(--color-border-default);
+}
+
+/* Read-only stand-in for the path input in virtual views (e.g. Recents), which have no path. */
+.PathBar .path_label {
+  width: 100%;
+  height: var(--size-control-large);
+  padding: var(--space-1-5) var(--space-2-5);
+  display: flex;
+  align-items: center;
+  background-color: var(--color-overlay-faint);
+  border: var(--border-width-default) solid var(--color-border-faint);
+  color: var(--color-text-secondary);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-base);
+  user-select: none;
+}
