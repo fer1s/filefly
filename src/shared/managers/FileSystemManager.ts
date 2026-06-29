@@ -41,9 +41,10 @@ export class FileSystemManager {
     return files;
   }
 
-  // Finder-style recent files (already ordered newest-first by the backend).
-  getRecentFiles(): Promise<DirEntry[]> {
-    return api.getRecentFiles();
+  // Finder-style recent files (already ordered newest-first by the backend). `hideAppFiles`
+  // filters out this app's own background files (config/cache/temp).
+  getRecentFiles(hideAppFiles: boolean): Promise<DirEntry[]> {
+    return api.getRecentFiles(hideAppFiles);
   }
 
   // Eject/unmount a removable volume by its mount point.
@@ -131,6 +132,12 @@ export class FileSystemManager {
 
   trash(path: string): Promise<void> {
     return api.deleteEntry(path);
+  }
+
+  // Restore a trashed item to its recorded original location; resolves to the restored path, or
+  // null when there's no record (the caller then asks the user where to put it).
+  restoreTrashed(path: string): Promise<string | null> {
+    return api.restoreTrashed(path);
   }
 
   // Permanently delete, bypassing the Trash (irreversible).

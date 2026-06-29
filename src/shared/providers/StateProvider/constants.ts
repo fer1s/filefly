@@ -31,6 +31,8 @@ export const initialState: State = {
   setView: () => {},
   showHidden: false,
   toggleShowHidden: () => {},
+  hideSystemRecents: true,
+  toggleHideSystemRecents: () => {},
   zoom: ZOOM_DEFAULT,
   zoomIn: () => {},
   zoomOut: () => {},

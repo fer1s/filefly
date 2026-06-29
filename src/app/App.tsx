@@ -32,14 +32,15 @@ const App = () => {
   // Each concern owns its own state and side effects; the composition root just wires them
   // together into the shared context (see ARCHITECTURE_RULES §6, §4).
   const tabs = useTabs();
+  // App-wide settings persisted in settings.toml; hydrated on launch.
+  const { settings, update, saving: savingSettings } = useAppSettings();
   const directory = useDirectoryContents({
     fs,
     path: tabs.path,
     navigate,
     locationPathname: location.pathname,
+    hideSystemRecents: settings.hideSystemRecents,
   });
-  // App-wide settings persisted in settings.toml; hydrated on launch.
-  const { settings, update, saving: savingSettings } = useAppSettings();
   const zoom = useZoom(fs, tabs.path, settings.defaultZoom);
   const { toasts, dismissToast } = useToasts();
   const sidebar = useSidebarCollapsed();
@@ -53,6 +54,11 @@ const App = () => {
       TOAST_TYPE.INFO,
     );
   }, [settings.showHidden, update]);
+
+  const toggleHideSystemRecents = useCallback(
+    () => update({ hideSystemRecents: !settings.hideSystemRecents }),
+    [settings.hideSystemRecents, update],
+  );
 
   // The OS/webview context menu is replaced by the app's own; suppress it everywhere.
   useEffect(() => {
@@ -86,6 +92,8 @@ const App = () => {
         setView,
         showHidden: settings.showHidden,
         toggleShowHidden,
+        hideSystemRecents: settings.hideSystemRecents,
+        toggleHideSystemRecents,
         zoom: zoom.zoom,
         zoomIn: zoom.zoomIn,
         zoomOut: zoom.zoomOut,

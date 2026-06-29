@@ -15,6 +15,7 @@ export type AppSettings = {
   defaultZoom: number;
   dateFormat: string;
   sidebarOpacity: number;
+  hideSystemRecents: boolean;
 };
 
 // Load the persisted app settings (falls back to defaults when settings.toml is absent).
@@ -119,9 +120,12 @@ export const watchDirectory = async (
 export const getDirSize = async (path: string): Promise<number> =>
   await invoke("get_dir_size", { path });
 
-// Recently modified files (Finder-style Recents), newest first. macOS only (Spotlight).
-export const getRecentFiles = async (): Promise<DirEntry[]> =>
-  (await invoke("get_recent_files")) as DirEntry[];
+// Recently modified files (Finder-style Recents), newest first. macOS only (Spotlight). When
+// `hideAppFiles` is set, this app's own background files (config/cache/temp) are filtered out.
+export const getRecentFiles = async (
+  hideAppFiles: boolean,
+): Promise<DirEntry[]> =>
+  (await invoke("get_recent_files", { hideAppFiles })) as DirEntry[];
 
 // Generate (or fetch from cache) a downscaled thumbnail for an image file. Returns the
 // filesystem path to the thumbnail (load it via convertFileSrc).
@@ -187,6 +191,10 @@ export const copyImage = async (path: string): Promise<void> =>
   await invoke("copy_image", { path });
 export const deleteEntry = async (path: string): Promise<void> =>
   await invoke("delete_entry", { path });
+// Restore a trashed item to its recorded original location. Resolves to the restored path, or
+// null when we have no record of where it came from (caller should then ask the user).
+export const restoreTrashed = async (path: string): Promise<string | null> =>
+  (await invoke("restore_trashed", { trashedPath: path })) as string | null;
 export const deleteEntryPermanently = async (path: string): Promise<void> =>
   await invoke("delete_entry_permanently", { path });
 // Permanently empty the system Trash (~/.Trash). Resolves to the number of items removed.

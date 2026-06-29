@@ -10,6 +10,7 @@ import { cutAction } from "./cut";
 import { pasteAction } from "./paste";
 import { renameAction } from "./rename";
 import { trashAction } from "./trash";
+import { restoreAction } from "./restore";
 import { destroyAction } from "./destroy";
 import { propertiesAction } from "./properties";
 
@@ -24,6 +25,7 @@ export const ENTRY_ACTIONS: Record<EntryActionId, EntryAction> = {
   [ENTRY_ACTION.PASTE]: pasteAction,
   [ENTRY_ACTION.RENAME]: renameAction,
   [ENTRY_ACTION.TRASH]: trashAction,
+  [ENTRY_ACTION.RESTORE]: restoreAction,
   [ENTRY_ACTION.DESTROY]: destroyAction,
   [ENTRY_ACTION.PROPERTIES]: propertiesAction,
 };

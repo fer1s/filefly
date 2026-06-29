@@ -10,6 +10,7 @@ export const ENTRY_ACTION = {
   PASTE: "paste",
   RENAME: "rename",
   TRASH: "trash",
+  RESTORE: "restore",
   DESTROY: "destroy",
   PROPERTIES: "properties",
 } as const;
@@ -18,3 +19,15 @@ export type EntryActionId = (typeof ENTRY_ACTION)[keyof typeof ENTRY_ACTION];
 
 // Token in an action list that renders a divider between groups (not a real action).
 export const ACTION_SEPARATOR = "separator";
+
+// Entry menu when browsing the Trash: an item is already trashed, so it offers Restore and
+// permanent delete instead of Move-to-Trash. Not driven by context_menu.toml (that's keyed by
+// entry kind, not location).
+export const TRASH_ENTRY_ACTIONS: readonly string[] = [
+  ENTRY_ACTION.OPEN,
+  ENTRY_ACTION.RESTORE,
+  ACTION_SEPARATOR,
+  ENTRY_ACTION.DESTROY,
+  ACTION_SEPARATOR,
+  ENTRY_ACTION.PROPERTIES,
+];

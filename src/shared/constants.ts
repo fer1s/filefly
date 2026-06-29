@@ -7,6 +7,10 @@ export const VIEW_MODE = {
 // special-cases it to fetch recent files instead of reading a folder.
 export const RECENTS = "recents://";
 
+// System Trash directory name (relative to home on macOS/Linux). Used to detect when the user is
+// browsing the Trash so the entry menu offers Restore instead of Move-to-Trash.
+export const TRASH_DIR_NAME = ".Trash";
+
 export type ViewMode = (typeof VIEW_MODE)[keyof typeof VIEW_MODE];
 
 // Directory zoom: a CSS `zoom` multiplier applied to the entries area. 1 = 100%.

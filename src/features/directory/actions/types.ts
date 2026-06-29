@@ -14,6 +14,7 @@ export type FileActions = {
   paste: () => Promise<void>;
   remove: (targets: string[]) => Promise<void>;
   removePermanently: (targets: string[]) => Promise<void>;
+  restore: (targets: string[]) => Promise<void>;
 };
 
 // Everything an action needs to run, resolved by the menu at click time. `targets` is the

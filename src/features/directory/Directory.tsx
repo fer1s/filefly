@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState, type CSSProperties } from "react";
 
 import { useStateContext } from "@/shared/providers/StateProvider";
-import { ENTRY_KIND, VIEW_MODE } from "@/shared/constants";
+import { ENTRY_KIND, VIEW_MODE, TRASH_DIR_NAME } from "@/shared/constants";
 import { classNames } from "@/shared/utils";
 import { notify, TOAST_TYPE } from "@/shared/toast";
 import { t } from "@/lang";
@@ -75,6 +75,8 @@ const Directory = () => {
   const menu = useContextMenu();
   const isCurrentDirectory =
     menu.elementType === ENTRY_KIND.DIRECTORY && menu.elementID === path;
+  // Browsing the system Trash (~/.Trash): entries offer Restore instead of Move-to-Trash.
+  const inTrash = path.endsWith(`/${TRASH_DIR_NAME}`);
 
   const handleKeyboardOpen = useCallback(
     (entry: DirEntry) =>
@@ -230,6 +232,7 @@ const Directory = () => {
         elementId={menu.elementID}
         elementType={menu.elementType}
         isCurrentDirectory={isCurrentDirectory}
+        inTrash={inTrash}
         selectedIDs={selectedIDs}
         canPaste={!!fileOps.clipboard}
         fileOps={fileOps}

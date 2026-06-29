@@ -29,6 +29,9 @@ export type State = {
   // Whether hidden entries (dotfiles) are shown in the listing. Toggled via the keymap.
   showHidden: boolean;
   toggleShowHidden: () => void;
+  // Hide this app's own background files (config/cache/temp) from the Recents listing.
+  hideSystemRecents: boolean;
+  toggleHideSystemRecents: () => void;
   // Directory zoom multiplier (1 = 100%), persisted per folder.
   zoom: number;
   zoomIn: () => void;

@@ -10,6 +10,7 @@ import { useKeymap, formatBinding } from "@/shared/keymap";
 import {
   ENTRY_ACTIONS,
   ACTION_SEPARATOR,
+  TRASH_ENTRY_ACTIONS,
   resolveActionIds,
   isActionVisible,
   type EntryActionContext,
@@ -29,6 +30,7 @@ const EntryContextMenu = ({
   elementId,
   elementType,
   isCurrentDirectory,
+  inTrash,
   selectedIDs,
   canPaste,
   fileOps,
@@ -59,11 +61,17 @@ const EntryContextMenu = ({
     onProperties,
   };
 
-  const actionIds = resolveActionIds(layout, {
-    isCurrentDirectory,
-    elementType,
-    extension: fileExtension,
-  });
+  // In the Trash, an entry is already trashed — offer Restore / permanent delete via the fixed
+  // trash menu instead of the kind-based layout. The empty-area (current directory) menu keeps
+  // its normal actions.
+  const actionIds =
+    inTrash && !isCurrentDirectory
+      ? TRASH_ENTRY_ACTIONS
+      : resolveActionIds(layout, {
+          isCurrentDirectory,
+          elementType,
+          extension: fileExtension,
+        });
 
   return (
     <ContextMenu contextMenuVisible={visible} ref={contextMenuRef}>

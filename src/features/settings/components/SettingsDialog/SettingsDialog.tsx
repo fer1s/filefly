@@ -25,6 +25,8 @@ const SettingsDialog = ({ visible, onClose }: SettingsDialogProps) => {
   const {
     showHidden,
     toggleShowHidden,
+    hideSystemRecents,
+    toggleHideSystemRecents,
     defaultZoom,
     setDefaultZoom,
     sidebarOpacity,
@@ -64,6 +66,18 @@ const SettingsDialog = ({ visible, onClose }: SettingsDialogProps) => {
               className="settings_switch"
               checked={showHidden}
               onChange={toggleShowHidden}
+            />
+          </SettingsRow>
+
+          <SettingsRow
+            label={t.settings.hideSystemRecents}
+            hint={t.settings.hideSystemRecentsHint}
+          >
+            <input
+              type="checkbox"
+              className="settings_switch"
+              checked={hideSystemRecents}
+              onChange={toggleHideSystemRecents}
             />
           </SettingsRow>
 

@@ -11,6 +11,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   defaultZoom: ZOOM_DEFAULT,
   dateFormat: DEFAULT_DATE_FORMAT,
   sidebarOpacity: DEFAULT_SIDEBAR_OPACITY,
+  hideSystemRecents: true,
 };
 
 // Coalesce rapid changes (e.g. dragging the opacity slider) into one disk write.

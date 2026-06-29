@@ -7,6 +7,7 @@ export type FileOps = {
   cut: (targets: string[]) => void;
   remove: (targets: string[]) => Promise<void>;
   removePermanently: (targets: string[]) => Promise<void>;
+  restore: (targets: string[]) => Promise<void>;
   paste: () => Promise<void>;
 };
 
@@ -17,6 +18,8 @@ export type EntryContextMenuProps = {
   elementId: string;
   elementType: EntryKind;
   isCurrentDirectory: boolean;
+  // The current folder is the Trash: entries offer Restore / permanent delete, not Move-to-Trash.
+  inTrash: boolean;
   selectedIDs: string[];
   canPaste: boolean;
   fileOps: FileOps;

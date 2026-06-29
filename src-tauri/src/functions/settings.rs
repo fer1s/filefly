@@ -18,6 +18,8 @@ pub struct AppSettings {
     date_format: String,
     // Sidebar background opacity (alpha of --color-background-sidebar), 0..1.
     sidebar_opacity: f64,
+    // Hide this app's own background files (config/cache/temp) from the Recents listing.
+    hide_system_recents: bool,
 }
 
 // Must mirror the frontend defaults (shared/constants.ts).
@@ -28,6 +30,7 @@ impl Default for AppSettings {
             default_zoom: 1.0,
             date_format: "locale".to_string(),
             sidebar_opacity: 0.85,
+            hide_system_recents: true,
         }
     }
 }

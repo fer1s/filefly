@@ -53,6 +53,7 @@ fn main() {
             filesystem::fs::create_folder,
             filesystem::fs::copy_image,
             filesystem::fs::delete_entry,
+            filesystem::fs::restore_trashed,
             filesystem::fs::delete_entry_permanently,
             filesystem::fs::empty_trash,
             functions::terminal::open_in_terminal,

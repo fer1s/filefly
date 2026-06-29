@@ -25,6 +25,7 @@ export const en = {
     cut: "Cut",
     rename: "Rename",
     delete: "Move to trash",
+    restore: "Restore",
     deletePermanently: "Destroy",
     copyImage: "Copy image",
     paste: "Paste",
@@ -98,6 +99,9 @@ export const en = {
     general: "General",
     showHidden: "Show hidden files",
     showHiddenHint: "Display dotfiles and other hidden entries in folders.",
+    hideSystemRecents: "Hide app files in Recents",
+    hideSystemRecentsHint:
+      "Keep files this app writes in the background (cache, settings, temp) out of Recents.",
     defaultZoom: "Default zoom",
     defaultZoomHint: "Zoom level for folders you haven't zoomed yet.",
     zoomPercent: (percent: number) => `${percent}%`,
@@ -144,6 +148,7 @@ export const en = {
     confirmDeletePermanently: (label: string) =>
       `Permanently delete ${label}? This can't be undone.`,
     deleteTitle: "Delete",
+    restoreToTitle: "Restore to…",
     items: (n: number) => `${n} items`,
     itemCount: (n: number) => `${n} ${n === 1 ? "item" : "items"}`,
     selectedCount: (n: number) => `${n} ${n === 1 ? "item" : "items"} selected`,
@@ -160,6 +165,7 @@ export const en = {
     pasted: (label: string) => `Pasted ${label}`,
     moved: (label: string) => `Moved ${label}`,
     trashed: (label: string) => `Moved ${label} to Trash`,
+    restored: (label: string) => `Restored ${label}`,
     deleted: (label: string) => `Deleted ${label}`,
     renamed: (name: string) => `Renamed to "${name}"`,
     accessDenied: {
@@ -184,6 +190,8 @@ export const en = {
     openInTerminal: (reason: string) => `Could not open terminal: ${reason}`,
     delete: (name: string, reason: string) =>
       `Could not delete ${name}: ${reason}`,
+    restore: (name: string, reason: string) =>
+      `Could not restore ${name}: ${reason}`,
     paste: (name: string, reason: string) =>
       `Could not paste ${name}: ${reason}`,
     rename: (reason: string) => `Could not rename: ${reason}`,

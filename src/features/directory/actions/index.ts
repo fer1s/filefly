@@ -1,7 +1,7 @@
 // Public API of the generic context-menu actions. Each action is a self-contained,
 // predefined descriptor (presentation + behavior); the menu composes them per context using
 // the layout from context_menu.toml.
-export { ENTRY_ACTION, ACTION_SEPARATOR } from "./constants";
+export { ENTRY_ACTION, ACTION_SEPARATOR, TRASH_ENTRY_ACTIONS } from "./constants";
 export type { EntryActionId } from "./constants";
 export type { EntryAction, EntryActionContext, FileActions } from "./types";
 
@@ -17,5 +17,6 @@ export { cutAction } from "./cut";
 export { pasteAction } from "./paste";
 export { renameAction } from "./rename";
 export { trashAction } from "./trash";
+export { restoreAction } from "./restore";
 export { destroyAction } from "./destroy";
 export { propertiesAction } from "./properties";

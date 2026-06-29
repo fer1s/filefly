@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { ask } from "@tauri-apps/plugin-dialog";
+import { ask, open as openDialog } from "@tauri-apps/plugin-dialog";
 
 import { useStateContext } from "@/shared/providers/StateProvider";
 import { notify, TOAST_TYPE } from "@/shared/toast";
@@ -97,6 +97,56 @@ export const useFileOperations = ({
     [deleteTargets],
   );
 
+  // Restore trashed items: each to its recorded original location, or — for items we have no
+  // record of — to one folder the user picks. Mirrors Finder's "Put Back" as closely as the OS
+  // lets us (macOS doesn't expose its own put-back data).
+  const restore = useCallback(
+    async (targets: string[]) => {
+      if (!targets.length || !targets[0]) return;
+
+      const unresolved: string[] = [];
+      let restored = 0;
+      for (const target of targets) {
+        try {
+          const dest = await fs.restoreTrashed(target);
+          if (dest) restored++;
+          else unresolved.push(target);
+        } catch (err) {
+          notify(
+            t.errors.restore(basename(target), String(err)),
+            TOAST_TYPE.ERROR,
+          );
+        }
+      }
+
+      if (unresolved.length) {
+        const dir = await openDialog({
+          directory: true,
+          title: t.directory.restoreToTitle,
+        });
+        if (typeof dir === "string") {
+          for (const target of unresolved) {
+            try {
+              await fs.move(target, dir);
+              restored++;
+            } catch (err) {
+              notify(
+                t.errors.restore(basename(target), String(err)),
+                TOAST_TYPE.ERROR,
+              );
+            }
+          }
+        }
+      }
+
+      if (restored)
+        notify(t.directory.restored(entryLabel(targets)), TOAST_TYPE.SUCCESS);
+      setSelectedIDs([]);
+      refreshDir();
+    },
+    [fs, refreshDir, setSelectedIDs],
+  );
+
   const paste = useCallback(async () => {
     if (!clipboard || path === "") return;
 
@@ -159,6 +209,7 @@ export const useFileOperations = ({
     cut,
     remove,
     removePermanently,
+    restore,
     paste,
     rename,
     progress,

@@ -14,6 +14,8 @@ type Args = {
   path: string;
   navigate: NavigateFunction;
   locationPathname: string;
+  // Hide this app's own background files from the Recents listing.
+  hideSystemRecents: boolean;
 };
 
 // Owns the listing for the active folder: volumes, entries and the access-denied flag. Loads on
@@ -24,6 +26,7 @@ export const useDirectoryContents = ({
   path,
   navigate,
   locationPathname,
+  hideSystemRecents,
 }: Args) => {
   const [volumes, setVolumes] = useState<Volume[]>([]);
   const [dirContent, setDirContent] = useState<DirEntry[]>([]);
@@ -42,14 +45,14 @@ export const useDirectoryContents = ({
         // Recents is a virtual listing (Finder-style), not a real folder to read.
         const files =
           target === RECENTS
-            ? await fs.getRecentFiles()
+            ? await fs.getRecentFiles(hideSystemRecents)
             : await fs.readDirectory(target);
         return { files, denied: false };
       } catch (err) {
         return { files: [], denied: String(err).includes(ACCESS_DENIED_ERROR) };
       }
     },
-    [fs],
+    [fs, hideSystemRecents],
   );
 
   // Reload the current view (used after filesystem operations like copy/move/rename/delete).

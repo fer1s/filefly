@@ -1,4 +1,4 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::collections::hash_map::DefaultHasher;
 use std::ffi::OsStr;
 use std::fs;
@@ -524,6 +524,10 @@ pub fn rename_entry(path: String, new_name: String) -> Result<(), String> {
     fs::rename(p, dest).map_err(|e| e.to_string())
 }
 
+// Filename prefix for the temp files our write-probe creates. Also used to keep these out of the
+// user's Recents (see get_recent_files).
+const WRITE_PROBE_PREFIX: &str = ".sfb_write_probe_";
+
 // Probe whether `path` (a directory) is actually writable, by creating and immediately deleting a
 // temp file in it. The reliable source of truth for read-only mounts (e.g. NTFS on macOS without a
 // write-capable driver), where the filesystem may report space but reject writes.
@@ -533,7 +537,7 @@ pub fn can_write(path: String) -> bool {
     if !dir.is_dir() {
         return false;
     }
-    let probe = dir.join(format!(".sfb_write_probe_{}", std::process::id()));
+    let probe = dir.join(format!("{}{}", WRITE_PROBE_PREFIX, std::process::id()));
     match fs::File::create(&probe) {
         Ok(_) => {
             let _ = fs::remove_file(&probe);
@@ -543,26 +547,131 @@ pub fn can_write(path: String) -> bool {
     }
 }
 
-// Move an entry to the system Trash/Recycle Bin (reversible).
+// Where a trashed item came from, so Restore can put it back to its original folder. macOS
+// doesn't expose Finder's "Put Back" data to us, so we record it ourselves when our app trashes
+// something. Keyed by the item's name (not its in-trash path) so recording needs no Trash access,
+// which is TCC-gated. Stored as a list (not a TOML map) to sidestep dotted-key quoting issues.
+#[derive(Debug, Default, Serialize, Deserialize)]
+struct TrashOrigins {
+    #[serde(default)]
+    entries: Vec<TrashOrigin>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct TrashOrigin {
+    name: String,
+    original: String,
+}
+
+fn trash_origins_path(app: &AppHandle) -> Result<PathBuf, String> {
+    Ok(app
+        .path()
+        .app_config_dir()
+        .map_err(|e| e.to_string())?
+        .join("trash-origins.toml"))
+}
+
+fn load_trash_origins(app: &AppHandle) -> TrashOrigins {
+    match trash_origins_path(app)
+        .and_then(|p| std::fs::read_to_string(p).map_err(|e| e.to_string()))
+    {
+        Ok(content) => toml::from_str(&content).unwrap_or_default(),
+        Err(_) => TrashOrigins::default(),
+    }
+}
+
+fn save_trash_origins(app: &AppHandle, origins: &TrashOrigins) {
+    if let Ok(target) = trash_origins_path(app) {
+        if let Some(parent) = target.parent() {
+            let _ = std::fs::create_dir_all(parent);
+        }
+        if let Ok(serialized) = toml::to_string_pretty(origins) {
+            let _ = std::fs::write(target, serialized);
+        }
+    }
+}
+
+// Remember where `original` lived (by its name), replacing any prior record for the same name.
+fn record_trash_origin(app: &AppHandle, original: &str) {
+    let Some(name) = Path::new(original).file_name().and_then(|n| n.to_str()) else {
+        return;
+    };
+    let mut origins = load_trash_origins(app);
+    origins.entries.retain(|entry| entry.name != name);
+    origins.entries.push(TrashOrigin {
+        name: name.to_string(),
+        original: original.to_string(),
+    });
+    save_trash_origins(app, &origins);
+}
+
+// Move an entry to the system Trash/Recycle Bin (reversible), recording where it came from so it
+// can be restored later.
 //
 // On macOS the `trash` crate defaults to the Finder method (osascript "tell Finder to delete"),
 // which requires Automation/Apple Events permission. In an unsigned/dev bundle that prompt can be
 // denied or fail, so files never reach ~/.Trash. Force the NsFileManager backend (trashItemAtURL):
 // no permission needed, faster, and reliably moves the item to the volume's Trash.
 #[tauri::command]
-pub fn delete_entry(path: String) -> Result<(), String> {
+pub fn delete_entry(app: AppHandle, path: String) -> Result<(), String> {
     println!("[delete_entry] trashing: {}", path);
 
-    #[cfg(target_os = "macos")]
-    {
-        use trash::macos::{DeleteMethod, TrashContextExtMacos};
-        let mut ctx = trash::TrashContext::default();
-        ctx.set_delete_method(DeleteMethod::NsFileManager);
-        return ctx.delete(&path).map_err(|e| e.to_string());
-    }
+    let result: Result<(), String> = {
+        #[cfg(target_os = "macos")]
+        {
+            use trash::macos::{DeleteMethod, TrashContextExtMacos};
+            let mut ctx = trash::TrashContext::default();
+            ctx.set_delete_method(DeleteMethod::NsFileManager);
+            ctx.delete(&path).map_err(|e| e.to_string())
+        }
+        #[cfg(not(target_os = "macos"))]
+        {
+            trash::delete(&path).map_err(|e| e.to_string())
+        }
+    };
 
-    #[cfg(not(target_os = "macos"))]
-    trash::delete(&path).map_err(|e| e.to_string())
+    if result.is_ok() {
+        record_trash_origin(&app, &path);
+    }
+    result
+}
+
+// Restore a trashed item to its recorded original location (put-back). Returns the destination
+// path on success, or None when we have no record for it (the frontend then asks the user where
+// to restore it). Reads the item out of the Trash, so it needs Full Disk Access — but the user is
+// already viewing the Trash to invoke this, so that's granted.
+#[tauri::command]
+pub fn restore_trashed(app: AppHandle, trashed_path: String) -> Result<Option<String>, String> {
+    let Some(name) = Path::new(&trashed_path)
+        .file_name()
+        .and_then(|n| n.to_str())
+        .map(|s| s.to_string())
+    else {
+        return Ok(None);
+    };
+
+    let mut origins = load_trash_origins(&app);
+    let Some(index) = origins.entries.iter().position(|entry| entry.name == name) else {
+        return Ok(None);
+    };
+
+    let original = origins.entries[index].original.clone();
+    let original_path = Path::new(&original);
+    let parent = original_path
+        .parent()
+        .ok_or_else(|| "Original location has no parent".to_string())?;
+    let file_name = original_path
+        .file_name()
+        .ok_or_else(|| "Original location has no name".to_string())?;
+
+    // Recreate the original folder if it's gone, and avoid clobbering an existing file there.
+    std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+    let dest = unique_dest(parent, file_name);
+    std::fs::rename(&trashed_path, &dest).map_err(|e| e.to_string())?;
+
+    origins.entries.remove(index);
+    save_trash_origins(&app, &origins);
+    Ok(Some(dest.to_string_lossy().to_string()))
 }
 
 // Permanently delete a file or directory, bypassing the Trash (irreversible). Backs the
@@ -647,9 +756,26 @@ const RECENTS_LIMIT: usize = 50;
 // Recently modified files in the user's home, à la Finder's Recents smart folder. Backed by
 // Spotlight (`mdfind`), so it only works on macOS with indexing enabled. Returns files newest
 // first; directories are excluded (Finder shows documents).
+//
+// When `hide_app_files` is set, files this app writes in the background are filtered out so the
+// list reflects the user's own activity, not ours: our config and cache directories, and the
+// write-probe temp files. Other apps' Library files are left untouched.
 #[tauri::command]
-pub async fn get_recent_files() -> Result<Vec<DirEntry>, String> {
-    tauri::async_runtime::spawn_blocking(|| {
+pub async fn get_recent_files(
+    app: AppHandle,
+    hide_app_files: bool,
+) -> Result<Vec<DirEntry>, String> {
+    // Resolve our own directories on the calling thread (PathBuf is Send into the blocking task).
+    let app_dirs: Vec<PathBuf> = if hide_app_files {
+        [app.path().app_config_dir(), app.path().app_cache_dir()]
+            .into_iter()
+            .flatten()
+            .collect()
+    } else {
+        Vec::new()
+    };
+
+    tauri::async_runtime::spawn_blocking(move || {
         let home = std::env::var("HOME").map_err(|e| e.to_string())?;
         let output = std::process::Command::new("mdfind")
             .arg("-onlyin")
@@ -658,12 +784,25 @@ pub async fn get_recent_files() -> Result<Vec<DirEntry>, String> {
             .output()
             .map_err(|e| e.to_string())?;
 
+        let is_app_file = |entry: &DirEntry| -> bool {
+            if app_dirs.iter().any(|dir| entry.path.starts_with(dir)) {
+                return true;
+            }
+            entry
+                .path
+                .file_name()
+                .and_then(|name| name.to_str())
+                .map(|name| name.starts_with(WRITE_PROBE_PREFIX))
+                .unwrap_or(false)
+        };
+
         let stdout = String::from_utf8_lossy(&output.stdout);
         let mut entries: Vec<DirEntry> = stdout
             .lines()
             .filter(|line| !line.is_empty())
             .filter_map(|line| build_dir_entry(PathBuf::from(line)).ok())
             .filter(|entry| entry.metadata.is_file)
+            .filter(|entry| !is_app_file(entry))
             .collect();
 
         // Newest first, then cap.
