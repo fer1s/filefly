@@ -9,8 +9,15 @@ import { dirSizeCache } from "../../hooks/dirSizeCache";
 // reports 0), so we compute the recursive total on demand — returning null while it's being
 // calculated. Only ever runs for the single selected entry (Properties / info panel), so it's a
 // one-off walk, not the whole listing.
+//
+// A volume root is special-cased: walking a whole disk (e.g. a 1 TB drive, slower still on NTFS)
+// would spin forever, so we use the OS-reported used space (total − available) — instant and what
+// Finder shows for a drive.
 export const useEntrySize = (entry: DirEntry): number | null => {
-  const { fs } = useStateContext();
+  const { fs, volumes } = useStateContext();
+  const volume = entry.metadata.isDir
+    ? volumes.find((v) => v.mountPoint === entry.path)
+    : undefined;
   // Tag the result with its path so a stale folder's size never shows for a newly selected one
   // (and so we don't need a synchronous reset-to-null in the effect body).
   const [computed, setComputed] = useState<{
@@ -19,7 +26,8 @@ export const useEntrySize = (entry: DirEntry): number | null => {
   } | null>(null);
 
   useEffect(() => {
-    if (!entry.metadata.isDir) return;
+    // Skip the recursive walk for non-folders and for volume roots (handled via disk stats below).
+    if (!entry.metadata.isDir || volume) return;
     let cancelled = false;
     fs.getDirSize(entry.path)
       .then((size) => {
@@ -30,9 +38,11 @@ export const useEntrySize = (entry: DirEntry): number | null => {
     return () => {
       cancelled = true;
     };
-  }, [fs, entry.path, entry.metadata.isDir]);
+  }, [fs, entry.path, entry.metadata.isDir, volume]);
 
   if (!entry.metadata.isDir) return entry.size;
+  // Volume root: used space straight from the OS, no walk.
+  if (volume) return Math.max(0, volume.totalBytes - volume.availableBytes);
   // Fresh result wins; otherwise show the cached value instantly (the list usually measured it
   // already) while the effect recomputes; null only when we've never measured this folder.
   if (computed?.path === entry.path) return computed.size;

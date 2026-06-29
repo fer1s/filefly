@@ -17,6 +17,9 @@ type Volume = {
   isRemovable: boolean;
   // Lowercased filesystem type (e.g. "ntfs", "apfs", "exfat").
   fileSystem: string;
+  // Raw byte counts (the *Space fields above are pre-formatted strings).
+  totalBytes: number;
+  availableBytes: number;
 };
 
 type DirMetadata = {

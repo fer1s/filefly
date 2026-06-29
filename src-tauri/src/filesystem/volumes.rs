@@ -15,6 +15,10 @@ pub struct Volume {
     // Lowercased filesystem type (e.g. "ntfs", "apfs", "exfat"). Used to warn about read-only
     // NTFS on macOS (which has no native write support).
     file_system: String,
+    // Raw byte counts (the *_space strings above are pre-formatted). Let the frontend show a
+    // volume's used size instantly in Properties instead of recursively walking the whole disk.
+    total_bytes: u64,
+    available_bytes: u64,
 }
 
 #[derive(serde::Serialize)]
@@ -94,6 +98,8 @@ pub fn get_volumes() -> Vec<Volume> {
             disk_usage: format_disk_usage(&available_space, &total_space),
             is_removable: disk.is_removable(),
             file_system: disk.file_system().to_string_lossy().to_lowercase(),
+            total_bytes: total_space,
+            available_bytes: available_space,
         });
     }
 
