@@ -20,6 +20,8 @@ pub struct AppSettings {
     sidebar_opacity: f64,
     // Hide this app's own background files (config/cache/temp) from the Recents listing.
     hide_system_recents: bool,
+    // Show transient toast notifications (e.g. "Copied"). When off, they're suppressed.
+    show_toasts: bool,
 }
 
 // Must mirror the frontend defaults (shared/constants.ts).
@@ -31,6 +33,7 @@ impl Default for AppSettings {
             date_format: "locale".to_string(),
             sidebar_opacity: 0.85,
             hide_system_recents: true,
+            show_toasts: true,
         }
     }
 }

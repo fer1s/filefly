@@ -125,6 +125,14 @@ export const useKeyboardNav = ({
       );
     };
 
+    // Select the first entry whose name starts with `buf` (searching the whole list from the top).
+    const selectFirstMatch = (buf: string) =>
+      setSelectedIDs((prev) => {
+        if (!items.length || !buf) return prev;
+        const match = items.find((e) => e.name.toLowerCase().startsWith(buf));
+        return match ? [match.path] : prev;
+      });
+
     // Type-to-find: accumulate typed chars; a single-char buffer starts after the current entry so
     // repeated presses cycle through matches.
     const typeahead = (char: string) => {
@@ -147,6 +155,22 @@ export const useKeyboardNav = ({
       });
     };
 
+    // Backspace while type-to-find is active edits the search (instead of navigating back).
+    // Returns whether it consumed the key, so the caller can stop the PathBar's back shortcut.
+    const backspaceTypeahead = () => {
+      if (!searchBufferRef.current) return false;
+      const next = searchBufferRef.current.slice(0, -1);
+      searchBufferRef.current = next;
+      onTypeaheadChange(next);
+      if (!next) {
+        clearTypeahead();
+      } else {
+        scheduleTypeaheadReset();
+        selectFirstMatch(next.toLowerCase());
+      }
+      return true;
+    };
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (isTypingTarget(e.target)) return;
       if (!enabled) return;
@@ -155,6 +179,14 @@ export const useKeyboardNav = ({
       if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
         e.preventDefault();
         typeahead(e.key);
+        return;
+      }
+
+      // Backspace edits an active type-to-find search rather than navigating back. Consuming it
+      // (capture phase + stopImmediatePropagation) keeps the PathBar's Backspace=back from firing.
+      if (e.key === KEY.BACKSPACE && !e.shiftKey && backspaceTypeahead()) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
         return;
       }
 
@@ -199,9 +231,11 @@ export const useKeyboardNav = ({
       }
     };
 
-    document.addEventListener("keydown", handleKeyDown);
+    // Capture phase so this runs before the PathBar's bubble-phase keydown — letting an active
+    // type-to-find swallow Backspace (via stopImmediatePropagation) before it navigates back.
+    document.addEventListener("keydown", handleKeyDown, true);
     return () => {
-      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("keydown", handleKeyDown, true);
       clearTypeahead();
     };
   }, [items, view, enabled, setSelectedIDs, onOpen, onTypeaheadChange]);

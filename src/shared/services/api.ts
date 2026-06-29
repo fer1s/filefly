@@ -16,6 +16,7 @@ export type AppSettings = {
   dateFormat: string;
   sidebarOpacity: number;
   hideSystemRecents: boolean;
+  showToasts: boolean;
 };
 
 // Load the persisted app settings (falls back to defaults when settings.toml is absent).

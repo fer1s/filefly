@@ -17,7 +17,7 @@ import { useDirectoryContents } from "./hooks/useDirectoryContents";
 import { useSidebarCollapsed } from "./hooks/useSidebarCollapsed";
 import { useAppSettings } from "./hooks/useAppSettings";
 
-import { notify, TOAST_TYPE } from "@/shared/toast";
+import { notify, setToastsEnabled, TOAST_TYPE } from "@/shared/toast";
 import { FileSystemManager } from "@/shared/managers/FileSystemManager";
 import { classNames } from "@/shared/utils";
 import { t } from "@/lang";
@@ -61,6 +61,17 @@ const App = () => {
     [settings.hideSystemRecents, update],
   );
 
+  const toggleShowToasts = useCallback(
+    () => update({ showToasts: !settings.showToasts }),
+    [settings.showToasts, update],
+  );
+
+  // Keep the toast bridge's enabled flag in sync so notify() (callable from non-React code)
+  // honors the setting.
+  useEffect(() => {
+    setToastsEnabled(settings.showToasts);
+  }, [settings.showToasts]);
+
   // The OS/webview context menu is replaced by the app's own; suppress it everywhere.
   useEffect(() => {
     const preventContextMenu = (event: MouseEvent) => event.preventDefault();
@@ -95,6 +106,8 @@ const App = () => {
         toggleShowHidden,
         hideSystemRecents: settings.hideSystemRecents,
         toggleHideSystemRecents,
+        showToasts: settings.showToasts,
+        toggleShowToasts,
         zoom: zoom.zoom,
         zoomIn: zoom.zoomIn,
         zoomOut: zoom.zoomOut,

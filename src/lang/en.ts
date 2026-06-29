@@ -147,6 +147,8 @@ export const en = {
     hideSystemRecents: "Hide app files in Recents",
     hideSystemRecentsHint:
       "Keep files this app writes in the background (cache, settings, temp) out of Recents.",
+    showToasts: "Show notifications",
+    showToastsHint: "Show transient pop-up messages (e.g. “Copied”, errors).",
     defaultZoom: "Default zoom",
     defaultZoomHint: "Zoom level for folders you haven't zoomed yet.",
     zoomPercent: (percent: number) => `${percent}%`,

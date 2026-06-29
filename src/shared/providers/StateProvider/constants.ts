@@ -33,6 +33,8 @@ export const initialState: State = {
   toggleShowHidden: () => {},
   hideSystemRecents: true,
   toggleHideSystemRecents: () => {},
+  showToasts: true,
+  toggleShowToasts: () => {},
   zoom: ZOOM_DEFAULT,
   zoomIn: () => {},
   zoomOut: () => {},

@@ -32,6 +32,9 @@ export type State = {
   // Hide this app's own background files (config/cache/temp) from the Recents listing.
   hideSystemRecents: boolean;
   toggleHideSystemRecents: () => void;
+  // Whether transient toast notifications are surfaced in the UI.
+  showToasts: boolean;
+  toggleShowToasts: () => void;
   // Directory zoom multiplier (1 = 100%), persisted per folder.
   zoom: number;
   zoomIn: () => void;
