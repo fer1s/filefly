@@ -6,4 +6,5 @@ export type UsePathBarShortcutsArgs = {
   toggleView: () => void;
   toggleHidden: () => void;
   toggleInfo: () => void;
+  toggleSearch: () => void;
 };

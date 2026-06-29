@@ -189,6 +189,11 @@ keys = ["i"]
 mod = true
 shift = true
 
+# Toggle the search field that filters the current folder.
+[search]
+keys = ["f"]
+mod = true
+
 # Open a terminal at the selection's folder. Matches VS Code's Ctrl+` (literal Control, all OSes).
 [open_in_terminal]
 keys = ["`"]

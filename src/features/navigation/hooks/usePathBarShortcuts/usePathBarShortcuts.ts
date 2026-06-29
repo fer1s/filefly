@@ -15,6 +15,7 @@ export const usePathBarShortcuts = ({
   toggleView,
   toggleHidden,
   toggleInfo,
+  toggleSearch,
 }: UsePathBarShortcutsArgs) => {
   const { keymap } = useKeymap();
 
@@ -56,6 +57,9 @@ export const usePathBarShortcuts = ({
       } else if (matchesBinding(e, keymap[KEYMAP_ACTION.TOGGLE_INFO])) {
         e.preventDefault();
         toggleInfo();
+      } else if (matchesBinding(e, keymap[KEYMAP_ACTION.SEARCH])) {
+        e.preventDefault();
+        toggleSearch();
       }
     };
 
@@ -70,5 +74,6 @@ export const usePathBarShortcuts = ({
     toggleView,
     toggleHidden,
     toggleInfo,
+    toggleSearch,
   ]);
 };

@@ -84,6 +84,8 @@ export const en = {
     up: "Up",
     toggleView: "Toggle view",
     toggleInfo: "Toggle info panel",
+    search: "Search",
+    searchPlaceholder: "Search in folder",
   },
   quickbar: {
     zoomIn: "Zoom in",
@@ -126,6 +128,7 @@ export const en = {
       toggleHidden: "Toggle hidden files",
       toggleInfo: "Toggle info panel",
       toggleSidebar: "Toggle sidebar",
+      search: "Search in folder",
       zoomIn: "Zoom in",
       zoomOut: "Zoom out",
       previewPrev: "Previous",

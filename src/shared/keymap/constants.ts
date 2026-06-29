@@ -27,6 +27,7 @@ export const KEYMAP_ACTION = {
   TOGGLE_SIDEBAR: "toggle_sidebar",
   GO_HOME: "go_home",
   TOGGLE_INFO: "toggle_info",
+  SEARCH: "search",
   HELP_SHORTCUTS: "help_shortcuts",
   PINNED_1: "pinned_1",
   PINNED_2: "pinned_2",

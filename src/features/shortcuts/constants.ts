@@ -100,6 +100,10 @@ export const SHORTCUT_SECTIONS: readonly ShortcutSection[] = [
         actions: [KEYMAP_ACTION.TOGGLE_SIDEBAR],
       },
       {
+        label: () => t.shortcuts.actions.search,
+        actions: [KEYMAP_ACTION.SEARCH],
+      },
+      {
         label: () => t.shortcuts.actions.zoomIn,
         actions: [KEYMAP_ACTION.ZOOM_IN],
       },

@@ -1,0 +1,85 @@
+/* Inline folder-filter field expanded from the PathBar search button. Mirrors the path input's
+   box and takes a bounded, shrinkable slice of the bar — so the path field gives up room for it. */
+.PathSearch {
+  flex: 0 1 var(--size-path-search);
+  min-width: 0;
+  max-width: var(--size-path-search);
+  /* Stretch to the row height (set by the LG buttons) so it always matches them exactly. */
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1-5);
+  padding: var(--space-0) var(--space-2-5);
+  background-color: var(--color-overlay-faint);
+  border: var(--border-width-default) solid var(--color-border-faint);
+  border-radius: var(--radius-sm);
+  /* Clip the content while expanding/collapsing so it grows out of the button's spot. */
+  overflow: hidden;
+  white-space: nowrap;
+  /* Eased expand (easeOutCubic) so it glides open rather than snapping. */
+  animation: path-search-in 0.32s cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+/* Exit: reverse the expand, then PathSearch unmounts on animationend (see onExited). */
+.PathSearch.closing {
+  animation: path-search-out 0.28s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+
+@keyframes path-search-in {
+  from {
+    max-width: 0;
+    padding-left: 0;
+    padding-right: 0;
+    opacity: 0;
+  }
+}
+
+@keyframes path-search-out {
+  to {
+    max-width: 0;
+    padding-left: 0;
+    padding-right: 0;
+    opacity: 0;
+  }
+}
+
+/* Near-instant (not `none`) so the exit's animationend still fires and PathSearch unmounts. */
+@media (prefers-reduced-motion: reduce) {
+  .PathSearch,
+  .PathSearch.closing {
+    animation-duration: 0.01ms;
+  }
+}
+
+.PathSearch:focus-within {
+  background-color: var(--color-surface-interactive);
+  border-color: var(--color-border-default);
+}
+
+.PathSearch .path_search_icon {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-md);
+}
+
+/* Two-class selector so it beats the generic `.PathBar input` box — the field must be fully
+   transparent (no inner background/border) so it reads as part of its container. */
+.PathSearch .path_search_input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: var(--space-0);
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  outline: none;
+  color: var(--color-text-primary);
+  font-family: "Inter", sans-serif;
+  font-size: var(--font-size-base);
+}
+
+.PathSearch .path_search_input:focus {
+  background: transparent;
+  border: none;
+}
