@@ -1,10 +1,12 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { convertFileSrc } from "@tauri-apps/api/core";
 
 import { useStateContext } from "@/shared/providers/StateProvider";
 import IconButton from "@/shared/components/elements/IconButton";
 import Spinner from "@/shared/components/elements/Spinner";
 import Icon from "@/shared/components/elements/Icon";
+import CloseButton from "@/shared/components/patterns/CloseButton";
+import ZoomControl from "@/shared/components/patterns/ZoomControl";
 import {
   ContextMenu,
   ContextMenuItem,
@@ -22,8 +24,8 @@ import {
   useKeymap,
   matchesBinding,
   formatBinding,
+  isMacPlatform,
   KEYMAP_ACTION,
-  ESCAPE_HOTKEY,
 } from "@/shared/keymap";
 import { classNames } from "@/shared/utils";
 import { notify, TOAST_TYPE } from "@/shared/toast";
@@ -33,11 +35,16 @@ import AudioPreview from "../AudioPreview";
 import { useContextMenu } from "../../hooks/useContextMenu";
 
 import { ZoomableImage } from "./ZoomableImage";
+import { useImageZoom } from "./useImageZoom";
+import {
+  IMAGE_ZOOM_MIN,
+  IMAGE_ZOOM_MAX,
+  IMAGE_ZOOM_BUTTON_STEP,
+} from "./constants";
 
 import {
   faChevronLeft,
   faChevronRight,
-  faXmark,
   faCopy,
 } from "@fortawesome/free-solid-svg-icons";
 
@@ -63,6 +70,23 @@ const Preview = ({
     openAt: openImageMenu,
     setVisible: setImageMenuVisible,
   } = useContextMenu();
+
+  const mac = isMacPlatform();
+  const isImage = IMAGE_FORMATS.includes(fileType);
+  // Image zoom lives here (not in ZoomableImage) so its control sits in the shared bottom bar.
+  const { zoom, pan, setPan, zoomTo, stepZoom, reset: resetZoom } =
+    useImageZoom();
+
+  // Navigation resets the zoom (so the next file opens at 1x) — done here rather than in an
+  // effect to avoid a synchronous reset-on-prop-change.
+  const goPrev = useCallback(() => {
+    resetZoom();
+    onPrev();
+  }, [resetZoom, onPrev]);
+  const goNext = useCallback(() => {
+    resetZoom();
+    onNext();
+  }, [resetZoom, onNext]);
 
   // Right-click an image → custom menu to copy it to the clipboard. (The webview's native menu
   // is blocked app-wide and would only show "Inspect Element" in dev anyway.)
@@ -118,15 +142,15 @@ const Preview = ({
     if (!previewVisible) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (matchesBinding(e, keymap[KEYMAP_ACTION.PREVIEW_PREV])) onPrev();
-      else if (matchesBinding(e, keymap[KEYMAP_ACTION.PREVIEW_NEXT])) onNext();
+      if (matchesBinding(e, keymap[KEYMAP_ACTION.PREVIEW_PREV])) goPrev();
+      else if (matchesBinding(e, keymap[KEYMAP_ACTION.PREVIEW_NEXT])) goNext();
       // Close is fixed to Escape (not user-configurable), like other universal cancels.
       else if (e.key === KEY.ESCAPE) setPreviewVisible(false);
     };
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [keymap, onNext, onPrev, previewVisible, setPreviewVisible]);
+  }, [keymap, goNext, goPrev, previewVisible, setPreviewVisible]);
 
   return (
     <>
@@ -152,33 +176,10 @@ const Preview = ({
             previewVisible && "visible",
           )}
         >
-          <div className="preview_header">
-            <div className="preview_nav">
-              <IconButton
-                icon={faChevronLeft}
-                onClick={onPrev}
-                disabled={!hasPrev}
-                tooltip={t.common.previous}
-                hotkey={formatBinding(keymap[KEYMAP_ACTION.PREVIEW_PREV])}
-                aria-label={t.common.previous}
-              />
-              <IconButton
-                icon={faChevronRight}
-                onClick={onNext}
-                disabled={!hasNext}
-                tooltip={t.common.next}
-                hotkey={formatBinding(keymap[KEYMAP_ACTION.PREVIEW_NEXT])}
-                aria-label={t.common.next}
-              />
-            </div>
+          <div className={classNames("preview_header", mac && "mac")}>
+            {mac && <CloseButton onClose={() => setPreviewVisible(false)} />}
             <h4>{t.common.preview}</h4>
-            <IconButton
-              icon={faXmark}
-              onClick={() => setPreviewVisible(false)}
-              tooltip={t.common.close}
-              hotkey={ESCAPE_HOTKEY}
-              aria-label={t.common.close}
-            />
+            {!mac && <CloseButton onClose={() => setPreviewVisible(false)} />}
           </div>
           <div
             className={classNames(
@@ -199,6 +200,10 @@ const Preview = ({
                   src={convertFileSrc(filePath)}
                   alt={filePath}
                   onContextMenu={handleImageContextMenu}
+                  zoom={zoom}
+                  pan={pan}
+                  onZoomTo={zoomTo}
+                  onPanChange={setPan}
                 />
               ) : VIDEO_FORMATS.includes(fileType) ? (
                 <video
@@ -220,6 +225,36 @@ const Preview = ({
             ) : (
               <Spinner />
             )}
+          </div>
+
+          {/* Floating controls, centred over the content: prev · (zoom for images) · next. */}
+          <div className="preview_controls">
+            <IconButton
+              icon={faChevronLeft}
+              onClick={goPrev}
+              disabled={!hasPrev}
+              tooltip={t.common.previous}
+              hotkey={formatBinding(keymap[KEYMAP_ACTION.PREVIEW_PREV])}
+              aria-label={t.common.previous}
+            />
+            {isImage && (
+              <ZoomControl
+                value={zoom}
+                min={IMAGE_ZOOM_MIN}
+                max={IMAGE_ZOOM_MAX}
+                onZoomIn={() => stepZoom(IMAGE_ZOOM_BUTTON_STEP)}
+                onZoomOut={() => stepZoom(-IMAGE_ZOOM_BUTTON_STEP)}
+                onZoomTo={zoomTo}
+              />
+            )}
+            <IconButton
+              icon={faChevronRight}
+              onClick={goNext}
+              disabled={!hasNext}
+              tooltip={t.common.next}
+              hotkey={formatBinding(keymap[KEYMAP_ACTION.PREVIEW_NEXT])}
+              aria-label={t.common.next}
+            />
           </div>
         </div>
       )}

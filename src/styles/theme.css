@@ -90,6 +90,12 @@
   --color-background-sidebar-rgb: 16, 16, 18;
   --sidebar-opacity: 0.85;
 
+  /* macOS-style dialog close button (the red traffic-light dot + its hover glyph). */
+  --size-mac-close: 12px;
+  --size-mac-close-glyph: 9px;
+  --color-mac-close: #ff5f57;
+  --color-mac-close-glyph: rgba(0, 0, 0, 0.55);
+
   --color-surface-solid: rgb(0, 0, 0);
   --color-surface-input: rgba(0, 0, 0, 0.06);
   --color-surface-row: rgba(0, 0, 0, 0.1);

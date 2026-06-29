@@ -1,16 +1,13 @@
 import Dialog from "@/shared/components/patterns/Dialog";
-import IconButton from "@/shared/components/elements/IconButton";
+import DialogHeader from "@/shared/components/patterns/DialogHeader";
 import { useStateContext } from "@/shared/providers/StateProvider";
 import { useCloseOnEscape } from "@/shared/hooks/useCloseOnEscape";
-import { ESCAPE_HOTKEY } from "@/shared/keymap";
 import {
   SIDEBAR_OPACITY_MIN,
   SIDEBAR_OPACITY_MAX,
   SIDEBAR_OPACITY_STEP,
 } from "@/shared/constants";
 import { t } from "@/lang";
-
-import { faXmark } from "@fortawesome/free-solid-svg-icons";
 
 import "@/styles/components/SettingsDialog.css";
 
@@ -42,16 +39,11 @@ const SettingsDialog = ({ visible, onClose }: SettingsDialogProps) => {
       className="settings_modal"
       labelledBy={SETTINGS_TITLE_ID}
     >
-      <div className="panel_header">
-        <h4 id={SETTINGS_TITLE_ID}>{t.settings.title}</h4>
-        <IconButton
-          icon={faXmark}
-          onClick={onClose}
-          tooltip={t.common.close}
-          hotkey={ESCAPE_HOTKEY}
-          aria-label={t.common.close}
-        />
-      </div>
+      <DialogHeader
+        title={t.settings.title}
+        titleId={SETTINGS_TITLE_ID}
+        onClose={onClose}
+      />
 
       <div className="settings_body">
         <section className="settings_section">

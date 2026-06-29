@@ -1,13 +1,10 @@
 import { useEffect } from "react";
 
-import IconButton from "@/shared/components/elements/IconButton";
 import Dialog from "@/shared/components/patterns/Dialog";
+import DialogHeader from "@/shared/components/patterns/DialogHeader";
 import { notify, TOAST_TYPE } from "@/shared/toast";
 import { useCloseOnEscape } from "@/shared/hooks/useCloseOnEscape";
-import { ESCAPE_HOTKEY } from "@/shared/keymap";
 import { t } from "@/lang";
-
-import { faXmark } from "@fortawesome/free-solid-svg-icons";
 
 import "@/styles/components/Properties.css";
 
@@ -39,16 +36,11 @@ const Properties = ({ entry, visible, onClose }: PropertiesProps) => {
       className="properties_modal"
       labelledBy={PROPERTIES_TITLE_ID}
     >
-      <div className="panel_header">
-        <h4 id={PROPERTIES_TITLE_ID}>{t.properties.title}</h4>
-        <IconButton
-          icon={faXmark}
-          onClick={onClose}
-          tooltip={t.common.close}
-          hotkey={ESCAPE_HOTKEY}
-          aria-label={t.common.close}
-        />
-      </div>
+      <DialogHeader
+        title={t.properties.title}
+        titleId={PROPERTIES_TITLE_ID}
+        onClose={onClose}
+      />
       {entry && <PropertiesContent entry={entry} />}
     </Dialog>
   );

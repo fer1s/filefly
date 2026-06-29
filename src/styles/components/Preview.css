@@ -73,15 +73,26 @@
   margin: var(--space-0);
   padding: var(--space-0);
   color: var(--color-text-primary);
-  font-size: var(--font-size-3xl);
+  /* Match the dialog title size (panel_header h4). */
+  font-size: var(--font-size-xl);
   font-weight: 600;
   user-select: none;
 }
 
-.preview_container .preview_header .preview_nav {
-  display: flex;
+/* macOS: close dot on the left, title centred (like macOS dialogs). The two equal 1fr side
+   columns keep the auto-width title centred regardless of the dot's width. */
+.preview_container .preview_header.mac {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  gap: var(--space-1);
+}
+
+.preview_container .preview_header.mac .mac_close {
+  justify-self: start;
+}
+
+.preview_container .preview_header.mac h4 {
+  text-align: center;
 }
 
 .preview_container .preview_content {
@@ -184,12 +195,15 @@
   position: relative;
 }
 
-/* Zoom control (styled in ZoomControl.css) overlaid as a pill at the bottom. */
-.preview_container .image_zoom_control {
+/* Floating controls pill (prev · zoom · next), centred over the content at the bottom. */
+.preview_container .preview_controls {
   position: absolute;
   bottom: var(--space-3);
   left: 50%;
   transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
   padding: var(--space-1) var(--space-2-5);
   background-color: var(--color-surface-popover);
   backdrop-filter: blur(var(--blur-medium));
