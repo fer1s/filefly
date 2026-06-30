@@ -483,7 +483,7 @@ body.is-marqueeing .directory_page .dir_entry_item {
   display: flex;
   flex-direction: column;
   gap: var(--space-1-5);
-  max-width: 18rem;
+  max-width: var(--size-entry-metadata-width);
 }
 
 .entry_metadata_title {
