@@ -2,7 +2,11 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 import { StateProvider } from "@/shared/providers/StateProvider";
-import { KeymapProvider, ShortcutHelpProvider } from "@/shared/keymap";
+import {
+  KeymapProvider,
+  HotkeyProvider,
+  ShortcutHelpProvider,
+} from "@/shared/keymap";
 
 import SideBar from "@/features/sidebar";
 import ShortcutsDialog from "@/features/shortcuts";
@@ -127,21 +131,23 @@ const App = () => {
       }}
     >
       <KeymapProvider>
-        <ShortcutHelpProvider>
-          <SettingsProvider>
-            <div
-              className={classNames("App", sidebar.collapsed && "collapsed")}
-            >
-              <SideBar
-                collapsed={sidebar.collapsed}
-                onToggle={sidebar.toggle}
-              />
-              <AppContent />
-            </div>
-          </SettingsProvider>
-          <ShortcutsDialog />
-          <ToastStack toasts={toasts} onDismiss={dismissToast} />
-        </ShortcutHelpProvider>
+        <HotkeyProvider>
+          <ShortcutHelpProvider>
+            <SettingsProvider>
+              <div
+                className={classNames("App", sidebar.collapsed && "collapsed")}
+              >
+                <SideBar
+                  collapsed={sidebar.collapsed}
+                  onToggle={sidebar.toggle}
+                />
+                <AppContent />
+              </div>
+            </SettingsProvider>
+            <ShortcutsDialog />
+            <ToastStack toasts={toasts} onDismiss={dismissToast} />
+          </ShortcutHelpProvider>
+        </HotkeyProvider>
       </KeymapProvider>
     </StateProvider>
   );

@@ -1,5 +1,28 @@
 # Hotkey Dispatcher Plan (Option C — Scoped, Data-Driven Dispatch)
 
+## Status (2026-06-30)
+
+- **Phase 1 (Core) — DONE.** `scopes.ts`, `dispatch.ts` (pure resolver), `HotkeyProvider` +
+  `HotkeyContext`, `useHotkey`, `useHotkeys` (plural, for data-driven slots), `useHotkeyScope`.
+  Provider mounted inside `KeymapProvider` in `app/App.tsx`. No test harness in repo → resolver
+  unit tests deferred.
+- **Phase 2 (Escape) — PARTIAL.** `useCloseOnEscape` reimplemented on `useHotkey`/MODAL scope
+  (LIFO falls out of precedence + most-recent-registered). Context-menu / Tooltip / Toast Escape
+  NOT yet migrated.
+- **Phase 3 (GLOBAL) — DONE.** `useSidebarShortcuts`, `useSettingsShortcut`,
+  `usePinnedShortcuts`, `useTabsShortcuts`, `usePathBarShortcuts` all on `useHotkey`/`useHotkeys`.
+- **Phase 4 (DIRECTORY) — TODO.** `useZoomShortcuts`, `useClipboardShortcuts` to migrate (decide
+  GLOBAL vs DIRECTORY scope + mount `useHotkeyScope(DIRECTORY)` in the directory view).
+  `useKeyboardNav` stays a dedicated listener: its core is type-to-find char accumulation (not a
+  discrete binding). It already coexists with the dispatcher (window-capture beats its
+  document-capture); the old Backspace=back hack is moot (Backspace no longer navigates back).
+- **Phase 5 (PREVIEW) — TODO.** `Preview`, `AudioPreview`.
+- **Phase 6 (Cleanup) — TODO.**
+
+Verify by running the app before continuing 4–6 (scope-activation behavior needs runtime checks).
+
+---
+
 ## Goal
 
 Replace the scattered, ad-hoc keyboard handling with **one centralized, scope-aware hotkey
