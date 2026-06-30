@@ -1,8 +1,14 @@
 import Icon from "@/shared/components/elements/Icon";
+import IconButton, {
+  ICON_BUTTON_SIZE,
+} from "@/shared/components/elements/IconButton";
 import Tooltip, {
   TOOLTIP_PLACEMENT,
 } from "@/shared/components/elements/Tooltip";
 import { classNames, activateOnKey } from "@/shared/utils";
+import { t } from "@/lang";
+
+import { faTrash } from "@fortawesome/free-solid-svg-icons";
 
 import type { FolderItemProps } from "./types";
 
@@ -13,6 +19,7 @@ const FolderItem = ({
   active,
   hotkey,
   onContextMenu,
+  onRemove,
 }: FolderItemProps) => {
   const open = () => setPath(item.path);
 
@@ -30,6 +37,20 @@ const FolderItem = ({
       <Icon icon={item.icon} />
       <p>{item.name}</p>
       {hotkey && <span className="folder_hotkey">{hotkey}</span>}
+      {onRemove && (
+        <IconButton
+          icon={faTrash}
+          size={ICON_BUTTON_SIZE.SM}
+          className="item_remove"
+          tooltip={t.sidebar.removeItem}
+          tooltipPlacement={TOOLTIP_PLACEMENT.RIGHT}
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemove();
+          }}
+          aria-label={t.sidebar.removeItem}
+        />
+      )}
     </div>
   );
 

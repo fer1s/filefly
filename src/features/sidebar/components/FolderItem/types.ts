@@ -9,4 +9,6 @@ export type FolderItemProps = {
   active: boolean;
   hotkey?: string;
   onContextMenu?: (e: MouseEvent) => void;
+  // When provided (edit mode, custom items only) a trash button shows to remove the item.
+  onRemove?: () => void;
 };

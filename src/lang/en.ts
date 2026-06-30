@@ -15,6 +15,8 @@ export const en = {
     unknown: "?",
     play: "Play",
     pause: "Pause",
+    cancel: "Cancel",
+    confirm: "Confirm",
   },
   contextMenu: {
     newFolder: "New Folder",
@@ -70,6 +72,12 @@ export const en = {
     itemAdded: (name: string) => `Added "${name}" to the sidebar`,
     itemAddFailed: "Couldn't add the item",
     itemAlreadyAdded: "That item is already in the sidebar",
+    removeItem: "Remove from sidebar",
+    removeItemTitle: "Remove item",
+    confirmRemoveItem: (name: string) =>
+      `Remove "${name}" from the sidebar? This only removes the shortcut, not the folder.`,
+    itemRemoved: (name: string) => `Removed "${name}" from the sidebar`,
+    itemRemoveFailed: "Couldn't remove the item",
     groupRenamed: (name: string) => `Group renamed to "${name}"`,
     groupRenameFailed: "Couldn't rename the group",
     settings: "Settings",

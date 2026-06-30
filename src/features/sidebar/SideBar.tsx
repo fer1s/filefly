@@ -17,7 +17,10 @@ import { useSettings } from "@/features/settings";
 import { Properties } from "@/features/directory";
 import { t } from "@/lang";
 
+import { useState } from "react";
 import type { CSSProperties, MouseEvent, ReactNode } from "react";
+
+import ConfirmationDialog from "@/shared/components/patterns/ConfirmationDialog";
 
 import {
   SIDEBAR_GROUP,
@@ -91,6 +94,11 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
     groups.order,
     groups.reorder,
   );
+  // The custom item awaiting delete-confirmation (null when the dialog is closed).
+  const [pendingRemoval, setPendingRemoval] = useState<{
+    id: SidebarGroupId;
+    path: string;
+  } | null>(null);
 
   // Open the context menu at the cursor for a given row (path + kind, plus removable flag for
   // volumes so Eject can show only for external devices).
@@ -116,6 +124,11 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
         collapsed={collapsed}
         active={itemPath === path}
         onContextMenu={onRowContextMenu(itemPath, SIDEBAR_ITEM_KIND.FOLDER)}
+        onRemove={
+          editingSidebar
+            ? () => setPendingRemoval({ id, path: itemPath })
+            : undefined
+        }
       />
     ));
 
@@ -275,6 +288,23 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
         entry={properties.entry}
         visible={properties.visible}
         onClose={properties.close}
+      />
+      <ConfirmationDialog
+        visible={!!pendingRemoval}
+        title={t.sidebar.removeItemTitle}
+        message={
+          pendingRemoval
+            ? t.sidebar.confirmRemoveItem(basename(pendingRemoval.path))
+            : ""
+        }
+        confirmLabel={t.sidebar.removeItem}
+        destructive
+        onConfirm={() => {
+          if (pendingRemoval)
+            groups.removeItem(pendingRemoval.id, pendingRemoval.path);
+          setPendingRemoval(null);
+        }}
+        onClose={() => setPendingRemoval(null)}
       />
     </div>
   );

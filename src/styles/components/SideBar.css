@@ -64,6 +64,18 @@
   transition: all 0.2s ease-in-out;
 }
 
+/* Trash button on custom items: pushed to the right, and clickable even though the row itself is
+   non-interactive in edit mode (the row gets pointer-events:none). */
+.SideBar section .section_content .folder_item .item_remove {
+  margin-left: auto;
+  pointer-events: auto;
+}
+
+.SideBar section .section_content .folder_item .item_remove .IconButton,
+.SideBar section .section_content .folder_item .item_remove .IconButton svg {
+  color: var(--color-danger);
+}
+
 .SideBar section .section_content .folder_item svg {
   font-size: var(--font-size-base);
   color: var(--color-text-tertiary);

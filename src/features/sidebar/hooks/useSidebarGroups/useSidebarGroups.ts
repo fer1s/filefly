@@ -103,5 +103,24 @@ export const useSidebarGroups = () => {
     [groups],
   );
 
-  return { name, rename, order, reorder, items, addItem };
+  // Remove a custom item path from a group, reflecting it immediately and persisting. Reverts
+  // from disk on a write failure.
+  const removeItem = useCallback(
+    (id: SidebarGroupId, path: string) => {
+      const next = (groups[id]?.items ?? []).filter((p) => p !== path);
+      setGroups((prev) => ({ ...prev, [id]: { ...prev[id], items: next } }));
+      setSidebarItems(id, next)
+        .then(() =>
+          notify(t.sidebar.itemRemoved(basename(path)), TOAST_TYPE.SUCCESS),
+        )
+        .catch((error) => {
+          console.error("Failed to remove sidebar item:\n" + error);
+          notify(t.sidebar.itemRemoveFailed, TOAST_TYPE.ERROR);
+          getSidebarGroups().then(setGroups).catch(() => {});
+        });
+    },
+    [groups],
+  );
+
+  return { name, rename, order, reorder, items, addItem, removeItem };
 };

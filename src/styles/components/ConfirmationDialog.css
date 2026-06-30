@@ -1,0 +1,35 @@
+.confirmation_modal {
+  width: var(--size-confirmation-width);
+  max-width: calc(100vw - var(--space-8));
+}
+
+.confirmation_modal .confirmation_body {
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.confirmation_modal .confirmation_message {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+.confirmation_modal .confirmation_actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2-5);
+}
+
+/* Destructive confirm: danger colours, matching the close button's danger treatment. */
+.confirmation_modal .confirmation_confirm.destructive {
+  background-color: var(--color-danger-surface);
+  border-color: var(--color-danger-border);
+  color: var(--color-danger);
+}
+
+.confirmation_modal .confirmation_confirm.destructive:hover {
+  background-color: var(--color-danger);
+  color: var(--color-text);
+}
