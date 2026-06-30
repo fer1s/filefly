@@ -1,25 +1,35 @@
 # Hotkey Dispatcher Plan (Option C — Scoped, Data-Driven Dispatch)
 
-## Status (2026-06-30)
+## Status (2026-06-30) — IMPLEMENTED (tsc + eslint + vite build all clean)
 
 - **Phase 1 (Core) — DONE.** `scopes.ts`, `dispatch.ts` (pure resolver), `HotkeyProvider` +
   `HotkeyContext`, `useHotkey`, `useHotkeys` (plural, for data-driven slots), `useHotkeyScope`.
   Provider mounted inside `KeymapProvider` in `app/App.tsx`. No test harness in repo → resolver
   unit tests deferred.
-- **Phase 2 (Escape) — PARTIAL.** `useCloseOnEscape` reimplemented on `useHotkey`/MODAL scope
-  (LIFO falls out of precedence + most-recent-registered). Context-menu / Tooltip / Toast Escape
-  NOT yet migrated.
+- **Phase 2 (Escape) — DONE.** `useCloseOnEscape` (MODAL), both context-menu hooks
+  (`useContextMenu`, `useContextMenuState` → MENU), `ShortcutHelpProvider` (MODAL while open) all
+  on the dispatcher. LIFO falls out of precedence + most-recent-registered.
+  Tooltip + Toast Escape left as self-contained listeners (no scope of their own; they coexist —
+  the dispatcher only consumes Escape when a higher scope is active, in which case the
+  modal/menu/preview *should* win).
 - **Phase 3 (GLOBAL) — DONE.** `useSidebarShortcuts`, `useSettingsShortcut`,
-  `usePinnedShortcuts`, `useTabsShortcuts`, `usePathBarShortcuts` all on `useHotkey`/`useHotkeys`.
-- **Phase 4 (DIRECTORY) — TODO.** `useZoomShortcuts`, `useClipboardShortcuts` to migrate (decide
-  GLOBAL vs DIRECTORY scope + mount `useHotkeyScope(DIRECTORY)` in the directory view).
-  `useKeyboardNav` stays a dedicated listener: its core is type-to-find char accumulation (not a
-  discrete binding). It already coexists with the dispatcher (window-capture beats its
-  document-capture); the old Backspace=back hack is moot (Backspace no longer navigates back).
-- **Phase 5 (PREVIEW) — TODO.** `Preview`, `AudioPreview`.
-- **Phase 6 (Cleanup) — TODO.**
+  `usePinnedShortcuts`, `useTabsShortcuts`, `usePathBarShortcuts`.
+- **Phase 4 (DIRECTORY) — DONE.** `useZoomShortcuts`, `useClipboardShortcuts` migrated as GLOBAL
+  hotkeys gated by `when: enabled` (the existing `enabled = !preview && !properties` flag already
+  encodes "directory active", so this preserves behavior exactly; SELECT_ALL stays always-on to
+  swallow the webview's native select-all). `useKeyboardNav` deliberately stays a dedicated
+  listener: its core is type-to-find char accumulation (not a discrete binding). It coexists with
+  the dispatcher (window-capture beats its document-capture) and is disabled while a preview is
+  open; the old Backspace=back hack is moot (Backspace no longer navigates back).
+- **Phase 5 (PREVIEW) — DONE.** `Preview` (prev/next/Escape) and `AudioPreview` (Space) on the
+  PREVIEW scope. An open image context menu (MENU) correctly consumes Escape before the preview.
+- **Phase 6 (Cleanup) — DONE.** Input guards centralized in the dispatcher; migrated listeners +
+  their per-hook `if (input)` guards removed. Remaining `keydown` listeners are intentional:
+  `useKeyboardNav` (type-to-find), `Dialog` (element-local Tab focus-trap), `Tooltip`/`useToasts`
+  (self-contained Escape dismiss), `HotkeyProvider` (the dispatcher itself).
 
-Verify by running the app before continuing 4–6 (scope-activation behavior needs runtime checks).
+Still worth a manual runtime pass (no automated test harness): the Escape-bug scenario, Cmd+1..9
+tabs, pinned jumps, back/forward, zoom, copy/paste, preview nav + image-menu Escape, Cmd+/ help.
 
 ---
 

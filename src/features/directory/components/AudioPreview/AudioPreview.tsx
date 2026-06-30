@@ -3,7 +3,12 @@ import { convertFileSrc } from "@tauri-apps/api/core";
 import IconButton, {
   ICON_BUTTON_SIZE,
 } from "@/shared/components/elements/IconButton";
-import { SPACE_HOTKEY } from "@/shared/keymap";
+import {
+  SPACE_HOTKEY,
+  useHotkey,
+  useHotkeyScope,
+  HOTKEY_SCOPE,
+} from "@/shared/keymap";
 import { classNames } from "@/shared/utils";
 import { KEY } from "@/shared/constants";
 import { t } from "@/lang";
@@ -62,26 +67,14 @@ const AudioPreview = ({ isVisible, filePath }: AudioPreviewProps) => {
     audio.volume = volume / 100;
   }, [filePath, isPlaying, volume]);
 
-  // Space toggles play/pause while the preview is open (universal media convention). Ignored
-  // while typing in inputs, and preventDefault stops the page from scrolling on Space.
-  useEffect(() => {
-    if (!isVisible) return;
-
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key !== KEY.SPACE) return;
-      const target = e.target as HTMLElement | null;
-      if (
-        target &&
-        (target.tagName === "INPUT" || target.tagName === "TEXTAREA")
-      )
-        return;
-      e.preventDefault();
-      togglePlay();
-    };
-
-    document.addEventListener("keydown", handleKey);
-    return () => document.removeEventListener("keydown", handleKey);
-  }, [isVisible, togglePlay]);
+  // Space toggles play/pause while the preview is open (universal media convention). Runs in the
+  // PREVIEW scope; the dispatcher's input guard ignores it while typing and preventDefault stops
+  // the page from scrolling on Space.
+  useHotkeyScope(HOTKEY_SCOPE.PREVIEW, isVisible);
+  useHotkey({ keys: [KEY.SPACE] }, togglePlay, {
+    scope: HOTKEY_SCOPE.PREVIEW,
+    when: isVisible,
+  });
 
   return (
     <div className={classNames("audio_preview", isVisible && "visible")}>

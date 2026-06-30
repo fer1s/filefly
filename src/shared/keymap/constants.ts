@@ -17,6 +17,8 @@ export const KEYMAP_ACTION = {
   ZOOM_OUT: "zoom_out",
   PREVIEW_PREV: "preview_prev",
   PREVIEW_NEXT: "preview_next",
+  PREVIEW_ZOOM_IN: "preview_zoom_in",
+  PREVIEW_ZOOM_OUT: "preview_zoom_out",
   NEW_TAB: "new_tab",
   CLOSE_TAB: "close_tab",
   NEXT_TAB: "next_tab",

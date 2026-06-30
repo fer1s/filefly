@@ -124,6 +124,14 @@ export const SHORTCUT_SECTIONS: readonly ShortcutSection[] = [
         label: () => t.shortcuts.actions.previewNext,
         actions: [KEYMAP_ACTION.PREVIEW_NEXT],
       },
+      {
+        label: () => t.shortcuts.actions.previewZoomIn,
+        actions: [KEYMAP_ACTION.PREVIEW_ZOOM_IN],
+      },
+      {
+        label: () => t.shortcuts.actions.previewZoomOut,
+        actions: [KEYMAP_ACTION.PREVIEW_ZOOM_OUT],
+      },
     ],
   },
   {

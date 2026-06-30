@@ -22,7 +22,9 @@ import {
 } from "@/shared/constants";
 import {
   useKeymap,
-  matchesBinding,
+  useHotkey,
+  useHotkeyScope,
+  HOTKEY_SCOPE,
   formatBinding,
   isMacPlatform,
   KEYMAP_ACTION,
@@ -143,20 +145,34 @@ const Preview = ({
   const previewContent =
     markdownPreview?.filePath === filePath ? markdownPreview.content : "";
 
-  // Keyboard control while the preview is open: arrows navigate, Escape closes.
-  useEffect(() => {
-    if (!previewVisible) return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (matchesBinding(e, keymap[KEYMAP_ACTION.PREVIEW_PREV])) goPrev();
-      else if (matchesBinding(e, keymap[KEYMAP_ACTION.PREVIEW_NEXT])) goNext();
-      // Close is fixed to Escape (not user-configurable), like other universal cancels.
-      else if (e.key === KEY.ESCAPE) setPreviewVisible(false);
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [keymap, goNext, goPrev, previewVisible, setPreviewVisible]);
+  // Keyboard control while the preview is open: arrows navigate, Escape closes. PREVIEW scope sits
+  // below MENU/MODAL, so an open image context menu or a dialog consumes Escape first.
+  useHotkeyScope(HOTKEY_SCOPE.PREVIEW, previewVisible);
+  useHotkey(KEYMAP_ACTION.PREVIEW_PREV, goPrev, {
+    scope: HOTKEY_SCOPE.PREVIEW,
+    when: previewVisible,
+  });
+  useHotkey(KEYMAP_ACTION.PREVIEW_NEXT, goNext, {
+    scope: HOTKEY_SCOPE.PREVIEW,
+    when: previewVisible,
+  });
+  // Close is fixed to Escape (not user-configurable), like other universal cancels.
+  useHotkey({ keys: [KEY.ESCAPE] }, () => setPreviewVisible(false), {
+    scope: HOTKEY_SCOPE.PREVIEW,
+    when: previewVisible,
+  });
+  // Cmd/Ctrl +/- zoom the image — a separate action from the directory zoom (which is disabled
+  // while a preview is open), bound to the same keys by default and scoped to PREVIEW.
+  useHotkey(
+    KEYMAP_ACTION.PREVIEW_ZOOM_IN,
+    () => stepZoom(IMAGE_ZOOM_BUTTON_STEP),
+    { scope: HOTKEY_SCOPE.PREVIEW, when: previewVisible && isImage },
+  );
+  useHotkey(
+    KEYMAP_ACTION.PREVIEW_ZOOM_OUT,
+    () => stepZoom(-IMAGE_ZOOM_BUTTON_STEP),
+    { scope: HOTKEY_SCOPE.PREVIEW, when: previewVisible && isImage },
+  );
 
   return (
     <>
@@ -251,6 +267,12 @@ const Preview = ({
                 onZoomIn={() => stepZoom(IMAGE_ZOOM_BUTTON_STEP)}
                 onZoomOut={() => stepZoom(-IMAGE_ZOOM_BUTTON_STEP)}
                 onZoomTo={zoomTo}
+                zoomInHotkey={formatBinding(
+                  keymap[KEYMAP_ACTION.PREVIEW_ZOOM_IN],
+                )}
+                zoomOutHotkey={formatBinding(
+                  keymap[KEYMAP_ACTION.PREVIEW_ZOOM_OUT],
+                )}
               />
             )}
             <IconButton

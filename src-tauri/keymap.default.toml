@@ -105,6 +105,16 @@ keys = ["ArrowLeft"]
 [preview_next]
 keys = ["ArrowRight"]
 
+# Zoom the image preview. Same default keys as the directory zoom, but a separate action: the
+# directory zoom is disabled while a preview is open, and these only fire then (PREVIEW scope).
+[preview_zoom_in]
+keys = ["+", "="]
+mod = true
+
+[preview_zoom_out]
+keys = ["-"]
+mod = true
+
 # Tabs. mod = Cmd / Ctrl. Next/prev cycle uses mod+alt+arrows to avoid clashing with the
 # alt+arrow history navigation.
 [new_tab]
