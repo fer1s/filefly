@@ -51,7 +51,9 @@
   --size-volume-row-height: 40px;
   --size-volume-usage-max-width: 152px;
   --size-context-menu-max-width: 248px;
-  --size-context-menu-max-height: 248px;
+  /* Context menus grow to their content; they only scroll if taller than the viewport (keeps a
+     long menu — e.g. with the tag picker — from running off-screen). */
+  --size-context-menu-max-height: calc(100vh - var(--space-8));
   --size-context-menu-item: 24px;
   --size-icon-small: 12px;
   --size-icon-medium: 16px;
