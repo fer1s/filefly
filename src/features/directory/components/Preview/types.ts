@@ -11,6 +11,10 @@ export interface PreviewProps {
   onNext: () => void;
   hasPrev: boolean;
   hasNext: boolean;
+
+  // Trash the file currently being previewed (with confirmation). The preview then advances to the
+  // next file, or closes when none remain — handled by usePreview reacting to the shrunk list.
+  onDelete: () => void;
 }
 
 export interface ZoomableImageProps {

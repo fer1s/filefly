@@ -2,7 +2,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { convertFileSrc } from "@tauri-apps/api/core";
 
 import { useStateContext } from "@/shared/providers/StateProvider";
-import IconButton from "@/shared/components/elements/IconButton";
+import IconButton, {
+  ICON_BUTTON_VARIANT,
+} from "@/shared/components/elements/IconButton";
 import Spinner from "@/shared/components/elements/Spinner";
 import Icon from "@/shared/components/elements/Icon";
 import CloseButton from "@/shared/components/patterns/CloseButton";
@@ -48,6 +50,7 @@ import {
   faChevronLeft,
   faChevronRight,
   faCopy,
+  faTrash,
 } from "@fortawesome/free-solid-svg-icons";
 
 import "@/styles/components/Preview.css";
@@ -63,6 +66,7 @@ const Preview = ({
   onNext,
   hasPrev,
   hasNext,
+  onDelete,
 }: PreviewProps) => {
   const { fs } = useStateContext();
   const { keymap } = useKeymap();
@@ -173,6 +177,12 @@ const Preview = ({
     () => stepZoom(-IMAGE_ZOOM_BUTTON_STEP),
     { scope: HOTKEY_SCOPE.PREVIEW, when: previewVisible && isImage },
   );
+  // Trash the previewed file (same binding as the directory's trash, which is disabled while a
+  // preview is open). usePreview advances to the next file after the list shrinks.
+  useHotkey(KEYMAP_ACTION.TRASH, onDelete, {
+    scope: HOTKEY_SCOPE.PREVIEW,
+    when: previewVisible,
+  });
 
   return (
     <>
@@ -282,6 +292,14 @@ const Preview = ({
               tooltip={t.common.next}
               hotkey={formatBinding(keymap[KEYMAP_ACTION.PREVIEW_NEXT])}
               aria-label={t.common.next}
+            />
+            <IconButton
+              icon={faTrash}
+              variant={ICON_BUTTON_VARIANT.DANGER}
+              onClick={onDelete}
+              tooltip={t.contextMenu.delete}
+              hotkey={formatBinding(keymap[KEYMAP_ACTION.TRASH])}
+              aria-label={t.contextMenu.delete}
             />
           </div>
         </div>

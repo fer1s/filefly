@@ -47,6 +47,16 @@
   min-height: var(--size-control-large);
 }
 
+/* Danger variant — destructive action (e.g. delete in the preview). Ghost shape, red icon. */
+.Button.IconButton.danger {
+  color: var(--color-danger);
+}
+
+.Button.IconButton.danger:hover {
+  background-color: var(--color-overlay-hover);
+  color: var(--color-danger-hover);
+}
+
 /* Boxed variant — bordered square (e.g. PathBar nav controls). */
 .Button.IconButton.boxed {
   background-color: var(--color-overlay-faint);

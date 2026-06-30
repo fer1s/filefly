@@ -1,6 +1,7 @@
 export const ICON_BUTTON_VARIANT = {
   GHOST: "ghost",
   BOXED: "boxed",
+  DANGER: "danger",
 } as const;
 
 export type IconButtonVariant =

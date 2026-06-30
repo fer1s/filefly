@@ -317,6 +317,7 @@ const Directory = () => {
         onNext={preview.next}
         hasPrev={preview.hasPrev}
         hasNext={preview.hasNext}
+        onDelete={() => fileOps.remove([preview.filePath])}
       />
 
       <Properties
