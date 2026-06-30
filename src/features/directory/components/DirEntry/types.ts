@@ -1,6 +1,6 @@
 import type { MouseEvent, RefObject } from "react";
 
-import { DirEntry } from "@/shared/models";
+import { DirEntry, Tag } from "@/shared/models";
 import { FileSystemManager } from "@/shared/managers/FileSystemManager";
 import { type EntryKind } from "@/shared/constants";
 
@@ -8,6 +8,8 @@ export type DirEntryItemProps = {
   entry: DirEntry;
   fs: FileSystemManager;
   setPath: (path: string) => void;
+  // Finder tags for this entry (empty when none / non-macOS). Loaded lazily by EntriesView.
+  tags: Tag[];
   // The user's date format, applied to the modified/created columns (list view).
   dateFormat: string;
 

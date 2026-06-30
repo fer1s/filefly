@@ -21,12 +21,14 @@ import { useInlineRename } from "./useInlineRename";
 import { useEntryContextMenu } from "./useEntryContextMenu";
 import { EntryMetadata } from "./EntryMetadata";
 import { EntryIcon } from "./EntryIcon";
+import { TagDots } from "./TagDots";
 import type { DirEntryItemProps } from "./types";
 
 const DirEntryItemComponent = ({
   entry,
   fs,
   setPath,
+  tags,
   dateFormat,
   contextMenuRef,
   id,
@@ -155,6 +157,7 @@ const DirEntryItemComponent = ({
             finishLoad={finishLoad}
           />
           {renaming ? renameInput : <h3>{name || extension}</h3>}
+          <TagDots tags={tags} />
         </div>
 
         {/* List-only columns (hidden in grid). */}

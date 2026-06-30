@@ -18,6 +18,18 @@ export const en = {
     cancel: "Cancel",
     confirm: "Confirm",
   },
+  tags: {
+    label: "Tags",
+    colors: {
+      gray: "Gray",
+      green: "Green",
+      purple: "Purple",
+      blue: "Blue",
+      yellow: "Yellow",
+      red: "Red",
+      orange: "Orange",
+    },
+  },
   contextMenu: {
     newFolder: "New Folder",
     open: "Open",

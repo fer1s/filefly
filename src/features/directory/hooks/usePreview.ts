@@ -38,9 +38,7 @@ export const usePreview = (previewables: DirEntry[]) => {
   );
   const next = useCallback(
     () =>
-      setIndex(
-        safeIndex < previewables.length - 1 ? safeIndex + 1 : safeIndex,
-      ),
+      setIndex(safeIndex < previewables.length - 1 ? safeIndex + 1 : safeIndex),
     [safeIndex, previewables.length],
   );
 

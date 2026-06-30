@@ -33,6 +33,8 @@
   --size-control-small: 20px;
   --size-control-medium: 28px;
   --size-control-large: 32px;
+  --size-tag-dot: 12px;
+  --size-tag-swatch: 12px;
   --size-path-controls: 96px;
   --size-path-search: 260px;
   --size-progress-track: 4px;
@@ -143,6 +145,15 @@
   --color-success-surface: rgba(30, 90, 50, 0.95);
   --color-success-border: rgba(80, 220, 130, 0.5);
   --color-link: #4ba3f5;
+
+  /* Finder tag colours (indices 1..7: gray, green, purple, blue, yellow, red, orange). */
+  --color-tag-gray: rgb(152, 152, 157);
+  --color-tag-green: rgb(102, 197, 79);
+  --color-tag-purple: rgb(170, 108, 217);
+  --color-tag-blue: rgb(58, 151, 245);
+  --color-tag-yellow: rgb(240, 201, 80);
+  --color-tag-red: rgb(245, 93, 93);
+  --color-tag-orange: rgb(245, 160, 60);
 
   --color-scrollbar-thumb: #494949;
   --color-range-track: #313131;

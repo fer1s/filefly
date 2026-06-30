@@ -522,3 +522,100 @@ body.is-marqueeing .directory_page .dir_entry_item {
   justify-content: center;
   padding: var(--space-12);
 }
+
+/* Finder tag dots, shown after the entry name. In the grid they float onto the tile corner. */
+.tag_dots {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-0-5);
+  flex-shrink: 0;
+}
+
+.directory_page .list .dir_entry_item .name .tag_dots {
+  margin-left: var(--space-2);
+}
+
+.tag_dot {
+  width: var(--size-tag-dot);
+  height: var(--size-tag-dot);
+  border-radius: var(--radius-pill);
+  background-color: var(--color-tag-gray);
+}
+
+/* Index 0 (no colour) renders as a hollow ring. */
+.tag_dot.none {
+  background-color: transparent;
+  border: var(--border-width-default) solid var(--color-text-muted);
+}
+
+.tag_dot.gray {
+  background-color: var(--color-tag-gray);
+}
+.tag_dot.green {
+  background-color: var(--color-tag-green);
+}
+.tag_dot.purple {
+  background-color: var(--color-tag-purple);
+}
+.tag_dot.blue {
+  background-color: var(--color-tag-blue);
+}
+.tag_dot.yellow {
+  background-color: var(--color-tag-yellow);
+}
+.tag_dot.red {
+  background-color: var(--color-tag-red);
+}
+.tag_dot.orange {
+  background-color: var(--color-tag-orange);
+}
+
+/* Finder-style colour-swatch row at the top of the entry context menu. */
+.tag_picker {
+  display: flex;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  justify-content: space-between;
+}
+
+.tag_swatch {
+  width: var(--size-tag-swatch);
+  height: var(--size-tag-swatch);
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: transform 0.08s ease;
+}
+
+.tag_swatch:hover {
+  transform: scale(1.15);
+}
+
+/* Selected colour: a ring in the current text colour around the swatch. */
+.tag_swatch.active {
+  outline: var(--border-width-accent) solid var(--color-text-primary);
+  outline-offset: var(--space-0-25);
+}
+
+.tag_swatch.gray {
+  background-color: var(--color-tag-gray);
+}
+.tag_swatch.green {
+  background-color: var(--color-tag-green);
+}
+.tag_swatch.purple {
+  background-color: var(--color-tag-purple);
+}
+.tag_swatch.blue {
+  background-color: var(--color-tag-blue);
+}
+.tag_swatch.yellow {
+  background-color: var(--color-tag-yellow);
+}
+.tag_swatch.red {
+  background-color: var(--color-tag-red);
+}
+.tag_swatch.orange {
+  background-color: var(--color-tag-orange);
+}

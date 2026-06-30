@@ -38,6 +38,13 @@ type DirEntry = {
   metadata: DirMetadata;
 };
 
+// A macOS Finder tag: a name plus a colour index (0 = no colour; 1..=7 = the standard Finder
+// colours — gray, green, purple, blue, yellow, red, orange). Empty on non-macOS platforms.
+type Tag = {
+  name: string;
+  color: number;
+};
+
 // A browser tab: its own back/forward navigation history and its own search query. The current
 // path is the entry at `history.index` in `history.stack`.
 type NavHistory = {
@@ -68,6 +75,7 @@ type ContextMenuLayout = {
 export type {
   TimeSince,
   DirEntry,
+  Tag,
   DirMetadata,
   DiskUsage,
   Volume,

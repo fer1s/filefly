@@ -46,7 +46,10 @@ export type HotkeyContextValue = {
 
 export type KeymapContextValue = {
   keymap: Keymap;
-  setBinding: (action: KeymapAction, binding: KeyBinding | KeyBinding[]) => void;
+  setBinding: (
+    action: KeymapAction,
+    binding: KeyBinding | KeyBinding[],
+  ) => void;
 };
 
 export type KeymapProviderProps = {

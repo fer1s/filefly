@@ -31,6 +31,11 @@ imageproc = { version = "0.25", default-features = false }
 ab_glyph = "0.2"
 arboard = "3"
 
+# Finder tags live in a macOS extended attribute (a binary plist) — only needed there.
+[target.'cfg(target_os = "macos")'.dependencies]
+xattr = "1"
+plist = "1"
+
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem
 # DO NOT REMOVE!!

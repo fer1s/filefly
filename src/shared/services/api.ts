@@ -5,7 +5,7 @@ import { open as openDialog } from "@tauri-apps/plugin-dialog";
 
 import { notify, TOAST_TYPE } from "@/shared/toast";
 import { t } from "@/lang";
-import { Volume, DirEntry, ContextMenuLayout } from "@/shared/models";
+import { Volume, DirEntry, ContextMenuLayout, Tag } from "@/shared/models";
 import { ACCESS_DENIED_ERROR } from "@/shared/constants";
 import type { Keymap } from "@/shared/keymap/types";
 
@@ -66,6 +66,18 @@ export const pickFolder = async (): Promise<string | null> => {
 // Load the keybindings (reads keymap.toml, falling back to bundled defaults).
 export const getKeymap = async (): Promise<Keymap> =>
   (await invoke("get_keymap")) as Keymap;
+
+// Finder tags for a batch of paths, keyed by path (macOS only; empty on other platforms). Lazy —
+// call for the rows currently shown, not the whole directory.
+export const getFileTags = async (
+  paths: string[],
+): Promise<Record<string, Tag[]>> =>
+  (await invoke("get_tags_for", { paths })) as Record<string, Tag[]>;
+
+// Replace a file's Finder tags (macOS only; a no-op elsewhere). An empty list clears them.
+export const setFileTags = async (path: string, tags: Tag[]): Promise<void> => {
+  await invoke("set_file_tags", { path, tags });
+};
 
 // Load the context-menu layout (reads context_menu.toml, falling back to bundled defaults).
 export const getContextMenu = async (): Promise<ContextMenuLayout> =>
