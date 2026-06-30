@@ -24,7 +24,7 @@
 .TabBar .TabItem {
   display: flex;
   align-items: center;
-  gap: var(--space-1-5);
+  gap: var(--space-2);
   height: var(--size-tab-height);
   min-width: var(--size-tab-min-width);
   max-width: var(--size-tab-max-width);
