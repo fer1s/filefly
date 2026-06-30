@@ -62,6 +62,12 @@ export class FileSystemManager {
     return api.setFileTags(path, tags);
   }
 
+  // Files carrying a given Finder tag (macOS only; empty elsewhere). Virtual listing for the
+  // sidebar tag filter — like getRecentFiles, ordered as Spotlight returns them.
+  findTagged(tag: string): Promise<DirEntry[]> {
+    return api.findTagged(tag);
+  }
+
   // Eject/unmount a removable volume by its mount point.
   ejectVolume(mountPoint: string): Promise<void> {
     return api.ejectVolume(mountPoint);

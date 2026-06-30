@@ -14,7 +14,7 @@ import {
   RECENTS,
   CLIPBOARD_MODE,
 } from "@/shared/constants";
-import { classNames } from "@/shared/utils";
+import { classNames, isTagsPath } from "@/shared/utils";
 import { notify, TOAST_TYPE } from "@/shared/toast";
 import { t } from "@/lang";
 import { DirEntry } from "@/shared/models";
@@ -125,7 +125,7 @@ const Directory = () => {
   // Open a terminal at the selection's folder (a folder → itself, a file → its parent), or the
   // current directory when the selection isn't a single entry. Skipped in the virtual views.
   const handleOpenInTerminal = useCallback(() => {
-    if (path === "" || path === RECENTS) return;
+    if (path === "" || path === RECENTS || isTagsPath(path)) return;
     const id = selectedIDs.length === 1 ? selectedIDs[0] : path;
     const entry = sorted.find((item) => item.path === id);
     const dir = entry?.metadata.isFile
@@ -148,7 +148,8 @@ const Directory = () => {
   // Show Properties for the single selected entry, or the current folder otherwise.
   const handleProperties = useCallback(() => {
     if (selectedIDs.length === 1) properties.open(selectedIDs[0], false);
-    else if (path !== "" && path !== RECENTS) properties.open(path, true);
+    else if (path !== "" && path !== RECENTS && !isTagsPath(path))
+      properties.open(path, true);
   }, [selectedIDs, path, properties]);
 
   useKeyboardNav({

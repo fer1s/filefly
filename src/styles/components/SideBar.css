@@ -82,6 +82,29 @@
   transition: all 0.2s ease-in-out;
 }
 
+/* Finder tag rows: tint the dot with its colour (kept on hover/active too). */
+.SideBar section .section_content .folder_item.tag_gray svg {
+  color: var(--color-tag-gray);
+}
+.SideBar section .section_content .folder_item.tag_green svg {
+  color: var(--color-tag-green);
+}
+.SideBar section .section_content .folder_item.tag_purple svg {
+  color: var(--color-tag-purple);
+}
+.SideBar section .section_content .folder_item.tag_blue svg {
+  color: var(--color-tag-blue);
+}
+.SideBar section .section_content .folder_item.tag_yellow svg {
+  color: var(--color-tag-yellow);
+}
+.SideBar section .section_content .folder_item.tag_red svg {
+  color: var(--color-tag-red);
+}
+.SideBar section .section_content .folder_item.tag_orange svg {
+  color: var(--color-tag-orange);
+}
+
 .SideBar section .section_content .folder_item p {
   min-width: 0;
   font-size: var(--font-size-base);

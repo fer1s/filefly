@@ -7,6 +7,51 @@ export const VIEW_MODE = {
 // special-cases it to fetch recent files instead of reading a folder.
 export const RECENTS = "recents://";
 
+// Sentinel "path" prefix for a Finder tag view (e.g. "tags://Red"). Like RECENTS, not a real
+// directory — the loader fetches the tagged files instead. See tagsPath / tagFromPath / isTagsPath.
+export const TAGS_PREFIX = "tags://";
+
+// Finder tag colour indices — the byte stored after the tag name in the xattr (`Name\nIndex`).
+// 0 = no colour; 1..=7 are the standard Finder colours. Shared by the directory (dots, picker)
+// and the sidebar (tag filter), so it lives here rather than in one feature.
+export const TAG_COLOR = {
+  NONE: 0,
+  GRAY: 1,
+  GREEN: 2,
+  PURPLE: 3,
+  BLUE: 4,
+  YELLOW: 5,
+  RED: 6,
+  ORANGE: 7,
+} as const;
+
+export type TagColor = (typeof TAG_COLOR)[keyof typeof TAG_COLOR];
+
+// CSS modifier class per colour index (array position = the index), driving the --color-tag-*
+// styling. Index 0 is the uncoloured (hollow) dot.
+export const TAG_COLOR_CLASS = [
+  "none",
+  "gray",
+  "green",
+  "purple",
+  "blue",
+  "yellow",
+  "red",
+  "orange",
+] as const;
+
+// The seven selectable colours shown in the context-menu picker and the sidebar, in Finder's
+// left→right order. `class` is the CSS modifier / i18n key; `index` is the stored colour byte.
+export const TAG_PICKER_COLORS = [
+  { index: TAG_COLOR.RED, class: "red" },
+  { index: TAG_COLOR.ORANGE, class: "orange" },
+  { index: TAG_COLOR.YELLOW, class: "yellow" },
+  { index: TAG_COLOR.GREEN, class: "green" },
+  { index: TAG_COLOR.BLUE, class: "blue" },
+  { index: TAG_COLOR.PURPLE, class: "purple" },
+  { index: TAG_COLOR.GRAY, class: "gray" },
+] as const;
+
 // System Trash directory name (relative to home on macOS/Linux). Used to detect when the user is
 // browsing the Trash so the entry menu offers Restore instead of Move-to-Trash.
 export const TRASH_DIR_NAME = ".Trash";

@@ -113,6 +113,9 @@ dispara confiable con cambios de xattr).
 - [x] Dots en las filas (`TagDots` + `useDirectoryTags`, lazy por slice renderizado).
 - [x] **Fase 2** — `set_file_tags` (write/clear xattr) + `tagStore` reactivo + `TagPicker` (fila de
       swatches, macOS-only, oculta en directorio vacío / Trash) + i18n `t.tags.*`.
-- [ ] **Fase 3** — `list_all_tags` + sección sidebar + filtro `mdfind` con path-centinela `tags://`
-      (macOS-only, oculta si !isMac).
-- [ ] **Fase 4** — tags custom (nombre libre), multi-select, leer nombres reales de Finder.
+- [x] **Fase 3** — filtro + sidebar: `find_tagged(tag)` (mdfind, scope $HOME) + path-centinela
+      `tags://<color>` reusando la vista Directory (loadDirectory branch, watcher/goUp/properties/
+      terminal off, tabLabel, PathBar label). Sección "Tags" en el sidebar (7 colores, macOS-only).
+      Constantes de color movidas a `shared/constants.ts` (las usan directory **y** sidebar → §6).
+- [ ] **Fase 4** — tags custom (nombre libre), multi-select, leer nombres reales/localizados de
+      Finder (hoy el filtro busca por el nombre en inglés, p. ej. "Red").

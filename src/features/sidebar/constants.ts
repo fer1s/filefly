@@ -6,6 +6,7 @@ export const SIDEBAR_ITEM_KIND = {
   TRASH: "trash",
   RECENTS: "recents",
   VOLUME: "volume",
+  TAG: "tag",
 } as const;
 
 export type SidebarItemKind =

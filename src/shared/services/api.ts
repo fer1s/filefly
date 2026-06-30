@@ -79,6 +79,10 @@ export const setFileTags = async (path: string, tags: Tag[]): Promise<void> => {
   await invoke("set_file_tags", { path, tags });
 };
 
+// Files carrying a given Finder tag (macOS only; empty elsewhere), via Spotlight.
+export const findTagged = async (tag: string): Promise<DirEntry[]> =>
+  (await invoke("find_tagged", { tag })) as DirEntry[];
+
 // Load the context-menu layout (reads context_menu.toml, falling back to bundled defaults).
 export const getContextMenu = async (): Promise<ContextMenuLayout> =>
   (await invoke("get_context_menu")) as ContextMenuLayout;

@@ -7,7 +7,7 @@ import IconButton, {
 } from "@/shared/components/elements/IconButton";
 import { VIEW_MODE, RECENTS } from "@/shared/constants";
 import { useKeymap, formatBinding, KEYMAP_ACTION } from "@/shared/keymap";
-import { classNames } from "@/shared/utils";
+import { classNames, isTagsPath, tagFromPath } from "@/shared/utils";
 import { t } from "@/lang";
 
 import { usePathBarShortcuts } from "./hooks/usePathBarShortcuts";
@@ -80,7 +80,7 @@ const PathBar = () => {
 
   // Go up one level to the parent directory. Uses the POSIX separator since paths come from the backend as '/'.
   const goUp = () => {
-    if (path === RECENTS) return; // Recents has no parent.
+    if (path === RECENTS || isTagsPath(path)) return; // Virtual views have no parent.
     if (path === "" || path === "/") return setPath("");
     const trimmed = path.replace(/\/+$/, "");
     const idx = trimmed.lastIndexOf("/");
@@ -139,7 +139,7 @@ const PathBar = () => {
         <IconButton
           icon={faArrowUp}
           onClick={goUp}
-          disabled={path === "" || path === RECENTS}
+          disabled={path === "" || path === RECENTS || isTagsPath(path)}
           variant={ICON_BUTTON_VARIANT.BOXED}
           size={ICON_BUTTON_SIZE.LG}
           tooltip={t.pathbar.up}
@@ -150,6 +150,8 @@ const PathBar = () => {
 
       {path === RECENTS ? (
         <div className="path_label shadow">{t.pathbar.recents}</div>
+      ) : isTagsPath(path) ? (
+        <div className="path_label shadow">{tagFromPath(path)}</div>
       ) : (
         <PathField key={path} path={path} onCommit={setPath} />
       )}

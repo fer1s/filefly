@@ -1,7 +1,6 @@
 import { classNames } from "@/shared/utils";
 import type { Tag } from "@/shared/models";
-
-import { TAG_COLOR, TAG_COLOR_CLASS } from "../../constants";
+import { TAG_COLOR, TAG_COLOR_CLASS } from "@/shared/constants";
 
 // Coloured dots for a file's Finder tags (Finder-style). Decorative — the tag name is in the
 // title attribute for hover; nothing renders when the file has no tags.

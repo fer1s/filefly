@@ -59,6 +59,7 @@ fn main() {
             filesystem::fs::empty_trash,
             filesystem::tags::get_tags_for,
             filesystem::tags::set_file_tags,
+            filesystem::tags::find_tagged,
             functions::terminal::open_in_terminal,
             functions::markdown::md_to_html,
             functions::system::open_full_disk_access_settings,

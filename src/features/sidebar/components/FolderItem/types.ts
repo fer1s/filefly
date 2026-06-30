@@ -11,4 +11,6 @@ export type FolderItemProps = {
   onContextMenu?: (e: MouseEvent) => void;
   // When provided (edit mode, custom items only) a trash button shows to remove the item.
   onRemove?: () => void;
+  // Extra class on the row (e.g. a tag colour modifier that tints the icon).
+  className?: string;
 };

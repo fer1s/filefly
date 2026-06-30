@@ -69,6 +69,7 @@ export const en = {
   },
   sidebar: {
     recents: "Recents",
+    tags: "Tags",
     pinned: "Pinned",
     volumes: "Volumes",
     network: "Network",

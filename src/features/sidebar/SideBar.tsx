@@ -7,12 +7,13 @@ import { TOOLTIP_PLACEMENT } from "@/shared/components/elements/Tooltip";
 import {
   useKeymap,
   formatBinding,
+  isMacPlatform,
   KEYMAP_ACTION,
   PINNED_ACTIONS,
 } from "@/shared/keymap";
-import { classNames, basename } from "@/shared/utils";
+import { classNames, basename, tagsPath } from "@/shared/utils";
 import { pickFolder } from "@/shared/services/api";
-import { RECENTS } from "@/shared/constants";
+import { RECENTS, TAG_PICKER_COLORS } from "@/shared/constants";
 import { useSettings } from "@/features/settings";
 import { Properties } from "@/features/directory";
 import { t } from "@/lang";
@@ -48,6 +49,7 @@ import {
   faGear,
   faPenToSquare,
   faFolder,
+  faCircle,
 } from "@fortawesome/free-solid-svg-icons";
 
 import "@/styles/components/SideBar.css";
@@ -276,6 +278,36 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
           </SidebarSection>
         );
       })}
+
+      {/* Finder tags — a fixed section of colour rows; clicking one opens its Spotlight tag view.
+          macOS-only (tags are a native macOS feature). */}
+      {isMacPlatform() && (
+        <SidebarSection title={t.sidebar.tags}>
+          {TAG_PICKER_COLORS.map(({ class: colorClass }) => {
+            const name = t.tags.colors[colorClass];
+            const itemPath = tagsPath(name);
+            return (
+              <FolderItem
+                key={colorClass}
+                item={{
+                  name,
+                  path: itemPath,
+                  icon: faCircle,
+                  kind: SIDEBAR_ITEM_KIND.TAG,
+                }}
+                className={`tag_${colorClass}`}
+                setPath={setPath}
+                collapsed={collapsed}
+                active={path === itemPath}
+                onContextMenu={onRowContextMenu(
+                  itemPath,
+                  SIDEBAR_ITEM_KIND.TAG,
+                )}
+              />
+            );
+          })}
+        </SidebarSection>
+      )}
 
       <SidebarContextMenu
         contextMenuRef={menu.ref}

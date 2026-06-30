@@ -20,12 +20,13 @@ const FolderItem = ({
   hotkey,
   onContextMenu,
   onRemove,
+  className,
 }: FolderItemProps) => {
   const open = () => setPath(item.path);
 
   const row = (
     <div
-      className={classNames("folder_item", active && "active")}
+      className={classNames("folder_item", active && "active", className)}
       role="button"
       tabIndex={0}
       aria-current={active ? "true" : undefined}

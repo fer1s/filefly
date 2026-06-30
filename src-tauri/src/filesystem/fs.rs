@@ -36,7 +36,7 @@ pub struct DirEntry {
     metadata: DirMetadata,
 }
 
-fn build_dir_entry(path: PathBuf) -> Result<DirEntry, String> {
+pub(crate) fn build_dir_entry(path: PathBuf) -> Result<DirEntry, String> {
     let metadata = fs::metadata(&path).map_err(|error| error.to_string())?;
     let modified = metadata.modified().unwrap_or(SystemTime::UNIX_EPOCH);
     let accessed = metadata.accessed().unwrap_or(SystemTime::UNIX_EPOCH);

@@ -1,9 +1,9 @@
 import { useEffect } from "react";
 
 import { classNames } from "@/shared/utils";
+import { TAG_PICKER_COLORS } from "@/shared/constants";
 import { t } from "@/lang";
 
-import { TAG_PICKER_COLORS } from "../../constants";
 import { useDirectory } from "../../providers/DirectoryProvider";
 
 type TagPickerProps = {

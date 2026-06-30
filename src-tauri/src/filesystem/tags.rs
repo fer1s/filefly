@@ -2,6 +2,8 @@ use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
+use super::fs::DirEntry;
+
 // A Finder tag: a name plus a color index (0 = no colour, 1..=7 = the standard Finder colours:
 // gray, green, purple, blue, yellow, red, orange).
 #[derive(Debug, Serialize, Deserialize)]
@@ -16,7 +18,9 @@ pub struct Tag {
 #[cfg(target_os = "macos")]
 mod imp {
     use std::io::Cursor;
+    use std::path::PathBuf;
 
+    use super::super::fs::{build_dir_entry, DirEntry};
     use super::Tag;
 
     const TAGS_ATTR: &str = "com.apple.metadata:_kMDItemUserTags";
@@ -82,6 +86,31 @@ mod imp {
             .map_err(|e| e.to_string())?;
         xattr::set(path, TAGS_ATTR, &buffer).map_err(|e| e.to_string())
     }
+
+    // Files carrying a given tag, via Spotlight (scoped to $HOME, like recents). Empty when
+    // Spotlight hasn't indexed the location or finds nothing.
+    pub fn find(tag: &str) -> Vec<DirEntry> {
+        let Ok(home) = std::env::var("HOME") else {
+            return Vec::new();
+        };
+        // Strip quotes so the tag can't break out of the mdfind query literal.
+        let query = format!("kMDItemUserTags == '{}'cd", tag.replace('\'', ""));
+        let output = match std::process::Command::new("mdfind")
+            .arg("-onlyin")
+            .arg(&home)
+            .arg(&query)
+            .output()
+        {
+            Ok(output) => output,
+            Err(_) => return Vec::new(),
+        };
+
+        String::from_utf8_lossy(&output.stdout)
+            .lines()
+            .filter(|line| !line.is_empty())
+            .filter_map(|line| build_dir_entry(PathBuf::from(line)).ok())
+            .collect()
+    }
 }
 
 // TODO(win/linux): there is no native Finder-tags equivalent. A sidecar tag store could live here,
@@ -96,6 +125,10 @@ mod imp {
 
     pub fn write(_path: &str, _tags: &[Tag]) -> Result<(), String> {
         Ok(())
+    }
+
+    pub fn find(_tag: &str) -> Vec<super::DirEntry> {
+        Vec::new()
     }
 }
 
@@ -125,4 +158,12 @@ pub async fn set_file_tags(path: String, tags: Vec<Tag>) -> Result<(), String> {
     tauri::async_runtime::spawn_blocking(move || imp::write(&path, &tags))
         .await
         .map_err(|e| e.to_string())?
+}
+
+// Files carrying the given tag (macOS only; empty elsewhere), for the sidebar tag filter.
+#[tauri::command]
+pub async fn find_tagged(tag: String) -> Result<Vec<DirEntry>, String> {
+    tauri::async_runtime::spawn_blocking(move || imp::find(&tag))
+        .await
+        .map_err(|e| e.to_string())
 }

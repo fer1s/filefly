@@ -1,5 +1,5 @@
 import { t } from "@/lang";
-import { basename } from "@/shared/utils";
+import { basename, isTagsPath, tagFromPath } from "@/shared/utils";
 import { RECENTS } from "@/shared/constants";
 import type { Tab } from "@/shared/models";
 
@@ -59,6 +59,7 @@ export const tabLabel = (tab: Tab): string => {
   const path = tabPath(tab);
   if (path === "") return t.tabs.volumes;
   if (path === RECENTS) return t.tabs.recents;
+  if (isTagsPath(path)) return tagFromPath(path);
   return basename(path);
 };
 
