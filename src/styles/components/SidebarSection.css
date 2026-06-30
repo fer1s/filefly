@@ -97,12 +97,63 @@
   pointer-events: none;
 }
 
-/* Add-item affordance: only present in edit mode, so just center its button. */
+/* Add-item affordance (edit mode only): a thin hover strip between rows. The button is hidden
+   (scaled to nothing) until the strip is hovered, then scales in smoothly while the strip grows. */
 .SideBar .SidebarSection .section_insert {
-  height: var(--size-control-medium);
+  height: var(--space-2);
+  padding-bottom: var(--space-2);
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: height 0.15s ease-in-out;
+}
+
+.SideBar .SidebarSection .section_insert:hover {
+  height: var(--size-control-medium);
+}
+
+/* Full-width button: a centered plus flanked by dashed rules (----- + -----). */
+.SideBar .SidebarSection .section_insert_button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1-5);
+  padding: var(--space-0) var(--space-2-5);
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  opacity: 0;
+  transform: scale(0);
+  transition:
+    opacity 0.15s ease-in-out,
+    transform 0.15s ease-in-out;
+}
+
+.SideBar .SidebarSection .section_insert_button::before,
+.SideBar .SidebarSection .section_insert_button::after {
+  content: "";
+  flex: 1;
+  border-top: var(--border-width-default) dashed var(--color-border-strong);
+}
+
+.SideBar .SidebarSection .section_insert:hover .section_insert_button {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Hovering the button itself highlights the plus. */
+.SideBar .SidebarSection .section_insert_button:hover {
+  background-color: transparent;
+  color: var(--color-text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .SideBar .SidebarSection .section_insert,
+  .SideBar .SidebarSection .section_insert_button {
+    transition: none;
+  }
 }
 
 .SideBar.collapsed .SidebarSection {

@@ -1,9 +1,7 @@
 import { Children, Fragment, useState, type ReactElement } from "react";
 
+import Button from "@/shared/components/elements/Button";
 import Icon from "@/shared/components/elements/Icon";
-import IconButton, {
-  ICON_BUTTON_SIZE,
-} from "@/shared/components/elements/IconButton";
 import { classNames } from "@/shared/utils";
 import { t } from "@/lang";
 
@@ -37,17 +35,17 @@ const SidebarSection = ({
 
   const toggle = () => setOpen((prev) => !prev);
 
-  // An "add item" button for the gap at `index`; only rendered while in edit mode (see below).
+  // An "add item" affordance for the gap at `index`; only rendered while in edit mode. Full-width
+  // button with a centered plus flanked by dashed rules (----- + -----), revealed on hover.
   const insertAt = (index: number) => (
     <div key={`insert-${index}`} className="section_insert">
-      <IconButton
-        icon={faPlus}
-        size={ICON_BUTTON_SIZE.SM}
+      <Button
         className="section_insert_button"
-        tooltip={t.sidebar.addItem}
         onClick={() => onAddItem?.(index)}
         aria-label={t.sidebar.addItem}
-      />
+      >
+        <Icon icon={faPlus} />
+      </Button>
     </div>
   );
 
