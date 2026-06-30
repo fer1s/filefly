@@ -81,24 +81,28 @@
   transform: rotate(-90deg);
 }
 
-/* Add-item affordance: a zero-height gap that reveals its button on hover. */
+/* Edit mode: the group and each of its rows get a dashed outline (outline, not border, so the
+   layout doesn't shift), and the add-item buttons become visible. */
+.SideBar .SidebarSection.editing {
+  outline: var(--border-width-default) dashed var(--color-text-muted);
+  outline-offset: var(--space-0-5);
+  border-radius: var(--radius-sm);
+}
+
+.SideBar .SidebarSection.editing .section_content_inner > *:not(.section_insert) {
+  outline: var(--border-width-default) dashed var(--color-border-strong);
+  outline-offset: calc(-1 * var(--border-width-default));
+  border-radius: var(--radius-sm);
+  /* In edit mode the rows aren't navigable — clicks shouldn't open the folder/volume. */
+  pointer-events: none;
+}
+
+/* Add-item affordance: only present in edit mode, so just center its button. */
 .SideBar .SidebarSection .section_insert {
-  height: var(--space-0);
-  display: flex;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity 0.15s ease-in-out;
-}
-
-.SideBar .SidebarSection .section_insert:hover {
   height: var(--size-control-medium);
-  opacity: 1;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .SideBar .SidebarSection .section_insert {
-    transition: none;
-  }
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .SideBar.collapsed .SidebarSection {

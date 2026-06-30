@@ -63,6 +63,8 @@ export const en = {
     expand: "Expand sidebar",
     collapseGroup: "Collapse group",
     expandGroup: "Expand group",
+    editSidebar: "Edit sidebar",
+    doneEditing: "Done editing",
     addItem: "Add item",
     groupRenamed: (name: string) => `Group renamed to "${name}"`,
     groupRenameFailed: "Couldn't rename the group",

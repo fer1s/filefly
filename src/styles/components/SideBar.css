@@ -17,6 +17,12 @@
   gap: var(--space-2-5);
 }
 
+/* The edit toggle stays highlighted while sidebar edit mode is on. */
+.SideBar .sidebar_header [aria-pressed="true"] {
+  background-color: var(--color-overlay-hover);
+  color: var(--color-text);
+}
+
 /* Collapsed: icon-only rail. Stack the header buttons. */
 .SideBar.collapsed .sidebar_header {
   flex-direction: column;
@@ -24,6 +30,11 @@
 
 .SideBar.collapsed .sidebar_header .new_tab_toggle {
   margin-left: var(--space-0);
+}
+
+/* No edit mode in the icon rail — the group headers (and their edit affordances) are hidden. */
+.SideBar.collapsed .sidebar_header .edit_toggle {
+  display: none;
 }
 
 .SideBar.collapsed section .section_content .folder_item,

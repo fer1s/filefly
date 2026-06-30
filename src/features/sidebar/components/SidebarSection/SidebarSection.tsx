@@ -22,12 +22,13 @@ const SidebarSection = ({
   title,
   children,
   hideWhenCollapsed = false,
+  editing = false,
   onRename,
   onAddItem,
 }: SidebarSectionProps) => {
   const [open, setOpen] = useState(true);
   const {
-    editing,
+    editing: renaming,
     inputRef,
     start: startRename,
     cancel: cancelRename,
@@ -36,7 +37,7 @@ const SidebarSection = ({
 
   const toggle = () => setOpen((prev) => !prev);
 
-  // An "add item" button for the gap at `index`; shown on hover, hidden otherwise (see CSS).
+  // An "add item" button for the gap at `index`; only rendered while in edit mode (see below).
   const insertAt = (index: number) => (
     <div key={`insert-${index}`} className="section_insert">
       <IconButton
@@ -58,10 +59,11 @@ const SidebarSection = ({
         "SidebarSection",
         hideWhenCollapsed && "hide_when_collapsed",
         !open && "closed",
+        editing && "editing",
       )}
     >
       <div className="section_header">
-        {editing ? (
+        {renaming ? (
           <input
             ref={inputRef}
             type="text"
@@ -92,7 +94,7 @@ const SidebarSection = ({
       </div>
       <div className="section_content">
         <div className="section_content_inner">
-          {onAddItem
+          {editing && onAddItem
             ? [
                 insertAt(0),
                 ...items.map((child, index) => (

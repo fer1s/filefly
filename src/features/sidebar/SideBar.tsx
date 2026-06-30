@@ -25,6 +25,7 @@ import {
 } from "./constants";
 import { usePinnedFolders } from "./hooks/usePinnedFolders";
 import { useSidebarGroups } from "./hooks/useSidebarGroups";
+import { useSidebarEditMode } from "./hooks/useSidebarEditMode";
 import { usePinnedShortcuts } from "./hooks/usePinnedShortcuts";
 import { useSidebarShortcuts } from "./hooks/useSidebarShortcuts";
 import { useSidebarContextMenu } from "./hooks/useSidebarContextMenu";
@@ -39,6 +40,7 @@ import {
   faClockRotateLeft,
   faPlus,
   faGear,
+  faPenToSquare,
 } from "@fortawesome/free-solid-svg-icons";
 
 import "@/styles/components/SideBar.css";
@@ -60,6 +62,11 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
   const { open: openSettings } = useSettings();
   const pinned = usePinnedFolders();
   const groups = useSidebarGroups();
+  const {
+    ref: sidebarRef,
+    editing: editingSidebar,
+    toggle: toggleEditMode,
+  } = useSidebarEditMode();
   usePinnedShortcuts({ pinned, setPath });
   useSidebarShortcuts({ onToggle });
 
@@ -77,6 +84,7 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
 
   return (
     <div
+      ref={sidebarRef}
       className={classNames("SideBar", collapsed && "collapsed")}
       // Drives the alpha of --color-background-sidebar (see theme.css); set by the user in Settings.
       style={{ "--sidebar-opacity": sidebarOpacity } as CSSProperties}
@@ -115,10 +123,22 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
           onClick={() => newTab()}
           aria-label={t.tabs.newTab}
         />
+        <IconButton
+          icon={faPenToSquare}
+          variant={ICON_BUTTON_VARIANT.BOXED}
+          size={ICON_BUTTON_SIZE.MD}
+          className="edit_toggle"
+          tooltip={editingSidebar ? t.sidebar.doneEditing : t.sidebar.editSidebar}
+          tooltipPlacement={TOOLTIP_PLACEMENT.RIGHT}
+          onClick={toggleEditMode}
+          aria-pressed={editingSidebar}
+          aria-label={editingSidebar ? t.sidebar.doneEditing : t.sidebar.editSidebar}
+        />
       </div>
 
       <SidebarSection
         title={groups.name(SIDEBAR_GROUP.PINNED, t.sidebar.pinned)}
+        editing={editingSidebar}
         onRename={(name) => groups.rename(SIDEBAR_GROUP.PINNED, name)}
         onAddItem={() => {}}
       >
@@ -168,6 +188,7 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
 
       <SidebarSection
         title={groups.name(SIDEBAR_GROUP.NETWORK, t.sidebar.network)}
+        editing={editingSidebar}
         onRename={(name) => groups.rename(SIDEBAR_GROUP.NETWORK, name)}
         onAddItem={() => {}}
       >
