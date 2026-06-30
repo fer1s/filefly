@@ -10,3 +10,14 @@ export const SIDEBAR_ITEM_KIND = {
 
 export type SidebarItemKind =
   (typeof SIDEBAR_ITEM_KIND)[keyof typeof SIDEBAR_ITEM_KIND];
+
+// Stable ids for the sidebar groups. Used as the persistence key in sidebar.toml so a group's
+// saved name/items survive even when its display label changes.
+export const SIDEBAR_GROUP = {
+  PINNED: "pinned",
+  VOLUMES: "volumes",
+  NETWORK: "network",
+} as const;
+
+export type SidebarGroupId =
+  (typeof SIDEBAR_GROUP)[keyof typeof SIDEBAR_GROUP];

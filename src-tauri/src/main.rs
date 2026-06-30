@@ -64,6 +64,8 @@ fn main() {
             functions::context_menu::get_context_menu,
             functions::settings::get_settings,
             functions::settings::set_settings,
+            functions::sidebar::get_sidebar_groups,
+            functions::sidebar::set_sidebar_group_name,
             functions::folder_columns::get_folder_columns,
             functions::folder_columns::set_folder_columns,
             functions::folder_columns::get_folder_view,

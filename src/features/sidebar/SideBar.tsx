@@ -18,8 +18,13 @@ import { t } from "@/lang";
 
 import type { CSSProperties, MouseEvent } from "react";
 
-import { SIDEBAR_ITEM_KIND, type SidebarItemKind } from "./constants";
+import {
+  SIDEBAR_GROUP,
+  SIDEBAR_ITEM_KIND,
+  type SidebarItemKind,
+} from "./constants";
 import { usePinnedFolders } from "./hooks/usePinnedFolders";
+import { useSidebarGroups } from "./hooks/useSidebarGroups";
 import { usePinnedShortcuts } from "./hooks/usePinnedShortcuts";
 import { useSidebarShortcuts } from "./hooks/useSidebarShortcuts";
 import { useSidebarContextMenu } from "./hooks/useSidebarContextMenu";
@@ -54,6 +59,7 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
   const { keymap } = useKeymap();
   const { open: openSettings } = useSettings();
   const pinned = usePinnedFolders();
+  const groups = useSidebarGroups();
   usePinnedShortcuts({ pinned, setPath });
   useSidebarShortcuts({ onToggle });
 
@@ -111,7 +117,11 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
         />
       </div>
 
-      <SidebarSection title={t.sidebar.pinned}>
+      <SidebarSection
+        title={groups.name(SIDEBAR_GROUP.PINNED, t.sidebar.pinned)}
+        onRename={(name) => groups.rename(SIDEBAR_GROUP.PINNED, name)}
+        onAddItem={() => {}}
+      >
         <FolderItem
           item={RECENTS_ITEM}
           setPath={setPath}
@@ -136,7 +146,9 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
         ))}
       </SidebarSection>
 
-      <SidebarSection title={t.sidebar.volumes}>
+      <SidebarSection
+        title={groups.name(SIDEBAR_GROUP.VOLUMES, t.sidebar.volumes)}
+      >
         {volumes.map((volume, i) => (
           <VolumeItem
             key={`${volume.name}#${volume.mountPoint}`}
@@ -154,7 +166,11 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
         ))}
       </SidebarSection>
 
-      <SidebarSection title={t.sidebar.location}>
+      <SidebarSection
+        title={groups.name(SIDEBAR_GROUP.NETWORK, t.sidebar.network)}
+        onRename={(name) => groups.rename(SIDEBAR_GROUP.NETWORK, name)}
+        onAddItem={() => {}}
+      >
         <p className="section_todo">{t.sidebar.todo}</p>
       </SidebarSection>
 
