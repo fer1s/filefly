@@ -536,8 +536,8 @@ body.is-marqueeing .directory_page .dir_entry_item {
 }
 
 .tag_dot {
-  width: var(--size-tag-dot);
-  height: var(--size-tag-dot);
+  width: var(--space-3);
+  height: var(--space-3);
   border-radius: var(--radius-pill);
   background-color: var(--color-tag-gray);
 }
@@ -639,8 +639,8 @@ body.is-marqueeing .directory_page .dir_entry_item {
 }
 
 .tag_swatch {
-  width: var(--size-tag-swatch);
-  height: var(--size-tag-swatch);
+  width: var(--space-3-5);
+  height: var(--space-3-5);
   padding: 0;
   border: none;
   border-radius: var(--radius-pill);
