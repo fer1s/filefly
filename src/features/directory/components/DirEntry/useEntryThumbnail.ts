@@ -21,6 +21,9 @@ export const useEntryThumbnail = (
   fs: FileSystemManager,
   enabled: boolean,
   itemRef: RefObject<HTMLDivElement | null>,
+  // When set, the file is drawn straight from disk (e.g. SVG, which the webview rasterises
+  // natively) instead of asking the backend for a cached raster thumbnail.
+  direct = false,
 ) => {
   const [wanted, setWanted] = useState(false);
   const [imgSrc, setImgSrc] = useState<string | null>(null);
@@ -62,6 +65,10 @@ export const useEntryThumbnail = (
     loadEndedRef.current = false;
     imagePreviewLoad.start();
     releaseSlotRef.current = acquireImageSlot(() => {
+      if (direct) {
+        setImgSrc(convertFileSrc(path));
+        return;
+      }
       fs.getThumbnail(path, THUMBNAIL_SIZE)
         .then((thumb) => setImgSrc(convertFileSrc(thumb)))
         .catch(() => finishLoad());
@@ -75,7 +82,7 @@ export const useEntryThumbnail = (
         imagePreviewLoad.end();
       }
     };
-  }, [wanted, path, fs]);
+  }, [wanted, path, fs, direct]);
 
   // Cached images can already be complete before onLoad fires — settle now so the slot frees
   // and the spinner count doesn't get stuck.

@@ -145,12 +145,16 @@ export type UiColor = (typeof UI_COLOR)[keyof typeof UI_COLOR];
 export const MARKDOWN_FORMAT = "md";
 export const MARKDOWN_FORMATS: readonly string[] = ["md", "markdown"];
 export const PDF_FORMAT = "pdf";
+// SVG renders natively in the webview's <img>, so it skips the Rust thumbnail pipeline (the
+// `image` crate can't rasterise SVG) and is drawn straight from the file — see useEntryThumbnail.
+export const SVG_FORMAT = "svg";
 export const IMAGE_FORMATS: readonly string[] = [
   "png",
   "jpg",
   "jpeg",
   "webp",
   "gif",
+  SVG_FORMAT,
 ];
 export const AUDIO_FORMATS: readonly string[] = ["mp3", "wav", "ogg"];
 export const VIDEO_FORMATS: readonly string[] = [

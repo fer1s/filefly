@@ -11,6 +11,7 @@ import {
   VIDEO_FORMATS,
   PDF_FORMAT,
   MARKDOWN_FORMATS,
+  SVG_FORMAT,
 } from "@/shared/constants";
 import Tooltip from "@/shared/components/elements/Tooltip";
 import { t } from "@/lang";
@@ -83,6 +84,8 @@ const DirEntryItemComponent = ({
   const isVideo = entry.metadata.isFile && VIDEO_FORMATS.includes(ext);
   const isPdf = entry.metadata.isFile && ext === PDF_FORMAT;
   const isMarkdown = entry.metadata.isFile && MARKDOWN_FORMATS.includes(ext);
+  // SVG draws straight from the file (no backend thumbnail) — the webview rasterises it natively.
+  const isSvg = entry.metadata.isFile && ext === SVG_FORMAT;
   const isThumbnail = isImage || isVideo || isPdf || isMarkdown;
 
   // Dotfiles are hidden on macOS/Unix; dim them to set them apart (Finder-style).
@@ -91,8 +94,9 @@ const DirEntryItemComponent = ({
   const { imgSrc, imgRef, finishLoad } = useEntryThumbnail(
     entry.path,
     fs,
-    isThumbnail,
+    isThumbnail || isSvg,
     itemRef,
+    isSvg,
   );
 
   const { renameInputRef, submitRename, handleRenameKeyDown } = useInlineRename(
