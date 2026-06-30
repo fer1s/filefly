@@ -25,6 +25,10 @@ mod imp {
 
     const TAGS_ATTR: &str = "com.apple.metadata:_kMDItemUserTags";
 
+    // Cap on how many tagged files we read when enumerating distinct tags, to bound the xattr
+    // reads. The common tags appear well within this; a tag used only beyond it is missed.
+    const ALL_TAGS_SCAN_LIMIT: usize = 1500;
+
     pub fn read(path: &str) -> Vec<Tag> {
         let raw = match xattr::get(path, TAGS_ATTR) {
             Ok(Some(bytes)) => bytes,
@@ -111,6 +115,41 @@ mod imp {
             .filter_map(|line| build_dir_entry(PathBuf::from(line)).ok())
             .collect()
     }
+
+    // Distinct tags currently in use under $HOME, discovered via Spotlight then read from each
+    // file's xattr (capped). Reads the real stored names, so custom and localized tags ("Rojo",
+    // "Trabajo") surface without any English assumption. Deduped by name; sorted by colour.
+    pub fn list_all() -> Vec<Tag> {
+        use std::collections::HashMap;
+
+        let Ok(home) = std::env::var("HOME") else {
+            return Vec::new();
+        };
+        let output = match std::process::Command::new("mdfind")
+            .arg("-onlyin")
+            .arg(&home)
+            .arg("kMDItemUserTags == '*'")
+            .output()
+        {
+            Ok(output) => output,
+            Err(_) => return Vec::new(),
+        };
+
+        let mut by_name: HashMap<String, Tag> = HashMap::new();
+        for line in String::from_utf8_lossy(&output.stdout)
+            .lines()
+            .filter(|line| !line.is_empty())
+            .take(ALL_TAGS_SCAN_LIMIT)
+        {
+            for tag in read(line) {
+                by_name.entry(tag.name.clone()).or_insert(tag);
+            }
+        }
+
+        let mut tags: Vec<Tag> = by_name.into_values().collect();
+        tags.sort_by(|a, b| a.color.cmp(&b.color).then_with(|| a.name.cmp(&b.name)));
+        tags
+    }
 }
 
 // TODO(win/linux): there is no native Finder-tags equivalent. A sidecar tag store could live here,
@@ -128,6 +167,10 @@ mod imp {
     }
 
     pub fn find(_tag: &str) -> Vec<super::DirEntry> {
+        Vec::new()
+    }
+
+    pub fn list_all() -> Vec<super::Tag> {
         Vec::new()
     }
 }
@@ -164,6 +207,14 @@ pub async fn set_file_tags(path: String, tags: Vec<Tag>) -> Result<(), String> {
 #[tauri::command]
 pub async fn find_tagged(tag: String) -> Result<Vec<DirEntry>, String> {
     tauri::async_runtime::spawn_blocking(move || imp::find(&tag))
+        .await
+        .map_err(|e| e.to_string())
+}
+
+// Distinct tags currently in use (macOS only; empty elsewhere), for the sidebar tag list.
+#[tauri::command]
+pub async fn list_all_tags() -> Result<Vec<Tag>, String> {
+    tauri::async_runtime::spawn_blocking(imp::list_all)
         .await
         .map_err(|e| e.to_string())
 }

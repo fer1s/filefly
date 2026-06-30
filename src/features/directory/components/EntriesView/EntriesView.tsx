@@ -3,8 +3,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useStateContext } from "@/shared/providers/StateProvider";
 import { t } from "@/lang";
 import type { Tag } from "@/shared/models";
+import { useTags } from "@/shared/providers/TagsProvider";
 import { DirEntryItem } from "../DirEntry";
-import { useDirectory } from "../../providers/DirectoryProvider";
 
 import { RENDER_BATCH_SIZE, RENDER_PREFETCH_PX } from "./constants";
 import type { EntriesViewProps } from "./types";
@@ -32,7 +32,7 @@ const EntriesView = ({
   menu,
 }: EntriesViewProps) => {
   const { fs, setPath, dateFormat } = useStateContext();
-  const { tags: tagsByPath, loadTags } = useDirectory();
+  const { tags: tagsByPath, loadTags } = useTags();
   const [renderCount, setRenderCount] = useState(RENDER_BATCH_SIZE);
   const sentinelRef = useRef<HTMLDivElement>(null);
 

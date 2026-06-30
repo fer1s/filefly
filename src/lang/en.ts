@@ -20,6 +20,7 @@ export const en = {
   },
   tags: {
     label: "Tags",
+    add: "Add a tag…",
     colors: {
       gray: "Gray",
       green: "Green",

@@ -83,6 +83,10 @@ export const setFileTags = async (path: string, tags: Tag[]): Promise<void> => {
 export const findTagged = async (tag: string): Promise<DirEntry[]> =>
   (await invoke("find_tagged", { tag })) as DirEntry[];
 
+// Distinct Finder tags currently in use (macOS only; empty elsewhere), for the sidebar list.
+export const listAllTags = async (): Promise<Tag[]> =>
+  (await invoke("list_all_tags")) as Tag[];
+
 // Load the context-menu layout (reads context_menu.toml, falling back to bundled defaults).
 export const getContextMenu = async (): Promise<ContextMenuLayout> =>
   (await invoke("get_context_menu")) as ContextMenuLayout;

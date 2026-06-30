@@ -27,3 +27,12 @@ export type EntryContextMenuProps = {
   onPreview: (id: string) => void;
   onProperties: (id: string, isCurrentDirectory: boolean) => void;
 };
+
+export type TagPickerProps = {
+  // The entries the menu acts on (the clicked one, or the whole selection).
+  targets: string[];
+  onClose: () => void;
+};
+
+// How a tag covers the selection: every target has it, a subset (mixed), or none.
+export type TagCoverage = "all" | "some" | "none";

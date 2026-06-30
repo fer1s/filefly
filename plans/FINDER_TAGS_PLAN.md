@@ -117,5 +117,12 @@ dispara confiable con cambios de xattr).
       `tags://<color>` reusando la vista Directory (loadDirectory branch, watcher/goUp/properties/
       terminal off, tabLabel, PathBar label). Sección "Tags" en el sidebar (7 colores, macOS-only).
       Constantes de color movidas a `shared/constants.ts` (las usan directory **y** sidebar → §6).
-- [ ] **Fase 4** — tags custom (nombre libre), multi-select, leer nombres reales/localizados de
-      Finder (hoy el filtro busca por el nombre en inglés, p. ej. "Red").
+- [x] **Fase 4** — `list_all_tags` (mdfind + lee xattr, agrega por nombre, locale-agnóstico) +
+      `TagsProvider` app-level (estado de tags subido de DirectoryProvider a nivel app, para que
+      sidebar y directory compartan y reaccionen). Sidebar **dinámico** (tags reales, no 7 fijos) →
+      custom y localizados ("Rojo", "Trabajo") aparecen y filtran solos. Picker: input "Add a tag…"
+      (custom) + checklist de tags nombrados + estado intermedio en multi-select (swatch `partial`).
+
+Pendiente menor: al **escribir** desde los swatches de color se guarda el nombre en inglés
+("Red"); en un Finder en español convive con "Rojo". La lectura/filtro/sidebar sí son
+locale-correctos (muestran el nombre real guardado).

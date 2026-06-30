@@ -7,7 +7,6 @@ import { useSelection } from "../../hooks/useSelection";
 import { useFileOperations } from "../../hooks/useFileOperations";
 import { usePreview } from "../../hooks/usePreview";
 import { useProperties } from "../../hooks/useProperties";
-import { useTags } from "../../hooks/useTags";
 
 import { DirectoryContext } from "./DirectoryContext";
 import type { DirectoryProviderProps } from "./types";
@@ -15,10 +14,9 @@ import type { DirectoryProviderProps } from "./types";
 // Owns the directory's domain state (entries, selection, clipboard ops, preview/properties,
 // inline rename) and provides it to the directory view and the quick-actions bar alike.
 export const DirectoryProvider = ({ children }: DirectoryProviderProps) => {
-  const { fs, view, path, refreshDir } = useStateContext();
+  const { view, path, refreshDir } = useStateContext();
 
   const entries = useDirectoryEntries(view);
-  const tags = useTags(fs);
   const selection = useSelection(entries.sorted.map((entry) => entry.path));
   const [renamingID, setRenamingID] = useState("");
 
@@ -41,7 +39,6 @@ export const DirectoryProvider = ({ children }: DirectoryProviderProps) => {
       value={{
         ...entries,
         ...selection,
-        ...tags,
         renamingID,
         setRenamingID,
         fileOps,

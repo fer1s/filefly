@@ -68,6 +68,11 @@ export class FileSystemManager {
     return api.findTagged(tag);
   }
 
+  // Distinct Finder tags currently in use (macOS only; empty elsewhere), for the sidebar list.
+  listAllTags(): Promise<Tag[]> {
+    return api.listAllTags();
+  }
+
   // Eject/unmount a removable volume by its mount point.
   ejectVolume(mountPoint: string): Promise<void> {
     return api.ejectVolume(mountPoint);

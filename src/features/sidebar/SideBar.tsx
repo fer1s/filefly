@@ -13,7 +13,8 @@ import {
 } from "@/shared/keymap";
 import { classNames, basename, tagsPath } from "@/shared/utils";
 import { pickFolder } from "@/shared/services/api";
-import { RECENTS, TAG_PICKER_COLORS } from "@/shared/constants";
+import { RECENTS, TAG_COLOR, TAG_COLOR_CLASS } from "@/shared/constants";
+import { useTags } from "@/shared/providers/TagsProvider";
 import { useSettings } from "@/features/settings";
 import { Properties } from "@/features/directory";
 import { t } from "@/lang";
@@ -75,6 +76,7 @@ const GROUP_META: Record<SidebarGroupId, { title: string; editable: boolean }> =
 
 const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
   const { path, volumes, setPath, newTab, sidebarOpacity } = useStateContext();
+  const { allTags } = useTags();
 
   const { keymap } = useKeymap();
   const { open: openSettings } = useSettings();
@@ -279,18 +281,19 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
         );
       })}
 
-      {/* Finder tags — a fixed section of colour rows; clicking one opens its Spotlight tag view.
-          macOS-only (tags are a native macOS feature). */}
-      {isMacPlatform() && (
+      {/* Finder tags — the tags actually in use (their real names + colours), discovered at
+          runtime. Clicking one opens its Spotlight tag view. macOS-only. */}
+      {isMacPlatform() && allTags.length > 0 && (
         <SidebarSection title={t.sidebar.tags}>
-          {TAG_PICKER_COLORS.map(({ class: colorClass }) => {
-            const name = t.tags.colors[colorClass];
-            const itemPath = tagsPath(name);
+          {allTags.map((tag) => {
+            const itemPath = tagsPath(tag.name);
+            const colorClass =
+              TAG_COLOR_CLASS[tag.color] ?? TAG_COLOR_CLASS[TAG_COLOR.NONE];
             return (
               <FolderItem
-                key={colorClass}
+                key={tag.name}
                 item={{
-                  name,
+                  name: tag.name,
                   path: itemPath,
                   icon: faCircle,
                   kind: SIDEBAR_ITEM_KIND.TAG,

@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 import { StateProvider } from "@/shared/providers/StateProvider";
+import { TagsProvider } from "@/shared/providers/TagsProvider";
 import {
   KeymapProvider,
   HotkeyProvider,
@@ -130,25 +131,30 @@ const App = () => {
         toggleInfoPanel: tabs.toggleInfoPanel,
       }}
     >
-      <KeymapProvider>
-        <HotkeyProvider>
-          <ShortcutHelpProvider>
-            <SettingsProvider>
-              <div
-                className={classNames("App", sidebar.collapsed && "collapsed")}
-              >
-                <SideBar
-                  collapsed={sidebar.collapsed}
-                  onToggle={sidebar.toggle}
-                />
-                <AppContent />
-              </div>
-            </SettingsProvider>
-            <ShortcutsDialog />
-            <ToastStack toasts={toasts} onDismiss={dismissToast} />
-          </ShortcutHelpProvider>
-        </HotkeyProvider>
-      </KeymapProvider>
+      <TagsProvider>
+        <KeymapProvider>
+          <HotkeyProvider>
+            <ShortcutHelpProvider>
+              <SettingsProvider>
+                <div
+                  className={classNames(
+                    "App",
+                    sidebar.collapsed && "collapsed",
+                  )}
+                >
+                  <SideBar
+                    collapsed={sidebar.collapsed}
+                    onToggle={sidebar.toggle}
+                  />
+                  <AppContent />
+                </div>
+              </SettingsProvider>
+              <ShortcutsDialog />
+              <ToastStack toasts={toasts} onDismiss={dismissToast} />
+            </ShortcutHelpProvider>
+          </HotkeyProvider>
+        </KeymapProvider>
+      </TagsProvider>
     </StateProvider>
   );
 };
