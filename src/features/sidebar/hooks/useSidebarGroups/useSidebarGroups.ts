@@ -4,9 +4,11 @@ import {
   getSidebarGroups,
   setSidebarGroupName,
   setSidebarOrder,
+  setSidebarItems,
   type SidebarGroups,
 } from "@/shared/services/api";
 import { notify, TOAST_TYPE } from "@/shared/toast";
+import { basename } from "@/shared/utils";
 import { t } from "@/lang";
 
 import { DEFAULT_GROUP_ORDER, type SidebarGroupId } from "../../constants";
@@ -70,5 +72,36 @@ export const useSidebarGroups = () => {
       });
   }, []);
 
-  return { name, rename, order, reorder };
+  // The user-added item paths for a group, in display order.
+  const items = useCallback(
+    (id: SidebarGroupId) => groups[id]?.items ?? [],
+    [groups],
+  );
+
+  // Add a path to a group at `index` (within its custom items), reflecting it immediately and
+  // persisting. No-ops with a toast when the path is already there; reverts from disk on failure.
+  const addItem = useCallback(
+    (id: SidebarGroupId, path: string, index: number) => {
+      const current = groups[id]?.items ?? [];
+      if (current.includes(path)) {
+        notify(t.sidebar.itemAlreadyAdded, TOAST_TYPE.INFO);
+        return;
+      }
+      const next = [...current];
+      next.splice(Math.min(index, next.length), 0, path);
+      setGroups((prev) => ({ ...prev, [id]: { ...prev[id], items: next } }));
+      setSidebarItems(id, next)
+        .then(() =>
+          notify(t.sidebar.itemAdded(basename(path)), TOAST_TYPE.SUCCESS),
+        )
+        .catch((error) => {
+          console.error("Failed to add sidebar item:\n" + error);
+          notify(t.sidebar.itemAddFailed, TOAST_TYPE.ERROR);
+          getSidebarGroups().then(setGroups).catch(() => {});
+        });
+    },
+    [groups],
+  );
+
+  return { name, rename, order, reorder, items, addItem };
 };

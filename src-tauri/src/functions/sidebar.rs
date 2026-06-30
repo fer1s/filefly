@@ -16,6 +16,9 @@ pub struct SidebarGroup {
     // Display position among the groups (0-based). Absent means "use the built-in default order".
     #[serde(default, skip_serializing_if = "Option::is_none")]
     order: Option<u32>,
+    // User-added item paths for this group, in display order (shown below the built-in rows).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    items: Vec<String>,
 }
 
 // group id -> group settings. A BTreeMap keeps the file stably ordered (nicer diffs).
@@ -68,5 +71,14 @@ pub fn set_sidebar_order(app: AppHandle, ids: Vec<String>) -> Result<(), String>
     for (index, id) in ids.into_iter().enumerate() {
         config.entry(id).or_default().order = Some(index as u32);
     }
+    write_config(&app, &config)
+}
+
+// Replace a group's user-added item paths, preserving its other settings. The frontend sends the
+// full ordered list (after an add / remove / reorder), so this stays a simple set.
+#[tauri::command]
+pub fn set_sidebar_items(app: AppHandle, id: String, items: Vec<String>) -> Result<(), String> {
+    let mut config = read_config(&app);
+    config.entry(id).or_default().items = items;
     write_config(&app, &config)
 }

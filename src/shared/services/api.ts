@@ -1,6 +1,7 @@
 import { invoke, Channel } from "@tauri-apps/api/core";
 import { watchImmediate } from "@tauri-apps/plugin-fs";
 import { openUrl } from "@tauri-apps/plugin-opener";
+import { open as openDialog } from "@tauri-apps/plugin-dialog";
 
 import { notify, TOAST_TYPE } from "@/shared/toast";
 import { t } from "@/lang";
@@ -29,7 +30,11 @@ export const setSettings = async (settings: AppSettings): Promise<void> =>
 
 // Per-group sidebar customization, persisted in sidebar.toml (keyed by stable group id). Mirrors
 // the SidebarGroup struct in functions/sidebar.rs. `name` is absent until the user renames a group.
-export type SidebarGroupConfig = { name?: string; order?: number };
+export type SidebarGroupConfig = {
+  name?: string;
+  order?: number;
+  items?: string[];
+};
 export type SidebarGroups = Record<string, SidebarGroupConfig>;
 
 // Load all saved sidebar group settings (empty object when sidebar.toml is absent).
@@ -45,6 +50,18 @@ export const setSidebarGroupName = async (
 // Persist the group display order from a top-to-bottom list of group ids.
 export const setSidebarOrder = async (ids: string[]): Promise<void> =>
   await invoke("set_sidebar_order", { ids });
+
+// Persist a group's user-added item paths (the full ordered list).
+export const setSidebarItems = async (
+  id: string,
+  items: string[],
+): Promise<void> => await invoke("set_sidebar_items", { id, items });
+
+// Open the native folder picker; resolves to the chosen directory path, or null if cancelled.
+export const pickFolder = async (): Promise<string | null> => {
+  const result = await openDialog({ directory: true, multiple: false });
+  return typeof result === "string" ? result : null;
+};
 
 // Load the keybindings (reads keymap.toml, falling back to bundled defaults).
 export const getKeymap = async (): Promise<Keymap> =>

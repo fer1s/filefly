@@ -10,7 +10,8 @@ import {
   KEYMAP_ACTION,
   PINNED_ACTIONS,
 } from "@/shared/keymap";
-import { classNames } from "@/shared/utils";
+import { classNames, basename } from "@/shared/utils";
+import { pickFolder } from "@/shared/services/api";
 import { RECENTS } from "@/shared/constants";
 import { useSettings } from "@/features/settings";
 import { Properties } from "@/features/directory";
@@ -43,6 +44,7 @@ import {
   faPlus,
   faGear,
   faPenToSquare,
+  faFolder,
 } from "@fortawesome/free-solid-svg-icons";
 
 import "@/styles/components/SideBar.css";
@@ -99,8 +101,35 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
       menu.openAt(e.clientX, e.clientY, { path: itemPath, kind, isRemovable });
     };
 
+  // User-added rows for a group (its persisted custom items), shown below the built-in rows.
+  const customRows = (id: SidebarGroupId) =>
+    groups.items(id).map((itemPath) => (
+      <FolderItem
+        key={`custom:${itemPath}`}
+        item={{
+          name: basename(itemPath),
+          path: itemPath,
+          icon: faFolder,
+          kind: SIDEBAR_ITEM_KIND.FOLDER,
+        }}
+        setPath={setPath}
+        collapsed={collapsed}
+        active={itemPath === path}
+        onContextMenu={onRowContextMenu(itemPath, SIDEBAR_ITEM_KIND.FOLDER)}
+      />
+    ));
+
+  // Pick a folder and add it to the group. The clicked insert index spans built-in + custom rows,
+  // so subtract the built-in count to land at the right slot within the persisted custom items.
+  const onAddItem =
+    (id: SidebarGroupId, builtinCount: number) => async (index: number) => {
+      const folder = await pickFolder();
+      if (folder) groups.addItem(id, folder, Math.max(0, index - builtinCount));
+    };
+
   // The rows for each group. Rendered in the user's saved order below; the group shell (header,
   // edit affordances, drag handle) is the same SidebarSection for all of them.
+  const networkRows = customRows(SIDEBAR_GROUP.NETWORK);
   const groupContent: Record<SidebarGroupId, ReactNode> = {
     // An array (not a fragment) so SidebarSection's Children.toArray sees each row individually
     // and can interleave the add-item inserts between them.
@@ -128,6 +157,7 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
           onContextMenu={onRowContextMenu(item.path, item.kind)}
         />
       )),
+      ...customRows(SIDEBAR_GROUP.PINNED),
     ],
     [SIDEBAR_GROUP.VOLUMES]: volumes.map((volume, i) => (
       <VolumeItem
@@ -144,7 +174,19 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
         )}
       />
     )),
-    [SIDEBAR_GROUP.NETWORK]: <p className="section_todo">{t.sidebar.todo}</p>,
+    // Show the placeholder only until the user adds their first network location.
+    [SIDEBAR_GROUP.NETWORK]: networkRows.length ? (
+      networkRows
+    ) : (
+      <p className="section_todo">{t.sidebar.todo}</p>
+    ),
+  };
+
+  // Built-in (non-custom) row counts, so onAddItem can map the clicked gap to a custom slot.
+  const builtinCount: Record<SidebarGroupId, number> = {
+    [SIDEBAR_GROUP.PINNED]: 1 + pinned.length,
+    [SIDEBAR_GROUP.VOLUMES]: volumes.length,
+    [SIDEBAR_GROUP.NETWORK]: 0,
   };
 
   return (
@@ -215,7 +257,7 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
             onRename={
               editable ? (name) => groups.rename(id, name) : undefined
             }
-            onAddItem={editable ? () => {} : undefined}
+            onAddItem={editable ? onAddItem(id, builtinCount[id]) : undefined}
           >
             {groupContent[id]}
           </SidebarSection>
