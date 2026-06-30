@@ -11,7 +11,7 @@
   on the dispatcher. LIFO falls out of precedence + most-recent-registered.
   Tooltip + Toast Escape left as self-contained listeners (no scope of their own; they coexist —
   the dispatcher only consumes Escape when a higher scope is active, in which case the
-  modal/menu/preview *should* win).
+  modal/menu/preview _should_ win).
 - **Phase 3 (GLOBAL) — DONE.** `useSidebarShortcuts`, `useSettingsShortcut`,
   `usePinnedShortcuts`, `useTabsShortcuts`, `usePathBarShortcuts`.
 - **Phase 4 (DIRECTORY) — DONE.** `useZoomShortcuts`, `useClipboardShortcuts` migrated as GLOBAL

@@ -20,22 +20,22 @@ Finder. Pedido por un usuario; encaja con la naturaleza macOS-first del app.
   menú, sección de sidebar). La app funciona igual, sin la feature.
 - Dejar un **seam** explícito: el módulo de tags detrás de `#[cfg(target_os = "macos")]` con un
   stub `#[cfg(not(target_os = "macos"))]` que retorna vacío + `// TODO(win/linux): tag store
-  propio si algún día se prueba`. Así un contribuidor futuro lo agrega sin refactor.
+propio si algún día se prueba`. Así un contribuidor futuro lo agrega sin refactor.
 
 ## Formato de los tags (macOS)
 
 `_kMDItemUserTags` es un **plist binario**: array de strings, cada uno `"Nombre\nÍndiceColor"`.
 
-| Índice | Color |
-|---|---|
-| 0 | (sin color) |
-| 1 | Gris |
-| 2 | Verde |
-| 3 | Morado |
-| 4 | Azul |
-| 5 | Amarillo |
-| 6 | Rojo |
-| 7 | Naranja |
+| Índice | Color       |
+| ------ | ----------- |
+| 0      | (sin color) |
+| 1      | Gris        |
+| 2      | Verde       |
+| 3      | Morado      |
+| 4      | Azul        |
+| 5      | Amarillo    |
+| 6      | Rojo        |
+| 7      | Naranja     |
 
 Un tag puede no tener color (solo nombre, índice 0). El nombre es libre (tags custom además de los
 7 estándar).
@@ -53,6 +53,7 @@ Crates: `xattr` (leer/escribir el atributo) + `plist` (parsear/serializar el arr
   opcional leer `~/Library/.../com.apple.finder` (`FavoriteTagNames`) más adelante.
 
 **Performance — el punto delicado.** Leer xattr por archivo encarece listados grandes. Opciones:
+
 1. **Lazy**: no leer tags en `build_dir_entry`; un comando aparte `get_tags_for(paths)` que la UI
    pide para las filas visibles. (Preferido.)
 2. **Batch vía Spotlight**: `mdfind`/`mdls kMDItemUserTags` para la carpeta, evita N syscalls.
@@ -69,7 +70,7 @@ Empezar con (1) lazy para no tocar el hot path de `read_directory`.
 4. **Menú contextual**: submenú "Tags ▸" con los 7 colores (toggle) — declarativo, como el resto de
    acciones (registry data-driven, no hardcode).
 5. **Filtro / sidebar**: sección "Tags" (macOS-only) que al click hace `mdfind 'kMDItemUserTags ==
-   "Rojo"'` y muestra resultados con el mismo path-centinela que Recents (`tags://Rojo`), reusando
+"Rojo"'` y muestra resultados con el mismo path-centinela que Recents (`tags://Rojo`), reusando
    la vista Directory.
 6. **i18n**: `t.tags.*`, nombres de color. macOS-only: ocultar la sección si `!isMac`.
 
