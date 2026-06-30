@@ -114,12 +114,18 @@
 }
 
 /* In edit mode no row is navigable — clicks shouldn't open the folder/volume. */
-.SideBar .SidebarSection.editing .section_content_inner > *:not(.section_insert) {
+.SideBar
+  .SidebarSection.editing
+  .section_content_inner
+  > *:not(.section_insert) {
   pointer-events: none;
 }
 
 /* Dashed item outlines only on editable groups; Volumes is reorderable but its rows aren't editable. */
-.SideBar .SidebarSection.editing.editable .section_content_inner > *:not(.section_insert) {
+.SideBar
+  .SidebarSection.editing.editable
+  .section_content_inner
+  > *:not(.section_insert) {
   outline: var(--border-width-default) dashed var(--color-border-strong);
   outline-offset: calc(-1 * var(--border-width-default));
   border-radius: var(--radius-sm);

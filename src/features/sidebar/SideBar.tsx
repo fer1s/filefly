@@ -64,14 +64,12 @@ const RECENTS_ITEM = {
 
 // Per-group metadata: the built-in default title and whether the group is user-editable
 // (rename + add items). Volumes is system-managed, so it's reorderable but not editable.
-const GROUP_META: Record<
-  SidebarGroupId,
-  { title: string; editable: boolean }
-> = {
-  [SIDEBAR_GROUP.PINNED]: { title: t.sidebar.pinned, editable: true },
-  [SIDEBAR_GROUP.VOLUMES]: { title: t.sidebar.volumes, editable: false },
-  [SIDEBAR_GROUP.NETWORK]: { title: t.sidebar.network, editable: true },
-};
+const GROUP_META: Record<SidebarGroupId, { title: string; editable: boolean }> =
+  {
+    [SIDEBAR_GROUP.PINNED]: { title: t.sidebar.pinned, editable: true },
+    [SIDEBAR_GROUP.VOLUMES]: { title: t.sidebar.volumes, editable: false },
+    [SIDEBAR_GROUP.NETWORK]: { title: t.sidebar.network, editable: true },
+  };
 
 const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
   const { path, volumes, setPath, newTab, sidebarOpacity } = useStateContext();
@@ -248,11 +246,15 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
           variant={ICON_BUTTON_VARIANT.BOXED}
           size={ICON_BUTTON_SIZE.MD}
           className="edit_toggle"
-          tooltip={editingSidebar ? t.sidebar.doneEditing : t.sidebar.editSidebar}
+          tooltip={
+            editingSidebar ? t.sidebar.doneEditing : t.sidebar.editSidebar
+          }
           tooltipPlacement={TOOLTIP_PLACEMENT.RIGHT}
           onClick={toggleEditMode}
           aria-pressed={editingSidebar}
-          aria-label={editingSidebar ? t.sidebar.doneEditing : t.sidebar.editSidebar}
+          aria-label={
+            editingSidebar ? t.sidebar.doneEditing : t.sidebar.editSidebar
+          }
         />
       </div>
 
@@ -267,9 +269,7 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
             style={dragStyle(id)}
             dragging={draggingId === id}
             dragHandleProps={editingSidebar ? bind(id) : undefined}
-            onRename={
-              editable ? (name) => groups.rename(id, name) : undefined
-            }
+            onRename={editable ? (name) => groups.rename(id, name) : undefined}
             onAddItem={editable ? onAddItem(id, builtinCount[id]) : undefined}
           >
             {groupContent[id]}

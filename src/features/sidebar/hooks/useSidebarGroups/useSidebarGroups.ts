@@ -55,7 +55,9 @@ export const useSidebarGroups = () => {
     });
     setSidebarOrder(ids).catch((error) => {
       console.error("Failed to reorder sidebar groups:\n" + error);
-      getSidebarGroups().then(setGroups).catch(() => {});
+      getSidebarGroups()
+        .then(setGroups)
+        .catch(() => {});
     });
   }, []);
 
@@ -68,7 +70,9 @@ export const useSidebarGroups = () => {
       .catch((error) => {
         console.error("Failed to rename sidebar group:\n" + error);
         notify(t.sidebar.groupRenameFailed, TOAST_TYPE.ERROR);
-        getSidebarGroups().then(setGroups).catch(() => {});
+        getSidebarGroups()
+          .then(setGroups)
+          .catch(() => {});
       });
   }, []);
 
@@ -97,7 +101,9 @@ export const useSidebarGroups = () => {
         .catch((error) => {
           console.error("Failed to add sidebar item:\n" + error);
           notify(t.sidebar.itemAddFailed, TOAST_TYPE.ERROR);
-          getSidebarGroups().then(setGroups).catch(() => {});
+          getSidebarGroups()
+            .then(setGroups)
+            .catch(() => {});
         });
     },
     [groups],
@@ -116,7 +122,9 @@ export const useSidebarGroups = () => {
         .catch((error) => {
           console.error("Failed to remove sidebar item:\n" + error);
           notify(t.sidebar.itemRemoveFailed, TOAST_TYPE.ERROR);
-          getSidebarGroups().then(setGroups).catch(() => {});
+          getSidebarGroups()
+            .then(setGroups)
+            .catch(() => {});
         });
     },
     [groups],

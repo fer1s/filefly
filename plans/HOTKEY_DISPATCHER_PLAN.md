@@ -30,22 +30,22 @@ Already present and reused as-is:
 
 Global `keydown` listeners to migrate (each its own listener + `if`):
 
-| Handler | Intent | Target scope |
-|---|---|---|
-| `useSidebarShortcuts` | toggle sidebar | GLOBAL |
-| `usePinnedShortcuts` | jump to pinned folders | GLOBAL |
-| `useTabsShortcuts` | new/close/switch tab | GLOBAL |
-| `useSettingsShortcut` | open settings | GLOBAL |
-| `usePathBarShortcuts` | focus/nav path bar | GLOBAL |
-| `useZoomShortcuts` | zoom in/out | DIRECTORY |
-| `useClipboardShortcuts` | copy/cut/paste | DIRECTORY |
-| `useKeyboardNav` (capture) | arrows / Enter / Escape selection | DIRECTORY |
-| `Preview` | prev/next / Escape | PREVIEW |
-| `AudioPreview` | media keys | PREVIEW (or MEDIA) |
-| `useContextMenu` / `useContextMenuState` (capture) | close on Escape / outside | MENU |
-| `useCloseOnEscape` (stack) | cancel modals / edit mode | MODAL (per layer) |
-| `Tooltip` | hide on Escape | TOOLTIP |
-| `useToasts` | dismiss on Escape | TOAST |
+| Handler                                            | Intent                            | Target scope       |
+| -------------------------------------------------- | --------------------------------- | ------------------ |
+| `useSidebarShortcuts`                              | toggle sidebar                    | GLOBAL             |
+| `usePinnedShortcuts`                               | jump to pinned folders            | GLOBAL             |
+| `useTabsShortcuts`                                 | new/close/switch tab              | GLOBAL             |
+| `useSettingsShortcut`                              | open settings                     | GLOBAL             |
+| `usePathBarShortcuts`                              | focus/nav path bar                | GLOBAL             |
+| `useZoomShortcuts`                                 | zoom in/out                       | DIRECTORY          |
+| `useClipboardShortcuts`                            | copy/cut/paste                    | DIRECTORY          |
+| `useKeyboardNav` (capture)                         | arrows / Enter / Escape selection | DIRECTORY          |
+| `Preview`                                          | prev/next / Escape                | PREVIEW            |
+| `AudioPreview`                                     | media keys                        | PREVIEW (or MEDIA) |
+| `useContextMenu` / `useContextMenuState` (capture) | close on Escape / outside         | MENU               |
+| `useCloseOnEscape` (stack)                         | cancel modals / edit mode         | MODAL (per layer)  |
+| `Tooltip`                                          | hide on Escape                    | TOOLTIP            |
+| `useToasts`                                        | dismiss on Escape                 | TOAST              |
 
 Stays component-local (NOT migrated — these are bound to a specific input element, not the
 document): `useSectionRename`, `useInlineRename`, `PathSearch`, `PathInput` (their `onKeyDown` is on
@@ -63,11 +63,11 @@ as an active-scope **stack** (the Escape stack generalized).
 ```ts
 // shared/keymap/scopes.ts
 export const HOTKEY_SCOPE = {
-  GLOBAL: "global",       // always active; lowest precedence
+  GLOBAL: "global", // always active; lowest precedence
   DIRECTORY: "directory", // a directory view is focused
-  PREVIEW: "preview",     // file preview open
-  MENU: "menu",           // a context menu open
-  MODAL: "modal",         // a dialog / confirmation open (highest precedence)
+  PREVIEW: "preview", // file preview open
+  MENU: "menu", // a context menu open
+  MODAL: "modal", // a dialog / confirmation open (highest precedence)
 } as const;
 export type HotkeyScope = (typeof HOTKEY_SCOPE)[keyof typeof HOTKEY_SCOPE];
 
@@ -96,11 +96,11 @@ it). It owns:
 ```ts
 type HotkeyEntry = {
   id: number;
-  action?: KeymapAction;      // resolved against the live keymap (rebindable)
-  hotkey?: KeyBinding;        // fixed binding (e.g. Escape, arrows) when not a keymap action
+  action?: KeymapAction; // resolved against the live keymap (rebindable)
+  hotkey?: KeyBinding; // fixed binding (e.g. Escape, arrows) when not a keymap action
   scope: HotkeyScope;
-  priority: number;           // tiebreak within a scope (default 0)
-  allowInInput: boolean;      // default false → ignored while typing in input/textarea/CE
+  priority: number; // tiebreak within a scope (default 0)
+  allowInInput: boolean; // default false → ignored while typing in input/textarea/CE
   handler: (e: KeyboardEvent) => void | boolean; // return false → "didn't handle, fall through"
 };
 ```
@@ -109,11 +109,9 @@ type HotkeyEntry = {
 
 ```ts
 // Register a hotkey for as long as the component is mounted (and `when` is true).
-useHotkey(
-  KEYMAP_ACTION.TOGGLE_SIDEBAR,
-  onToggle,
-  { scope: HOTKEY_SCOPE.GLOBAL },
-);
+useHotkey(KEYMAP_ACTION.TOGGLE_SIDEBAR, onToggle, {
+  scope: HOTKEY_SCOPE.GLOBAL,
+});
 
 // Fixed (non-rebindable) binding:
 useHotkey({ keys: [KEY.ESCAPE] }, onClose, { scope: HOTKEY_SCOPE.MODAL });

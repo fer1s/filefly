@@ -19,8 +19,7 @@ export const SIDEBAR_GROUP = {
   NETWORK: "network",
 } as const;
 
-export type SidebarGroupId =
-  (typeof SIDEBAR_GROUP)[keyof typeof SIDEBAR_GROUP];
+export type SidebarGroupId = (typeof SIDEBAR_GROUP)[keyof typeof SIDEBAR_GROUP];
 
 // Built-in top-to-bottom order of the sidebar groups, used until the user reorders them.
 export const DEFAULT_GROUP_ORDER: readonly SidebarGroupId[] = [

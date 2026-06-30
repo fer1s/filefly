@@ -33,8 +33,14 @@ export const ZoomableImage = ({
     const el = imgRef.current;
     if (!el) return next;
     const parent = el.parentElement;
-    const maxX = Math.max(0, (el.offsetWidth * scale - (parent?.clientWidth ?? 0)) / 2);
-    const maxY = Math.max(0, (el.offsetHeight * scale - (parent?.clientHeight ?? 0)) / 2);
+    const maxX = Math.max(
+      0,
+      (el.offsetWidth * scale - (parent?.clientWidth ?? 0)) / 2,
+    );
+    const maxY = Math.max(
+      0,
+      (el.offsetHeight * scale - (parent?.clientHeight ?? 0)) / 2,
+    );
     return {
       x: Math.min(maxX, Math.max(-maxX, next.x)),
       y: Math.min(maxY, Math.max(-maxY, next.y)),
