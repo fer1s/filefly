@@ -12,7 +12,9 @@ export type KeyBinding = {
   alt?: boolean;
 };
 
-export type Keymap = Partial<Record<KeymapAction, KeyBinding>>;
+// An action maps to a single chord, or several alternative chords (the user can bind more than one
+// shortcut to the same action — e.g. `[[nav_back]]` twice in keymap.toml).
+export type Keymap = Partial<Record<KeymapAction, KeyBinding | KeyBinding[]>>;
 
 // A hotkey handler. Returning `false` means "I didn't handle this" → the dispatcher falls through
 // to the next-best candidate (opt-in passthrough). Any other return consumes the event.
@@ -44,7 +46,7 @@ export type HotkeyContextValue = {
 
 export type KeymapContextValue = {
   keymap: Keymap;
-  setBinding: (action: KeymapAction, binding: KeyBinding) => void;
+  setBinding: (action: KeymapAction, binding: KeyBinding | KeyBinding[]) => void;
 };
 
 export type KeymapProviderProps = {

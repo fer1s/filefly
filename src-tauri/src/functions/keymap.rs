@@ -26,6 +26,15 @@ struct RawBinding {
     linux: Option<Box<RawBinding>>,
 }
 
+// An action in keymap.toml is either one table (`[copy]`) or an array of tables (`[[nav_back]]`
+// repeated) when the user wants several shortcuts bound to the same action.
+#[derive(Debug, Deserialize)]
+#[serde(untagged)]
+enum RawEntry {
+    Single(RawBinding),
+    Multiple(Vec<RawBinding>),
+}
+
 // Resolved binding sent to the frontend (always flat, for the current platform).
 #[derive(Debug, Serialize)]
 pub struct KeyBinding {
@@ -35,6 +44,24 @@ pub struct KeyBinding {
     ctrl: bool,
     shift: bool,
     alt: bool,
+}
+
+// Resolved entry sent to the frontend: a single binding stays an object, several stay an array —
+// mirroring how it was written, and matching the frontend `KeyBinding | KeyBinding[]` type.
+#[derive(Debug, Serialize)]
+#[serde(untagged)]
+pub enum ResolvedEntry {
+    Single(KeyBinding),
+    Multiple(Vec<KeyBinding>),
+}
+
+fn resolve_entry(entry: RawEntry) -> ResolvedEntry {
+    match entry {
+        RawEntry::Single(raw) => ResolvedEntry::Single(resolve(raw)),
+        RawEntry::Multiple(list) => {
+            ResolvedEntry::Multiple(list.into_iter().map(resolve).collect())
+        }
+    }
 }
 
 // Pick the override for the current OS (if it defines keys), otherwise the base binding.
@@ -68,10 +95,10 @@ fn resolve(raw: RawBinding) -> KeyBinding {
     }
 }
 
-fn parse(content: &str) -> Result<HashMap<String, KeyBinding>, String> {
-    let raw: HashMap<String, RawBinding> =
+fn parse(content: &str) -> Result<HashMap<String, ResolvedEntry>, String> {
+    let raw: HashMap<String, RawEntry> =
         toml::from_str(content).map_err(|e| e.to_string())?;
-    Ok(raw.into_iter().map(|(k, v)| (k, resolve(v))).collect())
+    Ok(raw.into_iter().map(|(k, v)| (k, resolve_entry(v))).collect())
 }
 
 // Bundled defaults, used when the user has no keymap file yet (or it can't be read).
@@ -80,7 +107,7 @@ const DEFAULT_KEYMAP: &str = include_str!("../../keymap.default.toml");
 // Load the keymap: the user's `keymap.toml` in the app config dir if present, otherwise the
 // bundled defaults. Per-OS overrides are resolved to the running platform.
 #[tauri::command]
-pub fn get_keymap(app: AppHandle) -> Result<HashMap<String, KeyBinding>, String> {
+pub fn get_keymap(app: AppHandle) -> Result<HashMap<String, ResolvedEntry>, String> {
     let path = app
         .path()
         .app_config_dir()

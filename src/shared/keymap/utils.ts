@@ -5,12 +5,11 @@ export const isMacPlatform = (): boolean =>
   typeof navigator !== "undefined" &&
   navigator.platform.toUpperCase().includes("MAC");
 
-// Whether a keyboard event matches a binding (an undefined binding never matches).
-export const matchesBinding = (
-  event: KeyboardEvent,
-  binding?: KeyBinding,
-): boolean => {
-  if (!binding) return false;
+// An action's binding may be a single chord or several alternatives (e.g. Alt+Left *and* Cmd+[).
+type BindingOrList = KeyBinding | KeyBinding[];
+
+// Whether the event matches one specific chord.
+const matchesOne = (event: KeyboardEvent, binding: KeyBinding): boolean => {
   // `ctrl` is literally the Control key (Ctrl+` style); `mod` is the Cmd/Ctrl abstraction,
   // matched loosely as either meta or ctrl. They are mutually exclusive on a binding.
   if (binding.ctrl) {
@@ -31,11 +30,26 @@ export const matchesBinding = (
   });
 };
 
-// Human-readable representation of a binding's primary key (e.g. "⌘C", "Ctrl+C", "←").
+// Whether a keyboard event matches a binding (an undefined binding never matches). A binding may
+// be a list of alternative chords, in which case any one matching counts.
+export const matchesBinding = (
+  event: KeyboardEvent,
+  binding?: BindingOrList,
+): boolean => {
+  if (!binding) return false;
+  if (Array.isArray(binding)) return binding.some((b) => matchesOne(event, b));
+  return matchesOne(event, binding);
+};
+
+// Human-readable representation of a binding's primary key (e.g. "⌘C", "Ctrl+C", "←"). For a list
+// of alternatives, the first chord is shown (the canonical one).
 export const formatBinding = (
-  binding?: KeyBinding,
+  bindingOrList?: BindingOrList,
   isMac = isMacPlatform(),
 ): string => {
+  const binding = Array.isArray(bindingOrList)
+    ? bindingOrList[0]
+    : bindingOrList;
   if (!binding || binding.keys.length === 0) return "";
 
   const parts: string[] = [];
