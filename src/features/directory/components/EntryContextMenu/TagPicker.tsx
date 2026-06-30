@@ -11,6 +11,8 @@ import { t } from "@/lang";
 
 import type { TagCoverage, TagPickerProps } from "./types";
 
+import "@/styles/components/TagPicker.css";
+
 // Finder-style tag controls in the context menu: a colour-swatch row, a checklist of the user's
 // named (uncoloured) tags, and an input to create a new one. Toggling applies across the whole
 // selection; a mixed selection shows a "some" (partial) state. Reads/writes the shared tag state.
