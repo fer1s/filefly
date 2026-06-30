@@ -180,12 +180,4 @@
   color: var(--color-text-primary);
 }
 
-.SideBar section .section_content .folder_item,
-.SideBar section .section_content .drive_item {
-  margin-bottom: var(--space-2);
-}
-
-.SideBar section .section_content .folder_item:last-child,
-.SideBar section .section_content .drive_item:last-child {
-  margin-bottom: var(--space-0);
-}
+/* Row spacing comes from the flex `gap` on .section_content_inner (see SidebarSection.css). */

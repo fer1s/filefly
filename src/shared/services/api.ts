@@ -29,7 +29,7 @@ export const setSettings = async (settings: AppSettings): Promise<void> =>
 
 // Per-group sidebar customization, persisted in sidebar.toml (keyed by stable group id). Mirrors
 // the SidebarGroup struct in functions/sidebar.rs. `name` is absent until the user renames a group.
-export type SidebarGroupConfig = { name?: string };
+export type SidebarGroupConfig = { name?: string; order?: number };
 export type SidebarGroups = Record<string, SidebarGroupConfig>;
 
 // Load all saved sidebar group settings (empty object when sidebar.toml is absent).
@@ -41,6 +41,10 @@ export const setSidebarGroupName = async (
   id: string,
   name: string,
 ): Promise<void> => await invoke("set_sidebar_group_name", { id, name });
+
+// Persist the group display order from a top-to-bottom list of group ids.
+export const setSidebarOrder = async (ids: string[]): Promise<void> =>
+  await invoke("set_sidebar_order", { ids });
 
 // Load the keybindings (reads keymap.toml, falling back to bundled defaults).
 export const getKeymap = async (): Promise<Keymap> =>

@@ -66,6 +66,7 @@ export const en = {
     editSidebar: "Edit sidebar",
     doneEditing: "Done editing",
     addItem: "Add item",
+    dragToReorder: "Drag to reorder",
     groupRenamed: (name: string) => `Group renamed to "${name}"`,
     groupRenameFailed: "Couldn't rename the group",
     settings: "Settings",

@@ -13,6 +13,9 @@ pub struct SidebarGroup {
     // User-chosen group name. Absent means "use the built-in default label".
     #[serde(default, skip_serializing_if = "Option::is_none")]
     name: Option<String>,
+    // Display position among the groups (0-based). Absent means "use the built-in default order".
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    order: Option<u32>,
 }
 
 // group id -> group settings. A BTreeMap keeps the file stably ordered (nicer diffs).
@@ -54,5 +57,16 @@ pub fn get_sidebar_groups(app: AppHandle) -> SidebarConfig {
 pub fn set_sidebar_group_name(app: AppHandle, id: String, name: String) -> Result<(), String> {
     let mut config = read_config(&app);
     config.entry(id).or_default().name = Some(name);
+    write_config(&app, &config)
+}
+
+// Persist the group display order from a top-to-bottom list of group ids, preserving each
+// group's other settings (e.g. its custom name).
+#[tauri::command]
+pub fn set_sidebar_order(app: AppHandle, ids: Vec<String>) -> Result<(), String> {
+    let mut config = read_config(&app);
+    for (index, id) in ids.into_iter().enumerate() {
+        config.entry(id).or_default().order = Some(index as u32);
+    }
     write_config(&app, &config)
 }

@@ -1,14 +1,15 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
   getSidebarGroups,
   setSidebarGroupName,
+  setSidebarOrder,
   type SidebarGroups,
 } from "@/shared/services/api";
 import { notify, TOAST_TYPE } from "@/shared/toast";
 import { t } from "@/lang";
 
-import type { SidebarGroupId } from "../../constants";
+import { DEFAULT_GROUP_ORDER, type SidebarGroupId } from "../../constants";
 
 // Owns the per-group sidebar customization (currently just custom names): hydrates it from
 // sidebar.toml on launch and persists every rename back. sidebar.toml is the source of truth —
@@ -30,6 +31,32 @@ export const useSidebarGroups = () => {
     [groups],
   );
 
+  // The groups in display order: sorted by their saved `order`, falling back to the built-in
+  // position for any group the user hasn't moved yet.
+  const order = useMemo(() => {
+    const positionOf = (id: SidebarGroupId) =>
+      groups[id]?.order ?? DEFAULT_GROUP_ORDER.indexOf(id);
+    return [...DEFAULT_GROUP_ORDER].sort(
+      (a, b) => positionOf(a) - positionOf(b),
+    );
+  }, [groups]);
+
+  // Persist a new top-to-bottom group order, reflecting it immediately. Reverts from disk on a
+  // write failure so the UI never shows an order that wasn't saved.
+  const reorder = useCallback((ids: SidebarGroupId[]) => {
+    setGroups((prev) => {
+      const next = { ...prev };
+      ids.forEach((id, index) => {
+        next[id] = { ...next[id], order: index };
+      });
+      return next;
+    });
+    setSidebarOrder(ids).catch((error) => {
+      console.error("Failed to reorder sidebar groups:\n" + error);
+      getSidebarGroups().then(setGroups).catch(() => {});
+    });
+  }, []);
+
   // Persist a renamed group, reflecting it immediately and toasting the outcome. On a write
   // failure we revert so the UI never shows a name that isn't on disk.
   const rename = useCallback((id: SidebarGroupId, newName: string) => {
@@ -43,5 +70,5 @@ export const useSidebarGroups = () => {
       });
   }, []);
 
-  return { name, rename };
+  return { name, rename, order, reorder };
 };

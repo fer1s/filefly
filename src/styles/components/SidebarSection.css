@@ -62,6 +62,30 @@
   outline: none;
 }
 
+/* Drag handle (edit mode only): grips the group for vertical reordering. touch-action:none lets
+   the pointer gesture own the drag instead of scrolling. */
+.SideBar .SidebarSection .section_grip {
+  display: flex;
+  align-items: center;
+  color: var(--color-text-muted);
+  cursor: grab;
+  touch-action: none;
+}
+
+.SideBar .SidebarSection .section_grip:active {
+  cursor: grabbing;
+}
+
+.SideBar .SidebarSection .section_grip svg {
+  font-size: var(--font-size-xs);
+}
+
+/* The group being dragged floats above the others and shows it's being lifted. */
+.SideBar .SidebarSection.dragging {
+  cursor: grabbing;
+  opacity: 0.9;
+}
+
 /* Chevron toggle button, points down when open and right when collapsed. */
 .SideBar .SidebarSection .section_chevron {
   display: flex;
@@ -89,27 +113,30 @@
   border-radius: var(--radius-sm);
 }
 
+/* In edit mode no row is navigable — clicks shouldn't open the folder/volume. */
 .SideBar .SidebarSection.editing .section_content_inner > *:not(.section_insert) {
+  pointer-events: none;
+}
+
+/* Dashed item outlines only on editable groups; Volumes is reorderable but its rows aren't editable. */
+.SideBar .SidebarSection.editing.editable .section_content_inner > *:not(.section_insert) {
   outline: var(--border-width-default) dashed var(--color-border-strong);
   outline-offset: calc(-1 * var(--border-width-default));
   border-radius: var(--radius-sm);
-  /* In edit mode the rows aren't navigable — clicks shouldn't open the folder/volume. */
-  pointer-events: none;
 }
 
 /* Add-item affordance (edit mode only): a thin hover strip between rows. The button is hidden
    (scaled to nothing) until the strip is hovered, then scales in smoothly while the strip grows. */
 .SideBar .SidebarSection .section_insert {
-  height: var(--space-2);
-  padding-bottom: var(--space-2);
+  min-height: var(--space-2);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: height 0.15s ease-in-out;
+  transition: min-height 0.15s ease-in-out;
 }
 
 .SideBar .SidebarSection .section_insert:hover {
-  height: var(--size-control-medium);
+  min-height: var(--size-control-medium);
 }
 
 /* Full-width button: a centered plus flanked by dashed rules (----- + -----). */
@@ -181,6 +208,10 @@
 .SideBar .SidebarSection .section_content_inner {
   min-height: 0;
   overflow: hidden;
+  /* Stack rows (and edit-mode insert strips) with one uniform gap, instead of per-item margins. */
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
 }
 
 /* Collapse the content only in the expanded sidebar; the rail always shows it. */
