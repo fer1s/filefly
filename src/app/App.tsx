@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, type CSSProperties } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 import { StateProvider } from "@/shared/providers/StateProvider";
@@ -9,7 +9,7 @@ import {
   ShortcutHelpProvider,
 } from "@/shared/keymap";
 
-import SideBar from "@/features/sidebar";
+import SideBar, { SidebarResizeHandle } from "@/features/sidebar";
 import ShortcutsDialog from "@/features/shortcuts";
 import { SettingsProvider } from "@/features/settings";
 import { useTabs, saveStartupConfig } from "@/features/tabs";
@@ -132,6 +132,8 @@ const App = () => {
         setDateFormat: (dateFormat) => update({ dateFormat }),
         sidebarOpacity: settings.sidebarOpacity,
         setSidebarOpacity: (sidebarOpacity) => update({ sidebarOpacity }),
+        sidebarWidth: settings.sidebarWidth,
+        setSidebarWidth: (sidebarWidth) => update({ sidebarWidth }),
         startupMode: settings.startupMode as StartupMode,
         setStartupMode: (startupMode) => update({ startupMode }),
         homePath: settings.homePath,
@@ -154,11 +156,16 @@ const App = () => {
                     "App",
                     sidebar.collapsed && "collapsed",
                   )}
+                  // Expanded-column width; the collapsed rule overrides it (see index.css).
+                  style={
+                    { "--sidebar-width": `${settings.sidebarWidth}px` } as CSSProperties
+                  }
                 >
                   <SideBar
                     collapsed={sidebar.collapsed}
                     onToggle={sidebar.toggle}
                   />
+                  {!sidebar.collapsed && <SidebarResizeHandle />}
                   <AppContent />
                 </div>
               </SettingsProvider>

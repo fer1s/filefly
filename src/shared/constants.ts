@@ -59,6 +59,13 @@ export const SIDEBAR_OPACITY_MAX = 1;
 export const SIDEBAR_OPACITY_STEP = 0.05;
 export const DEFAULT_SIDEBAR_OPACITY = 0.85;
 
+// User-adjustable sidebar width (px), the expanded grid column. Dragging the right edge clamps
+// between MIN and MAX; the collapsed rail keeps its own fixed width. DEFAULT matches the
+// --size-sidebar-expanded token (theme.css) so first launch looks unchanged.
+export const SIDEBAR_WIDTH_MIN = 180;
+export const SIDEBAR_WIDTH_MAX = 400;
+export const DEFAULT_SIDEBAR_WIDTH = 220;
+
 // Sentinel date-format value meaning "use the OS locale's date-time string" (Date.toLocaleString).
 // Any other value is a token pattern (YYYY, MM, DD, HH, …) interpreted by formatDate.
 export const DATE_FORMAT_LOCALE = "locale";

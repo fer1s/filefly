@@ -18,6 +18,8 @@ pub struct AppSettings {
     date_format: String,
     // Sidebar background opacity (alpha of --color-background-sidebar), 0..1.
     sidebar_opacity: f64,
+    // User-adjustable sidebar width (px) for the expanded rail (see SIDEBAR_WIDTH_MIN/MAX).
+    sidebar_width: f64,
     // Hide this app's own background files (config/cache/temp) from the Recents listing.
     hide_system_recents: bool,
     // Show transient toast notifications (e.g. "Copied"). When off, they're suppressed.
@@ -37,6 +39,7 @@ impl Default for AppSettings {
             default_zoom: 1.0,
             date_format: "locale".to_string(),
             sidebar_opacity: 0.85,
+            sidebar_width: 220.0,
             hide_system_recents: true,
             show_toasts: true,
             startup_mode: "restore".to_string(),

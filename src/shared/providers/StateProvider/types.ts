@@ -50,6 +50,9 @@ export type State = {
   // Sidebar background opacity (alpha of --color-background-sidebar), 0..1.
   sidebarOpacity: number;
   setSidebarOpacity: (opacity: number) => void;
+  // Expanded-sidebar width in px, driven by dragging its right edge (see SIDEBAR_WIDTH_MIN/MAX).
+  sidebarWidth: number;
+  setSidebarWidth: (width: number) => void;
   // What the app opens on launch (see STARTUP_MODE), and the folder used when mode is "home".
   // Takes effect on the next launch (tab restoration runs at mount).
   startupMode: StartupMode;

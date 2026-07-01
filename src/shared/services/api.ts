@@ -16,6 +16,8 @@ export type AppSettings = {
   defaultZoom: number;
   dateFormat: string;
   sidebarOpacity: number;
+  // Expanded-sidebar width in px (see SIDEBAR_WIDTH_MIN/MAX).
+  sidebarWidth: number;
   hideSystemRecents: boolean;
   showToasts: boolean;
   // Launch behavior: "restore" | "volumes" | "home" (see STARTUP_MODE).

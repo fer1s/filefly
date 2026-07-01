@@ -61,7 +61,9 @@ body {
   left: var(--space-0);
   z-index: 1;
   display: grid;
-  grid-template-columns: var(--size-sidebar-expanded) 1fr;
+  /* Expanded width is user-draggable (--sidebar-width, set inline in App.tsx); the token is the
+     first-launch fallback. The collapsed rule below overrides it with the fixed rail width. */
+  grid-template-columns: var(--sidebar-width, var(--size-sidebar-expanded)) 1fr;
   grid-template-rows: 1fr;
   transition: grid-template-columns 0.2s ease-in-out;
   /* The UI chrome is not text: a click-drag (incl. right-click) must not rubber-band-select it,
@@ -81,6 +83,15 @@ body {
 
 .App.collapsed {
   grid-template-columns: var(--size-sidebar-collapsed) 1fr;
+}
+
+/* While dragging the sidebar edge: track the cursor 1:1 (no easing) and keep the resize cursor. */
+body.sidebar-resizing {
+  cursor: col-resize;
+}
+
+body.sidebar-resizing .App {
+  transition: none;
 }
 
 .App > .SideBar,
