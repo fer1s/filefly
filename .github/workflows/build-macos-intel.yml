@@ -17,8 +17,9 @@ permissions:
 
 jobs:
   build:
-    # Intel runner → builds x86_64 natively (no cross-compile).
-    runs-on: macos-13
+    # Apple Silicon runner (always available; the Intel macos-13 runner is being retired and often
+    # never gets picked up). We cross-compile to x86_64 via --target below, so the .dmg is Intel.
+    runs-on: macos-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
