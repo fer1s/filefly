@@ -46,6 +46,12 @@
   color: inherit;
 }
 
+/* Delete button on custom group headers (edit mode only). Danger-tinted like item removal. */
+.SideBar .SidebarSection .section_delete .IconButton,
+.SideBar .SidebarSection .section_delete .IconButton svg {
+  color: var(--color-danger);
+}
+
 /* Inline rename input mirrors the title typography in place. */
 .SideBar .SidebarSection .section_title_input {
   flex: 1;

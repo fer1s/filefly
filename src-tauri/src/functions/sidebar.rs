@@ -23,6 +23,14 @@ pub struct SidebarGroup {
     // Presets can't be deleted (we couldn't re-create them), only hidden; edit mode toggles this.
     #[serde(rename = "hiddenPresets", default, skip_serializing_if = "Vec::is_empty")]
     hidden_presets: Vec<String>,
+    // True for user-created groups (vs the built-in pinned/volumes/network/tags). Only custom
+    // groups can be deleted; deleting one drops the whole entry, taking its items with it.
+    #[serde(default, skip_serializing_if = "is_false")]
+    custom: bool,
+}
+
+fn is_false(b: &bool) -> bool {
+    !*b
 }
 
 // group id -> group settings. A BTreeMap keeps the file stably ordered (nicer diffs).
@@ -93,5 +101,26 @@ pub fn set_sidebar_items(app: AppHandle, id: String, items: Vec<String>) -> Resu
 pub fn set_hidden_presets(app: AppHandle, id: String, presets: Vec<String>) -> Result<(), String> {
     let mut config = read_config(&app);
     config.entry(id).or_default().hidden_presets = presets;
+    write_config(&app, &config)
+}
+
+// Create a user group with a generated id, a display name and a display position. Marked `custom`
+// so the UI knows it can be renamed and deleted (built-in groups can't be deleted).
+#[tauri::command]
+pub fn add_sidebar_group(app: AppHandle, id: String, name: String, order: u32) -> Result<(), String> {
+    let mut config = read_config(&app);
+    let group = config.entry(id).or_default();
+    group.custom = true;
+    group.name = Some(name);
+    group.order = Some(order);
+    write_config(&app, &config)
+}
+
+// Delete a group entirely, dropping its items/name/order with it. Intended for custom groups only
+// (the frontend gates this); built-in group ids would just get recreated from defaults next launch.
+#[tauri::command]
+pub fn delete_sidebar_group(app: AppHandle, id: String) -> Result<(), String> {
+    let mut config = read_config(&app);
+    config.remove(&id);
     write_config(&app, &config)
 }

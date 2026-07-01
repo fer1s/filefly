@@ -1,30 +1,29 @@
 import { useRef, useState } from "react";
 import { useDrag } from "@use-gesture/react";
 
-import type { SidebarGroupId } from "../../constants";
-
-type DragState = { id: SidebarGroupId; offsetY: number };
+import { DRAG_Z_INDEX } from "./constants";
+import type { DragState } from "./types";
 
 // Vertical drag-to-reorder for the sidebar groups. The dragged group follows the pointer (via a
 // transform) while the others stay put; on release it computes the drop slot from the measured
 // group centers and commits the new order. `registerRef` must be attached to each group's root so
 // the drop math can read live positions, and `bind(id)` goes on that group's drag handle.
 export const useGroupDragSort = (
-  order: SidebarGroupId[],
-  onReorder: (ids: SidebarGroupId[]) => void,
+  order: string[],
+  onReorder: (ids: string[]) => void,
 ) => {
-  const refs = useRef<Partial<Record<SidebarGroupId, HTMLElement>>>({});
+  const refs = useRef<Partial<Record<string, HTMLElement>>>({});
   const [drag, setDrag] = useState<DragState | null>(null);
 
-  const registerRef = (id: SidebarGroupId) => (el: HTMLElement | null) => {
+  const registerRef = (id: string) => (el: HTMLElement | null) => {
     if (el) refs.current[id] = el;
     else delete refs.current[id];
   };
 
   // The order that results from dropping `id` after moving it `offsetY` px vertically: count how
   // many other groups' centers the dragged group's projected center has passed.
-  const orderAfterDrop = (id: SidebarGroupId, offsetY: number) => {
-    const centerOf = (gid: SidebarGroupId) => {
+  const orderAfterDrop = (id: string, offsetY: number) => {
+    const centerOf = (gid: string) => {
       const rect = refs.current[gid]?.getBoundingClientRect();
       if (!rect) return null;
       // The dragged element's rect is shifted by the live transform — undo it for the original.
@@ -47,7 +46,7 @@ export const useGroupDragSort = (
   };
 
   const bind = useDrag(({ args, movement: [, offsetY], active, last }) => {
-    const id = args[0] as SidebarGroupId;
+    const id = args[0] as string;
     if (last) {
       const next = orderAfterDrop(id, offsetY);
       setDrag(null);
@@ -57,12 +56,12 @@ export const useGroupDragSort = (
     }
   });
 
-  const dragStyle = (id: SidebarGroupId) =>
+  const dragStyle = (id: string) =>
     drag?.id === id
       ? {
           transform: `translateY(${drag.offsetY}px)`,
           position: "relative" as const,
-          zIndex: 2,
+          zIndex: DRAG_Z_INDEX,
         }
       : undefined;
 

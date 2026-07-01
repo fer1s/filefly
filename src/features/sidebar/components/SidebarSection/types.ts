@@ -19,4 +19,7 @@ export type SidebarSectionProps = {
   // When provided an "add item" button appears between items and at both ends of the list while
   // in edit mode; `index` is the insert position (0 = before the first item, length = after last).
   onAddItem?: (index: number) => void;
+  // When provided a delete button shows in the header in edit mode (custom groups only). Deleting
+  // a group takes all its items with it, so the caller should confirm first.
+  onDelete?: () => void;
 };

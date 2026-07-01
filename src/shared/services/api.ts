@@ -42,6 +42,8 @@ export type SidebarGroupConfig = {
   items?: string[];
   // Stable ids of built-in preset rows the user has hidden (presets are hidden, never deleted).
   hiddenPresets?: string[];
+  // True for user-created groups (renamable + deletable). Absent/false for the built-in groups.
+  custom?: boolean;
 };
 export type SidebarGroups = Record<string, SidebarGroupConfig>;
 
@@ -70,6 +72,17 @@ export const setHiddenPresets = async (
   id: string,
   presets: string[],
 ): Promise<void> => await invoke("set_hidden_presets", { id, presets });
+
+// Create a user group with a generated id, display name and display position.
+export const addSidebarGroup = async (
+  id: string,
+  name: string,
+  order: number,
+): Promise<void> => await invoke("add_sidebar_group", { id, name, order });
+
+// Delete a group entirely (its items/name go with it). For custom groups only.
+export const deleteSidebarGroup = async (id: string): Promise<void> =>
+  await invoke("delete_sidebar_group", { id });
 
 // Open the native folder picker; resolves to the chosen directory path, or null if cancelled.
 export const pickFolder = async (): Promise<string | null> => {

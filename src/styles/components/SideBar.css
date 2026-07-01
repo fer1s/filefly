@@ -227,4 +227,27 @@
   color: var(--color-text-primary);
 }
 
+/* "Add group" button, shown at the bottom of the sidebar in edit mode. Full-width dashed row with
+   a centered plus + label, echoing the dashed item outlines of editable groups. */
+.SideBar .add_group_button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2-5);
+  padding: var(--space-2-5);
+  border: var(--border-width-default) dashed var(--color-border-default);
+  border-radius: var(--radius-sm);
+  background-color: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.SideBar .add_group_button:hover {
+  color: var(--color-text-primary);
+  border-color: var(--color-text-primary);
+  background-color: var(--color-overlay-hover);
+}
+
 /* Row spacing comes from the flex `gap` on .section_content_inner (see SidebarSection.css). */

@@ -7,7 +7,11 @@ import {
 } from "react";
 
 import Button from "@/shared/components/elements/Button";
+import IconButton, {
+  ICON_BUTTON_SIZE,
+} from "@/shared/components/elements/IconButton";
 import Icon from "@/shared/components/elements/Icon";
+import { TOOLTIP_PLACEMENT } from "@/shared/components/elements/Tooltip";
 import { classNames } from "@/shared/utils";
 import { t } from "@/lang";
 
@@ -15,6 +19,7 @@ import {
   faChevronDown,
   faGripVertical,
   faPlus,
+  faTrash,
 } from "@fortawesome/free-solid-svg-icons";
 
 import "@/styles/components/SidebarSection.css";
@@ -39,6 +44,7 @@ const SidebarSection = forwardRef<HTMLElement, SidebarSectionProps>(
       dragHandleProps,
       onRename,
       onAddItem,
+      onDelete,
     },
     ref,
   ) => {
@@ -111,6 +117,17 @@ const SidebarSection = forwardRef<HTMLElement, SidebarSectionProps>(
             >
               <h2>{title}</h2>
             </button>
+          )}
+          {editing && onDelete && (
+            <IconButton
+              icon={faTrash}
+              size={ICON_BUTTON_SIZE.SM}
+              className="section_delete"
+              tooltip={t.sidebar.deleteGroup}
+              tooltipPlacement={TOOLTIP_PLACEMENT.RIGHT}
+              onClick={onDelete}
+              aria-label={t.sidebar.deleteGroup}
+            />
           )}
           <button
             type="button"

@@ -42,6 +42,8 @@ import SidebarSection from "./components/SidebarSection";
 import SidebarContextMenu from "./components/SidebarContextMenu";
 import VolumeItem from "./components/VolumeItem";
 import FolderItem from "./components/FolderItem";
+import Button from "@/shared/components/elements/Button";
+import Icon from "@/shared/components/elements/Icon";
 
 import {
   faBars,
@@ -100,8 +102,13 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
   );
   // The custom item awaiting delete-confirmation (null when the dialog is closed).
   const [pendingRemoval, setPendingRemoval] = useState<{
-    id: SidebarGroupId;
+    id: string;
     path: string;
+  } | null>(null);
+  // The custom group awaiting delete-confirmation (deleting it takes all its items).
+  const [pendingGroupRemoval, setPendingGroupRemoval] = useState<{
+    id: string;
+    name: string;
   } | null>(null);
 
   // Open the context menu at the cursor for a given row (path + kind, plus removable flag for
@@ -114,7 +121,7 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
     };
 
   // User-added rows for a group (its persisted custom items), shown below the built-in rows.
-  const customRows = (id: SidebarGroupId) =>
+  const customRows = (id: string) =>
     groups.items(id).map((itemPath) => (
       <FolderItem
         key={`custom:${itemPath}`}
@@ -139,10 +146,21 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
   // Pick a folder and add it to the group. The clicked insert index spans built-in + custom rows,
   // so subtract the built-in count to land at the right slot within the persisted custom items.
   const onAddItem =
-    (id: SidebarGroupId, builtinCount: number) => async (index: number) => {
+    (id: string, builtinCount: number) => async (index: number) => {
       const folder = await pickFolder();
       if (folder) groups.addItem(id, folder, Math.max(0, index - builtinCount));
     };
+
+  // Content for a user-created group: its custom rows, or an empty-state hint when not editing.
+  const customGroupContent = (id: string) => {
+    const rows = customRows(id);
+    if (rows.length) return rows;
+    return editingSidebar ? (
+      rows
+    ) : (
+      <p className="section_todo">{t.sidebar.emptyGroup}</p>
+    );
+  };
 
   // The rows for each group. Rendered in the user's saved order below; the group shell (header,
   // edit affordances, drag handle) is the same SidebarSection for all of them.
@@ -319,23 +337,48 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
 
       {groups.order.map((id) => {
         if (id === SIDEBAR_GROUP.TAGS && !showTags) return null;
-        const { title, editable } = GROUP_META[id];
+        // Custom groups have no built-in metadata/content: they're always editable + deletable and
+        // render only their user-added rows. Built-in groups keep their fixed title/content.
+        const custom = groups.isCustom(id);
+        const meta = custom ? undefined : GROUP_META[id as SidebarGroupId];
+        const editable = custom || (meta?.editable ?? false);
+        const title = groups.name(id, custom ? t.sidebar.newGroupName : meta!.title);
+        const content = custom
+          ? customGroupContent(id)
+          : groupContent[id as SidebarGroupId];
+        const insertBase = custom ? 0 : builtinCount[id as SidebarGroupId];
         return (
           <SidebarSection
             key={id}
             ref={registerRef(id)}
-            title={groups.name(id, title)}
+            title={title}
             editing={editingSidebar}
             style={dragStyle(id)}
             dragging={draggingId === id}
             dragHandleProps={editingSidebar ? bind(id) : undefined}
             onRename={editable ? (name) => groups.rename(id, name) : undefined}
-            onAddItem={editable ? onAddItem(id, builtinCount[id]) : undefined}
+            onAddItem={editable ? onAddItem(id, insertBase) : undefined}
+            onDelete={
+              custom
+                ? () => setPendingGroupRemoval({ id, name: title })
+                : undefined
+            }
           >
-            {groupContent[id]}
+            {content}
           </SidebarSection>
         );
       })}
+
+      {editingSidebar && (
+        <Button
+          className="add_group_button"
+          onClick={() => groups.addGroup(t.sidebar.newGroupName)}
+          aria-label={t.sidebar.addGroup}
+        >
+          <Icon icon={faPlus} />
+          <span>{t.sidebar.addGroup}</span>
+        </Button>
+      )}
 
       <SidebarContextMenu
         contextMenuRef={menu.ref}
@@ -365,6 +408,22 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
           setPendingRemoval(null);
         }}
         onClose={() => setPendingRemoval(null)}
+      />
+      <ConfirmationDialog
+        visible={!!pendingGroupRemoval}
+        title={t.sidebar.deleteGroupTitle}
+        message={
+          pendingGroupRemoval
+            ? t.sidebar.confirmDeleteGroup(pendingGroupRemoval.name)
+            : ""
+        }
+        confirmLabel={t.sidebar.deleteGroup}
+        destructive
+        onConfirm={() => {
+          if (pendingGroupRemoval) groups.deleteGroup(pendingGroupRemoval.id);
+          setPendingGroupRemoval(null);
+        }}
+        onClose={() => setPendingGroupRemoval(null)}
       />
     </div>
   );
