@@ -342,7 +342,10 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
         const custom = groups.isCustom(id);
         const meta = custom ? undefined : GROUP_META[id as SidebarGroupId];
         const editable = custom || (meta?.editable ?? false);
-        const title = groups.name(id, custom ? t.sidebar.newGroupName : meta!.title);
+        const title = groups.name(
+          id,
+          custom ? t.sidebar.newGroupName : meta!.title,
+        );
         const content = custom
           ? customGroupContent(id)
           : groupContent[id as SidebarGroupId];

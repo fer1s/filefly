@@ -89,7 +89,10 @@ const SettingsDialog = ({ visible, onClose }: SettingsDialogProps) => {
             <Switcher checked={showToasts} onChange={toggleShowToasts} />
           </SettingsRow>
 
-          <SettingsRow label={t.settings.dragDrop} hint={t.settings.dragDropHint}>
+          <SettingsRow
+            label={t.settings.dragDrop}
+            hint={t.settings.dragDropHint}
+          >
             <select
               className="settings_select"
               value={dragDropAction}
@@ -110,7 +113,10 @@ const SettingsDialog = ({ visible, onClose }: SettingsDialogProps) => {
             label={t.settings.confirmDragDrop}
             hint={t.settings.confirmDragDropHint}
           >
-            <Switcher checked={confirmDragDrop} onChange={toggleConfirmDragDrop} />
+            <Switcher
+              checked={confirmDragDrop}
+              onChange={toggleConfirmDragDrop}
+            />
           </SettingsRow>
 
           <SettingsRow

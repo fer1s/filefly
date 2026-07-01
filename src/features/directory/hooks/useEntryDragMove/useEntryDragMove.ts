@@ -37,8 +37,7 @@ export const useEntryDragMove = ({
   const handedOffRef = useRef(false);
 
   const dirPaths = useMemo(
-    () =>
-      new Set(entries.filter((e) => e.metadata.isDir).map((e) => e.path)),
+    () => new Set(entries.filter((e) => e.metadata.isDir).map((e) => e.path)),
     [entries],
   );
 

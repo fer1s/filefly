@@ -66,8 +66,9 @@ const glyphToPng = (icon: IconDefinition): Promise<string> => {
   const [width, height, , , pathData] = icon.icon;
   const d = Array.isArray(pathData) ? pathData.join(" ") : pathData;
   const color =
-    getComputedStyle(document.body).getPropertyValue(GLYPH_COLOR_TOKEN).trim() ||
-    FALLBACK_GLYPH_COLOR;
+    getComputedStyle(document.body)
+      .getPropertyValue(GLYPH_COLOR_TOKEN)
+      .trim() || FALLBACK_GLYPH_COLOR;
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}"><path fill="${color}" d="${d}"/></svg>`;
   return svgUrlToPng(svgToDataUrl(svg));
 };

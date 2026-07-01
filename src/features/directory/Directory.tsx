@@ -149,8 +149,7 @@ const Directory = () => {
   // When a native OS drag is over the window (our own drag that left and came back, or files from
   // another app), highlight the folder under the cursor and drop into it — or, on empty space,
   // import into the current directory (only where that makes sense, not Volumes/Recents/Tags).
-  const importDir =
-    path && path !== RECENTS && !isTagsPath(path) ? path : "";
+  const importDir = path && path !== RECENTS && !isTagsPath(path) ? path : "";
   useNativeDropTarget({
     entries: sorted,
     currentDir: importDir,

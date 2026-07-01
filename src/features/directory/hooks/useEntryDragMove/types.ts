@@ -4,7 +4,9 @@ import { DirEntry } from "@/shared/models";
 
 // The attributes @use-gesture spreads onto an element (onPointerDown, etc.). The package doesn't
 // re-export this type, so recover it from useDrag's binder return type.
-export type EntryDragBinder = (path: string) => ReturnType<ReturnType<typeof useDrag>>;
+export type EntryDragBinder = (
+  path: string,
+) => ReturnType<ReturnType<typeof useDrag>>;
 
 export type UseEntryDragMoveArgs = {
   // Entries currently listed — used to know which drop targets are folders.

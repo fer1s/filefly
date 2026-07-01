@@ -1,0 +1,66 @@
+name: Build macOS (Intel)
+
+# Builds the unsigned Intel (x86_64) .dmg for Macs like the 2018 MacBook Pro. Runs when you publish
+# a GitHub Release (the .dmg is attached to that release), or manually from the Actions tab (the
+# .dmg is uploaded as a run artifact). Never runs on pushes or PRs.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+concurrency:
+  group: build-macos-intel-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write # attach the .dmg to the release
+
+jobs:
+  build:
+    # Intel runner → builds x86_64 natively (no cross-compile).
+    runs-on: macos-13
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-apple-darwin
+
+      - name: Cache Rust build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build DMG (x86_64)
+        run: pnpm tauri build --target x86_64-apple-darwin --bundles dmg
+
+      # Manual runs have no release to attach to → keep the .dmg as a downloadable artifact.
+      - name: Upload DMG artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sito-file-browser-macos-intel
+          path: src-tauri/target/x86_64-apple-darwin/release/bundle/dmg/*.dmg
+          if-no-files-found: error
+
+      # Release runs → attach the .dmg to the published release.
+      - name: Attach DMG to release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: src-tauri/target/x86_64-apple-darwin/release/bundle/dmg/*.dmg

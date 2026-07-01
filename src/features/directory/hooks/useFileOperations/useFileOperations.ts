@@ -231,7 +231,11 @@ export const useFileOperations = ({
       const label = entryLabel(valid);
       const progressLabel = isCopy ? t.directory.copying : t.directory.moving;
       const onProgress = (p: { processed: number; total: number }) =>
-        setProgress({ label: progressLabel, done: p.processed, total: p.total });
+        setProgress({
+          label: progressLabel,
+          done: p.processed,
+          total: p.total,
+        });
 
       setProgress({ label: progressLabel, done: 0, total: 0 });
       let failed = 0;
