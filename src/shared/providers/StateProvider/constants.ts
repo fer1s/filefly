@@ -6,6 +6,7 @@ import {
   DEFAULT_SIDEBAR_OPACITY,
   DEFAULT_SIDEBAR_WIDTH,
   DEFAULT_STARTUP_MODE,
+  DEFAULT_DRAG_DROP_ACTION,
 } from "@/shared/constants";
 
 import type { State } from "./types";
@@ -53,6 +54,10 @@ export const initialState: State = {
   setStartupMode: () => {},
   homePath: "",
   setHomePath: () => {},
+  dragDropAction: DEFAULT_DRAG_DROP_ACTION,
+  setDragDropAction: () => {},
+  confirmDragDrop: true,
+  toggleConfirmDragDrop: () => {},
   savingSettings: false,
   search: "",
   setSearch: () => {},

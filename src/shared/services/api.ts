@@ -24,6 +24,10 @@ export type AppSettings = {
   startupMode: string;
   // Folder opened on launch when startupMode is "home" (empty = Volumes view).
   homePath: string;
+  // What dragging entries onto a folder does: "move" | "copy" (see DRAG_DROP_ACTION).
+  dragDropAction: string;
+  // Whether a confirmation dialog is shown before a drag-and-drop move/copy.
+  confirmDragDrop: boolean;
 };
 
 // Load the persisted app settings (falls back to defaults when settings.toml is absent).

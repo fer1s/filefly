@@ -1,6 +1,10 @@
 import { Volume, DirEntry, Tab } from "@/shared/models";
 import { FileSystemManager } from "@/shared/managers/FileSystemManager";
-import { type ViewMode, type StartupMode } from "@/shared/constants";
+import {
+  type ViewMode,
+  type StartupMode,
+  type DragDropAction,
+} from "@/shared/constants";
 
 export type State = {
   fs: FileSystemManager;
@@ -59,6 +63,12 @@ export type State = {
   setStartupMode: (mode: StartupMode) => void;
   homePath: string;
   setHomePath: (path: string) => void;
+  // What dragging entries onto a folder does: move them there (default) or copy them there.
+  dragDropAction: DragDropAction;
+  setDragDropAction: (action: DragDropAction) => void;
+  // Whether a confirmation dialog is shown before a drag-and-drop move/copy.
+  confirmDragDrop: boolean;
+  toggleConfirmDragDrop: () => void;
   // True while a settings change is being written to settings.toml (drives the StatusBar spinner).
   savingSettings: boolean;
   search: string;

@@ -1,6 +1,7 @@
 import type { MouseEvent, RefObject } from "react";
 
 import { DirEntry } from "@/shared/models";
+import type { EntryDragBinder } from "@/features/directory/hooks/useEntryDragMove";
 import type { ViewMode } from "@/shared/constants";
 import type { EntryKind } from "@/features/directory/constants";
 
@@ -20,4 +21,6 @@ export type EntriesViewProps = {
     setId: (id: string) => void;
     setType: (type: EntryKind) => void;
   };
+  // Drag-to-move binder, forwarded to each row's root (see useEntryDragMove).
+  bindDrag: EntryDragBinder;
 };

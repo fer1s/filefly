@@ -19,6 +19,7 @@ const ConfirmationDialog = ({
   confirmLabel,
   cancelLabel,
   destructive = false,
+  extra,
   onConfirm,
   onClose,
 }: ConfirmationDialogProps) => {
@@ -39,6 +40,7 @@ const ConfirmationDialog = ({
 
       <div className="confirmation_body">
         <p className="confirmation_message">{message}</p>
+        {extra && <div className="confirmation_extra">{extra}</div>}
         <div className="confirmation_actions">
           <Button className="confirmation_cancel" onClick={onClose}>
             {cancelLabel ?? t.common.cancel}

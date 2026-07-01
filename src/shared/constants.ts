@@ -86,6 +86,18 @@ export type StartupMode = (typeof STARTUP_MODE)[keyof typeof STARTUP_MODE];
 // Default before the user picks: restore the previous session (preserves prior behavior).
 export const DEFAULT_STARTUP_MODE: StartupMode = STARTUP_MODE.RESTORE;
 
+// What dragging entries onto a folder does: MOVE them there, or COPY them there.
+export const DRAG_DROP_ACTION = {
+  MOVE: "move",
+  COPY: "copy",
+} as const;
+
+export type DragDropAction =
+  (typeof DRAG_DROP_ACTION)[keyof typeof DRAG_DROP_ACTION];
+
+// Default: move (matches most file managers).
+export const DEFAULT_DRAG_DROP_ACTION: DragDropAction = DRAG_DROP_ACTION.MOVE;
+
 // DOM KeyboardEvent.key names used in non-configurable key handling (navigation, input
 // submit/cancel). These are not user-rebindable bindings — see shared/keymap for those — but
 // they still shouldn't be raw string literals scattered through the code.

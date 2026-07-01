@@ -29,6 +29,10 @@ pub struct AppSettings {
     startup_mode: String,
     // Folder opened on launch when startup_mode is "home" (empty = Volumes view).
     home_path: String,
+    // What dragging entries onto a folder does: "move" or "copy".
+    drag_drop_action: String,
+    // Whether a confirmation dialog is shown before a drag-and-drop move/copy.
+    confirm_drag_drop: bool,
 }
 
 // Must mirror the frontend defaults (shared/constants.ts).
@@ -44,6 +48,8 @@ impl Default for AppSettings {
             show_toasts: true,
             startup_mode: "restore".to_string(),
             home_path: String::new(),
+            drag_drop_action: "move".to_string(),
+            confirm_drag_drop: true,
         }
     }
 }

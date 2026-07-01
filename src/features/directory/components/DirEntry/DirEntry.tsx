@@ -47,6 +47,8 @@ const DirEntryItemComponent = ({
   setContextMenuVisible,
   setContextMenuElementID,
   setContextMenuElementType,
+
+  bindDrag,
 }: DirEntryItemProps) => {
   const itemRef = useRef<HTMLDivElement>(null);
 
@@ -119,6 +121,7 @@ const DirEntryItemComponent = ({
     />
   );
 
+  // Drag-to-move is disabled while renaming so dragging to select text in the input isn't hijacked.
   // One DOM for both views; .grid / .list on the container arranges it via CSS, so toggling
   // the view never rebuilds these subtrees (which is what made the switch laggy). The Tooltip
   // wrapper renders as `display: contents` so the entry keeps its slot in the flex layout.
@@ -148,6 +151,7 @@ const DirEntryItemComponent = ({
             : fs.open(entry.path)
         }
         ref={itemRef}
+        {...(renaming ? {} : bindDrag(entry.path))}
       >
         {/* Grid-only extension badge (hidden in list). */}
         {extension && name && <div className="extension">{extension}</div>}
@@ -160,8 +164,10 @@ const DirEntryItemComponent = ({
             imgRef={imgRef}
             finishLoad={finishLoad}
           />
-          {renaming ? renameInput : <h3>{name || extension}</h3>}
-          <TagDots tags={tags} />
+          <span className="entry_label">
+            {renaming ? renameInput : <h3>{name || extension}</h3>}
+            <TagDots tags={tags} />
+          </span>
         </div>
 
         {/* List-only columns (hidden in grid). */}

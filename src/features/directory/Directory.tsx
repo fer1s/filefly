@@ -7,9 +7,14 @@ import {
 } from "react";
 
 import { useStateContext } from "@/shared/providers/StateProvider";
-import { VIEW_MODE, TRASH_DIR_NAME, RECENTS } from "@/shared/constants";
+import {
+  VIEW_MODE,
+  TRASH_DIR_NAME,
+  RECENTS,
+  DRAG_DROP_ACTION,
+} from "@/shared/constants";
 import { ENTRY_KIND, CLIPBOARD_MODE } from "@/features/directory/constants";
-import { classNames, isTagsPath } from "@/shared/utils";
+import { classNames, isTagsPath, basename } from "@/shared/utils";
 import { notify, TOAST_TYPE } from "@/shared/toast";
 import { t } from "@/lang";
 import { DirEntry } from "@/shared/models";
@@ -18,6 +23,7 @@ import { COLUMN_KEYS, buildListGrid } from "./columns";
 import { useColumnVisibility } from "./hooks/useColumnVisibility";
 import { useFolderView } from "./hooks/useFolderView";
 import { useMarqueeSelection } from "./hooks/useMarqueeSelection";
+import { useEntryDragMove } from "./hooks/useEntryDragMove";
 import { useKeyboardNav } from "./hooks/useKeyboardNav";
 import { useClipboardShortcuts } from "./hooks/useClipboardShortcuts";
 import { useZoomShortcuts } from "./hooks/useZoomShortcuts";
@@ -25,6 +31,8 @@ import { useContextMenu } from "./hooks/useContextMenu";
 import { useWritability } from "./hooks/useWritability";
 import { useDirectory } from "./providers/DirectoryProvider";
 
+import ConfirmationDialog from "@/shared/components/patterns/ConfirmationDialog";
+import Switcher from "@/shared/components/elements/Switcher";
 import ListHeader from "./components/ListHeader";
 import EntriesView from "./components/EntriesView";
 import AccessDeniedNotice from "./components/AccessDeniedNotice";
@@ -48,6 +56,9 @@ const Directory = () => {
     accessDenied,
     zoom,
     savingSettings,
+    dragDropAction,
+    confirmDragDrop,
+    toggleConfirmDragDrop,
   } = useStateContext();
 
   const [typeaheadQuery, setTypeaheadQuery] = useState("");
@@ -80,6 +91,41 @@ const Directory = () => {
   const { marquee, onMouseDown: onMarqueeMouseDown } = useMarqueeSelection({
     containerRef: directoryRef,
     setSelectedIDs,
+  });
+
+  // Drag entries onto a folder to move (default) or copy them there, per the drag-and-drop
+  // settings. A pending drop is held until the user confirms, when confirmation is enabled.
+  const [pendingDrop, setPendingDrop] = useState<{
+    sources: string[];
+    dest: string;
+  } | null>(null);
+  // "Don't ask again" toggle inside the confirm dialog; on accept it turns off future confirms.
+  const [dontAskAgain, setDontAskAgain] = useState(false);
+
+  const isCopy = dragDropAction === DRAG_DROP_ACTION.COPY;
+
+  const performDrop = useCallback(
+    (sources: string[], dest: string) =>
+      isCopy ? fileOps.copyTo(sources, dest) : fileOps.moveTo(sources, dest),
+    [isCopy, fileOps],
+  );
+
+  const handleDrop = useCallback(
+    (sources: string[], dest: string) => {
+      if (confirmDragDrop) {
+        setDontAskAgain(false);
+        setPendingDrop({ sources, dest });
+      } else performDrop(sources, dest);
+    },
+    [confirmDragDrop, performDrop],
+  );
+
+  // Drag entries onto a folder row (the whole selection if the dragged entry is part of it).
+  // Feedback is applied imperatively, so it never re-renders the rows.
+  const { bindDrag, ghostRef } = useEntryDragMove({
+    entries: sorted,
+    selectedIDs,
+    onDrop: handleDrop,
   });
 
   useFolderView(path);
@@ -270,6 +316,7 @@ const Directory = () => {
               setId: menu.setElementID,
               setType: menu.setElementType,
             }}
+            bindDrag={bindDrag}
           />
         )}
 
@@ -321,6 +368,43 @@ const Directory = () => {
         visible={properties.visible}
         onClose={properties.close}
       />
+
+      {/* Confirm a drag-and-drop move/copy before it runs (when confirmation is enabled). */}
+      <ConfirmationDialog
+        visible={!!pendingDrop}
+        title={isCopy ? t.common.copy : t.common.move}
+        message={
+          pendingDrop
+            ? (isCopy ? t.directory.confirmDragCopy : t.directory.confirmDragMove)(
+                pendingDrop.sources.length === 1
+                  ? basename(pendingDrop.sources[0])
+                  : t.directory.itemCount(pendingDrop.sources.length),
+                basename(pendingDrop.dest),
+              )
+            : ""
+        }
+        confirmLabel={isCopy ? t.common.copy : t.common.move}
+        extra={
+          <label className="confirmation_toggle">
+            <Switcher
+              checked={dontAskAgain}
+              onChange={() => setDontAskAgain((prev) => !prev)}
+            />
+            <span>{t.common.dontAskAgain}</span>
+          </label>
+        }
+        onConfirm={() => {
+          if (pendingDrop) performDrop(pendingDrop.sources, pendingDrop.dest);
+          // Persist the preference: stop confirming future drops.
+          if (dontAskAgain && confirmDragDrop) toggleConfirmDragDrop();
+          setPendingDrop(null);
+        }}
+        onClose={() => setPendingDrop(null)}
+      />
+
+      {/* Follows the pointer during a drag-to-move; shows the dragged entry + a count badge.
+          Toggled visible via body.is-entry-dragging; positioned imperatively by the hook. */}
+      <div ref={ghostRef} className="drag_ghost" aria-hidden="true" />
     </div>
   );
 };

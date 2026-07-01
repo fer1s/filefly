@@ -1,11 +1,14 @@
 import Dialog from "@/shared/components/patterns/Dialog";
 import DialogHeader from "@/shared/components/patterns/DialogHeader";
+import Switcher from "@/shared/components/elements/Switcher";
 import { useStateContext } from "@/shared/providers/StateProvider";
 import { useCloseOnEscape } from "@/shared/hooks/useCloseOnEscape";
 import {
   SIDEBAR_OPACITY_MIN,
   SIDEBAR_OPACITY_MAX,
   SIDEBAR_OPACITY_STEP,
+  DRAG_DROP_ACTION,
+  type DragDropAction,
 } from "@/shared/constants";
 import { t } from "@/lang";
 
@@ -31,6 +34,10 @@ const SettingsDialog = ({ visible, onClose }: SettingsDialogProps) => {
     setDefaultZoom,
     sidebarOpacity,
     setSidebarOpacity,
+    dragDropAction,
+    setDragDropAction,
+    confirmDragDrop,
+    toggleConfirmDragDrop,
   } = useStateContext();
 
   useCloseOnEscape(visible, onClose);
@@ -58,21 +65,14 @@ const SettingsDialog = ({ visible, onClose }: SettingsDialogProps) => {
             label={t.settings.showHidden}
             hint={t.settings.showHiddenHint}
           >
-            <input
-              type="checkbox"
-              className="settings_switch"
-              checked={showHidden}
-              onChange={toggleShowHidden}
-            />
+            <Switcher checked={showHidden} onChange={toggleShowHidden} />
           </SettingsRow>
 
           <SettingsRow
             label={t.settings.hideSystemRecents}
             hint={t.settings.hideSystemRecentsHint}
           >
-            <input
-              type="checkbox"
-              className="settings_switch"
+            <Switcher
               checked={hideSystemRecents}
               onChange={toggleHideSystemRecents}
             />
@@ -82,12 +82,31 @@ const SettingsDialog = ({ visible, onClose }: SettingsDialogProps) => {
             label={t.settings.showToasts}
             hint={t.settings.showToastsHint}
           >
-            <input
-              type="checkbox"
-              className="settings_switch"
-              checked={showToasts}
-              onChange={toggleShowToasts}
-            />
+            <Switcher checked={showToasts} onChange={toggleShowToasts} />
+          </SettingsRow>
+
+          <SettingsRow label={t.settings.dragDrop} hint={t.settings.dragDropHint}>
+            <select
+              className="settings_select"
+              value={dragDropAction}
+              onChange={(event) =>
+                setDragDropAction(event.target.value as DragDropAction)
+              }
+            >
+              <option value={DRAG_DROP_ACTION.MOVE}>
+                {t.settings.dragDropMove}
+              </option>
+              <option value={DRAG_DROP_ACTION.COPY}>
+                {t.settings.dragDropCopy}
+              </option>
+            </select>
+          </SettingsRow>
+
+          <SettingsRow
+            label={t.settings.confirmDragDrop}
+            hint={t.settings.confirmDragDropHint}
+          >
+            <Switcher checked={confirmDragDrop} onChange={toggleConfirmDragDrop} />
           </SettingsRow>
 
           <SettingsRow

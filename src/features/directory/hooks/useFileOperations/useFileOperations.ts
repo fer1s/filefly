@@ -187,6 +187,65 @@ export const useFileOperations = ({
     refreshDir();
   }, [clipboard, path, fs, refreshDir, setSelectedIDs]);
 
+  // Transfer (move or copy) a set of entries into a destination folder (drag-and-drop). Unlike
+  // paste it takes an explicit destination rather than the current folder, and skips no-op /
+  // invalid transfers (an entry already in dest, or a folder dropped onto itself or a descendant).
+  const transferTo = useCallback(
+    async (sources: string[], destDir: string, isCopy: boolean) => {
+      const valid = sources.filter((src) => {
+        if (!src) return false;
+        const parent = src.split("/").slice(0, -1).join("/");
+        if (parent === destDir) return false; // already there
+        if (destDir === src || destDir.startsWith(`${src}/`)) return false; // into self/descendant
+        return true;
+      });
+      if (!valid.length) return;
+
+      const label = entryLabel(valid);
+      const progressLabel = isCopy ? t.directory.copying : t.directory.moving;
+      const onProgress = (p: { processed: number; total: number }) =>
+        setProgress({ label: progressLabel, done: p.processed, total: p.total });
+
+      setProgress({ label: progressLabel, done: 0, total: 0 });
+      let failed = 0;
+      try {
+        for (const source of valid) {
+          try {
+            if (isCopy) await fs.copy(source, destDir, onProgress);
+            else await fs.move(source, destDir, onProgress);
+          } catch (err) {
+            failed++;
+            notify(
+              t.errors.paste(basename(source), String(err)),
+              TOAST_TYPE.ERROR,
+            );
+          }
+        }
+      } finally {
+        setProgress(null);
+      }
+
+      if (!failed)
+        notify(
+          isCopy ? t.directory.pasted(label) : t.directory.moved(label),
+          TOAST_TYPE.SUCCESS,
+        );
+      setSelectedIDs([]);
+      refreshDir();
+    },
+    [fs, refreshDir, setSelectedIDs],
+  );
+
+  const moveTo = useCallback(
+    (sources: string[], destDir: string) => transferTo(sources, destDir, false),
+    [transferTo],
+  );
+
+  const copyTo = useCallback(
+    (sources: string[], destDir: string) => transferTo(sources, destDir, true),
+    [transferTo],
+  );
+
   const rename = useCallback(
     async (targetPath: string, newName: string) => {
       try {
@@ -211,6 +270,8 @@ export const useFileOperations = ({
     removePermanently,
     restore,
     paste,
+    moveTo,
+    copyTo,
     rename,
     progress,
   };

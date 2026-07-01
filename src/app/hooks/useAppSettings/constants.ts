@@ -4,6 +4,7 @@ import {
   DEFAULT_SIDEBAR_OPACITY,
   DEFAULT_SIDEBAR_WIDTH,
   DEFAULT_STARTUP_MODE,
+  DEFAULT_DRAG_DROP_ACTION,
 } from "@/shared/constants";
 import type { AppSettings } from "@/shared/services/api";
 
@@ -18,6 +19,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   showToasts: true,
   startupMode: DEFAULT_STARTUP_MODE,
   homePath: "",
+  dragDropAction: DEFAULT_DRAG_DROP_ACTION,
+  confirmDragDrop: true,
 };
 
 // Coalesce rapid changes (e.g. dragging the opacity slider) into one disk write.

@@ -17,6 +17,9 @@ export const en = {
     pause: "Pause",
     cancel: "Cancel",
     confirm: "Confirm",
+    move: "Move",
+    copy: "Copy",
+    dontAskAgain: "Don't ask again",
   },
   tags: {
     label: "Tags",
@@ -223,6 +226,12 @@ export const en = {
       "Folder opened when a new session starts at your home folder.",
     homeFolderVolumes: "Volumes",
     choose: "Choose…",
+    dragDrop: "Drag and drop",
+    dragDropHint: "What dragging files onto a folder does.",
+    dragDropMove: "Move",
+    dragDropCopy: "Copy",
+    confirmDragDrop: "Confirm drag and drop",
+    confirmDragDropHint: "Ask before moving or copying dragged files.",
     saving: "Saving settings…",
   },
   infoPanel: {
@@ -257,6 +266,10 @@ export const en = {
     confirmDelete: (label: string) => `Move ${label} to the Trash?`,
     confirmDeletePermanently: (label: string) =>
       `Permanently delete ${label}? This can't be undone.`,
+    confirmDragMove: (label: string, dest: string) =>
+      `Move ${label} to "${dest}"?`,
+    confirmDragCopy: (label: string, dest: string) =>
+      `Copy ${label} to "${dest}"?`,
     deleteTitle: "Delete",
     restoreToTitle: "Restore to…",
     items: (n: number) => `${n} items`,

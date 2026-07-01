@@ -32,7 +32,12 @@ import { notify, setToastsEnabled, TOAST_TYPE } from "@/shared/toast";
 import { FileSystemManager } from "@/shared/managers/FileSystemManager";
 import { classNames } from "@/shared/utils";
 import { t } from "@/lang";
-import { VIEW_MODE, type ViewMode, type StartupMode } from "@/shared/constants";
+import {
+  VIEW_MODE,
+  type ViewMode,
+  type StartupMode,
+  type DragDropAction,
+} from "@/shared/constants";
 
 const App = () => {
   const navigate = useNavigate();
@@ -75,6 +80,11 @@ const App = () => {
   const toggleShowToasts = useCallback(
     () => update({ showToasts: !settings.showToasts }),
     [settings.showToasts, update],
+  );
+
+  const toggleConfirmDragDrop = useCallback(
+    () => update({ confirmDragDrop: !settings.confirmDragDrop }),
+    [settings.confirmDragDrop, update],
   );
 
   // Keep the toast bridge's enabled flag in sync so notify() (callable from non-React code)
@@ -144,6 +154,10 @@ const App = () => {
         setStartupMode: (startupMode) => update({ startupMode }),
         homePath: settings.homePath,
         setHomePath: (homePath) => update({ homePath }),
+        dragDropAction: settings.dragDropAction as DragDropAction,
+        setDragDropAction: (dragDropAction) => update({ dragDropAction }),
+        confirmDragDrop: settings.confirmDragDrop,
+        toggleConfirmDragDrop,
         savingSettings,
         search: tabs.search,
         setSearch: tabs.setSearch,

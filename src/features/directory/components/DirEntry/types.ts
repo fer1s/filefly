@@ -1,6 +1,7 @@
 import type { MouseEvent, RefObject } from "react";
 
 import { DirEntry, Tag } from "@/shared/models";
+import type { EntryDragBinder } from "@/features/directory/hooks/useEntryDragMove";
 import { FileSystemManager } from "@/shared/managers/FileSystemManager";
 import { type EntryKind } from "@/features/directory/constants";
 
@@ -34,4 +35,8 @@ export type DirEntryItemProps = {
 
   contextMenuRef: RefObject<HTMLDivElement | null>;
   id: string;
+
+  // Drag-to-move binder (@use-gesture), spread onto the row's root. Identity-stable so the
+  // memo isn't broken; call with this entry's path to move it (or the whole selection).
+  bindDrag: EntryDragBinder;
 };

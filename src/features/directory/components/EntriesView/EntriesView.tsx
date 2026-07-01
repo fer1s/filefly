@@ -30,6 +30,7 @@ const EntriesView = ({
   onRename,
   onCancelRename,
   menu,
+  bindDrag,
 }: EntriesViewProps) => {
   const { fs, setPath, dateFormat } = useStateContext();
   const { tags: tagsByPath, loadTags } = useTags();
@@ -101,6 +102,7 @@ const EntriesView = ({
             setContextMenuVisible={menu.setVisible}
             setContextMenuElementID={menu.setId}
             setContextMenuElementType={menu.setType}
+            bindDrag={bindDrag}
           />
         );
       })}
