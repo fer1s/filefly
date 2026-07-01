@@ -1,4 +1,4 @@
-import { SORT_KEY, type SortKey } from "@/shared/constants";
+import { SORT_KEY, type SortKey } from "@/features/directory/constants";
 
 // List columns in display order. Header buttons and row cells follow this order, so the
 // dynamic grid track list (built from the visible subset) stays aligned with both.

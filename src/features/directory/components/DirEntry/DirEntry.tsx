@@ -12,7 +12,7 @@ import {
   PDF_FORMAT,
   MARKDOWN_FORMATS,
   SVG_FORMAT,
-} from "@/shared/constants";
+} from "@/features/directory/constants";
 import Tooltip from "@/shared/components/elements/Tooltip";
 import { t } from "@/lang";
 

@@ -27,7 +27,7 @@ import {
   TEXT_FORMATS,
   VIDEO_FORMATS,
   WORD_FORMATS,
-} from "@/shared/constants";
+} from "@/features/directory/constants";
 
 // Declarative file-type → glyph registry. The first group whose formats include the extension
 // wins (groups are disjoint today, so order is cosmetic). Extend by adding a row — no branching.

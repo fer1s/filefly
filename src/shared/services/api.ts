@@ -18,6 +18,10 @@ export type AppSettings = {
   sidebarOpacity: number;
   hideSystemRecents: boolean;
   showToasts: boolean;
+  // Launch behavior: "restore" | "volumes" | "home" (see STARTUP_MODE).
+  startupMode: string;
+  // Folder opened on launch when startupMode is "home" (empty = Volumes view).
+  homePath: string;
 };
 
 // Load the persisted app settings (falls back to defaults when settings.toml is absent).

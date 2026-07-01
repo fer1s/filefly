@@ -1,4 +1,4 @@
-import { SORT_KEY } from "@/shared/constants";
+import { SORT_KEY } from "@/features/directory/constants";
 import { t } from "@/lang";
 
 // List columns shown in the header and the show/hide menu, in display order.

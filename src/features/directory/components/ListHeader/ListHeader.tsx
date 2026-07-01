@@ -2,7 +2,7 @@ import type { MouseEvent } from "react";
 
 import Icon from "@/shared/components/elements/Icon";
 import { classNames } from "@/shared/utils";
-import { ENTRY_KIND, SORT_DIRECTION } from "@/shared/constants";
+import { ENTRY_KIND, SORT_DIRECTION } from "@/features/directory/constants";
 
 import { useContextMenu } from "../../hooks/useContextMenu";
 

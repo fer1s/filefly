@@ -13,15 +13,15 @@ import {
   ContextMenu,
   ContextMenuItem,
 } from "@/shared/components/patterns/ContextMenu";
+import { KEY } from "@/shared/constants";
 import {
   AUDIO_FORMATS,
   IMAGE_FORMATS,
   VIDEO_FORMATS,
   ENTRY_KIND,
-  KEY,
   MARKDOWN_FORMAT,
   PDF_FORMAT,
-} from "@/shared/constants";
+} from "@/features/directory/constants";
 import {
   useKeymap,
   useHotkey,

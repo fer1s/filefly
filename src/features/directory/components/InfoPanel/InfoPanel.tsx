@@ -8,7 +8,7 @@ import {
   VIDEO_FORMATS,
   AUDIO_FORMATS,
   PDF_FORMAT,
-} from "@/shared/constants";
+} from "@/features/directory/constants";
 import { t } from "@/lang";
 
 import { faXmark } from "@fortawesome/free-solid-svg-icons";

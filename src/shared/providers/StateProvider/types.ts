@@ -1,6 +1,6 @@
 import { Volume, DirEntry, Tab } from "@/shared/models";
 import { FileSystemManager } from "@/shared/managers/FileSystemManager";
-import { type ViewMode } from "@/shared/constants";
+import { type ViewMode, type StartupMode } from "@/shared/constants";
 
 export type State = {
   fs: FileSystemManager;
@@ -50,6 +50,12 @@ export type State = {
   // Sidebar background opacity (alpha of --color-background-sidebar), 0..1.
   sidebarOpacity: number;
   setSidebarOpacity: (opacity: number) => void;
+  // What the app opens on launch (see STARTUP_MODE), and the folder used when mode is "home".
+  // Takes effect on the next launch (tab restoration runs at mount).
+  startupMode: StartupMode;
+  setStartupMode: (mode: StartupMode) => void;
+  homePath: string;
+  setHomePath: (path: string) => void;
   // True while a settings change is being written to settings.toml (drives the StatusBar spinner).
   savingSettings: boolean;
   search: string;

@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { ENTRY_KIND, KEY, type EntryKind } from "@/shared/constants";
+import { KEY } from "@/shared/constants";
+import { ENTRY_KIND, type EntryKind } from "@/features/directory/constants";
 import { HOTKEY_SCOPE, useHotkey, useHotkeyScope } from "@/shared/keymap";
 
 // Gap (px) kept between the menu and the viewport edges when clamping.

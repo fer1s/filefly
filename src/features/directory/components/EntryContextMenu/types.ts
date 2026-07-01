@@ -1,6 +1,6 @@
 import type { RefObject } from "react";
 
-import type { EntryKind } from "@/shared/constants";
+import type { EntryKind } from "@/features/directory/constants";
 
 export type FileOps = {
   copy: (targets: string[]) => void;

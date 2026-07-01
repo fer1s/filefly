@@ -1,4 +1,4 @@
-import type { ClipboardMode } from "@/shared/constants";
+import type { ClipboardMode } from "@/features/directory/constants";
 
 export type Clipboard = { paths: string[]; mode: ClipboardMode } | null;
 

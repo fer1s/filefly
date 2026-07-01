@@ -22,6 +22,11 @@ pub struct AppSettings {
     hide_system_recents: bool,
     // Show transient toast notifications (e.g. "Copied"). When off, they're suppressed.
     show_toasts: bool,
+    // What to open on launch: "restore" (previous session), "volumes" (fresh at Volumes), or
+    // "home" (fresh at home_path).
+    startup_mode: String,
+    // Folder opened on launch when startup_mode is "home" (empty = Volumes view).
+    home_path: String,
 }
 
 // Must mirror the frontend defaults (shared/constants.ts).
@@ -34,6 +39,8 @@ impl Default for AppSettings {
             sidebar_opacity: 0.85,
             hide_system_recents: true,
             show_toasts: true,
+            startup_mode: "restore".to_string(),
+            home_path: String::new(),
         }
     }
 }

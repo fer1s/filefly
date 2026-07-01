@@ -4,6 +4,7 @@ import {
   ZOOM_DEFAULT,
   DEFAULT_DATE_FORMAT,
   DEFAULT_SIDEBAR_OPACITY,
+  DEFAULT_STARTUP_MODE,
 } from "@/shared/constants";
 
 import type { State } from "./types";
@@ -45,6 +46,10 @@ export const initialState: State = {
   setDateFormat: () => {},
   sidebarOpacity: DEFAULT_SIDEBAR_OPACITY,
   setSidebarOpacity: () => {},
+  startupMode: DEFAULT_STARTUP_MODE,
+  setStartupMode: () => {},
+  homePath: "",
+  setHomePath: () => {},
   savingSettings: false,
   search: "",
   setSearch: () => {},

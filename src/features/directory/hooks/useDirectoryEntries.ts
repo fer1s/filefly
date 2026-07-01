@@ -1,15 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { useStateContext } from "@/shared/providers/StateProvider";
+import { RECENTS, VIEW_MODE, type ViewMode } from "@/shared/constants";
 import {
   ACCEPTED_PREVIEW_FORMATS,
-  RECENTS,
   SORT_DIRECTION,
   SORT_KEY,
-  VIEW_MODE,
   type SortKey,
-  type ViewMode,
-} from "@/shared/constants";
+} from "@/features/directory/constants";
 import * as api from "@/shared/services/api";
 import { extension } from "@/shared/utils";
 import { FEATURE_FLAGS } from "@/shared/featureFlags";

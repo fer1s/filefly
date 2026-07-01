@@ -1,9 +1,18 @@
 import { t } from "@/lang";
 import { basename, isTagsPath, tagFromPath } from "@/shared/utils";
-import { RECENTS } from "@/shared/constants";
+import {
+  RECENTS,
+  STARTUP_MODE,
+  DEFAULT_STARTUP_MODE,
+  type StartupMode,
+} from "@/shared/constants";
 import type { Tab } from "@/shared/models";
 
-import { TABS_STORAGE_KEY, ACTIVE_TAB_STORAGE_KEY } from "./constants";
+import {
+  TABS_STORAGE_KEY,
+  ACTIVE_TAB_STORAGE_KEY,
+  STARTUP_STORAGE_KEY,
+} from "./constants";
 
 // A fresh tab rooted at `path` (empty string = the Volumes view). `infoPanelOpen` lets a new tab
 // inherit the current tab's panel state so opening one feels continuous.
@@ -79,9 +88,45 @@ const isTab = (value: unknown): value is Tab => {
   );
 };
 
+// The launch preference cached in localStorage (see STARTUP_STORAGE_KEY). Read synchronously at
+// mount to decide how the session opens.
+export type StartupConfig = { mode: StartupMode; homePath: string };
+
+const isStartupMode = (value: unknown): value is StartupMode =>
+  value === STARTUP_MODE.RESTORE ||
+  value === STARTUP_MODE.VOLUMES ||
+  value === STARTUP_MODE.HOME;
+
+// The cached launch preference, or the default (restore) when absent/corrupt.
+export const loadStartupConfig = (): StartupConfig => {
+  try {
+    const raw = localStorage.getItem(STARTUP_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw) as Record<string, unknown>;
+      if (isStartupMode(parsed.mode))
+        return {
+          mode: parsed.mode,
+          homePath: typeof parsed.homePath === "string" ? parsed.homePath : "",
+        };
+    }
+  } catch {
+    // Corrupt storage — fall through to the default.
+  }
+  return { mode: DEFAULT_STARTUP_MODE, homePath: "" };
+};
+
+// Cache the launch preference for the next launch's synchronous tab init.
+export const saveStartupConfig = (config: StartupConfig): void =>
+  localStorage.setItem(STARTUP_STORAGE_KEY, JSON.stringify(config));
+
 // Restore the persisted tab session, falling back to a single Volumes tab when absent/corrupt.
-// Normalises older sessions that predate per-tab fields (e.g. `infoPanelOpen`).
+// Normalises older sessions that predate per-tab fields (e.g. `infoPanelOpen`). When the launch
+// preference is a fresh session (Volumes or a home folder), the persisted tabs are ignored and a
+// single new tab is opened at the chosen location instead.
 export const loadTabs = (): Tab[] => {
+  const { mode, homePath } = loadStartupConfig();
+  if (mode === STARTUP_MODE.VOLUMES) return [makeTab("")];
+  if (mode === STARTUP_MODE.HOME) return [makeTab(homePath)];
   try {
     const raw = localStorage.getItem(TABS_STORAGE_KEY);
     if (raw) {

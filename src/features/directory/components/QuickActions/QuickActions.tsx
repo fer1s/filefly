@@ -2,7 +2,8 @@ import { useStateContext } from "@/shared/providers/StateProvider";
 import { useKeymap, formatBinding } from "@/shared/keymap";
 import IconButton from "@/shared/components/elements/IconButton";
 import { extension } from "@/shared/utils";
-import { ENTRY_KIND, TRASH_DIR_NAME } from "@/shared/constants";
+import { TRASH_DIR_NAME } from "@/shared/constants";
+import { ENTRY_KIND } from "@/features/directory/constants";
 
 import { useDirectory } from "../../providers/DirectoryProvider";
 import { useContextMenuLayout } from "../../hooks/useContextMenuLayout";

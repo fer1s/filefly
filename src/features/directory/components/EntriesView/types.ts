@@ -1,7 +1,8 @@
 import type { MouseEvent, RefObject } from "react";
 
 import { DirEntry } from "@/shared/models";
-import type { EntryKind, ViewMode } from "@/shared/constants";
+import type { ViewMode } from "@/shared/constants";
+import type { EntryKind } from "@/features/directory/constants";
 
 export type EntriesViewProps = {
   entries: DirEntry[];

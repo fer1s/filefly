@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 
-import { ACCEPTED_PREVIEW_FORMATS } from "@/shared/constants";
+import { ACCEPTED_PREVIEW_FORMATS } from "@/features/directory/constants";
 import { extension } from "@/shared/utils";
 import { DirEntry } from "@/shared/models";
 

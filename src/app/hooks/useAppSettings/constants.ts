@@ -2,6 +2,7 @@ import {
   ZOOM_DEFAULT,
   DEFAULT_DATE_FORMAT,
   DEFAULT_SIDEBAR_OPACITY,
+  DEFAULT_STARTUP_MODE,
 } from "@/shared/constants";
 import type { AppSettings } from "@/shared/services/api";
 
@@ -13,6 +14,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   sidebarOpacity: DEFAULT_SIDEBAR_OPACITY,
   hideSystemRecents: true,
   showToasts: true,
+  startupMode: DEFAULT_STARTUP_MODE,
+  homePath: "",
 };
 
 // Coalesce rapid changes (e.g. dragging the opacity slider) into one disk write.

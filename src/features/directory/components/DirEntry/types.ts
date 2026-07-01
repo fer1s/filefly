@@ -2,7 +2,7 @@ import type { MouseEvent, RefObject } from "react";
 
 import { DirEntry, Tag } from "@/shared/models";
 import { FileSystemManager } from "@/shared/managers/FileSystemManager";
-import { type EntryKind } from "@/shared/constants";
+import { type EntryKind } from "@/features/directory/constants";
 
 export type DirEntryItemProps = {
   entry: DirEntry;

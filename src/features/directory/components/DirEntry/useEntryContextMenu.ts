@@ -1,7 +1,7 @@
 import { useEffect, type MouseEvent, type RefObject } from "react";
 
 import { DirEntry } from "@/shared/models";
-import { ENTRY_KIND, type EntryKind } from "@/shared/constants";
+import { ENTRY_KIND, type EntryKind } from "@/features/directory/constants";
 
 type Args = {
   itemRef: RefObject<HTMLDivElement | null>;

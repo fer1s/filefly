@@ -60,6 +60,18 @@
   cursor: pointer;
 }
 
+/* Action button in a settings row (e.g. the home-folder chooser). Matches the select's chrome. */
+.settings_modal .settings_button {
+  flex-shrink: 0;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  border: var(--border-width-default) solid var(--color-border-default);
+  background-color: var(--color-surface-input);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-base);
+  cursor: pointer;
+}
+
 /* Custom date-format pattern input + live preview, stacked under the format dropdown. */
 .settings_modal .settings_date_custom {
   display: flex;

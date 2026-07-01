@@ -3,7 +3,7 @@ import {
   SORT_KEY,
   type SortDirection,
   type SortKey,
-} from "@/shared/constants";
+} from "@/features/directory/constants";
 import { extension } from "@/shared/utils";
 import { DirEntry } from "@/shared/models";
 

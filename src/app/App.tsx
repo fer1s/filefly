@@ -12,7 +12,7 @@ import {
 import SideBar from "@/features/sidebar";
 import ShortcutsDialog from "@/features/shortcuts";
 import { SettingsProvider } from "@/features/settings";
-import { useTabs } from "@/features/tabs";
+import { useTabs, saveStartupConfig } from "@/features/tabs";
 import ToastStack from "@/shared/components/patterns/ToastStack";
 
 import AppContent from "./AppContent";
@@ -26,7 +26,7 @@ import { notify, setToastsEnabled, TOAST_TYPE } from "@/shared/toast";
 import { FileSystemManager } from "@/shared/managers/FileSystemManager";
 import { classNames } from "@/shared/utils";
 import { t } from "@/lang";
-import { VIEW_MODE, type ViewMode } from "@/shared/constants";
+import { VIEW_MODE, type ViewMode, type StartupMode } from "@/shared/constants";
 
 const App = () => {
   const navigate = useNavigate();
@@ -77,6 +77,15 @@ const App = () => {
     setToastsEnabled(settings.showToasts);
   }, [settings.showToasts]);
 
+  // Mirror the launch preference into localStorage so the next launch's (synchronous) tab
+  // restoration can read it before settings.toml has finished loading.
+  useEffect(() => {
+    saveStartupConfig({
+      mode: settings.startupMode as StartupMode,
+      homePath: settings.homePath,
+    });
+  }, [settings.startupMode, settings.homePath]);
+
   // The OS/webview context menu is replaced by the app's own; suppress it everywhere.
   useEffect(() => {
     const preventContextMenu = (event: MouseEvent) => event.preventDefault();
@@ -123,6 +132,10 @@ const App = () => {
         setDateFormat: (dateFormat) => update({ dateFormat }),
         sidebarOpacity: settings.sidebarOpacity,
         setSidebarOpacity: (sidebarOpacity) => update({ sidebarOpacity }),
+        startupMode: settings.startupMode as StartupMode,
+        setStartupMode: (startupMode) => update({ startupMode }),
+        homePath: settings.homePath,
+        setHomePath: (homePath) => update({ homePath }),
         savingSettings,
         search: tabs.search,
         setSearch: tabs.setSearch,

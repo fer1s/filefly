@@ -4,7 +4,8 @@ import { faCheck, faMinus } from "@fortawesome/free-solid-svg-icons";
 
 import Icon from "@/shared/components/elements/Icon";
 import { classNames } from "@/shared/utils";
-import { KEY, TAG_COLOR, TAG_PICKER_COLORS } from "@/shared/constants";
+import { KEY, TAG_COLOR } from "@/shared/constants";
+import { TAG_PICKER_COLORS } from "@/features/directory/constants";
 import { useTags } from "@/shared/providers/TagsProvider";
 import type { Tag } from "@/shared/models";
 import { t } from "@/lang";

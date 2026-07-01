@@ -5,7 +5,7 @@ import { useStateContext } from "@/shared/providers/StateProvider";
 import { notify, TOAST_TYPE } from "@/shared/toast";
 import { basename } from "@/shared/utils";
 import { t } from "@/lang";
-import { CLIPBOARD_MODE } from "@/shared/constants";
+import { CLIPBOARD_MODE } from "@/features/directory/constants";
 
 import { withName, entryLabel } from "./utils";
 import type {

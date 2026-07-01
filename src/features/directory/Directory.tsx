@@ -7,13 +7,8 @@ import {
 } from "react";
 
 import { useStateContext } from "@/shared/providers/StateProvider";
-import {
-  ENTRY_KIND,
-  VIEW_MODE,
-  TRASH_DIR_NAME,
-  RECENTS,
-  CLIPBOARD_MODE,
-} from "@/shared/constants";
+import { VIEW_MODE, TRASH_DIR_NAME, RECENTS } from "@/shared/constants";
+import { ENTRY_KIND, CLIPBOARD_MODE } from "@/features/directory/constants";
 import { classNames, isTagsPath } from "@/shared/utils";
 import { notify, TOAST_TYPE } from "@/shared/toast";
 import { t } from "@/lang";
