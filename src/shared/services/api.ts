@@ -262,23 +262,33 @@ export type CopyProgress = { processed: number; total: number };
 
 // Filesystem operations. These throw on error (the Rust command returns a Result) so callers can surface it.
 // copy/move stream byte progress over an IPC Channel; pass `onProgress` to observe it.
+// copy/move resolve to the final destination path, which differs from destDir/basename when a
+// name collision triggered a rename (e.g. "file (1).txt").
 export const copyEntry = async (
   source: string,
   destDir: string,
   onProgress?: (progress: CopyProgress) => void,
-): Promise<void> => {
+): Promise<string> => {
   const channel = new Channel<CopyProgress>();
   if (onProgress) channel.onmessage = onProgress;
-  await invoke("copy_entry", { source, destDir, onProgress: channel });
+  return (await invoke("copy_entry", {
+    source,
+    destDir,
+    onProgress: channel,
+  })) as string;
 };
 export const moveEntry = async (
   source: string,
   destDir: string,
   onProgress?: (progress: CopyProgress) => void,
-): Promise<void> => {
+): Promise<string> => {
   const channel = new Channel<CopyProgress>();
   if (onProgress) channel.onmessage = onProgress;
-  await invoke("move_entry", { source, destDir, onProgress: channel });
+  return (await invoke("move_entry", {
+    source,
+    destDir,
+    onProgress: channel,
+  })) as string;
 };
 export const renameEntry = async (
   path: string,

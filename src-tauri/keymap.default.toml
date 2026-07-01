@@ -22,6 +22,17 @@ mod = true
 keys = ["v"]
 mod = true
 
+# Undo / redo the last reversible file action (move, paste, trash, rename). Redo is the shifted
+# sibling — same key. Permanent deletes are not undoable.
+[undo]
+keys = ["z"]
+mod = true
+
+[redo]
+keys = ["z"]
+mod = true
+shift = true
+
 [trash]
 keys = ["Backspace", "Delete"]
 mod = true

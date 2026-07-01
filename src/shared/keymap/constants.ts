@@ -3,6 +3,8 @@ export const KEYMAP_ACTION = {
   COPY: "copy",
   CUT: "cut",
   PASTE: "paste",
+  UNDO: "undo",
+  REDO: "redo",
   TRASH: "trash",
   DELETE_PERMANENTLY: "delete_permanently",
   SELECT_ALL: "select_all",

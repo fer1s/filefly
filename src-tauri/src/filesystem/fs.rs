@@ -543,12 +543,14 @@ fn copy_with_progress(
 // Copy a file or directory into dest_dir (recursively for dirs), avoiding name collisions.
 // async + spawn_blocking so a large recursive copy runs on a blocking-thread-pool thread instead
 // of Tauri's main thread — otherwise the whole webview freezes until the copy finishes.
+// Returns the final destination path — which differs from dest_dir/name when a name collision
+// triggered a rename (e.g. "file (1).txt") — so the frontend can reveal or undo the exact result.
 #[tauri::command]
 pub async fn copy_entry(
     source: String,
     dest_dir: String,
     on_progress: Channel<ProgressPayload>,
-) -> Result<(), String> {
+) -> Result<String, String> {
     tauri::async_runtime::spawn_blocking(move || {
         let src = Path::new(&source);
         let name = src
@@ -556,7 +558,8 @@ pub async fn copy_entry(
             .ok_or_else(|| "Invalid source path".to_string())?;
         let dest = unique_dest(Path::new(&dest_dir), name);
 
-        copy_with_progress(src, &dest, &on_progress).map_err(|e| e.to_string())
+        copy_with_progress(src, &dest, &on_progress).map_err(|e| e.to_string())?;
+        Ok(dest.to_string_lossy().into_owned())
     })
     .await
     .map_err(|e| e.to_string())?
@@ -564,18 +567,20 @@ pub async fn copy_entry(
 
 // Move a file or directory into dest_dir. Fast rename when possible, copy + delete across volumes.
 // Runs on a blocking thread (cross-volume moves copy the whole tree) to keep the UI responsive.
+// Returns the final destination path (see copy_entry) so the frontend can reveal or undo it.
 #[tauri::command]
 pub async fn move_entry(
     source: String,
     dest_dir: String,
     on_progress: Channel<ProgressPayload>,
-) -> Result<(), String> {
+) -> Result<String, String> {
     tauri::async_runtime::spawn_blocking(move || {
         let src = Path::new(&source);
         let name = src
             .file_name()
             .ok_or_else(|| "Invalid source path".to_string())?;
         let dest = unique_dest(Path::new(&dest_dir), name);
+        let dest_path = dest.to_string_lossy().into_owned();
 
         // Same-volume move is an instant rename — report it as immediately complete.
         if fs::rename(src, &dest).is_ok() {
@@ -585,16 +590,17 @@ pub async fn move_entry(
                     total: 1,
                 })
                 .ok();
-            return Ok(());
+            return Ok(dest_path);
         }
 
         // Cross-volume: copy with progress, then remove the source.
         copy_with_progress(src, &dest, &on_progress).map_err(|e| e.to_string())?;
         if src.is_dir() {
-            fs::remove_dir_all(src).map_err(|e| e.to_string())
+            fs::remove_dir_all(src).map_err(|e| e.to_string())?;
         } else {
-            fs::remove_file(src).map_err(|e| e.to_string())
+            fs::remove_file(src).map_err(|e| e.to_string())?;
         }
+        Ok(dest_path)
     })
     .await
     .map_err(|e| e.to_string())?

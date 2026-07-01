@@ -28,6 +28,8 @@ export const SHORTCUT_SECTIONS: readonly ShortcutSection[] = [
         label: () => t.shortcuts.actions.paste,
         actions: [KEYMAP_ACTION.PASTE],
       },
+      { label: () => t.shortcuts.actions.undo, actions: [KEYMAP_ACTION.UNDO] },
+      { label: () => t.shortcuts.actions.redo, actions: [KEYMAP_ACTION.REDO] },
       {
         label: () => t.shortcuts.actions.rename,
         actions: [KEYMAP_ACTION.RENAME],

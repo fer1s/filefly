@@ -239,6 +239,8 @@ const Directory = () => {
     onCopy: fileOps.copy,
     onCut: fileOps.cut,
     onPaste: fileOps.paste,
+    onUndo: fileOps.undo,
+    onRedo: fileOps.redo,
     onDelete: fileOps.remove,
     onDeletePermanently: fileOps.removePermanently,
     // Rename only makes sense for a single entry.

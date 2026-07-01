@@ -164,6 +164,8 @@ export const en = {
       copy: "Copy",
       cut: "Cut",
       paste: "Paste",
+      undo: "Undo",
+      redo: "Redo",
       trash: "Move to Trash",
       deletePermanently: "Delete permanently",
       selectAll: "Select all",
@@ -298,6 +300,8 @@ export const en = {
     restored: (label: string) => `Restored ${label}`,
     deleted: (label: string) => `Deleted ${label}`,
     renamed: (name: string) => `Renamed to "${name}"`,
+    undone: (label: string) => `Undone — ${label}`,
+    redone: (label: string) => `Redone — ${label}`,
     accessDenied: {
       title: "Can't read this folder",
       description:
@@ -326,6 +330,8 @@ export const en = {
     paste: (name: string, reason: string) =>
       `Could not paste ${name}: ${reason}`,
     rename: (reason: string) => `Could not rename: ${reason}`,
+    undo: (reason: string) => `Could not undo: ${reason}`,
+    redo: (reason: string) => `Could not redo: ${reason}`,
     createFolder: (reason: string) => `Could not create folder: ${reason}`,
     copyImage: (reason: string) => `Could not copy image: ${reason}`,
     properties: (reason: string) => `Could not read properties: ${reason}`,

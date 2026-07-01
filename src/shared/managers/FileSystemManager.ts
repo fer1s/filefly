@@ -126,11 +126,12 @@ export class FileSystemManager {
     return api.generateMarkdownPreview(path);
   }
 
+  // Resolve to the final destination path (differs from destDir/basename on conflict-rename).
   copy(
     source: string,
     destDir: string,
     onProgress?: (progress: api.CopyProgress) => void,
-  ): Promise<void> {
+  ): Promise<string> {
     return api.copyEntry(source, destDir, onProgress);
   }
 
@@ -138,7 +139,7 @@ export class FileSystemManager {
     source: string,
     destDir: string,
     onProgress?: (progress: api.CopyProgress) => void,
-  ): Promise<void> {
+  ): Promise<string> {
     return api.moveEntry(source, destDir, onProgress);
   }
 
