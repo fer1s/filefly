@@ -87,6 +87,8 @@ export const en = {
     itemAddFailed: "Couldn't add the item",
     itemAlreadyAdded: "That item is already in the sidebar",
     removeItem: "Remove from sidebar",
+    hidePreset: "Hide from sidebar",
+    showPreset: "Show in sidebar",
     removeItemTitle: "Remove item",
     confirmRemoveItem: (name: string) =>
       `Remove "${name}" from the sidebar? This only removes the shortcut, not the folder.`,

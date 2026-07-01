@@ -147,6 +147,19 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
   // The rows for each group. Rendered in the user's saved order below; the group shell (header,
   // edit affordances, drag handle) is the same SidebarSection for all of them.
   const networkRows = customRows(SIDEBAR_GROUP.NETWORK);
+
+  // Presets are hidden, not deleted (we couldn't re-create them). In edit mode show them all so a
+  // hidden one can be toggled back on; otherwise drop the hidden ones. Each keeps its original
+  // index so its hotkey slot (Cmd/Ctrl+1..6) stays correct regardless of what's filtered out.
+  const hiddenPinnedPresets = new Set(groups.hiddenPresets(SIDEBAR_GROUP.PINNED));
+  const visiblePinned = pinned
+    .map((item, index) => ({ item, index }))
+    .filter(
+      ({ item }) =>
+        editingSidebar ||
+        !item.presetId ||
+        !hiddenPinnedPresets.has(item.presetId),
+    );
   const groupContent: Record<SidebarGroupId, ReactNode> = {
     // An array (not a fragment) so SidebarSection's Children.toArray sees each row individually
     // and can interleave the add-item inserts between them.
@@ -159,7 +172,7 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
         active={path === RECENTS}
         onContextMenu={onRowContextMenu(RECENTS_ITEM.path, RECENTS_ITEM.kind)}
       />,
-      ...pinned.map((item, i) => (
+      ...visiblePinned.map(({ item, index }) => (
         <FolderItem
           key={item.path}
           item={item}
@@ -167,8 +180,18 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
           collapsed={collapsed}
           active={item.path === path}
           hotkey={
-            i < PINNED_ACTIONS.length
-              ? formatBinding(keymap[PINNED_ACTIONS[i]])
+            index < PINNED_ACTIONS.length
+              ? formatBinding(keymap[PINNED_ACTIONS[index]])
+              : undefined
+          }
+          hidden={!!item.presetId && hiddenPinnedPresets.has(item.presetId)}
+          onToggleHidden={
+            editingSidebar && item.presetId
+              ? () =>
+                  groups.toggleHiddenPreset(
+                    SIDEBAR_GROUP.PINNED,
+                    item.presetId!,
+                  )
               : undefined
           }
           onContextMenu={onRowContextMenu(item.path, item.kind)}
@@ -224,7 +247,7 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
 
   // Built-in (non-custom) row counts, so onAddItem can map the clicked gap to a custom slot.
   const builtinCount: Record<SidebarGroupId, number> = {
-    [SIDEBAR_GROUP.PINNED]: 1 + pinned.length,
+    [SIDEBAR_GROUP.PINNED]: 1 + visiblePinned.length,
     [SIDEBAR_GROUP.VOLUMES]: volumes.length,
     [SIDEBAR_GROUP.NETWORK]: 0,
     [SIDEBAR_GROUP.TAGS]: allTags.length,

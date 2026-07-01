@@ -8,7 +8,7 @@ import Tooltip, {
 import { classNames, activateOnKey } from "@/shared/utils";
 import { t } from "@/lang";
 
-import { faTrash } from "@fortawesome/free-solid-svg-icons";
+import { faTrash, faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 
 import type { FolderItemProps } from "./types";
 
@@ -20,13 +20,20 @@ const FolderItem = ({
   hotkey,
   onContextMenu,
   onRemove,
+  onToggleHidden,
+  hidden,
   className,
 }: FolderItemProps) => {
   const open = () => setPath(item.path);
 
   const row = (
     <div
-      className={classNames("folder_item", active && "active", className)}
+      className={classNames(
+        "folder_item",
+        active && "active",
+        hidden && "hidden",
+        className,
+      )}
       role="button"
       tabIndex={0}
       aria-current={active ? "true" : undefined}
@@ -37,7 +44,11 @@ const FolderItem = ({
     >
       <Icon icon={item.icon} />
       <p>{item.name}</p>
-      {hotkey && <span className="folder_hotkey">{hotkey}</span>}
+      {/* In edit mode the row shows an action button (eye/trash) on the right; hide the hotkey
+          badge then so they don't crowd each other. */}
+      {hotkey && !onRemove && !onToggleHidden && (
+        <span className="folder_hotkey">{hotkey}</span>
+      )}
       {onRemove && (
         <IconButton
           icon={faTrash}
@@ -50,6 +61,20 @@ const FolderItem = ({
             onRemove();
           }}
           aria-label={t.sidebar.removeItem}
+        />
+      )}
+      {onToggleHidden && (
+        <IconButton
+          icon={hidden ? faEyeSlash : faEye}
+          size={ICON_BUTTON_SIZE.SM}
+          className="item_hide"
+          tooltip={hidden ? t.sidebar.showPreset : t.sidebar.hidePreset}
+          tooltipPlacement={TOOLTIP_PLACEMENT.RIGHT}
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleHidden();
+          }}
+          aria-label={hidden ? t.sidebar.showPreset : t.sidebar.hidePreset}
         />
       )}
     </div>

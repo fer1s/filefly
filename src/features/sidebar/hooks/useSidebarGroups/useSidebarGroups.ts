@@ -5,6 +5,7 @@ import {
   setSidebarGroupName,
   setSidebarOrder,
   setSidebarItems,
+  setHiddenPresets,
   type SidebarGroups,
 } from "@/shared/services/api";
 import { notify, TOAST_TYPE } from "@/shared/toast";
@@ -130,5 +131,43 @@ export const useSidebarGroups = () => {
     [groups],
   );
 
-  return { name, rename, order, reorder, items, addItem, removeItem };
+  // The stable ids of built-in presets the user has hidden in a group.
+  const hiddenPresets = useCallback(
+    (id: SidebarGroupId) => groups[id]?.hiddenPresets ?? [],
+    [groups],
+  );
+
+  // Toggle a built-in preset's hidden state (presets are hidden, never removed), reflecting it
+  // immediately and persisting the new set. Reverts from disk on a write failure.
+  const toggleHiddenPreset = useCallback(
+    (id: SidebarGroupId, presetId: string) => {
+      const current = groups[id]?.hiddenPresets ?? [];
+      const next = current.includes(presetId)
+        ? current.filter((p) => p !== presetId)
+        : [...current, presetId];
+      setGroups((prev) => ({
+        ...prev,
+        [id]: { ...prev[id], hiddenPresets: next },
+      }));
+      setHiddenPresets(id, next).catch((error) => {
+        console.error("Failed to persist hidden presets:\n" + error);
+        getSidebarGroups()
+          .then(setGroups)
+          .catch(() => {});
+      });
+    },
+    [groups],
+  );
+
+  return {
+    name,
+    rename,
+    order,
+    reorder,
+    items,
+    addItem,
+    removeItem,
+    hiddenPresets,
+    toggleHiddenPreset,
+  };
 };

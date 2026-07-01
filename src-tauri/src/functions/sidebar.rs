@@ -19,6 +19,10 @@ pub struct SidebarGroup {
     // User-added item paths for this group, in display order (shown below the built-in rows).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     items: Vec<String>,
+    // Stable ids of built-in preset rows the user has hidden (see PRESET_ID on the frontend).
+    // Presets can't be deleted (we couldn't re-create them), only hidden; edit mode toggles this.
+    #[serde(rename = "hiddenPresets", default, skip_serializing_if = "Vec::is_empty")]
+    hidden_presets: Vec<String>,
 }
 
 // group id -> group settings. A BTreeMap keeps the file stably ordered (nicer diffs).
@@ -80,5 +84,14 @@ pub fn set_sidebar_order(app: AppHandle, ids: Vec<String>) -> Result<(), String>
 pub fn set_sidebar_items(app: AppHandle, id: String, items: Vec<String>) -> Result<(), String> {
     let mut config = read_config(&app);
     config.entry(id).or_default().items = items;
+    write_config(&app, &config)
+}
+
+// Replace the set of hidden built-in preset ids for a group, preserving its other settings. The
+// frontend sends the full list after each hide/show toggle.
+#[tauri::command]
+pub fn set_hidden_presets(app: AppHandle, id: String, presets: Vec<String>) -> Result<(), String> {
+    let mut config = read_config(&app);
+    config.entry(id).or_default().hidden_presets = presets;
     write_config(&app, &config)
 }

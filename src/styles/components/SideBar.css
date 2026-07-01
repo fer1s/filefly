@@ -76,6 +76,18 @@
   color: var(--color-danger);
 }
 
+/* Eye toggle on preset rows: same right-aligned, still-clickable placement as the trash button,
+   but neutral (presets are hidden, not deleted). */
+.SideBar section .section_content .folder_item .item_hide {
+  margin-left: auto;
+  pointer-events: auto;
+}
+
+/* A hidden preset only shows in edit mode; dim it so it reads as "off" while still toggleable. */
+.SideBar section .section_content .folder_item.hidden {
+  opacity: 0.5;
+}
+
 .SideBar section .section_content .folder_item svg {
   font-size: var(--font-size-base);
   color: var(--color-text-tertiary);

@@ -40,6 +40,8 @@ export type SidebarGroupConfig = {
   name?: string;
   order?: number;
   items?: string[];
+  // Stable ids of built-in preset rows the user has hidden (presets are hidden, never deleted).
+  hiddenPresets?: string[];
 };
 export type SidebarGroups = Record<string, SidebarGroupConfig>;
 
@@ -62,6 +64,12 @@ export const setSidebarItems = async (
   id: string,
   items: string[],
 ): Promise<void> => await invoke("set_sidebar_items", { id, items });
+
+// Persist the set of hidden built-in preset ids for a group (the full list after a toggle).
+export const setHiddenPresets = async (
+  id: string,
+  presets: string[],
+): Promise<void> => await invoke("set_hidden_presets", { id, presets });
 
 // Open the native folder picker; resolves to the chosen directory path, or null if cancelled.
 export const pickFolder = async (): Promise<string | null> => {

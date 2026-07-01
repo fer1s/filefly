@@ -72,6 +72,7 @@ fn main() {
             functions::sidebar::set_sidebar_group_name,
             functions::sidebar::set_sidebar_order,
             functions::sidebar::set_sidebar_items,
+            functions::sidebar::set_hidden_presets,
             functions::folder_columns::get_folder_columns,
             functions::folder_columns::set_folder_columns,
             functions::folder_columns::get_folder_view,
