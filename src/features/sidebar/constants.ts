@@ -18,13 +18,17 @@ export const SIDEBAR_GROUP = {
   PINNED: "pinned",
   VOLUMES: "volumes",
   NETWORK: "network",
+  TAGS: "tags",
 } as const;
 
 export type SidebarGroupId = (typeof SIDEBAR_GROUP)[keyof typeof SIDEBAR_GROUP];
 
 // Built-in top-to-bottom order of the sidebar groups, used until the user reorders them.
+// Tags is macOS-only and system-managed (its rows come from the live Finder tags), so it's
+// reorderable like Volumes but only shows when there are tags — see SideBar.
 export const DEFAULT_GROUP_ORDER: readonly SidebarGroupId[] = [
   SIDEBAR_GROUP.PINNED,
   SIDEBAR_GROUP.VOLUMES,
   SIDEBAR_GROUP.NETWORK,
+  SIDEBAR_GROUP.TAGS,
 ] as const;

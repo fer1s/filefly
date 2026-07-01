@@ -72,6 +72,8 @@ const GROUP_META: Record<SidebarGroupId, { title: string; editable: boolean }> =
     [SIDEBAR_GROUP.PINNED]: { title: t.sidebar.pinned, editable: true },
     [SIDEBAR_GROUP.VOLUMES]: { title: t.sidebar.volumes, editable: false },
     [SIDEBAR_GROUP.NETWORK]: { title: t.sidebar.network, editable: true },
+    // System-managed like Volumes: reorderable, but the rows are the live Finder tags.
+    [SIDEBAR_GROUP.TAGS]: { title: t.sidebar.tags, editable: false },
   };
 
 const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
@@ -195,6 +197,29 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
     ) : (
       <p className="section_todo">{t.sidebar.todo}</p>
     ),
+    // Finder tags — the tags actually in use (their real names + colours), discovered at runtime.
+    // Clicking one opens its Spotlight tag view. macOS-only (the group is hidden otherwise below).
+    [SIDEBAR_GROUP.TAGS]: allTags.map((tag) => {
+      const itemPath = tagsPath(tag.name);
+      const colorClass =
+        TAG_COLOR_CLASS[tag.color] ?? TAG_COLOR_CLASS[TAG_COLOR.NONE];
+      return (
+        <FolderItem
+          key={tag.name}
+          item={{
+            name: tag.name,
+            path: itemPath,
+            icon: faCircle,
+            kind: SIDEBAR_ITEM_KIND.TAG,
+          }}
+          className={`tag_${colorClass}`}
+          setPath={setPath}
+          collapsed={collapsed}
+          active={path === itemPath}
+          onContextMenu={onRowContextMenu(itemPath, SIDEBAR_ITEM_KIND.TAG)}
+        />
+      );
+    }),
   };
 
   // Built-in (non-custom) row counts, so onAddItem can map the clicked gap to a custom slot.
@@ -202,7 +227,12 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
     [SIDEBAR_GROUP.PINNED]: 1 + pinned.length,
     [SIDEBAR_GROUP.VOLUMES]: volumes.length,
     [SIDEBAR_GROUP.NETWORK]: 0,
+    [SIDEBAR_GROUP.TAGS]: allTags.length,
   };
+
+  // Tags is macOS-only and only meaningful once tags exist; keep its slot in the saved order but
+  // skip rendering it otherwise.
+  const showTags = isMacPlatform() && allTags.length > 0;
 
   return (
     <div
@@ -263,6 +293,7 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
       </div>
 
       {groups.order.map((id) => {
+        if (id === SIDEBAR_GROUP.TAGS && !showTags) return null;
         const { title, editable } = GROUP_META[id];
         return (
           <SidebarSection
@@ -280,37 +311,6 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
           </SidebarSection>
         );
       })}
-
-      {/* Finder tags — the tags actually in use (their real names + colours), discovered at
-          runtime. Clicking one opens its Spotlight tag view. macOS-only. */}
-      {isMacPlatform() && allTags.length > 0 && (
-        <SidebarSection title={t.sidebar.tags}>
-          {allTags.map((tag) => {
-            const itemPath = tagsPath(tag.name);
-            const colorClass =
-              TAG_COLOR_CLASS[tag.color] ?? TAG_COLOR_CLASS[TAG_COLOR.NONE];
-            return (
-              <FolderItem
-                key={tag.name}
-                item={{
-                  name: tag.name,
-                  path: itemPath,
-                  icon: faCircle,
-                  kind: SIDEBAR_ITEM_KIND.TAG,
-                }}
-                className={`tag_${colorClass}`}
-                setPath={setPath}
-                collapsed={collapsed}
-                active={path === itemPath}
-                onContextMenu={onRowContextMenu(
-                  itemPath,
-                  SIDEBAR_ITEM_KIND.TAG,
-                )}
-              />
-            );
-          })}
-        </SidebarSection>
-      )}
 
       <SidebarContextMenu
         contextMenuRef={menu.ref}
