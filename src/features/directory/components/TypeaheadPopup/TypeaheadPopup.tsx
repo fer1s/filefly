@@ -4,6 +4,7 @@ import "@/styles/components/TypeaheadPopup.css";
 
 import type { TypeaheadPopupProps } from "./types";
 
+// Type-to-find feedback: shows what the user has typed while jumping to matching entries.
 const TypeaheadPopup = ({ query }: TypeaheadPopupProps) => (
   <Popup
     visible={Boolean(query)}

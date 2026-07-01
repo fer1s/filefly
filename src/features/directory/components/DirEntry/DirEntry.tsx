@@ -1,5 +1,4 @@
-import { memo, useEffect, useRef, useState } from "react";
-import { convertFileSrc } from "@tauri-apps/api/core";
+import { memo, useEffect, useRef } from "react";
 
 import {
   classNames,
@@ -7,162 +6,108 @@ import {
   formatBytes,
   formatDate,
 } from "@/shared/utils";
-import { ENTRY_KIND, IMAGE_FORMATS } from "@/shared/constants";
-import Icon from "@/shared/components/elements/Icon";
 import {
-  imagePreviewLoad,
-  acquireImageSlot,
-} from "../../hooks/useImagePreviewLoading";
+  IMAGE_FORMATS,
+  VIDEO_FORMATS,
+  PDF_FORMAT,
+  MARKDOWN_FORMATS,
+  SVG_FORMAT,
+} from "@/features/directory/constants";
+import Tooltip from "@/shared/components/elements/Tooltip";
 import { t } from "@/lang";
 
-import { faFile, faFolder } from "@fortawesome/free-solid-svg-icons";
-
+import { METADATA_TOOLTIP_DELAY } from "./constants";
+import { useEntryThumbnail } from "./useEntryThumbnail";
+import { useInlineRename } from "./useInlineRename";
+import { useEntryContextMenu } from "./useEntryContextMenu";
+import { EntryMetadata } from "./EntryMetadata";
+import { EntryIcon } from "./EntryIcon";
+import { TagDots } from "./TagDots";
 import type { DirEntryItemProps } from "./types";
-
-// Max thumbnail edge in px. Sized for a retina grid icon; the backend caches at this size.
-const THUMBNAIL_SIZE = 160;
 
 const DirEntryItemComponent = ({
   entry,
   fs,
   setPath,
+  tags,
+  dateFormat,
   contextMenuRef,
   id,
 
   selected,
+  cut,
+  focused,
+  tabbable,
   onSelect,
 
   renaming,
   onRename,
   onCancelRename,
 
-  setHighlitedElementID,
-  setHighlitedElementType,
-  setDetailsPopupVisible,
-
   setContextMenuVisible,
   setContextMenuElementID,
   setContextMenuElementType,
+
+  bindDrag,
 }: DirEntryItemProps) => {
   const itemRef = useRef<HTMLDivElement>(null);
 
-  // handle context menu
-  useEffect(() => {
-    const item = itemRef.current;
-    const handleContextMenu = (e: MouseEvent) => {
-      e.preventDefault();
-
-      if (itemRef.current && contextMenuRef.current) {
-        if (!itemRef.current.contains(e.target as Node))
-          return setContextMenuVisible(false);
-
-        setContextMenuElementID(itemRef.current.id);
-
-        if (entry.metadata.isDir)
-          setContextMenuElementType(ENTRY_KIND.DIRECTORY);
-        else if (entry.metadata.isFile)
-          setContextMenuElementType(ENTRY_KIND.FILE);
-        else setContextMenuElementType(ENTRY_KIND.NONE);
-
-        contextMenuRef.current.style.left = `${e.clientX}px`;
-        contextMenuRef.current.style.top = `${e.clientY}px`;
-
-        setContextMenuVisible(true);
-      }
-    };
-
-    // Attach the event listener to the individual item
-    item?.addEventListener("contextmenu", handleContextMenu);
-    // Remove the event listener from the individual item
-    return () => item?.removeEventListener("contextmenu", handleContextMenu);
-  }, [
+  useEntryContextMenu({
+    itemRef,
     contextMenuRef,
-    entry.metadata.isDir,
-    entry.metadata.isFile,
+    entry,
+    selected,
+    onSelect,
     setContextMenuElementID,
     setContextMenuElementType,
     setContextMenuVisible,
-  ]);
+  });
 
-  // handle details popup
+  // Move keyboard focus to the entry only when it's the single focused one (keyboard nav),
+  // never on bulk selection — focusing every item on Ctrl+A would scroll to the last one.
   useEffect(() => {
-    const item = itemRef.current;
-    let timer: number | null = null;
+    if (focused) itemRef.current?.focus();
+  }, [focused]);
 
-    const handleMouseEnter = () => {
-      timer = setTimeout(() => {
-        if (!itemRef.current) return;
-
-        setHighlitedElementID(itemRef.current.id);
-        if (entry.metadata.isDir) setHighlitedElementType(ENTRY_KIND.DIRECTORY);
-        else if (entry.metadata.isFile)
-          setHighlitedElementType(ENTRY_KIND.FILE);
-        else setHighlitedElementType(ENTRY_KIND.NONE);
-
-        setTimeout(() => {
-          if (!itemRef.current) return;
-          setDetailsPopupVisible(true);
-        }, 1000);
-      }, 1000);
-    };
-
-    const handleMouseLeave = () => {
-      setDetailsPopupVisible(false);
-      if (timer) clearTimeout(timer);
-    };
-
-    item?.addEventListener("mouseenter", handleMouseEnter);
-    item?.addEventListener("mouseleave", handleMouseLeave);
-
-    return () => {
-      item?.removeEventListener("mouseenter", handleMouseEnter);
-      item?.removeEventListener("mouseleave", handleMouseLeave);
-    };
-  }, [
-    entry.metadata.isDir,
-    entry.metadata.isFile,
-    setDetailsPopupVisible,
-    setHighlitedElementID,
-    setHighlitedElementType,
-  ]);
-
-  // Move keyboard focus to the entry when it becomes the selected one.
+  // A freshly created folder starts in rename mode, possibly off-screen — scroll it into view.
   useEffect(() => {
-    if (selected) itemRef.current?.focus();
-  }, [selected]);
+    if (renaming) itemRef.current?.scrollIntoView({ block: "nearest" });
+  }, [renaming]);
 
-  // Inline rename: focus the input and preselect the base name (without extension) when editing starts.
-  const renameInputRef = useRef<HTMLInputElement>(null);
-  const renameDoneRef = useRef(false);
+  // Split extension from the file name.
+  const name = entry.metadata.isFile ? entry.name.split(".")[0] : entry.name;
+  const extension = entry.metadata.isFile
+    ? entry.name.split(".")[entry.name.split(".").length - 1]
+    : "";
 
-  useEffect(() => {
-    if (!renaming || !renameInputRef.current) return;
-    renameDoneRef.current = false;
-    const el = renameInputRef.current;
-    el.focus();
-    const dot = entry.name.lastIndexOf(".");
-    el.setSelectionRange(0, dot > 0 ? dot : entry.name.length);
-  }, [entry.name, renaming]);
+  const ext = extension.toLowerCase().trim();
+  const isImage = entry.metadata.isFile && IMAGE_FORMATS.includes(ext);
+  // Videos, PDFs and markdown get a thumbnail too (macOS QuickLook); same lazy/throttled path.
+  const isVideo = entry.metadata.isFile && VIDEO_FORMATS.includes(ext);
+  const isPdf = entry.metadata.isFile && ext === PDF_FORMAT;
+  const isMarkdown = entry.metadata.isFile && MARKDOWN_FORMATS.includes(ext);
+  // SVG draws straight from the file (no backend thumbnail) — the webview rasterises it natively.
+  const isSvg = entry.metadata.isFile && ext === SVG_FORMAT;
+  const isThumbnail = isImage || isVideo || isPdf || isMarkdown;
 
-  const submitRename = () => {
-    if (renameDoneRef.current) return;
-    renameDoneRef.current = true;
-    const value = renameInputRef.current?.value.trim();
-    if (value && value !== entry.name) onRename(entry.path, value);
-    else onCancelRename();
-  };
+  // Dotfiles are hidden on macOS/Unix; dim them to set them apart (Finder-style).
+  const isHidden = entry.name.startsWith(".");
 
-  const cancelRename = () => {
-    if (renameDoneRef.current) return;
-    renameDoneRef.current = true;
-    onCancelRename();
-  };
+  const { imgSrc, imgRef, finishLoad } = useEntryThumbnail(
+    entry.path,
+    fs,
+    isThumbnail || isSvg,
+    itemRef,
+    isSvg,
+  );
 
-  const handleRenameKeyDown = (e: React.KeyboardEvent) => {
-    e.stopPropagation();
-    if (e.key === "Enter") submitRename();
-    else if (e.key === "Escape") cancelRename();
-  };
+  const { renameInputRef, submitRename, handleRenameKeyDown } = useInlineRename(
+    entry.name,
+    entry.path,
+    renaming,
+    onRename,
+    onCancelRename,
+  );
 
   const renameInput = (
     <input
@@ -176,139 +121,80 @@ const DirEntryItemComponent = ({
     />
   );
 
-  // Split extension from the file name
-  const name = entry.metadata.isFile ? entry.name.split(".")[0] : entry.name;
-  const extension = entry.metadata.isFile
-    ? entry.name.split(".")[entry.name.split(".").length - 1]
-    : "";
-
-  const isImage =
-    entry.metadata.isFile &&
-    IMAGE_FORMATS.includes(extension.toLowerCase().trim());
-
-  // Lazy + throttled image thumbnails. A row only "wants" its thumbnail once it
-  // scrolls near the viewport (IntersectionObserver); it then queues for a load
-  // slot so only a few decode at a time. This keeps opening a screenshot-heavy
-  // folder from janking the main thread.
-  const [wanted, setWanted] = useState(false);
-  const [imgSrc, setImgSrc] = useState<string | null>(null);
-  const imgRef = useRef<HTMLImageElement>(null);
-  const loadEndedRef = useRef(false);
-  const releaseSlotRef = useRef<(() => void) | null>(null);
-
-  // Settle one load: free the slot (so the next queued thumbnail starts) and
-  // drop the StatusBar spinner count. Idempotent per load.
-  const finishLoad = () => {
-    if (loadEndedRef.current) return;
-    loadEndedRef.current = true;
-    releaseSlotRef.current?.();
-    releaseSlotRef.current = null;
-    imagePreviewLoad.end();
-  };
-
-  useEffect(() => {
-    if (!isImage) return;
-    const el = itemRef.current;
-    if (!el) return;
-
-    const io = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((e) => e.isIntersecting)) {
-          setWanted(true);
-          io.disconnect();
-        }
-      },
-      { rootMargin: "300px" },
-    );
-
-    io.observe(el);
-    return () => io.disconnect();
-  }, [isImage]);
-
-  // Once wanted, count it as loading and queue for a slot; when granted, ask the backend
-  // for a small cached thumbnail (decoded/resized off the UI thread) and load that — never
-  // the multi-megabyte original.
-  useEffect(() => {
-    if (!wanted) return;
-    loadEndedRef.current = false;
-    imagePreviewLoad.start();
-    releaseSlotRef.current = acquireImageSlot(() => {
-      fs.getThumbnail(entry.path, THUMBNAIL_SIZE)
-        .then((thumb) => setImgSrc(convertFileSrc(thumb)))
-        .catch(() => finishLoad());
-    });
-
-    return () => {
-      releaseSlotRef.current?.();
-      releaseSlotRef.current = null;
-      if (!loadEndedRef.current) {
-        loadEndedRef.current = true;
-        imagePreviewLoad.end();
-      }
-    };
-  }, [wanted, entry.path, fs]);
-
-  // Cached images can already be complete before onLoad fires — settle now so
-  // the slot frees and the spinner count doesn't get stuck.
-  useEffect(() => {
-    if (imgSrc && imgRef.current?.complete) finishLoad();
-  }, [imgSrc]);
-
+  // Drag-to-move is disabled while renaming so dragging to select text in the input isn't hijacked.
   // One DOM for both views; .grid / .list on the container arranges it via CSS, so toggling
-  // the view never rebuilds these subtrees (which is what made the switch laggy).
+  // the view never rebuilds these subtrees (which is what made the switch laggy). The Tooltip
+  // wrapper renders as `display: contents` so the entry keeps its slot in the flex layout.
   return (
-    <div
-      className={classNames("dir_entry_item", selected && "selected")}
-      id={id}
-      tabIndex={0}
-      onClick={(e) => onSelect(entry.path, e)}
-      onDoubleClick={() =>
-        entry.metadata.isDir
-          ? navigateToPath(entry, setPath)
-          : fs.open(entry.path)
-      }
-      ref={itemRef}
+    <Tooltip
+      contents
+      delay={METADATA_TOOLTIP_DELAY}
+      showOnFocus={false}
+      content={<EntryMetadata entry={entry} extension={extension} />}
     >
-      {/* Grid-only extension badge (hidden in list). */}
-      {extension && name && <div className="extension">{extension}</div>}
+      <div
+        className={classNames(
+          "dir_entry_item",
+          selected && "selected",
+          cut && "cut",
+          isHidden && "hidden",
+        )}
+        id={id}
+        role="option"
+        aria-selected={selected}
+        aria-label={entry.name}
+        tabIndex={tabbable ? 0 : -1}
+        onClick={(e) => onSelect(entry.path, e)}
+        onDoubleClick={() =>
+          entry.metadata.isDir
+            ? navigateToPath(entry, setPath)
+            : fs.open(entry.path)
+        }
+        ref={itemRef}
+        {...(renaming ? {} : bindDrag(entry.path))}
+      >
+        {/* Grid-only extension badge (hidden in list). */}
+        {extension && name && <div className="extension">{extension}</div>}
 
-      <div className="name">
-        <div className="icon">
-          {isImage && imgSrc ? (
-            <img
-              ref={imgRef}
-              src={imgSrc}
-              decoding="async"
-              onLoad={finishLoad}
-              onError={finishLoad}
-            />
-          ) : (
-            <Icon icon={entry.metadata.isDir ? faFolder : faFile} />
-          )}
+        <div className="name">
+          <EntryIcon
+            isDir={entry.metadata.isDir}
+            extension={ext}
+            imgSrc={imgSrc}
+            imgRef={imgRef}
+            finishLoad={finishLoad}
+          />
+          <span className="entry_label">
+            {renaming ? renameInput : <h3>{name || extension}</h3>}
+            <TagDots tags={tags} />
+          </span>
         </div>
-        {renaming ? renameInput : <h3>{name || extension}</h3>}
-      </div>
 
-      {/* List-only columns (hidden in grid). */}
-      <div className="date_modified">
-        <h3>{formatDate(entry.metadata.modified.secs_since_epoch)}</h3>
+        {/* List-only columns (hidden in grid). */}
+        <div className="date_modified">
+          <h3>
+            {formatDate(entry.metadata.modified.secs_since_epoch, dateFormat)}
+          </h3>
+        </div>
+        <div className="date_created">
+          <h3>
+            {formatDate(entry.metadata.created.secs_since_epoch, dateFormat)}
+          </h3>
+        </div>
+        <div className="size">
+          {entry.size > 0 && <h3>{formatBytes(entry.size)}</h3>}
+        </div>
+        <div className="kind">
+          <h3>
+            {entry.metadata.isDir
+              ? t.common.directory
+              : name && extension
+                ? extension.toUpperCase()
+                : t.common.file}
+          </h3>
+        </div>
       </div>
-      <div className="date_created">
-        <h3>{formatDate(entry.metadata.created.secs_since_epoch)}</h3>
-      </div>
-      <div className="size">
-        {entry.size > 0 && <h3>{formatBytes(entry.size)}</h3>}
-      </div>
-      <div className="kind">
-        <h3>
-          {entry.metadata.isDir
-            ? t.common.directory
-            : name && extension
-              ? extension.toUpperCase()
-              : t.common.file}
-        </h3>
-      </div>
-    </div>
+    </Tooltip>
   );
 };
 

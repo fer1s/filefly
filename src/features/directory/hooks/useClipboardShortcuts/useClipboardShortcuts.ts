@@ -1,9 +1,10 @@
-import { useEffect } from "react";
+import { KEYMAP_ACTION, useHotkey } from "@/shared/keymap";
 
 import type { UseClipboardShortcutsArgs } from "./types";
 
-// Clipboard keyboard shortcuts acting on the current selection: Cmd/Ctrl + C/X/V and
-// Cmd/Ctrl + Backspace/Delete. Ignored while typing in inputs or when disabled.
+// Selection keyboard shortcuts resolved from the keymap (copy/cut/paste/trash/rename/…). Ignored
+// while typing in inputs (centralized in the dispatcher) or when disabled (e.g. a preview/
+// properties popup is open).
 export const useClipboardShortcuts = ({
   enabled,
   selectedIDs,
@@ -11,42 +12,36 @@ export const useClipboardShortcuts = ({
   onCut,
   onPaste,
   onDelete,
+  onDeletePermanently,
+  onRename,
+  onNewFolder,
+  onSelectAll,
+  onOpenInTerminal,
+  onProperties,
 }: UseClipboardShortcutsArgs) => {
-  useEffect(() => {
-    const handleShortcut = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement | null;
-      if (
-        target &&
-        (target.tagName === "INPUT" || target.tagName === "TEXTAREA")
-      )
-        return;
-      if (!enabled) return;
+  // Always swallow select-all so the webview's native "select everything" never fires (it would
+  // highlight the whole page / image Live Text). Only select entries when active.
+  useHotkey(KEYMAP_ACTION.SELECT_ALL, () => {
+    if (enabled) onSelectAll();
+  });
 
-      const mod = e.metaKey || e.ctrlKey;
-      if (!mod) return;
-
-      switch (e.key) {
-        case "c":
-          e.preventDefault();
-          onCopy(selectedIDs);
-          break;
-        case "x":
-          e.preventDefault();
-          onCut(selectedIDs);
-          break;
-        case "v":
-          e.preventDefault();
-          onPaste();
-          break;
-        case "Backspace":
-        case "Delete":
-          e.preventDefault();
-          onDelete(selectedIDs);
-          break;
-      }
-    };
-
-    document.addEventListener("keydown", handleShortcut);
-    return () => document.removeEventListener("keydown", handleShortcut);
-  }, [enabled, selectedIDs, onCopy, onCut, onPaste, onDelete]);
+  useHotkey(KEYMAP_ACTION.COPY, () => onCopy(selectedIDs), { when: enabled });
+  useHotkey(KEYMAP_ACTION.CUT, () => onCut(selectedIDs), { when: enabled });
+  useHotkey(KEYMAP_ACTION.PASTE, () => onPaste(), { when: enabled });
+  useHotkey(
+    KEYMAP_ACTION.DELETE_PERMANENTLY,
+    () => onDeletePermanently(selectedIDs),
+    { when: enabled },
+  );
+  useHotkey(KEYMAP_ACTION.TRASH, () => onDelete(selectedIDs), {
+    when: enabled,
+  });
+  useHotkey(KEYMAP_ACTION.RENAME, () => onRename(selectedIDs), {
+    when: enabled,
+  });
+  useHotkey(KEYMAP_ACTION.NEW_FOLDER, onNewFolder, { when: enabled });
+  useHotkey(KEYMAP_ACTION.OPEN_IN_TERMINAL, onOpenInTerminal, {
+    when: enabled,
+  });
+  useHotkey(KEYMAP_ACTION.PROPERTIES, onProperties, { when: enabled });
 };

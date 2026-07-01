@@ -14,6 +14,47 @@
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
+  /* Empty gutters around the entries (no padding-top so the sticky list header stays
+     flush). These bands give the rubber-band selection somewhere to start on every side,
+     not just the floor below the entries. Header and rows inset together, so list columns
+     stay aligned. */
+  padding: 0 var(--space-2-5) var(--space-2-5);
+}
+
+/* Hidden columns (toggled from the list header context menu). The cell stays in the DOM but is
+   removed from the grid flow, so the dynamic --list-grid (set inline with one track per visible
+   column) keeps the header and rows aligned. Name is never hideable. */
+.directory_content.hide_col_modified .list_header .modified,
+.directory_content.hide_col_modified .list .date_modified {
+  display: none;
+}
+
+.directory_content.hide_col_created .list_header .created,
+.directory_content.hide_col_created .list .date_created {
+  display: none;
+}
+
+.directory_content.hide_col_size .list_header .size,
+.directory_content.hide_col_size .list .size {
+  display: none;
+}
+
+.directory_content.hide_col_kind .list_header .kind,
+.directory_content.hide_col_kind .list .kind {
+  display: none;
+}
+
+/* While rubber-band selecting, entries ignore the pointer so their hover tooltip doesn't
+   pop up mid-drag. The marquee hit-test uses geometry (getBoundingClientRect), not events,
+   so selection still works. */
+body.is-marqueeing .directory_page .dir_entry_item {
+  pointer-events: none;
+}
+
+/* Same during a drag-to-move: entries ignore the pointer so their hover tooltip stays hidden.
+   The drop target is found by geometry (see useEntryDragMove), so highlighting still works. */
+body.is-entry-dragging .directory_page .dir_entry_item {
+  pointer-events: none;
 }
 
 .directory_page .marquee_box {
@@ -23,6 +64,115 @@
   background-color: var(--color-selection-background);
   border: var(--border-width-default) solid var(--color-selection-border);
   border-radius: var(--radius-xs);
+}
+
+/* Hidden entries (dotfiles) are dimmed to distinguish them from regular files. */
+.directory_page .dir_entry_item.hidden {
+  opacity: var(--opacity-hidden-entry);
+}
+
+/* Entries cut to the clipboard are dimmed until the cut is pasted or cleared (Finder-style). */
+.directory_page .dir_entry_item.cut {
+  opacity: var(--opacity-cut-entry);
+}
+
+/* Drag-to-move: the folder under the pointer is highlighted as the drop target, and a small
+   count badge follows the cursor. Both are toggled/positioned imperatively (see useEntryDragMove). */
+.directory_page .dir_entry_item.drag_over {
+  background-color: var(--color-selection-background);
+  outline: var(--border-width-default) solid var(--color-selection-border);
+  outline-offset: calc(-1 * var(--border-width-default));
+  border-radius: var(--radius-sm);
+}
+
+body.is-entry-dragging {
+  cursor: grabbing;
+}
+
+/* A native OS drag (ours, returning to the window, or files from another app) is hovering the
+   app: outline the entries area as a drop zone. Independent of the per-folder hit-test. */
+body.is-native-drag-over .directory_page .directory_content {
+  outline: var(--border-width-default) solid var(--color-selection-border);
+  outline-offset: calc(-1 * var(--space-1));
+  border-radius: var(--radius-sm);
+}
+
+/* Follows the pointer during a drag: a clone of the grabbed entry's icon + a name pill, plus a
+   count badge when moving a multi-selection. Content is built imperatively (see useEntryDragMove). */
+.directory_page .drag_ghost {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 10000;
+  pointer-events: none;
+  display: none;
+  align-items: flex-start;
+  gap: var(--space-1);
+}
+
+body.is-entry-dragging .drag_ghost {
+  display: flex;
+}
+
+/* Multi-drag: name pills stacked vertically (Finder-style), one per dragged item. */
+.directory_page .drag_ghost .drag_ghost_stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+}
+
+.directory_page .drag_ghost .drag_ghost_item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+/* Normalise the cloned icon to a small, consistent size in both views. */
+.directory_page .drag_ghost .icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--space-6);
+  height: var(--space-6);
+}
+
+.directory_page .drag_ghost .icon svg {
+  font-size: var(--font-size-2xl);
+  color: var(--color-text-muted);
+}
+
+.directory_page .drag_ghost .icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: var(--radius-xs);
+}
+
+.directory_page .drag_ghost .drag_ghost_label {
+  padding: var(--space-0-5) var(--space-1-5);
+  background-color: var(--color-selection-focus);
+  color: var(--color-text-primary);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  white-space: nowrap;
+  box-shadow: var(--shadow-md);
+}
+
+/* Red count badge for a multi-item drag (Finder-style). */
+.directory_page .drag_ghost .drag_ghost_count {
+  display: grid;
+  place-items: center;
+  min-width: var(--space-5);
+  height: var(--space-5);
+  padding: 0 var(--space-1);
+  background-color: var(--color-danger);
+  color: var(--color-text);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  box-shadow: var(--shadow-md);
 }
 
 /* Entries are not text-selectable, and their icons/images are not draggable
@@ -44,29 +194,44 @@
   border-radius: var(--radius-sm);
   color: var(--color-text-primary);
   font-family: "Inter", sans-serif;
-  font-size: 0.7rem;
+  font-size: var(--font-size-sm);
   font-weight: 400;
   text-align: center;
   outline: none;
 }
 
 .directory_page .list .dir_entry_item .name .rename_input {
-  font-size: 0.8rem;
+  font-size: var(--font-size-base);
   text-align: left;
 }
 
 .directory_page .no_results {
   margin-top: var(--space-5);
-  font-size: 0.85rem;
+  font-size: var(--font-size-base);
   font-weight: 400;
   color: var(--color-text-muted);
   -webkit-user-select: none;
   user-select: none;
 }
 
+/* Top gutter so the rubber-band can start above the first row too (sides/bottom come from
+   .directory_content's padding). */
+.directory_page .grid {
+  padding-top: var(--space-2-5);
+}
+
+/* Invisible marker at the end of the rendered slice; when it nears the viewport the next batch
+   of entries mounts. Full-width so it sits on its own row in the wrapping grid. */
+.directory_page .entries_sentinel {
+  width: 100%;
+  height: var(--border-width-default);
+  pointer-events: none;
+}
+
 .directory_page .grid .dir_entry_item {
-  width: var(--size-directory-tile);
-  height: var(--size-directory-tile);
+  /* Zoom scales the tile (and thus the icon), but not the label/badge fonts. */
+  width: calc(var(--size-directory-tile) * var(--zoom, 1));
+  height: calc(var(--size-directory-tile) * var(--zoom, 1));
   cursor: pointer;
   background-color: transparent;
   border-radius: var(--radius-sm);
@@ -83,7 +248,7 @@
   top: var(--space-0);
   right: var(--space-0);
   z-index: 998;
-  font-size: 0.6rem;
+  font-size: var(--font-size-xs);
   font-weight: 400;
   -webkit-user-select: none;
   user-select: none;
@@ -111,7 +276,7 @@
 }
 
 .directory_page .grid .dir_entry_item .icon svg {
-  font-size: 1.4rem;
+  font-size: calc(var(--font-size-3xl) * var(--zoom, 1));
   color: var(--color-text-muted);
 }
 
@@ -122,30 +287,38 @@
   border-radius: var(--radius-xs);
 }
 
-.directory_page .grid .dir_entry_item .name h3 {
+/* Bottom label bar: name centred, tag dots to its left. Absolute so the icon can occupy the
+   tile above it (the .name wrapper is display:contents, so both anchor to the tile). */
+.directory_page .grid .dir_entry_item .entry_label {
   position: absolute;
   bottom: var(--space-1);
-  left: 50%;
-  transform: translateX(-50%);
+  left: 0;
   width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  padding-inline: var(--space-1);
+}
+
+.directory_page .grid .dir_entry_item .entry_label .tag_dots {
+  order: -1;
+}
+
+.directory_page .grid .dir_entry_item .entry_label h3 {
   text-align: center;
-  font-size: 0.7rem;
+  font-size: var(--font-size-sm);
   font-weight: 400;
   color: var(--color-text-subtle);
   -webkit-user-select: none;
   user-select: none;
-  max-width: 100%;
-  padding-inline: var(--space-1);
+  min-width: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.directory_page .grid .dir_entry_item .name .rename_input {
-  position: absolute;
-  bottom: var(--space-1);
-  left: 50%;
-  transform: translateX(-50%);
+.directory_page .grid .dir_entry_item .entry_label .rename_input {
   width: 86%;
 }
 
@@ -182,6 +355,8 @@
 }
 
 .directory_page .list {
+  /* Top gutter below the sticky header so the rubber-band can start there. */
+  padding-top: var(--space-2-5);
   padding-bottom: var(--space-2-5);
 }
 
@@ -205,7 +380,8 @@
   width: 100%;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  /* Text columns align left; numeric columns (Size) align right — see override below. */
+  justify-content: flex-start;
   gap: var(--space-1);
   min-width: 0;
   padding: var(--space-0-5) var(--space-1);
@@ -229,7 +405,7 @@
 }
 
 .directory_page .list_header button span {
-  font-size: 0.65rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   color: var(--color-text-tertiary);
   letter-spacing: 0.03em;
@@ -241,7 +417,7 @@
 }
 
 .directory_page .list_header button svg {
-  font-size: 0.5rem;
+  font-size: var(--font-size-2xs);
   flex-shrink: 0;
   color: var(--color-text-secondary);
 }
@@ -257,7 +433,8 @@
 
 .directory_page .list .dir_entry_item {
   width: 100%;
-  height: var(--size-directory-row);
+  /* Row grows with the icon zoom so the larger icon fits; column text stays the same size. */
+  height: calc(var(--size-directory-row) * var(--zoom, 1));
   display: grid;
   grid-template-columns: var(--list-grid);
   align-items: center;
@@ -276,8 +453,8 @@
 }
 
 .directory_page .list .dir_entry_item .icon {
-  width: var(--size-control-large);
-  height: var(--size-control-large);
+  width: calc(var(--size-control-large) * var(--zoom, 1));
+  height: calc(var(--size-control-large) * var(--zoom, 1));
   flex-shrink: 0;
   display: flex;
   justify-content: center;
@@ -285,7 +462,7 @@
 }
 
 .directory_page .list .dir_entry_item .icon svg {
-  font-size: 0.9rem;
+  font-size: calc(var(--font-size-lg) * var(--zoom, 1));
   color: var(--color-text-muted);
 }
 
@@ -302,10 +479,18 @@
   gap: var(--space-2);
 }
 
+/* Name + tag dots share a row; the label flexes so the name ellipsises within the column. */
+.directory_page .list .dir_entry_item .entry_label {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
 .directory_page .list .dir_entry_item .name h3 {
   -webkit-user-select: none;
   user-select: none;
-  font-size: 0.8rem;
+  font-size: var(--font-size-base);
   font-weight: 400;
   color: var(--color-text-secondary);
   min-width: 0;
@@ -317,12 +502,12 @@
 .directory_page .list .dir_entry_item .date_modified,
 .directory_page .list .dir_entry_item .date_created {
   min-width: 0;
-  text-align: right;
+  text-align: left;
 }
 
 .directory_page .list .dir_entry_item .date_modified h3,
 .directory_page .list .dir_entry_item .date_created h3 {
-  font-size: 0.7rem;
+  font-size: var(--font-size-sm);
   font-weight: 400;
   color: var(--color-text-tertiary);
   white-space: nowrap;
@@ -339,7 +524,7 @@
 }
 
 .directory_page .list .dir_entry_item .size h3 {
-  font-size: 0.6rem;
+  font-size: var(--font-size-xs);
   font-weight: 400;
   color: var(--color-text-tertiary);
   background-color: var(--color-surface-popover);
@@ -352,13 +537,13 @@
 
 .directory_page .list .dir_entry_item .kind {
   display: flex;
-  justify-content: flex-end;
+  justify-content: flex-start;
   align-items: center;
   min-width: 0;
 }
 
 .directory_page .list .dir_entry_item .kind h3 {
-  font-size: 0.7rem;
+  font-size: var(--font-size-sm);
   font-weight: 400;
   color: var(--color-text-tertiary);
   white-space: nowrap;
@@ -412,4 +597,49 @@
 .directory_page .list .dir_entry_item:last-child {
   border-bottom-left-radius: var(--radius-sm);
   border-bottom-right-radius: var(--radius-sm);
+}
+
+/* Metadata hover card rendered inside the shared Tooltip (.tooltip_bubble.rich). */
+.entry_metadata {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1-5);
+  max-width: var(--size-entry-metadata-width);
+}
+
+.entry_metadata_title {
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.entry_metadata_rows {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  column-gap: var(--space-3);
+  row-gap: var(--space-0-5);
+  align-items: baseline;
+}
+
+.entry_metadata_key {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.entry_metadata_value {
+  min-width: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-tertiary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Centered spinner shown while a recursive search is loading (directory content hidden). */
+.directory_page .search_loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-12);
 }

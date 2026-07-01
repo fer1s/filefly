@@ -2,7 +2,11 @@
   height: 100vh;
   overflow-y: auto;
   overflow-x: hidden;
-  background-color: var(--color-background-sidebar);
+  /* Composed here (not via a :root token) so the inline --sidebar-opacity override applies. */
+  background-color: rgba(
+    var(--color-background-sidebar-rgb),
+    var(--sidebar-opacity)
+  );
 }
 
 .SideBar .sidebar_header {
@@ -13,52 +17,23 @@
   gap: var(--space-2-5);
 }
 
-.SideBar .sidebar_header .host_name {
-  min-width: var(--space-0);
-  overflow: hidden;
-  color: var(--color-text-tertiary);
-  font-size: 0.8rem;
-  font-weight: 500;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+/* The edit toggle stays highlighted while sidebar edit mode is on. */
+.SideBar .sidebar_header [aria-pressed="true"] {
+  background-color: var(--color-overlay-hover);
+  color: var(--color-text);
 }
 
-.SideBar .collapse_toggle {
-  width: var(--size-control-medium);
-  min-width: var(--size-control-medium);
-  height: var(--size-control-medium);
-  margin-left: auto;
-  padding: var(--space-0);
-  background-color: var(--color-overlay-soft);
-  border: var(--border-width-default) solid var(--color-border-soft);
-  border-radius: var(--radius-sm);
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
+/* Collapsed: icon-only rail. Stack the header buttons. */
+.SideBar.collapsed .sidebar_header {
+  flex-direction: column;
 }
 
-.SideBar .collapse_toggle:hover {
-  background-color: var(--color-overlay-active);
-  border: var(--border-width-default) solid var(--color-border-default);
+.SideBar.collapsed .sidebar_header .new_tab_toggle {
+  margin-left: var(--space-0);
 }
 
-.SideBar .collapse_toggle svg {
-  font-size: 0.8rem;
-  color: var(--color-text-muted);
-}
-
-.SideBar .collapse_toggle:hover svg {
-  color: var(--color-text-primary);
-}
-
-/* Collapsed: icon-only rail. Center icons and hide text. */
-.SideBar.collapsed .collapse_toggle {
-  margin-right: auto;
-  margin-left: auto;
-}
-
-.SideBar.collapsed .sidebar_header .host_name {
+/* No edit mode in the icon rail — the group headers (and their edit affordances) are hidden. */
+.SideBar.collapsed .sidebar_header .edit_toggle {
   display: none;
 }
 
@@ -70,6 +45,7 @@
 }
 
 .SideBar.collapsed section .section_content .folder_item p,
+.SideBar.collapsed section .section_content .folder_item .folder_hotkey,
 .SideBar.collapsed section .section_content .drive_item .details {
   display: none;
 }
@@ -88,18 +64,77 @@
   transition: all 0.2s ease-in-out;
 }
 
+/* Trash button on custom items: pushed to the right, and clickable even though the row itself is
+   non-interactive in edit mode (the row gets pointer-events:none). */
+.SideBar section .section_content .folder_item .item_remove {
+  margin-left: auto;
+  pointer-events: auto;
+}
+
+.SideBar section .section_content .folder_item .item_remove .IconButton,
+.SideBar section .section_content .folder_item .item_remove .IconButton svg {
+  color: var(--color-danger);
+}
+
+/* Eye toggle on preset rows: same right-aligned, still-clickable placement as the trash button,
+   but neutral (presets are hidden, not deleted). */
+.SideBar section .section_content .folder_item .item_hide {
+  margin-left: auto;
+  pointer-events: auto;
+}
+
+/* A hidden preset only shows in edit mode; dim it so it reads as "off" while still toggleable. */
+.SideBar section .section_content .folder_item.hidden {
+  opacity: 0.5;
+}
+
 .SideBar section .section_content .folder_item svg {
-  font-size: 0.8rem;
+  font-size: var(--font-size-base);
   color: var(--color-text-tertiary);
   transition: all 0.2s ease-in-out;
 }
 
+/* Finder tag rows: tint the dot with its colour (kept on hover/active too). */
+.SideBar section .section_content .folder_item.tag_gray svg {
+  color: var(--color-tag-gray);
+}
+.SideBar section .section_content .folder_item.tag_green svg {
+  color: var(--color-tag-green);
+}
+.SideBar section .section_content .folder_item.tag_purple svg {
+  color: var(--color-tag-purple);
+}
+.SideBar section .section_content .folder_item.tag_blue svg {
+  color: var(--color-tag-blue);
+}
+.SideBar section .section_content .folder_item.tag_yellow svg {
+  color: var(--color-tag-yellow);
+}
+.SideBar section .section_content .folder_item.tag_red svg {
+  color: var(--color-tag-red);
+}
+.SideBar section .section_content .folder_item.tag_orange svg {
+  color: var(--color-tag-orange);
+}
+
 .SideBar section .section_content .folder_item p {
-  font-size: 0.8rem;
+  min-width: 0;
+  font-size: var(--font-size-base);
   font-weight: 400;
   color: var(--color-text-tertiary);
   user-select: none;
+  /* Stay on one line (clip, don't wrap) while the sidebar width animates open. */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   transition: all 0.2s ease-in-out;
+}
+
+.SideBar section .section_content .folder_item .folder_hotkey {
+  margin-left: auto;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  user-select: none;
 }
 
 .SideBar section .section_content .folder_item:hover,
@@ -143,7 +178,7 @@
 }
 
 .SideBar section .section_content .drive_item svg {
-  font-size: 0.8rem;
+  font-size: var(--font-size-base);
   color: var(--color-text-tertiary);
   transition: all 0.2s ease-in-out;
 }
@@ -158,10 +193,15 @@
 }
 
 .SideBar section .section_content .drive_item .details p {
-  font-size: 0.7rem;
+  width: 100%;
+  font-size: var(--font-size-sm);
   font-weight: 400;
   color: var(--color-text-tertiary);
   user-select: none;
+  /* Stay on one line (clip, don't wrap) while the sidebar width animates open. */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   transition: all 0.2s ease-in-out;
 }
 
@@ -169,18 +209,9 @@
   font-weight: 600;
 }
 
+/* Base bar styling lives in UsageBar.css; only the width is sidebar-specific. */
 .SideBar section .section_content .drive_item .details .usage {
   width: 90%;
-  height: var(--size-progress-track);
-  border-radius: var(--radius-sm);
-  background-color: var(--color-progress-track);
-  overflow: hidden;
-}
-
-.SideBar section .section_content .drive_item .details .usage .usage_bar {
-  height: 100%;
-  border-radius: var(--space-0) var(--radius-sm) var(--radius-sm) var(--space-0);
-  background-color: var(--color-progress-fill);
 }
 
 .SideBar section .section_content .drive_item:hover,
@@ -196,12 +227,27 @@
   color: var(--color-text-primary);
 }
 
-.SideBar section .section_content .folder_item,
-.SideBar section .section_content .drive_item {
-  margin-bottom: var(--space-2);
+/* "Add group" button, shown at the bottom of the sidebar in edit mode. Full-width dashed row with
+   a centered plus + label, echoing the dashed item outlines of editable groups. */
+.SideBar .add_group_button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2-5);
+  padding: var(--space-2-5);
+  border: var(--border-width-default) dashed var(--color-border-default);
+  border-radius: var(--radius-sm);
+  background-color: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
 }
 
-.SideBar section .section_content .folder_item:last-child,
-.SideBar section .section_content .drive_item:last-child {
-  margin-bottom: var(--space-0);
+.SideBar .add_group_button:hover {
+  color: var(--color-text-primary);
+  border-color: var(--color-text-primary);
+  background-color: var(--color-overlay-hover);
 }
+
+/* Row spacing comes from the flex `gap` on .section_content_inner (see SidebarSection.css). */

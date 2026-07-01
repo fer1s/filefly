@@ -3,7 +3,8 @@ import {
   SORT_KEY,
   type SortDirection,
   type SortKey,
-} from "@/shared/constants";
+} from "@/features/directory/constants";
+import { extension } from "@/shared/utils";
 import { DirEntry } from "@/shared/models";
 
 export type Sort = { key: SortKey; direction: SortDirection };
@@ -15,7 +16,7 @@ const kindValue = (entry: DirEntry) =>
     ? ""
     : entry.name.startsWith(".") || !entry.name.includes(".")
       ? ""
-      : (entry.name.split(".").pop() || "").toLowerCase();
+      : extension(entry.name);
 
 const byName = (a: DirEntry, b: DirEntry) =>
   a.name.localeCompare(b.name, undefined, { sensitivity: "base" });

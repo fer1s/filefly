@@ -1,3 +1,25 @@
+/* Base button: resets native styling and provides the default (text) button look.
+   IconButton and other variants layer on top of this. */
 .Button {
   font: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-1-5) var(--space-3);
+  background-color: var(--color-surface-interactive);
+  border: var(--border-width-default) solid var(--color-border-default);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.Button:hover {
+  background-color: var(--color-overlay-hover);
+}
+
+.Button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }

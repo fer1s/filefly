@@ -1,0 +1,48 @@
+.NtfsNotice {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  border: var(--border-width-default) solid var(--color-border-default);
+  background-color: var(--color-overlay-active);
+}
+
+.NtfsNotice .ntfs_icon {
+  flex-shrink: 0;
+  font-size: var(--size-icon-medium);
+  color: var(--color-danger);
+}
+
+.NtfsNotice .ntfs_text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-0-5);
+}
+
+.NtfsNotice .ntfs_title {
+  margin: var(--space-0);
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.NtfsNotice .ntfs_description {
+  font-size: var(--font-size-md);
+  color: var(--color-text-secondary);
+}
+
+.NtfsNotice .ntfs_hint {
+  font-size: var(--font-size-md);
+  color: var(--color-text-dim);
+}
+
+.NtfsNotice .ntfs_actions {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}

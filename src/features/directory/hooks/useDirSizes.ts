@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { useStateContext } from "@/shared/providers/StateProvider";
 import { DirEntry } from "@/shared/models";
 
+import { dirSizeCache } from "./dirSizeCache";
+
 // How many folder walks run at once. Each walk is already parallel (jwalk/rayon) and runs
 // off the main thread, so a small pool overlaps IO latency without oversubscribing CPU/disk.
 const CONCURRENCY = 4;
@@ -54,12 +56,18 @@ export const useDirSizes = (entries: DirEntry[], enabled: boolean) => {
         if (!folder) return;
         try {
           const size = await fs.getDirSize(folder.path);
+          dirSizeCache.set(folder.path, size);
           if (!cancelled) {
             pending[folder.path] = size;
             scheduleFlush();
           }
         } catch {
-          // Ignore folders we can't read; they just keep an empty size cell.
+          // Folders we can't read still get recorded (as 0, an empty cell) so they count as
+          // "resolved" — otherwise the computing indicator below would never clear.
+          if (!cancelled) {
+            pending[folder.path] = 0;
+            scheduleFlush();
+          }
         }
       }
     };
@@ -73,5 +81,11 @@ export const useDirSizes = (entries: DirEntry[], enabled: boolean) => {
     };
   }, [entries, enabled, fs]);
 
-  return sizes;
+  // Still computing while any visible folder has no size yet. Derived (no extra state) so it
+  // flips off on its own as the batches land.
+  const computing =
+    enabled &&
+    entries.some((entry) => entry.metadata.isDir && sizes[entry.path] == null);
+
+  return { sizes, computing };
 };

@@ -1,0 +1,117 @@
+.settings_modal {
+  width: var(--size-properties-width);
+  max-width: calc(100% - var(--space-10));
+}
+
+.settings_modal .settings_body {
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.settings_modal .settings_section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2-5);
+}
+
+.settings_modal .settings_section_title {
+  margin: var(--space-0);
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+}
+
+.settings_modal .settings_row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  cursor: pointer;
+}
+
+.settings_modal .settings_row_text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.settings_modal .settings_row_label {
+  font-size: var(--font-size-base);
+  color: var(--color-text-primary);
+}
+
+.settings_modal .settings_row_hint {
+  font-size: var(--font-size-md);
+  color: var(--color-text-dim);
+}
+
+.settings_modal .settings_select {
+  flex-shrink: 0;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  border: var(--border-width-default) solid var(--color-border-default);
+  background-color: var(--color-surface-input);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-base);
+  cursor: pointer;
+}
+
+/* Action button in a settings row (e.g. the home-folder chooser). Matches the select's chrome. */
+.settings_modal .settings_button {
+  flex-shrink: 0;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  border: var(--border-width-default) solid var(--color-border-default);
+  background-color: var(--color-surface-input);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-base);
+  cursor: pointer;
+}
+
+/* Custom date-format pattern input + live preview, stacked under the format dropdown. */
+.settings_modal .settings_date_custom {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.settings_modal .settings_input {
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  border: var(--border-width-default) solid var(--color-border-default);
+  background-color: var(--color-surface-input);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-base);
+  font-family: var(--font-mono, monospace);
+}
+
+.settings_modal .settings_preview {
+  font-size: var(--font-size-md);
+  color: var(--color-text-dim);
+}
+
+/* Range slider + its live percentage value (e.g. sidebar opacity). */
+.settings_modal .settings_range_control {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2-5);
+}
+
+.settings_modal .settings_range {
+  accent-color: var(--color-selection-indicator);
+  cursor: pointer;
+}
+
+.settings_modal .settings_range_value {
+  min-width: var(--space-8);
+  text-align: right;
+  font-size: var(--font-size-md);
+  color: var(--color-text-dim);
+}
+
+/* The pill toggles are the shared <Switcher> element (see styles/components/Switcher.css). */

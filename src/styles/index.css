@@ -34,6 +34,25 @@ body {
   box-shadow: var(--shadow-elevation);
 }
 
+/* Shared header for dialogs and side panels: title on the left, close button on the right. */
+.panel_header {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: var(--border-width-default) solid var(--color-border-default);
+}
+
+.panel_header h4 {
+  margin: var(--space-0);
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  user-select: none;
+}
+
 .App {
   width: 100%;
   height: 100vh;
@@ -42,13 +61,37 @@ body {
   left: var(--space-0);
   z-index: 1;
   display: grid;
-  grid-template-columns: var(--size-sidebar-expanded) 1fr;
+  /* Expanded width is user-draggable (--sidebar-width, set inline in App.tsx); the token is the
+     first-launch fallback. The collapsed rule below overrides it with the fixed rail width. */
+  grid-template-columns: var(--sidebar-width, var(--size-sidebar-expanded)) 1fr;
   grid-template-rows: 1fr;
   transition: grid-template-columns 0.2s ease-in-out;
+  /* The UI chrome is not text: a click-drag (incl. right-click) must not rubber-band-select it,
+     like a native file manager. Editable fields opt back in below. */
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.App input,
+.App textarea,
+.App [contenteditable="true"],
+/* Keep macOS Live Text working on previewed images (ZoomableImage). */
+.App img {
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 .App.collapsed {
   grid-template-columns: var(--size-sidebar-collapsed) 1fr;
+}
+
+/* While dragging the sidebar edge: track the cursor 1:1 (no easing) and keep the resize cursor. */
+body.sidebar-resizing {
+  cursor: col-resize;
+}
+
+body.sidebar-resizing .App {
+  transition: none;
 }
 
 .App > .SideBar,
@@ -56,7 +99,7 @@ body {
   height: 100vh;
   overflow-x: hidden;
   padding-top: var(--space-4);
-  padding-left: var(--space-4);
+  padding-left: var(--space-2);
   padding-right: var(--space-4);
   padding-bottom: var(--space-4);
 }
@@ -64,16 +107,30 @@ body {
 .AppContent {
   background-color: var(--color-background-app);
   overflow: hidden;
+  /* Stack the bars (tabs / path / quick) above the page and let the page take the rest, so the
+     status bar stays visible no matter how many bars are shown (a fixed % broke with tabs on). */
+  display: flex;
+  flex-direction: column;
 }
 
 .AppContent .Page {
   width: 100%;
-  height: 93.3%;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+}
+
+/* Routed view (directory/volumes); the info panel sits beside it when open. */
+.AppContent .Page .page_main {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
   overflow: hidden;
 }
 
 .AppContent .Page h1 {
-  font-size: 1.6rem;
+  font-size: var(--font-size-3xl);
   font-weight: 700;
   margin-bottom: var(--space-5);
 }

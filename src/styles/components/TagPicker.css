@@ -1,0 +1,110 @@
+/* Finder-style tag controls in the entry context menu (TagPicker): swatch row, named-tag
+   checklist, and the add-tag input. */
+.tag_picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1-5);
+  padding: var(--space-2) var(--space-3);
+}
+
+.tag_swatches {
+  display: flex;
+  gap: var(--space-4);
+}
+
+.tag_swatch {
+  width: var(--space-3-5);
+  height: var(--space-3-5);
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: transform 0.08s ease;
+}
+
+.tag_swatch:hover {
+  transform: scale(1.15);
+}
+
+/* Selected colour: a ring in the current text colour around the swatch. */
+.tag_swatch.active {
+  outline: var(--border-width-accent) solid var(--color-text-primary);
+  outline-offset: var(--space-0-25);
+}
+
+/* Mixed selection (some targets tagged): a dashed ring instead of the solid "all" ring. */
+.tag_swatch.partial {
+  outline: var(--border-width-default) dashed var(--color-text-muted);
+  outline-offset: var(--space-0-25);
+}
+
+.tag_swatch.gray {
+  background-color: var(--color-tag-gray);
+}
+.tag_swatch.green {
+  background-color: var(--color-tag-green);
+}
+.tag_swatch.purple {
+  background-color: var(--color-tag-purple);
+}
+.tag_swatch.blue {
+  background-color: var(--color-tag-blue);
+}
+.tag_swatch.yellow {
+  background-color: var(--color-tag-yellow);
+}
+.tag_swatch.red {
+  background-color: var(--color-tag-red);
+}
+.tag_swatch.orange {
+  background-color: var(--color-tag-orange);
+}
+
+.tag_list {
+  display: flex;
+  flex-direction: column;
+  margin: var(--space-0);
+  padding: var(--space-0);
+  list-style: none;
+}
+
+.tag_list_item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1-5);
+  width: 100%;
+  padding: var(--space-1) var(--space-1-5);
+  border: none;
+  border-radius: var(--radius-sm);
+  background-color: transparent;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-base);
+  text-align: left;
+  cursor: pointer;
+}
+
+.tag_list_item:hover {
+  background-color: var(--color-overlay-hover);
+}
+
+.tag_list_item.checked {
+  color: var(--color-text-primary);
+}
+
+.tag_check {
+  width: var(--size-icon-small);
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.tag_input {
+  width: 100%;
+  margin-top: var(--space-2);
+  padding: var(--space-1) var(--space-1-5);
+  border: var(--border-width-default) solid var(--color-border-default);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-surface-input);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-base);
+  outline: none;
+}

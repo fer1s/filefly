@@ -3,52 +3,23 @@
   max-width: calc(100% - var(--space-10));
 }
 
-.properties_modal .properties_header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--space-3) var(--space-4);
-  border-bottom: var(--border-width-default) solid var(--color-border-default);
-}
-
-.properties_modal .properties_header h4 {
-  margin: var(--space-0);
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--color-text-primary);
-  user-select: none;
-}
-
-.properties_modal .properties_header button {
-  background-color: transparent;
-  border: none;
-  outline: none;
-  color: var(--color-text-subtle);
-  font-size: 0.8rem;
-  cursor: pointer;
-  transition: color 0.2s ease-in-out;
-}
-
-.properties_modal .properties_header button:hover {
-  color: var(--color-text-primary);
-}
-
-.properties_modal .properties_content {
+/* Shared by the Properties dialog and the info side panel. */
+.properties_content {
   padding: var(--space-4);
   display: flex;
   flex-direction: column;
   gap: var(--space-2-5);
 }
 
-.properties_modal .properties_content .row {
+.properties_content .row {
   display: flex;
   gap: var(--space-4);
   align-items: baseline;
 }
 
-.properties_modal .properties_content .row .label {
+.properties_content .row .label {
   flex: 0 0 var(--space-20);
-  font-size: 0.78rem;
+  font-size: var(--font-size-md);
   font-weight: 600;
   color: var(--color-text-high);
   white-space: nowrap;
@@ -57,9 +28,9 @@
   cursor: text;
 }
 
-.properties_modal .properties_content .row .value {
+.properties_content .row .value {
   flex: 1;
-  font-size: 0.78rem;
+  font-size: var(--font-size-md);
   font-weight: 400;
   color: var(--color-text-dim);
   text-align: right;

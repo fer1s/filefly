@@ -1,0 +1,16 @@
+.QuickBar {
+  width: 100%;
+  margin-bottom: var(--space-2-5);
+  padding: var(--space-1) var(--space-2);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  border-top: var(--border-width-default) solid var(--color-border-default);
+  border-bottom: var(--border-width-default) solid var(--color-border-default);
+}
+
+/* Quick actions sit on the left; the zoom control (styled in ZoomControl.css) is pushed to
+   the right. */
+.QuickBar .zoom_control {
+  margin-left: auto;
+}

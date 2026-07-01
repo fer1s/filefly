@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 import type { MouseEvent as ReactMouseEvent } from "react";
 
-import { DRAG_THRESHOLD } from "./constants";
+import { DRAG_THRESHOLD, MARQUEE_ACTIVE_CLASS } from "./constants";
 import type { MarqueeRect, UseMarqueeSelectionArgs } from "./types";
 
 // Rubber-band selection: press on empty area and drag to draw a box; entries the
@@ -70,6 +70,8 @@ export const useMarqueeSelection = ({
           dragged = true;
           document.body.style.userSelect = "none";
           document.body.style.webkitUserSelect = "none";
+          // Suppress entry hover effects (e.g. the metadata tooltip) during the drag.
+          document.body.classList.add(MARQUEE_ACTIVE_CLASS);
         }
         selectWithin(ev.clientX, ev.clientY);
       };
@@ -79,6 +81,7 @@ export const useMarqueeSelection = ({
         document.removeEventListener("mouseup", onUp);
         document.body.style.userSelect = "";
         document.body.style.webkitUserSelect = "";
+        document.body.classList.remove(MARQUEE_ACTIVE_CLASS);
         setMarquee(null);
 
         // Swallow the click that follows a drag so the empty-area onClick does

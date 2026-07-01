@@ -1,7 +1,17 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import { convertFileSrc } from "@tauri-apps/api/core";
-import IconButton from "@/shared/components/elements/IconButton";
+import IconButton, {
+  ICON_BUTTON_SIZE,
+} from "@/shared/components/elements/IconButton";
+import {
+  SPACE_HOTKEY,
+  useHotkey,
+  useHotkeyScope,
+  HOTKEY_SCOPE,
+} from "@/shared/keymap";
 import { classNames } from "@/shared/utils";
+import { KEY } from "@/shared/constants";
+import { t } from "@/lang";
 
 import {
   faPause,
@@ -25,9 +35,9 @@ const AudioPreview = ({ isVisible, filePath }: AudioPreviewProps) => {
   const [duration, setDuration] = useState<number>(0);
   const [volume, setVolume] = useState<number>(DEFAULT_VOLUME);
 
-  const togglePlay = () => {
+  const togglePlay = useCallback(() => {
     setIsPlaying((prev) => !prev);
-  };
+  }, []);
 
   const handleProgress = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!audioRef.current) return;
@@ -57,6 +67,15 @@ const AudioPreview = ({ isVisible, filePath }: AudioPreviewProps) => {
     audio.volume = volume / 100;
   }, [filePath, isPlaying, volume]);
 
+  // Space toggles play/pause while the preview is open (universal media convention). Runs in the
+  // PREVIEW scope; the dispatcher's input guard ignores it while typing and preventDefault stops
+  // the page from scrolling on Space.
+  useHotkeyScope(HOTKEY_SCOPE.PREVIEW, isVisible);
+  useHotkey({ keys: [KEY.SPACE] }, togglePlay, {
+    scope: HOTKEY_SCOPE.PREVIEW,
+    when: isVisible,
+  });
+
   return (
     <div className={classNames("audio_preview", isVisible && "visible")}>
       <audio
@@ -65,7 +84,13 @@ const AudioPreview = ({ isVisible, filePath }: AudioPreviewProps) => {
         ref={audioRef}
         onTimeUpdate={handleTimeUpdate}
       />
-      <IconButton icon={isPlaying ? faPause : faPlay} onClick={togglePlay} />
+      <IconButton
+        icon={isPlaying ? faPause : faPlay}
+        size={ICON_BUTTON_SIZE.LG}
+        tooltip={isPlaying ? t.common.pause : t.common.play}
+        hotkey={SPACE_HOTKEY}
+        onClick={togglePlay}
+      />
       <div className="progress">
         <span className="currentTime">{formatTime(progress)}</span>
         <input
@@ -78,7 +103,11 @@ const AudioPreview = ({ isVisible, filePath }: AudioPreviewProps) => {
         <span className="duration">{formatTime(duration)}</span>
       </div>
       <div className="volume_control">
-        <IconButton icon={faVolumeHigh} onClick={handleVolumeButtonClick} />
+        <IconButton
+          icon={faVolumeHigh}
+          size={ICON_BUTTON_SIZE.LG}
+          onClick={handleVolumeButtonClick}
+        />
         <div
           className={classNames(
             "volume_extension",

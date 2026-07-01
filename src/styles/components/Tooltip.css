@@ -1,0 +1,72 @@
+.Tooltip {
+  position: relative;
+  display: inline-flex;
+}
+
+/* No box of its own — the wrapped trigger keeps its place in the parent flex/grid layout. */
+.Tooltip.contents {
+  display: contents;
+}
+
+/* Rendered in a portal on document.body. Positioned via inline top/left (viewport coords)
+   computed in JS after measuring, so it's clamped inside the viewport. Hidden until then. */
+.tooltip_bubble {
+  position: fixed;
+  z-index: 2500;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1-5);
+  width: max-content;
+  max-width: var(--size-toast-max-width);
+  padding: var(--space-1) var(--space-2);
+  background-color: var(--color-surface-floating);
+  border: var(--border-width-default) solid var(--color-border-default);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-popover);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+  font-weight: 400;
+  white-space: nowrap;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+/* Rich bubble (arbitrary content, e.g. a metadata card): let the content own its layout. */
+.tooltip_bubble.rich {
+  display: block;
+  align-items: stretch;
+  padding: var(--space-2) var(--space-2-5);
+  white-space: normal;
+}
+
+.tooltip_bubble.positioned {
+  visibility: visible;
+  animation: tooltip-in 0.15s ease-in-out;
+}
+
+.tooltip_bubble .tooltip_hotkey {
+  padding: var(--space-0-25) var(--space-1);
+  background-color: var(--color-overlay-hover);
+  border: var(--border-width-default) solid var(--color-border-soft);
+  border-radius: var(--radius-xs);
+  font-family: inherit;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  line-height: 1;
+}
+
+@keyframes tooltip-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Respect users who prefer reduced motion: appear without fading. */
+@media (prefers-reduced-motion: reduce) {
+  .tooltip_bubble.positioned {
+    animation: none;
+  }
+}

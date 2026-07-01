@@ -28,7 +28,7 @@ Sito File Browser is a faster file explorer alternative.
 
 - [x] Add audio file preview
 
-- [ ] Add video file preview
+- [x] Add video file preview
 
 - [x] Add image file preview
 

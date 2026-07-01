@@ -1,22 +1,34 @@
-import { useState } from "react";
+import { useState, type MouseEvent } from "react";
 
 import { useStateContext } from "@/shared/providers/StateProvider";
-import { Volume } from "@/shared/models";
-import { classNames } from "@/shared/utils";
+import { useContextMenuState } from "@/shared/hooks/useContextMenuState";
+import { useEntryProperties } from "@/shared/hooks/useEntryProperties";
+import { Properties } from "@/features/directory";
 import { VIEW_MODE } from "@/shared/constants";
-import Icon from "@/shared/components/elements/Icon";
+import type { Volume } from "@/shared/models";
 import { t } from "@/lang";
 
-import { faHardDrive } from "@fortawesome/free-solid-svg-icons";
-import { faUsb } from "@fortawesome/free-brands-svg-icons";
-
 import "@/styles/views/Volumes.css";
+
+import VolumeCard from "./components/VolumeCard";
+import VolumeListRow from "./components/VolumeListRow";
+import VolumeContextMenu from "./components/VolumeContextMenu";
 
 const Volumes = () => {
   const { volumes, setPath, view } = useStateContext();
 
   // Single click selects (visual); double click enters, like the directory entries.
   const [selected, setSelected] = useState("");
+
+  const menu = useContextMenuState<Volume>();
+  const properties = useEntryProperties();
+
+  // Open the context menu at the cursor for a volume.
+  const onVolumeContextMenu = (volume: Volume) => (e: MouseEvent) => {
+    e.preventDefault();
+    setSelected(volume.mountPoint);
+    menu.openAt(e.clientX, e.clientY, volume);
+  };
 
   return (
     <div
@@ -35,6 +47,7 @@ const Volumes = () => {
               setPath={setPath}
               selected={selected === volume.mountPoint}
               onSelect={() => setSelected(volume.mountPoint)}
+              onContextMenu={onVolumeContextMenu(volume)}
             />
           ))}
         </div>
@@ -59,88 +72,28 @@ const Volumes = () => {
                   setPath={setPath}
                   selected={selected === volume.mountPoint}
                   onSelect={() => setSelected(volume.mountPoint)}
+                  onContextMenu={onVolumeContextMenu(volume)}
                 />
               ))}
             </tbody>
           </table>
         </div>
       )}
+
+      <VolumeContextMenu
+        contextMenuRef={menu.ref}
+        visible={menu.visible}
+        volume={menu.payload}
+        onClose={menu.close}
+        openProperties={properties.open}
+      />
+      <Properties
+        entry={properties.entry}
+        visible={properties.visible}
+        onClose={properties.close}
+      />
     </div>
   );
 };
 
 export default Volumes;
-
-type VolumeItemProps = {
-  volume: Volume;
-  setPath: (path: string) => void;
-  selected: boolean;
-  onSelect: () => void;
-};
-
-const VolumeCard = ({
-  volume,
-  setPath,
-  selected,
-  onSelect,
-}: VolumeItemProps) => {
-  return (
-    <div
-      className={classNames("volume_item", selected && "selected")}
-      onClick={onSelect}
-      onDoubleClick={() => setPath(volume.mountPoint)}
-    >
-      <Icon icon={volume.isRemovable ? faUsb : faHardDrive} />
-      <div className="volume_info">
-        <h3>
-          <span>{volume.mountPoint}</span> {volume.name}
-        </h3>
-        <div className="usage">
-          <div
-            className="usage_bar"
-            style={{ width: `${volume.diskUsage.percentage}%` }}
-          ></div>
-        </div>
-        <p>{t.volumes.freeOf(volume.availableSpace, volume.totalSpace)}</p>
-      </div>
-    </div>
-  );
-};
-
-const VolumeListRow = ({
-  volume,
-  setPath,
-  selected,
-  onSelect,
-}: VolumeItemProps) => {
-  return (
-    <tr
-      className={classNames("volume_item", selected && "selected")}
-      onClick={onSelect}
-      onDoubleClick={() => setPath(volume.mountPoint)}
-    >
-      <td>
-        <div className="volume_identity">
-          <Icon icon={volume.isRemovable ? faUsb : faHardDrive} />
-          <div className="volume_summary">
-            <span className="volume_name">{volume.name}</span>
-            <div className="volume_usage">
-              <div className="usage">
-                <div
-                  className="usage_bar"
-                  style={{ width: `${volume.diskUsage.percentage}%` }}
-                ></div>
-              </div>
-              <span>{volume.diskUsage.percentage}%</span>
-            </div>
-          </div>
-        </div>
-      </td>
-      <td className="mount_point">{volume.mountPoint}</td>
-      <td>{volume.isRemovable ? t.volumes.removable : t.volumes.localDrive}</td>
-      <td>{volume.diskUsage.used}</td>
-      <td>{volume.availableSpace}</td>
-      <td>{volume.totalSpace}</td>
-    </tr>
-  );
-};

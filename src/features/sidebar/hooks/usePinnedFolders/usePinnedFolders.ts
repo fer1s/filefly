@@ -4,6 +4,7 @@ import {
   documentDir,
   downloadDir,
   homeDir,
+  join,
   pictureDir,
 } from "@tauri-apps/api/path";
 
@@ -16,8 +17,12 @@ import {
   faFileLines,
   faHouse,
   faImage,
+  faTrash,
 } from "@fortawesome/free-solid-svg-icons";
 
+import { MAX_PINNED_FOLDERS, PRESET_ID, TRASH_DIR_NAME } from "./constants";
+
+import { SIDEBAR_ITEM_KIND, type SidebarItemKind } from "../../constants";
 import type { SidebarPathItem } from "../../types";
 
 // Resolve the standard user directories once and keep only the ones the OS reports.
@@ -26,29 +31,80 @@ export const usePinnedFolders = () => {
 
   useEffect(() => {
     const resolvers: {
+      presetId: string;
       name: string;
       icon: IconDefinition;
+      kind: SidebarItemKind;
       resolve: () => Promise<string>;
     }[] = [
-      { name: t.sidebar.home, icon: faHouse, resolve: homeDir },
-      { name: t.sidebar.desktop, icon: faDesktop, resolve: desktopDir },
-      { name: t.sidebar.documents, icon: faFileLines, resolve: documentDir },
-      { name: t.sidebar.downloads, icon: faDownload, resolve: downloadDir },
-      { name: t.sidebar.pictures, icon: faImage, resolve: pictureDir },
+      {
+        presetId: PRESET_ID.HOME,
+        name: t.sidebar.home,
+        icon: faHouse,
+        kind: SIDEBAR_ITEM_KIND.FOLDER,
+        resolve: homeDir,
+      },
+      {
+        presetId: PRESET_ID.DESKTOP,
+        name: t.sidebar.desktop,
+        icon: faDesktop,
+        kind: SIDEBAR_ITEM_KIND.FOLDER,
+        resolve: desktopDir,
+      },
+      {
+        presetId: PRESET_ID.DOCUMENTS,
+        name: t.sidebar.documents,
+        icon: faFileLines,
+        kind: SIDEBAR_ITEM_KIND.FOLDER,
+        resolve: documentDir,
+      },
+      {
+        presetId: PRESET_ID.DOWNLOADS,
+        name: t.sidebar.downloads,
+        icon: faDownload,
+        kind: SIDEBAR_ITEM_KIND.FOLDER,
+        resolve: downloadDir,
+      },
+      {
+        presetId: PRESET_ID.PICTURES,
+        name: t.sidebar.pictures,
+        icon: faImage,
+        kind: SIDEBAR_ITEM_KIND.FOLDER,
+        resolve: pictureDir,
+      },
+      {
+        presetId: PRESET_ID.TRASH,
+        name: t.sidebar.trash,
+        icon: faTrash,
+        kind: SIDEBAR_ITEM_KIND.TRASH,
+        resolve: async () => join(await homeDir(), TRASH_DIR_NAME),
+      },
     ];
 
     Promise.all(
-      resolvers.map(async ({ name, icon, resolve }) => {
-        try {
-          // Tauri returns these with a trailing slash; drop it so it matches the rest of the app's paths.
-          const path = (await resolve()).replace(/\/+$/, "");
-          return path ? { name, path, icon } : null;
-        } catch {
-          return null;
-        }
-      }),
+      resolvers.map(
+        async ({
+          presetId,
+          name,
+          icon,
+          kind,
+          resolve,
+        }): Promise<SidebarPathItem | null> => {
+          try {
+            // Tauri returns these with a trailing slash; drop it so it matches the rest of the app's paths.
+            const path = (await resolve()).replace(/\/+$/, "");
+            return path ? { presetId, name, path, icon, kind } : null;
+          } catch {
+            return null;
+          }
+        },
+      ),
     ).then((items) =>
-      setPinned(items.filter((item): item is SidebarPathItem => item !== null)),
+      setPinned(
+        items
+          .filter((item): item is SidebarPathItem => item !== null)
+          .slice(0, MAX_PINNED_FOLDERS),
+      ),
     );
   }, []);
 

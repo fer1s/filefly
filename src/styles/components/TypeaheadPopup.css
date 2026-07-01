@@ -4,6 +4,7 @@
   left: auto;
   margin-bottom: var(--space-0);
   transform: translateY(100%) scale(0.7);
+  padding-top: var(--space-2);
 }
 
 .popup.typeahead_popup.visible {

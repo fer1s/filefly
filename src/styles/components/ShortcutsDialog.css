@@ -1,0 +1,69 @@
+.shortcuts_modal {
+  width: var(--size-shortcuts-width);
+  max-width: calc(100% - var(--space-10));
+}
+
+/* Two columns of sections so the full cheat-sheet stays compact; collapses to one when narrow. */
+.shortcuts_modal .shortcuts_body {
+  padding: var(--space-4);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-5);
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.shortcuts_modal .shortcuts_section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.shortcuts_modal .shortcuts_section_title {
+  margin: var(--space-0);
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+}
+
+.shortcuts_modal .shortcuts_list {
+  list-style: none;
+  margin: var(--space-0);
+  padding: var(--space-0);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.shortcuts_modal .shortcuts_row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.shortcuts_modal .shortcuts_label {
+  font-size: var(--font-size-base);
+  color: var(--color-text-primary);
+}
+
+.shortcuts_modal .shortcuts_keys {
+  flex-shrink: 0;
+  padding: var(--space-0-25) var(--space-1-5);
+  background-color: var(--color-overlay-hover);
+  border: var(--border-width-default) solid var(--color-border-soft);
+  border-radius: var(--radius-xs);
+  font-family: inherit;
+  font-size: var(--font-size-md);
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+  .shortcuts_modal .shortcuts_body {
+    grid-template-columns: 1fr;
+  }
+}

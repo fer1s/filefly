@@ -1,5 +1,5 @@
 [package]
-name = "tauri-react-template"
+name = "sito-file-browser"
 version = "0.0.0"
 description = "A Tauri App"
 authors = ["you"]
@@ -16,16 +16,26 @@ tauri-build = { version = "2", features = [] }
 tauri = { version = "2", features = ["macos-private-api", "tray-icon", "protocol-asset"] }
 tauri-plugin-window-state = "2"
 tauri-plugin-opener = "2"
-tauri-plugin-fs = "2"
+tauri-plugin-fs = { version = "2", features = ["watch"] }
 tauri-plugin-dialog = "2"
+tauri-plugin-drag = "2"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+toml = "0.8"
 window-vibrancy = "0.5"
 sysinfo = "0.30.5"
 jwalk = "0.8.1"
 markdown = "0.3.0"
 trash = "5"
 image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp", "gif", "bmp"] }
+imageproc = { version = "0.25", default-features = false }
+ab_glyph = "0.2"
+arboard = "3"
+
+# Finder tags live in a macOS extended attribute (a binary plist) — only needed there.
+[target.'cfg(target_os = "macos")'.dependencies]
+xattr = "1"
+plist = "1"
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem

@@ -1,0 +1,46 @@
+/* Finder tag dots, shown after the entry name (TagDots). */
+.tag_dots {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-0-5);
+  flex-shrink: 0;
+}
+
+.directory_page .list .dir_entry_item .name .tag_dots {
+  margin-left: var(--space-2);
+}
+
+.tag_dot {
+  width: var(--space-3);
+  height: var(--space-3);
+  border-radius: var(--radius-pill);
+  background-color: var(--color-tag-gray);
+}
+
+/* Index 0 (no colour) renders as a hollow ring. */
+.tag_dot.none {
+  background-color: transparent;
+  border: var(--border-width-default) solid var(--color-text-muted);
+}
+
+.tag_dot.gray {
+  background-color: var(--color-tag-gray);
+}
+.tag_dot.green {
+  background-color: var(--color-tag-green);
+}
+.tag_dot.purple {
+  background-color: var(--color-tag-purple);
+}
+.tag_dot.blue {
+  background-color: var(--color-tag-blue);
+}
+.tag_dot.yellow {
+  background-color: var(--color-tag-yellow);
+}
+.tag_dot.red {
+  background-color: var(--color-tag-red);
+}
+.tag_dot.orange {
+  background-color: var(--color-tag-orange);
+}

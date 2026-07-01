@@ -1,0 +1,42 @@
+/* macOS red traffic-light close dot; the ✕ glyph shows only on hover/focus, like macOS. */
+.mac_close {
+  flex-shrink: 0;
+  width: var(--size-mac-close);
+  height: var(--size-mac-close);
+  padding: var(--space-0);
+  border: none;
+  border-radius: var(--radius-pill);
+  background-color: var(--color-mac-close);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mac_close .mac_close_glyph {
+  opacity: 0;
+  color: var(--color-mac-close-glyph);
+  font-size: var(--size-mac-close-glyph);
+  transition: opacity 0.12s ease-in-out;
+}
+
+.mac_close:hover .mac_close_glyph,
+.mac_close:focus-visible .mac_close_glyph {
+  opacity: 1;
+}
+
+/* Non-macOS: the ✕ close button in the danger colour. The class lands on the Tooltip wrapper, so
+   target the inner IconButton. */
+.icon_button_danger .IconButton,
+.icon_button_danger .IconButton svg {
+  color: var(--color-danger);
+}
+
+.icon_button_danger .IconButton:hover {
+  background-color: var(--color-danger-surface);
+}
+
+.icon_button_danger .IconButton:hover,
+.icon_button_danger .IconButton:hover svg {
+  color: var(--color-danger);
+}

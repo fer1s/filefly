@@ -1,0 +1,1 @@
+export { useHotkeyScope } from "./useHotkeyScope";

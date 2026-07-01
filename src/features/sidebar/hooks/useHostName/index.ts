@@ -1,1 +1,0 @@
-export { useHostName } from "./useHostName";

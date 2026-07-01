@@ -1,7 +1,9 @@
 import Icon from "@/shared/components/elements/Icon";
-import { classNames } from "@/shared/utils";
-import { faHardDrive } from "@fortawesome/free-solid-svg-icons";
-import { faUsb } from "@fortawesome/free-brands-svg-icons";
+import UsageBar from "@/shared/components/elements/UsageBar";
+import Tooltip, {
+  TOOLTIP_PLACEMENT,
+} from "@/shared/components/elements/Tooltip";
+import { classNames, activateOnKey, volumeIcon } from "@/shared/utils";
 
 import { VOLUME_ITEM_STAGGER_MS } from "./constants";
 import type { VolumeItemProps } from "./types";
@@ -12,27 +14,43 @@ const VolumeItem = ({
   index,
   collapsed,
   active,
+  onContextMenu,
 }: VolumeItemProps) => {
-  return (
+  const open = () => setPath(volume.mountPoint);
+
+  const row = (
     <div
       className={classNames("drive_item", active && "active")}
-      onClick={() => setPath(volume.mountPoint)}
+      role="button"
+      tabIndex={0}
+      aria-current={active ? "true" : undefined}
+      aria-label={`${volume.mountPoint} ${volume.name}`}
+      onClick={open}
+      onKeyDown={activateOnKey(open)}
+      onContextMenu={onContextMenu}
       style={{ animationDelay: `${index * VOLUME_ITEM_STAGGER_MS}ms` }}
-      title={collapsed ? `${volume.mountPoint} ${volume.name}` : undefined}
     >
-      <Icon icon={volume.isRemovable ? faUsb : faHardDrive} />
+      <Icon icon={volumeIcon(volume)} />
       <div className="details">
         <p>
           <span>{volume.mountPoint}</span> {volume.name}
         </p>
-        <div className="usage">
-          <div
-            className="usage_bar"
-            style={{ width: `${volume.diskUsage.percentage}%` }}
-          ></div>
-        </div>
+        <UsageBar percentage={volume.diskUsage.percentage} />
       </div>
     </div>
+  );
+
+  // Collapsed: the details are hidden in the rail, so surface them in our tooltip.
+  return collapsed ? (
+    <Tooltip
+      contents
+      label={`${volume.mountPoint} ${volume.name}`}
+      placement={TOOLTIP_PLACEMENT.RIGHT}
+    >
+      {row}
+    </Tooltip>
+  ) : (
+    row
   );
 };
 

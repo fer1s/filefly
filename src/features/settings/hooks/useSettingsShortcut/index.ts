@@ -1,0 +1,1 @@
+export { useSettingsShortcut } from "./useSettingsShortcut";
