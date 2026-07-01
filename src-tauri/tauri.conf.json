@@ -29,7 +29,7 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; img-src 'self' asset: https://asset.localhost; media-src 'self' asset: https://asset.localhost; frame-src 'self' asset: https://asset.localhost; object-src 'self' asset: https://asset.localhost",
+      "csp": "default-src 'self'; img-src 'self' data: asset: https://asset.localhost; media-src 'self' asset: https://asset.localhost; frame-src 'self' asset: https://asset.localhost; object-src 'self' asset: https://asset.localhost",
       "assetProtocol": {
         "enable": true,
         "scope": ["**", "**/*"]
