@@ -101,31 +101,38 @@ const Directory = () => {
   const [pendingDrop, setPendingDrop] = useState<{
     sources: string[];
     dest: string;
+    copy: boolean;
   } | null>(null);
   // "Don't ask again" toggle inside the confirm dialog; on accept it turns off future confirms.
   const [dontAskAgain, setDontAskAgain] = useState(false);
 
-  const isCopy = dragDropAction === DRAG_DROP_ACTION.COPY;
+  const settingIsCopy = dragDropAction === DRAG_DROP_ACTION.COPY;
 
   const performDrop = useCallback(
-    (sources: string[], dest: string) =>
-      isCopy ? fileOps.copyTo(sources, dest) : fileOps.moveTo(sources, dest),
-    [isCopy, fileOps],
+    (sources: string[], dest: string, copy: boolean) =>
+      copy ? fileOps.copyTo(sources, dest) : fileOps.moveTo(sources, dest),
+    [fileOps],
   );
 
+  // Files dropped on a folder / the current dir. Our own drag honours the move/copy setting;
+  // files dragged in from another app always copy (never move them out of their origin).
   const handleDrop = useCallback(
-    (sources: string[], dest: string) => {
+    (sources: string[], dest: string, external = false) => {
+      const copy = external || settingIsCopy;
       if (confirmDragDrop) {
         setDontAskAgain(false);
-        setPendingDrop({ sources, dest });
-      } else performDrop(sources, dest);
+        setPendingDrop({ sources, dest, copy });
+      } else performDrop(sources, dest, copy);
     },
-    [confirmDragDrop, performDrop],
+    [confirmDragDrop, performDrop, settingIsCopy],
   );
 
-  // Drag past the window edge → native OS drag, so files can be dropped into other apps.
+  // Start the native OS drag (files can be dropped into other apps and back into ours). `icon` is
+  // the grabbed entry's cached thumbnail. We deliberately don't force a copy/move mode: pinning it
+  // to "move" makes external apps (e.g. WhatsApp) reject the drop, so we let each target choose the
+  // operation. The in-app move/copy is still decided by handleDrop per the drag-and-drop setting.
   const handleDragOut = useCallback(
-    (sources: string[]) => void startNativeDrag(sources),
+    (sources: string[], icon?: string) => startNativeDrag(sources, icon),
     [],
   );
 
@@ -139,9 +146,16 @@ const Directory = () => {
     onDragOut: handleDragOut,
   });
 
-  // When a native OS drag is over the window (our own drag that left and came back, or files
-  // from another app), highlight the folder under the cursor and drop into it.
-  useNativeDropTarget({ entries: sorted, onDropFiles: handleDrop });
+  // When a native OS drag is over the window (our own drag that left and came back, or files from
+  // another app), highlight the folder under the cursor and drop into it — or, on empty space,
+  // import into the current directory (only where that makes sense, not Volumes/Recents/Tags).
+  const importDir =
+    path && path !== RECENTS && !isTagsPath(path) ? path : "";
+  useNativeDropTarget({
+    entries: sorted,
+    currentDir: importDir,
+    onDropFiles: handleDrop,
+  });
 
   useFolderView(path);
 
@@ -387,10 +401,12 @@ const Directory = () => {
       {/* Confirm a drag-and-drop move/copy before it runs (when confirmation is enabled). */}
       <ConfirmationDialog
         visible={!!pendingDrop}
-        title={isCopy ? t.common.copy : t.common.move}
+        title={pendingDrop?.copy ? t.common.copy : t.common.move}
         message={
           pendingDrop
-            ? (isCopy ? t.directory.confirmDragCopy : t.directory.confirmDragMove)(
+            ? (pendingDrop.copy
+                ? t.directory.confirmDragCopy
+                : t.directory.confirmDragMove)(
                 pendingDrop.sources.length === 1
                   ? basename(pendingDrop.sources[0])
                   : t.directory.itemCount(pendingDrop.sources.length),
@@ -398,7 +414,7 @@ const Directory = () => {
               )
             : ""
         }
-        confirmLabel={isCopy ? t.common.copy : t.common.move}
+        confirmLabel={pendingDrop?.copy ? t.common.copy : t.common.move}
         extra={
           <label className="confirmation_toggle">
             <Switcher
@@ -409,7 +425,12 @@ const Directory = () => {
           </label>
         }
         onConfirm={() => {
-          if (pendingDrop) performDrop(pendingDrop.sources, pendingDrop.dest);
+          if (pendingDrop)
+            performDrop(
+              pendingDrop.sources,
+              pendingDrop.dest,
+              pendingDrop.copy,
+            );
           // Persist the preference: stop confirming future drops.
           if (dontAskAgain && confirmDragDrop) toggleConfirmDragDrop();
           setPendingDrop(null);

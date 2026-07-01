@@ -1,22 +1,25 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useDrag } from "@use-gesture/react";
 
+import { getThumbnailPath } from "../../thumbnailCache";
+import { glyphPngFor } from "../../dragPreview";
+import { setOwnDragPaths } from "../../nativeDragSource";
 import {
   DRAG_OVER_CLASS,
   DRAGGING_BODY_CLASS,
   GHOST_OFFSET,
-  WINDOW_EDGE_PX,
   DRAG_GHOST_MAX_PILLS,
 } from "./constants";
 import type { EntryDragBinder, UseEntryDragMoveArgs } from "./types";
 
 // Drag-to-move for directory entries, built on @use-gesture (matching the sidebar's drag-sort).
-// HTML5 dnd is avoided so it behaves consistently with the app's other pointer gestures.
 //
-// There is no native "drop" event, so the folder under the pointer is found with
-// elementFromPoint on release. All in-flight feedback (the follow-the-pointer ghost and the
-// hovered-folder highlight) is applied imperatively via refs, so a drag never re-renders the
-// (heavily memoized) entry rows.
+// When external drag is enabled, a drag starts a native OS drag immediately (its preview is the
+// grabbed entry's cached thumbnail, or the bundled icon), so one continuous drag works both inside
+// the app and into other apps; the folder highlight and drop are driven by the OS drag-drop events
+// (see useNativeDropTarget). When it's disabled, the drag stays in-app: a follow-the-pointer ghost
+// + hovered-folder highlight resolved on release. Feedback is applied imperatively so a drag never
+// re-renders the (heavily memoized) entry rows.
 export const useEntryDragMove = ({
   entries,
   selectedIDs,
@@ -118,7 +121,7 @@ export const useEntryDragMove = ({
   };
 
   const bind = useDrag(
-    ({ args, xy: [x, y], first, active, last, cancel }) => {
+    ({ args, xy: [x, y], first, active, last, event }) => {
       if (first) {
         const sourcePath = args[0] as string;
         // Drag the whole selection when the grabbed entry is part of it, else just that entry.
@@ -126,32 +129,43 @@ export const useEntryDragMove = ({
           ? selectedIDs
           : [sourcePath];
         handedOffRef.current = false;
-        buildGhost(sourcePath);
-        document.body.classList.add(DRAGGING_BODY_CLASS);
-        // Dismiss any tooltip already open (or pending) when the drag starts: pointer capture
-        // means the trigger never gets a mouseleave. Tooltips self-dismiss on scroll, so reuse
-        // that signal rather than reaching into their state.
+        // Dismiss any tooltip already open (or pending): pointer capture means the trigger never
+        // gets a mouseleave. Tooltips self-dismiss on scroll, so reuse that signal.
         window.dispatchEvent(new Event("scroll"));
-      }
 
-      if (active && !handedOffRef.current) {
-        // Pointer reached the window edge → hand the drag off to the OS so it can be dropped
-        // into other apps. The in-app drag ends here; the OS owns the gesture from now on.
-        const leftWindow =
-          x <= WINDOW_EDGE_PX ||
-          y <= WINDOW_EDGE_PX ||
-          x >= window.innerWidth - WINDOW_EDGE_PX ||
-          y >= window.innerHeight - WINDOW_EDGE_PX;
-        if (allowExternalDrag && leftWindow) {
+        if (allowExternalDrag) {
+          // Start the native OS drag straight away, synchronously within this gesture tick (an
+          // await here would break the OS latch). Preview = the grabbed entry's cached thumbnail,
+          // else its rasterised type glyph, else the bundled icon. The OS owns the gesture from
+          // here; highlight and drop (inside the window or back from another app) run via
+          // useNativeDropTarget.
           handedOffRef.current = true;
-          const sources = sourcesRef.current;
-          endDragVisuals();
-          onDragOut(sources);
-          cancel();
+          const entry = entries.find((e) => e.path === sourcePath);
+          const icon =
+            getThumbnailPath(sourcePath) ??
+            (entry ? glyphPngFor(entry) : undefined);
+          // Mark these as our own drag so a drop back inside honours the move/copy setting (an
+          // external drop copies instead).
+          setOwnDragPaths(sourcesRef.current);
+          onDragOut(sourcesRef.current, icon);
           sourcesRef.current = [];
+          // The OS drag consumes the real pointerup, so @use-gesture's gesture never ends on its
+          // own — its leftover state then swallows the next click. Dispatch a synthetic pointerup
+          // to terminate the gesture cleanly (fires `last` below) so selection works right after.
+          const pointerId = (event as PointerEvent).pointerId;
+          window.dispatchEvent(
+            new PointerEvent("pointerup", { bubbles: true, pointerId }),
+          );
           return;
         }
 
+        buildGhost(sourcePath);
+        document.body.classList.add(DRAGGING_BODY_CLASS);
+      }
+
+      if (active && !handedOffRef.current) {
+        // In-app drag (external disabled): the ghost follows the cursor and the folder under it
+        // highlights.
         const ghost = ghostRef.current;
         if (ghost)
           ghost.style.transform = `translate3d(${x + GHOST_OFFSET}px, ${
@@ -168,7 +182,7 @@ export const useEntryDragMove = ({
       }
 
       if (last) {
-        // Already handed off to the OS drag — nothing more to do in-app.
+        // Native drag already owns it — nothing more to do in-app.
         if (handedOffRef.current) {
           handedOffRef.current = false;
           return;
@@ -180,8 +194,14 @@ export const useEntryDragMove = ({
         sourcesRef.current = [];
       }
     },
-    // filterTaps: a click never starts a drag, so entry select / open still work.
-    { filterTaps: true },
+    {
+      // filterTaps: a click never starts a drag, so entry select / open still work.
+      filterTaps: true,
+      // In external mode the drag is handed to the OS on the first frame, so @use-gesture needs no
+      // pointer capture — and NOT capturing avoids the webview getting stuck (needing a stray
+      // click) when the OS consumes the pointerup. In-app mode keeps capture for reliable tracking.
+      pointer: { capture: !allowExternalDrag },
+    },
   );
 
   // Stable wrapper: useDrag returns a fresh `bind` each render, but entry rows are memoized, so

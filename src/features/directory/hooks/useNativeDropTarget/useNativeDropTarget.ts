@@ -2,15 +2,17 @@ import { useEffect, useMemo, useRef } from "react";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
 
 import { DRAG_OVER_CLASS } from "../useEntryDragMove/constants";
+import { isOwnDrag, clearOwnDragPaths } from "../../nativeDragSource";
 import type { UseNativeDropTargetArgs } from "./types";
 
-// Handles a native OS drag while it's over our window: highlights the folder under the cursor
-// and, on drop, hands the dropped paths to `onDropFiles`. This is what lets a drag that left the
-// window (see useEntryDragMove's edge handoff) resume its in-app behaviour when it returns —
-// @use-gesture can't, because the OS owns the gesture once the native drag starts. It also
-// enables dropping files dragged in from other apps.
+// Handles a native OS drag while it's over our window: highlights the folder under the cursor and,
+// on drop, hands the dropped paths to `onDropFiles` — onto the hovered folder, or (on empty space)
+// the current directory. This lets a drag that left the window (see useEntryDragMove) resume its
+// in-app behaviour on return — @use-gesture can't, since the OS owns the gesture once the native
+// drag starts — and enables dropping files dragged in from other apps.
 export const useNativeDropTarget = ({
   entries,
+  currentDir,
   onDropFiles,
 }: UseNativeDropTargetArgs) => {
   const dirPaths = useMemo(
@@ -20,9 +22,11 @@ export const useNativeDropTarget = ({
 
   // Latest values for the once-registered listener (written in an effect, never during render).
   const dirPathsRef = useRef(dirPaths);
+  const currentDirRef = useRef(currentDir);
   const onDropFilesRef = useRef(onDropFiles);
   useEffect(() => {
     dirPathsRef.current = dirPaths;
+    currentDirRef.current = currentDir;
     onDropFilesRef.current = onDropFiles;
   });
 
@@ -77,11 +81,16 @@ export const useNativeDropTarget = ({
           const el = folderAt(payload.position.x, payload.position.y);
           clearTarget();
           setActive(false);
-          if (el && payload.paths.length)
-            onDropFilesRef.current(payload.paths, el.id);
+          // Drop target: the hovered folder, else the current directory (import on empty space).
+          const dest = el?.id ?? currentDirRef.current;
+          const external = !isOwnDrag(payload.paths);
+          clearOwnDragPaths();
+          if (dest && payload.paths.length)
+            onDropFilesRef.current(payload.paths, dest, external);
         } else if (payload.type === "leave") {
           clearTarget();
           setActive(false);
+          clearOwnDragPaths();
         }
       })
       .then((fn) => {

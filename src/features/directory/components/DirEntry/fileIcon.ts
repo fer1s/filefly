@@ -56,3 +56,9 @@ export const getFileIcon = (extension: string): IconDefinition => {
     faFile
   );
 };
+
+// Every glyph getFileIcon can return, for pre-rendering them (e.g. as native drag previews).
+export const FILE_ICONS: readonly IconDefinition[] = [
+  ...FILE_ICON_REGISTRY.map((entry) => entry.icon),
+  faFile,
+];

@@ -29,6 +29,8 @@ import { useSidebarCollapsed } from "./hooks/useSidebarCollapsed";
 import { useAppSettings } from "./hooks/useAppSettings";
 
 import { notify, setToastsEnabled, TOAST_TYPE } from "@/shared/toast";
+import { prewarmDragIcon } from "@/shared/services/api";
+import { prewarmDragGlyphs } from "@/features/directory/dragPreview";
 import { FileSystemManager } from "@/shared/managers/FileSystemManager";
 import { classNames } from "@/shared/utils";
 import { t } from "@/lang";
@@ -111,6 +113,13 @@ const App = () => {
       homePath: settings.homePath,
     });
   }, [settings.startupMode, settings.homePath]);
+
+  // Prepare the native-drag previews once (bundled fallback icon + rasterised type glyphs), so a
+  // drag can pick its image synchronously.
+  useEffect(() => {
+    void prewarmDragIcon();
+    void prewarmDragGlyphs();
+  }, []);
 
   // The OS/webview context menu is replaced by the app's own; suppress it everywhere.
   useEffect(() => {

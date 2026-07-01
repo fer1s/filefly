@@ -312,15 +312,31 @@ export const openFullDiskAccessSettings = async (): Promise<void> =>
 export const openExternalUrl = async (url: string): Promise<void> =>
   await openUrl(url);
 
-// Bundled fallback image used as the drag preview (resolved once, then cached).
-let dragIconPath: Promise<string> | null = null;
-const dragIcon = () => (dragIconPath ??= resolveResource("icons/32x32.png"));
+// Bundled fallback drag preview, resolved once at startup so startNativeDrag can run fully
+// synchronously (the native drag only latches when started within the drag's event tick — an
+// await before startDrag breaks it).
+let bundledDragIcon = "";
+export const prewarmDragIcon = async (): Promise<void> => {
+  if (bundledDragIcon) return;
+  try {
+    bundledDragIcon = await resolveResource("icons/32x32.png");
+  } catch (err) {
+    console.error("Failed to resolve drag icon:\n" + err);
+  }
+};
 
 // Start a native OS drag of real files, so they can be dropped into other apps (Finder, Mail,
-// WhatsApp, …). Wraps the drag plugin; the drag preview is the bundled app icon for now.
-export const startNativeDrag = async (paths: string[]): Promise<void> => {
-  if (!paths.length) return;
-  await startDrag({ item: paths, icon: await dragIcon() });
+// WhatsApp, …) and back into our own window. `icon` is a filesystem path to the preview image
+// (e.g. a cached thumbnail); it falls back to the bundled icon. `mode` sets the OS drop-effect
+// badge (copy → green "+", move → arrow). Synchronous on purpose — see prewarmDragIcon.
+export const startNativeDrag = (
+  paths: string[],
+  icon?: string,
+  mode?: "copy" | "move",
+): void => {
+  const image = icon || bundledDragIcon;
+  if (!paths.length || !image) return;
+  void startDrag({ item: paths, icon: image, mode });
 };
 
 // Helper function to invoke methods with a path argument
