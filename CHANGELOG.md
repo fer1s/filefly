@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.2.2]
+
+### Fixed
+
+- Native drag preview icons not showing in release builds (added `data:` to the `img-src` CSP so glyph rasterisation works in production)
+
 ## [0.2.0]
 
 ### Added
