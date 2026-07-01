@@ -22,6 +22,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   dragDropAction: DEFAULT_DRAG_DROP_ACTION,
   confirmDragDrop: true,
   clickableToasts: true,
+  dragToExternalApps: true,
 };
 
 // Coalesce rapid changes (e.g. dragging the opacity slider) into one disk write.

@@ -26,6 +26,7 @@
       "identifier": "fs:scope",
       "allow": [{ "path": "$HOME/**" }, { "path": "/**" }]
     },
-    "dialog:default"
+    "dialog:default",
+    "drag:default"
   ]
 }

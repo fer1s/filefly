@@ -89,6 +89,14 @@ body.is-entry-dragging {
   cursor: grabbing;
 }
 
+/* A native OS drag (ours, returning to the window, or files from another app) is hovering the
+   app: outline the entries area as a drop zone. Independent of the per-folder hit-test. */
+body.is-native-drag-over .directory_page .directory_content {
+  outline: var(--border-width-default) solid var(--color-selection-border);
+  outline-offset: calc(-1 * var(--space-1));
+  border-radius: var(--radius-sm);
+}
+
 /* Follows the pointer during a drag: a clone of the grabbed entry's icon + a name pill, plus a
    count badge when moving a multi-selection. Content is built imperatively (see useEntryDragMove). */
 .directory_page .drag_ghost {
@@ -98,12 +106,20 @@ body.is-entry-dragging {
   z-index: 10000;
   pointer-events: none;
   display: none;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--space-1);
 }
 
 body.is-entry-dragging .drag_ghost {
   display: flex;
+}
+
+/* Multi-drag: name pills stacked vertically (Finder-style), one per dragged item. */
+.directory_page .drag_ghost .drag_ghost_stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
 }
 
 .directory_page .drag_ghost .drag_ghost_item {
@@ -144,14 +160,15 @@ body.is-entry-dragging .drag_ghost {
   box-shadow: var(--shadow-md);
 }
 
+/* Red count badge for a multi-item drag (Finder-style). */
 .directory_page .drag_ghost .drag_ghost_count {
   display: grid;
   place-items: center;
   min-width: var(--space-5);
   height: var(--space-5);
   padding: 0 var(--space-1);
-  background-color: var(--color-selection-border);
-  color: var(--color-text-primary);
+  background-color: var(--color-danger);
+  color: var(--color-text);
   border-radius: var(--radius-full);
   font-size: var(--font-size-xs);
   font-weight: 600;

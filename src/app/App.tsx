@@ -92,6 +92,11 @@ const App = () => {
     [settings.clickableToasts, update],
   );
 
+  const toggleDragToExternalApps = useCallback(
+    () => update({ dragToExternalApps: !settings.dragToExternalApps }),
+    [settings.dragToExternalApps, update],
+  );
+
   // Keep the toast bridge's enabled flag in sync so notify() (callable from non-React code)
   // honors the setting.
   useEffect(() => {
@@ -165,6 +170,8 @@ const App = () => {
         toggleConfirmDragDrop,
         clickableToasts: settings.clickableToasts,
         toggleClickableToasts,
+        dragToExternalApps: settings.dragToExternalApps,
+        toggleDragToExternalApps,
         savingSettings,
         search: tabs.search,
         setSearch: tabs.setSearch,

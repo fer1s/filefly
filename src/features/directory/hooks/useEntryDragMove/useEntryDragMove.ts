@@ -5,6 +5,8 @@ import {
   DRAG_OVER_CLASS,
   DRAGGING_BODY_CLASS,
   GHOST_OFFSET,
+  WINDOW_EDGE_PX,
+  DRAG_GHOST_MAX_PILLS,
 } from "./constants";
 import type { EntryDragBinder, UseEntryDragMoveArgs } from "./types";
 
@@ -19,12 +21,17 @@ export const useEntryDragMove = ({
   entries,
   selectedIDs,
   onDrop,
+  allowExternalDrag,
+  onDragOut,
 }: UseEntryDragMoveArgs) => {
   const ghostRef = useRef<HTMLDivElement>(null);
   // The entry element currently highlighted as the drop target.
   const targetElRef = useRef<HTMLElement | null>(null);
   // The paths being dragged (the whole selection, or just the grabbed entry).
   const sourcesRef = useRef<string[]>([]);
+  // Set once the drag has been handed off to a native OS drag (pointer left the window), so the
+  // remaining gesture frames and the release don't also run the in-app drop.
+  const handedOffRef = useRef(false);
 
   const dirPaths = useMemo(
     () =>
@@ -37,35 +44,52 @@ export const useEntryDragMove = ({
     targetElRef.current = null;
   };
 
-  // Build the drag ghost once per drag: a clone of the grabbed entry's icon plus its name in a
-  // pill (Finder-style), so what's being dragged is literally visible in both list and grid.
-  // A stacked count badge is added when the whole selection is being moved.
+  const nameOf = (path: string) =>
+    entries.find((e) => e.path === path)?.name ?? path;
+
+  // Build the drag ghost once per drag (Finder-style), so what's being dragged is visible:
+  //  - single item → the grabbed entry's icon + its name in a pill.
+  //  - multiple    → a red count badge + a stack of name pills (one per item, capped).
   const buildGhost = (sourcePath: string) => {
     const ghost = ghostRef.current;
     if (!ghost) return;
     ghost.innerHTML = "";
 
-    const iconEl = document
-      .getElementById(sourcePath)
-      ?.querySelector<HTMLElement>(".name .icon");
-    const name = entries.find((e) => e.path === sourcePath)?.name ?? "";
+    const sources = sourcesRef.current;
+    const count = sources.length;
 
-    const item = document.createElement("div");
-    item.className = "drag_ghost_item";
-    if (iconEl) item.appendChild(iconEl.cloneNode(true));
-    const label = document.createElement("span");
-    label.className = "drag_ghost_label";
-    label.textContent = name;
-    item.appendChild(label);
-    ghost.appendChild(item);
-
-    const count = sourcesRef.current.length;
     if (count > 1) {
       const badge = document.createElement("span");
       badge.className = "drag_ghost_count";
       badge.textContent = String(count);
       ghost.appendChild(badge);
     }
+
+    const stack = document.createElement("div");
+    stack.className = "drag_ghost_stack";
+
+    if (count === 1) {
+      const item = document.createElement("div");
+      item.className = "drag_ghost_item";
+      const iconEl = document
+        .getElementById(sourcePath)
+        ?.querySelector<HTMLElement>(".name .icon");
+      if (iconEl) item.appendChild(iconEl.cloneNode(true));
+      const label = document.createElement("span");
+      label.className = "drag_ghost_label";
+      label.textContent = nameOf(sourcePath);
+      item.appendChild(label);
+      stack.appendChild(item);
+    } else {
+      sources.slice(0, DRAG_GHOST_MAX_PILLS).forEach((p) => {
+        const pill = document.createElement("span");
+        pill.className = "drag_ghost_label";
+        pill.textContent = nameOf(p);
+        stack.appendChild(pill);
+      });
+    }
+
+    ghost.appendChild(stack);
   };
 
   // The folder element under (x, y), if it's a valid drop target for the current drag: a listed
@@ -87,14 +111,21 @@ export const useEntryDragMove = ({
     return null;
   };
 
+  // Ends all in-app drag feedback (highlight + ghost). Shared by the native handoff and release.
+  const endDragVisuals = () => {
+    clearTarget();
+    document.body.classList.remove(DRAGGING_BODY_CLASS);
+  };
+
   const bind = useDrag(
-    ({ args, xy: [x, y], first, active, last }) => {
+    ({ args, xy: [x, y], first, active, last, cancel }) => {
       if (first) {
         const sourcePath = args[0] as string;
         // Drag the whole selection when the grabbed entry is part of it, else just that entry.
         sourcesRef.current = selectedIDs.includes(sourcePath)
           ? selectedIDs
           : [sourcePath];
+        handedOffRef.current = false;
         buildGhost(sourcePath);
         document.body.classList.add(DRAGGING_BODY_CLASS);
         // Dismiss any tooltip already open (or pending) when the drag starts: pointer capture
@@ -103,7 +134,24 @@ export const useEntryDragMove = ({
         window.dispatchEvent(new Event("scroll"));
       }
 
-      if (active) {
+      if (active && !handedOffRef.current) {
+        // Pointer reached the window edge → hand the drag off to the OS so it can be dropped
+        // into other apps. The in-app drag ends here; the OS owns the gesture from now on.
+        const leftWindow =
+          x <= WINDOW_EDGE_PX ||
+          y <= WINDOW_EDGE_PX ||
+          x >= window.innerWidth - WINDOW_EDGE_PX ||
+          y >= window.innerHeight - WINDOW_EDGE_PX;
+        if (allowExternalDrag && leftWindow) {
+          handedOffRef.current = true;
+          const sources = sourcesRef.current;
+          endDragVisuals();
+          onDragOut(sources);
+          cancel();
+          sourcesRef.current = [];
+          return;
+        }
+
         const ghost = ghostRef.current;
         if (ghost)
           ghost.style.transform = `translate3d(${x + GHOST_OFFSET}px, ${
@@ -120,10 +168,14 @@ export const useEntryDragMove = ({
       }
 
       if (last) {
+        // Already handed off to the OS drag — nothing more to do in-app.
+        if (handedOffRef.current) {
+          handedOffRef.current = false;
+          return;
+        }
         const dest = targetElRef.current?.id;
         const sources = sourcesRef.current;
-        clearTarget();
-        document.body.classList.remove(DRAGGING_BODY_CLASS);
+        endDragVisuals();
         if (dest) onDrop(sources, dest);
         sourcesRef.current = [];
       }

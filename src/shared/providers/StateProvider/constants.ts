@@ -60,6 +60,8 @@ export const initialState: State = {
   toggleConfirmDragDrop: () => {},
   clickableToasts: true,
   toggleClickableToasts: () => {},
+  dragToExternalApps: true,
+  toggleDragToExternalApps: () => {},
   savingSettings: false,
   search: "",
   setSearch: () => {},

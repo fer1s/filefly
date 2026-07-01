@@ -236,6 +236,9 @@ export const en = {
     clickableToasts: "Clickable notifications",
     clickableToastsHint:
       "Click a notification to jump to the affected file or folder.",
+    dragToExternalApps: "Drag to other apps",
+    dragToExternalAppsHint:
+      "Drag a file out of the window to drop it into other apps (Finder, Mail, …).",
     saving: "Saving settings…",
   },
   infoPanel: {

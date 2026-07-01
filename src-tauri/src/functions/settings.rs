@@ -35,6 +35,8 @@ pub struct AppSettings {
     confirm_drag_drop: bool,
     // Whether success toasts are clickable to jump to the affected file/folder.
     clickable_toasts: bool,
+    // Whether dragging entries out of the window starts a native OS drag (drop into other apps).
+    drag_to_external_apps: bool,
 }
 
 // Must mirror the frontend defaults (shared/constants.ts).
@@ -53,6 +55,7 @@ impl Default for AppSettings {
             drag_drop_action: "move".to_string(),
             confirm_drag_drop: true,
             clickable_toasts: true,
+            drag_to_external_apps: true,
         }
     }
 }

@@ -40,6 +40,8 @@ const SettingsDialog = ({ visible, onClose }: SettingsDialogProps) => {
     toggleConfirmDragDrop,
     clickableToasts,
     toggleClickableToasts,
+    dragToExternalApps,
+    toggleDragToExternalApps,
   } = useStateContext();
 
   useCloseOnEscape(visible, onClose);
@@ -118,6 +120,16 @@ const SettingsDialog = ({ visible, onClose }: SettingsDialogProps) => {
             <Switcher
               checked={clickableToasts}
               onChange={toggleClickableToasts}
+            />
+          </SettingsRow>
+
+          <SettingsRow
+            label={t.settings.dragToExternalApps}
+            hint={t.settings.dragToExternalAppsHint}
+          >
+            <Switcher
+              checked={dragToExternalApps}
+              onChange={toggleDragToExternalApps}
             />
           </SettingsRow>
 

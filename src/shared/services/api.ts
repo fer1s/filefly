@@ -2,6 +2,8 @@ import { invoke, Channel } from "@tauri-apps/api/core";
 import { watchImmediate } from "@tauri-apps/plugin-fs";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
+import { resolveResource } from "@tauri-apps/api/path";
+import { startDrag } from "@crabnebula/tauri-plugin-drag";
 
 import { notify, TOAST_TYPE } from "@/shared/toast";
 import { t } from "@/lang";
@@ -30,6 +32,8 @@ export type AppSettings = {
   confirmDragDrop: boolean;
   // Whether success toasts are clickable to jump to the affected file/folder.
   clickableToasts: boolean;
+  // Whether dragging entries out of the window starts a native OS drag (drop into other apps).
+  dragToExternalApps: boolean;
 };
 
 // Load the persisted app settings (falls back to defaults when settings.toml is absent).
@@ -307,6 +311,17 @@ export const openFullDiskAccessSettings = async (): Promise<void> =>
 // Open a URL in the user's default browser (used by the NTFS driver guidance links).
 export const openExternalUrl = async (url: string): Promise<void> =>
   await openUrl(url);
+
+// Bundled fallback image used as the drag preview (resolved once, then cached).
+let dragIconPath: Promise<string> | null = null;
+const dragIcon = () => (dragIconPath ??= resolveResource("icons/32x32.png"));
+
+// Start a native OS drag of real files, so they can be dropped into other apps (Finder, Mail,
+// WhatsApp, …). Wraps the drag plugin; the drag preview is the bundled app icon for now.
+export const startNativeDrag = async (paths: string[]): Promise<void> => {
+  if (!paths.length) return;
+  await startDrag({ item: paths, icon: await dragIcon() });
+};
 
 // Helper function to invoke methods with a path argument
 const invokeWithPathArg = async (

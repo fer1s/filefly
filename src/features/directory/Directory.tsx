@@ -24,6 +24,7 @@ import { useColumnVisibility } from "./hooks/useColumnVisibility";
 import { useFolderView } from "./hooks/useFolderView";
 import { useMarqueeSelection } from "./hooks/useMarqueeSelection";
 import { useEntryDragMove } from "./hooks/useEntryDragMove";
+import { useNativeDropTarget } from "./hooks/useNativeDropTarget";
 import { useKeyboardNav } from "./hooks/useKeyboardNav";
 import { useClipboardShortcuts } from "./hooks/useClipboardShortcuts";
 import { useZoomShortcuts } from "./hooks/useZoomShortcuts";
@@ -31,6 +32,7 @@ import { useContextMenu } from "./hooks/useContextMenu";
 import { useWritability } from "./hooks/useWritability";
 import { useDirectory } from "./providers/DirectoryProvider";
 
+import { startNativeDrag } from "@/shared/services/api";
 import ConfirmationDialog from "@/shared/components/patterns/ConfirmationDialog";
 import Switcher from "@/shared/components/elements/Switcher";
 import ListHeader from "./components/ListHeader";
@@ -59,6 +61,7 @@ const Directory = () => {
     dragDropAction,
     confirmDragDrop,
     toggleConfirmDragDrop,
+    dragToExternalApps,
   } = useStateContext();
 
   const [typeaheadQuery, setTypeaheadQuery] = useState("");
@@ -120,13 +123,25 @@ const Directory = () => {
     [confirmDragDrop, performDrop],
   );
 
+  // Drag past the window edge → native OS drag, so files can be dropped into other apps.
+  const handleDragOut = useCallback(
+    (sources: string[]) => void startNativeDrag(sources),
+    [],
+  );
+
   // Drag entries onto a folder row (the whole selection if the dragged entry is part of it).
   // Feedback is applied imperatively, so it never re-renders the rows.
   const { bindDrag, ghostRef } = useEntryDragMove({
     entries: sorted,
     selectedIDs,
     onDrop: handleDrop,
+    allowExternalDrag: dragToExternalApps,
+    onDragOut: handleDragOut,
   });
+
+  // When a native OS drag is over the window (our own drag that left and came back, or files
+  // from another app), highlight the folder under the cursor and drop into it.
+  useNativeDropTarget({ entries: sorted, onDropFiles: handleDrop });
 
   useFolderView(path);
 

@@ -72,6 +72,9 @@ export type State = {
   // Whether success toasts are clickable to jump to the affected file/folder.
   clickableToasts: boolean;
   toggleClickableToasts: () => void;
+  // Whether dragging entries out of the window starts a native OS drag (drop into other apps).
+  dragToExternalApps: boolean;
+  toggleDragToExternalApps: () => void;
   // True while a settings change is being written to settings.toml (drives the StatusBar spinner).
   savingSettings: boolean;
   search: string;
