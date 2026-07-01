@@ -28,6 +28,8 @@ export type AppSettings = {
   dragDropAction: string;
   // Whether a confirmation dialog is shown before a drag-and-drop move/copy.
   confirmDragDrop: boolean;
+  // Whether success toasts are clickable to jump to the affected file/folder.
+  clickableToasts: boolean;
 };
 
 // Load the persisted app settings (falls back to defaults when settings.toml is absent).

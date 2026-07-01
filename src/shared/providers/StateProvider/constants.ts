@@ -58,6 +58,8 @@ export const initialState: State = {
   setDragDropAction: () => {},
   confirmDragDrop: true,
   toggleConfirmDragDrop: () => {},
+  clickableToasts: true,
+  toggleClickableToasts: () => {},
   savingSettings: false,
   search: "",
   setSearch: () => {},

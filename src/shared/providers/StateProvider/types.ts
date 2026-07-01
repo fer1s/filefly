@@ -69,6 +69,9 @@ export type State = {
   // Whether a confirmation dialog is shown before a drag-and-drop move/copy.
   confirmDragDrop: boolean;
   toggleConfirmDragDrop: () => void;
+  // Whether success toasts are clickable to jump to the affected file/folder.
+  clickableToasts: boolean;
+  toggleClickableToasts: () => void;
   // True while a settings change is being written to settings.toml (drives the StatusBar spinner).
   savingSettings: boolean;
   search: string;

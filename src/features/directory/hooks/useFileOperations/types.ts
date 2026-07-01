@@ -10,4 +10,7 @@ export type UseFileOperationsArgs = {
   path: string;
   refreshDir: () => void;
   setSelectedIDs: (ids: string[]) => void;
+  // Navigate to `destDir` and select `paths` there once its listing loads (drives the clickable
+  // "jump to the moved/copied/restored file" toasts). Pass an empty `paths` to just navigate.
+  revealEntries: (destDir: string, paths: string[]) => void;
 };

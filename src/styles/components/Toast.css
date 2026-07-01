@@ -18,6 +18,15 @@
   animation: toast-enter 0.2s ease-out;
 }
 
+/* A clickable toast (carries an action, e.g. "jump to the moved file"). */
+.toast.actionable {
+  cursor: pointer;
+}
+
+.toast.actionable:hover {
+  border-color: var(--color-selection-border);
+}
+
 .toast .toast_icon {
   flex-shrink: 0;
 }

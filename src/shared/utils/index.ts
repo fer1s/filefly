@@ -41,6 +41,14 @@ export const basename = (path: string) => {
   return segments[segments.length - 1] || path;
 };
 
+// Parent directory of a path (everything up to the last segment), handling "/" and "\" and
+// trailing separators. Returns "" for a top-level segment.
+export const dirname = (path: string) => {
+  const trimmed = path.replace(/[\\/]+$/, "");
+  const sep = Math.max(trimmed.lastIndexOf("/"), trimmed.lastIndexOf("\\"));
+  return sep <= 0 ? "" : trimmed.slice(0, sep);
+};
+
 // Lowercased file extension (no dot). Returns the whole name for dotless files.
 export const extension = (name: string) =>
   (name.split(".").pop() || "").toLowerCase();

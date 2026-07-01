@@ -6,6 +6,7 @@ export const en = {
   common: {
     close: "Close",
     dismiss: "Dismiss",
+    clickToReveal: "Click to show",
     copied: "Copied",
     preview: "Preview",
     previous: "Previous",
@@ -232,6 +233,9 @@ export const en = {
     dragDropCopy: "Copy",
     confirmDragDrop: "Confirm drag and drop",
     confirmDragDropHint: "Ask before moving or copying dragged files.",
+    clickableToasts: "Clickable notifications",
+    clickableToastsHint:
+      "Click a notification to jump to the affected file or folder.",
     saving: "Saving settings…",
   },
   infoPanel: {

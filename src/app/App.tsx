@@ -87,6 +87,11 @@ const App = () => {
     [settings.confirmDragDrop, update],
   );
 
+  const toggleClickableToasts = useCallback(
+    () => update({ clickableToasts: !settings.clickableToasts }),
+    [settings.clickableToasts, update],
+  );
+
   // Keep the toast bridge's enabled flag in sync so notify() (callable from non-React code)
   // honors the setting.
   useEffect(() => {
@@ -158,6 +163,8 @@ const App = () => {
         setDragDropAction: (dragDropAction) => update({ dragDropAction }),
         confirmDragDrop: settings.confirmDragDrop,
         toggleConfirmDragDrop,
+        clickableToasts: settings.clickableToasts,
+        toggleClickableToasts,
         savingSettings,
         search: tabs.search,
         setSearch: tabs.setSearch,

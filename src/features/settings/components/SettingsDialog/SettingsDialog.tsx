@@ -38,6 +38,8 @@ const SettingsDialog = ({ visible, onClose }: SettingsDialogProps) => {
     setDragDropAction,
     confirmDragDrop,
     toggleConfirmDragDrop,
+    clickableToasts,
+    toggleClickableToasts,
   } = useStateContext();
 
   useCloseOnEscape(visible, onClose);
@@ -107,6 +109,16 @@ const SettingsDialog = ({ visible, onClose }: SettingsDialogProps) => {
             hint={t.settings.confirmDragDropHint}
           >
             <Switcher checked={confirmDragDrop} onChange={toggleConfirmDragDrop} />
+          </SettingsRow>
+
+          <SettingsRow
+            label={t.settings.clickableToasts}
+            hint={t.settings.clickableToastsHint}
+          >
+            <Switcher
+              checked={clickableToasts}
+              onChange={toggleClickableToasts}
+            />
           </SettingsRow>
 
           <SettingsRow

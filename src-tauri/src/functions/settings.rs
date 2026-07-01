@@ -33,6 +33,8 @@ pub struct AppSettings {
     drag_drop_action: String,
     // Whether a confirmation dialog is shown before a drag-and-drop move/copy.
     confirm_drag_drop: bool,
+    // Whether success toasts are clickable to jump to the affected file/folder.
+    clickable_toasts: bool,
 }
 
 // Must mirror the frontend defaults (shared/constants.ts).
@@ -50,6 +52,7 @@ impl Default for AppSettings {
             home_path: String::new(),
             drag_drop_action: "move".to_string(),
             confirm_drag_drop: true,
+            clickable_toasts: true,
         }
     }
 }
