@@ -6,6 +6,7 @@ All notable changes to this project are documented in this file.
 
 ### Added
 
+- Drag and drop (`7286e3a`)
 - Drag and drop files to outside the app (`4d6d8e0`)
 - Clickable toasts (`d4e1bae`)
 - Confirmation dialog for move (`6515f9e`)
@@ -105,7 +106,7 @@ All notable changes to this project are documented in this file.
 
 ### Docs
 
-- Architecture rules (`6eab344`, `23e8973`)
+- Architecture rules (`d694b92`, `6eab344`, `23e8973`)
 - Workflow (`6a5f566`)
 - Updated plans (`4b1f6c1`)
 
