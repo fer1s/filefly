@@ -208,7 +208,8 @@ export const en = {
     startupVolumes: "New session (Volumes)",
     startupHome: "New session (home folder)",
     homeFolder: "Home folder",
-    homeFolderHint: "Folder opened when a new session starts at your home folder.",
+    homeFolderHint:
+      "Folder opened when a new session starts at your home folder.",
     homeFolderVolumes: "Volumes",
     choose: "Choose…",
     saving: "Saving settings…",

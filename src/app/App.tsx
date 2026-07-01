@@ -1,4 +1,10 @@
-import { useState, useEffect, useMemo, useCallback, type CSSProperties } from "react";
+import {
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+  type CSSProperties,
+} from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 import { StateProvider } from "@/shared/providers/StateProvider";
@@ -158,7 +164,9 @@ const App = () => {
                   )}
                   // Expanded-column width; the collapsed rule overrides it (see index.css).
                   style={
-                    { "--sidebar-width": `${settings.sidebarWidth}px` } as CSSProperties
+                    {
+                      "--sidebar-width": `${settings.sidebarWidth}px`,
+                    } as CSSProperties
                   }
                 >
                   <SideBar

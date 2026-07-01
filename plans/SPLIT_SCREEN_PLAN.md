@@ -42,7 +42,7 @@ Un **Pane** es un grupo de tabs que posee un contexto de navegación completo:
 // shared/models
 type Pane = {
   id: string;
-  tabs: Tab[];        // reutiliza el Tab actual (history/search/infoPanelOpen)
+  tabs: Tab[]; // reutiliza el Tab actual (history/search/infoPanelOpen)
   activeTabId: string;
 };
 ```
@@ -94,7 +94,7 @@ desaparece. Revisar todos los `navigate(...)` / `useLocation` / `ROUTES` en `App
 ## Crear / destruir el split
 
 - **Crear (drag)**: los `TabItem` ya deben soportar drag (verificar `features/tabs/components/
-  TabItem`). Añadir una **zona de drop en el borde derecho** de la app. Soltar un tab ahí: si no
+TabItem`). Añadir una **zona de drop en el borde derecho** de la app. Soltar un tab ahí: si no
   existe 2º pane, crearlo y **mover** ese tab (sacarlo de su pane origen). Si el pane origen queda
   sin tabs, colapsar el split.
 - **Destruir**: cerrar el último tab de un pane elimina el pane; el otro pasa a ancho completo. Un

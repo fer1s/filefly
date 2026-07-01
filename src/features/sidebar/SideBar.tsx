@@ -151,7 +151,9 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
   // Presets are hidden, not deleted (we couldn't re-create them). In edit mode show them all so a
   // hidden one can be toggled back on; otherwise drop the hidden ones. Each keeps its original
   // index so its hotkey slot (Cmd/Ctrl+1..6) stays correct regardless of what's filtered out.
-  const hiddenPinnedPresets = new Set(groups.hiddenPresets(SIDEBAR_GROUP.PINNED));
+  const hiddenPinnedPresets = new Set(
+    groups.hiddenPresets(SIDEBAR_GROUP.PINNED),
+  );
   const visiblePinned = pinned
     .map((item, index) => ({ item, index }))
     .filter(
