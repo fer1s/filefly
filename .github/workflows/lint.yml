@@ -6,6 +6,9 @@ on:
     branches: ["**"]
   pull_request:
 
+permissions:
+  contents: read
+
 # Cancel superseded runs on the same ref (e.g. rapid pushes to a PR).
 concurrency:
   group: lint-${{ github.ref }}
