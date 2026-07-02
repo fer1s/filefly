@@ -14,6 +14,7 @@ import StartupControl from "../components/SettingsDialog/controls/StartupControl
 import StartupBelow from "../components/SettingsDialog/controls/StartupBelow";
 import StorageControl from "../components/SettingsDialog/controls/StorageControl";
 import StorageBelow from "../components/SettingsDialog/controls/StorageBelow";
+import AccentControl from "../components/SettingsDialog/controls/AccentControl";
 
 import { SETTINGS_SECTION } from "./sections";
 import { SETTING_KIND, type SettingDescriptor } from "./types";
@@ -54,6 +55,18 @@ export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
       { value: THEME.LIGHT, label: t.settings.themeLight },
       { value: THEME.DARK, label: t.settings.themeDark },
     ],
+  },
+  {
+    kind: SETTING_KIND.CUSTOM,
+    key: "accentColor",
+    section: SETTINGS_SECTION.APPEARANCE,
+    label: () => t.settings.accent,
+    hint: () => t.settings.accentHint,
+    Control: AccentControl,
+    isModified: (settings, defaults) =>
+      settings.accentColor !== defaults.accentColor,
+    reset: (update, defaults) =>
+      update({ accentColor: defaults.accentColor }),
   },
 
   // View

@@ -15,6 +15,11 @@
   min-width: 0;
   overflow-x: auto;
   scrollbar-width: none;
+  /* overflow-x:auto also clips the vertical axis, cropping the lifted (dragging/active) tab's
+     shadow. Pad the clip box and cancel it with an equal negative margin so the strip stays put
+     but the shadow has room to render. */
+  padding-block: var(--space-4);
+  margin-block: calc(-1 * var(--space-4));
 }
 
 .TabBar .tab_strip::-webkit-scrollbar {

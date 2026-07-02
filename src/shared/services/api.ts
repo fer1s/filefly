@@ -17,6 +17,8 @@ export type AppSettings = {
   showHidden: boolean;
   // Colour theme: "system" (follow OS) | "light" | "dark" (see THEME).
   theme: string;
+  // Accent hue driving selection/focus/links: "blue" | "navy" | "red" | "teal" | "gold" (see ACCENT).
+  accentColor: string;
   defaultZoom: number;
   dateFormat: string;
   sidebarOpacity: number;
@@ -395,3 +397,9 @@ export type AppStorageLocation = {
 // dir). Only existing directories are returned; the walk runs off the UI thread in Rust.
 export const getAppStorage = async (): Promise<AppStorageLocation[]> =>
   (await invoke("get_app_storage")) as AppStorageLocation[];
+
+// Mirror this window's live UI state (current path, view, tabs) to Rust so the headless control
+// socket (`sfb ui get-state`) can report it without a round-trip to the webview. Called on every
+// relevant change; `state` is a JSON string. Keyed by the calling window's label in Rust.
+export const setUiState = async (state: string): Promise<void> =>
+  await invoke("set_ui_state", { state });

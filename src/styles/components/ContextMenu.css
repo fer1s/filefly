@@ -96,8 +96,20 @@
   color: var(--color-danger);
 }
 
+/* On hover the danger surface is a solid dark red in both themes, so every part of the row —
+   label, icon, and the hotkey glyphs (which otherwise stay text-muted, dark and unreadable in
+   light mode) — flips to a light on-danger colour. */
 .context_menu .context_menu_item.ctx_button.ctx_danger:hover {
   background-color: var(--color-danger-surface);
+}
+
+.context_menu .context_menu_item.ctx_button.ctx_danger:hover,
+.context_menu .context_menu_item.ctx_button.ctx_danger:hover svg {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.context_menu .context_menu_item.ctx_button.ctx_danger:hover .ctx_hotkey {
+  color: rgba(255, 255, 255, 0.75);
 }
 
 .context_menu .context_menu_item.ctx_button:disabled {

@@ -17,8 +17,8 @@
 }
 
 .Button.IconButton:hover {
-  background-color: var(--color-overlay-hover);
-  color: var(--color-text-primary);
+  background-color: rgba(var(--color-accent-rgb), 0.14);
+  color: var(--color-accent);
 }
 
 .Button.IconButton:disabled:hover {
@@ -64,8 +64,8 @@
 }
 
 .Button.IconButton.boxed:hover {
-  background-color: var(--color-surface-interactive);
-  border-color: var(--color-border-default);
+  background-color: rgba(var(--color-accent-rgb), 0.14);
+  border-color: rgba(var(--color-accent-rgb), 0.4);
 }
 
 .Button.IconButton.boxed:disabled:hover {

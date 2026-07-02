@@ -1,6 +1,7 @@
 import type { RefObject } from "react";
 
 import Icon from "@/shared/components/elements/Icon";
+import { classNames } from "@/shared/utils";
 
 import { faFolder } from "@fortawesome/free-solid-svg-icons";
 
@@ -26,7 +27,7 @@ const EntryIcon = ({
   imgRef,
   finishLoad,
 }: EntryIconProps) => (
-  <div className="icon">
+  <div className={classNames("icon", isDir && "is_dir")}>
     {imgSrc ? (
       <img
         ref={imgRef}

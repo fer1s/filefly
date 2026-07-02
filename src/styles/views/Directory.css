@@ -280,6 +280,12 @@ body.is-entry-dragging .drag_ghost {
   color: var(--color-text-muted);
 }
 
+/* Folders carry the accent (Finder-style), so the one live colour appears throughout the file
+   grid; plain files stay neutral. */
+.directory_page .grid .dir_entry_item .icon.is_dir svg {
+  color: var(--color-accent);
+}
+
 .directory_page .grid .dir_entry_item .icon img {
   width: 100%;
   height: 100%;
@@ -340,6 +346,11 @@ body.is-entry-dragging .drag_ghost {
   color: var(--color-text-secondary);
 }
 
+/* Folders keep the accent on hover (the generic hover above would grey them out). */
+.directory_page .grid .dir_entry_item:hover .icon.is_dir svg {
+  color: var(--color-accent-hover);
+}
+
 .directory_page .dir_entry_item:focus {
   outline: none;
 }
@@ -352,6 +363,12 @@ body.is-entry-dragging .drag_ghost {
 .directory_page .grid .dir_entry_item.selected .icon svg,
 .directory_page .grid .dir_entry_item.selected .name h3 {
   color: var(--color-text-primary);
+}
+
+/* Selected folders keep the accent — the generic selected rule above would turn them near-black,
+   which reads as a black blob on the accent-tinted tile. */
+.directory_page .grid .dir_entry_item.selected .icon.is_dir svg {
+  color: var(--color-accent);
 }
 
 .directory_page .list {
@@ -373,6 +390,12 @@ body.is-entry-dragging .drag_ghost {
   background-color: var(--color-surface-backdrop);
   backdrop-filter: blur(var(--blur-medium));
   border-bottom: var(--border-width-default) solid var(--color-border-default);
+}
+
+/* Light theme: the dark 25%-black backdrop reads as a heavy gray band here. Use the
+   translucent-white floating surface so the header stays light and subtle. */
+:root[data-theme="light"] .directory_page .list_header {
+  background-color: var(--color-surface-floating);
 }
 
 .directory_page .list_header button {
@@ -464,6 +487,11 @@ body.is-entry-dragging .drag_ghost {
 .directory_page .list .dir_entry_item .icon svg {
   font-size: calc(var(--font-size-lg) * var(--zoom, 1));
   color: var(--color-text-muted);
+}
+
+/* Folders carry the accent in the list view too (see grid). */
+.directory_page .list .dir_entry_item .icon.is_dir svg {
+  color: var(--color-accent);
 }
 
 .directory_page .list .dir_entry_item .icon img {
@@ -574,6 +602,11 @@ body.is-entry-dragging .drag_ghost {
   color: var(--color-text-secondary);
 }
 
+/* Folders keep the accent on hover (see grid). */
+.directory_page .list .dir_entry_item:hover .icon.is_dir svg {
+  color: var(--color-accent-hover);
+}
+
 .directory_page .list .dir_entry_item.selected {
   background-color: var(--color-selection-background);
   box-shadow: inset var(--border-width-accent) 0 0
@@ -587,6 +620,11 @@ body.is-entry-dragging .drag_ghost {
 .directory_page .list .dir_entry_item.selected .size h3,
 .directory_page .list .dir_entry_item.selected .kind h3 {
   color: var(--color-text-primary);
+}
+
+/* Selected folders keep the accent in list view too (see grid). */
+.directory_page .list .dir_entry_item.selected .icon.is_dir svg {
+  color: var(--color-accent);
 }
 
 .directory_page .list .dir_entry_item:first-child {

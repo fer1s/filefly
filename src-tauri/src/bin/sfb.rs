@@ -257,6 +257,28 @@ const COMMANDS: &[Command] = &[
         args: &[],
         run: |_a| to_value(&tags::list_all_tags_core()),
     },
+    // -- UI (drive the running GUI over the control socket) ---------------------------------
+    Command {
+        name: "ui-state",
+        group: "ui",
+        summary: "Report the running app's live UI (open windows, tabs, current path, view).",
+        args: &[],
+        run: |_a| ui_call("get-state", json!({})),
+    },
+    Command {
+        name: "ui-navigate",
+        group: "ui",
+        summary: "Navigate the focused window's active tab to a directory.",
+        args: &[val("path", true, "Directory to navigate to.")],
+        run: |a| ui_call("navigate", json!({ "path": a.require("path")? })),
+    },
+    Command {
+        name: "ui-open-window",
+        group: "ui",
+        summary: "Open a new file-browser window rooted at a directory.",
+        args: &[val("path", true, "Directory the new window opens at.")],
+        run: |a| ui_call("open-window", json!({ "path": a.require("path")? })),
+    },
 ];
 
 // ---- Argument parsing -------------------------------------------------------------------------
@@ -339,6 +361,47 @@ fn app_cache_dir() -> Result<PathBuf, String> {
     Ok(home()?.join("Library/Caches").join("com.sito8943.file-browser"))
 }
 
+// ---- UI control socket (drive the running GUI) ------------------------------------------------
+
+// Send one action to the running app's control socket and return its `data` (or its error). The
+// socket is a Unix-domain socket in the app config dir (same path the GUI binds); if the app isn't
+// running the connect fails, which we surface as a clear "app not running" message.
+#[cfg(unix)]
+fn ui_call(action: &str, args: Value) -> Result<Value, String> {
+    use std::io::{BufRead, BufReader, Write};
+    use std::os::unix::net::UnixStream;
+
+    let socket = app_config_dir()?.join("sfb-control.sock");
+    let mut stream = UnixStream::connect(&socket)
+        .map_err(|e| format!("File Browser app not running (no control socket): {e}"))?;
+
+    let request = json!({ "action": action, "args": args }).to_string();
+    stream
+        .write_all(request.as_bytes())
+        .and_then(|_| stream.write_all(b"\n"))
+        .map_err(|e| e.to_string())?;
+
+    let mut reader = BufReader::new(stream);
+    let mut line = String::new();
+    reader.read_line(&mut line).map_err(|e| e.to_string())?;
+
+    let response: Value = serde_json::from_str(line.trim()).map_err(|e| e.to_string())?;
+    if response.get("ok").and_then(Value::as_bool) == Some(true) {
+        Ok(response.get("data").cloned().unwrap_or(Value::Null))
+    } else {
+        Err(response
+            .get("error")
+            .and_then(Value::as_str)
+            .unwrap_or("control socket error")
+            .to_string())
+    }
+}
+
+#[cfg(not(unix))]
+fn ui_call(_action: &str, _args: Value) -> Result<Value, String> {
+    Err("UI control is only available on Unix (macOS).".to_string())
+}
+
 // ---- Output helpers ---------------------------------------------------------------------------
 
 fn to_value<T: serde::Serialize>(v: &T) -> Result<Value, String> {
@@ -391,7 +454,7 @@ fn help_text() -> String {
     let mut out = String::from(
         "sfb — headless file-browser CLI (JSON out).\n\nUsage: sfb <command> [--arg value ...]\n\n",
     );
-    for group in ["read", "write", "delete", "tags"] {
+    for group in ["read", "write", "delete", "tags", "ui"] {
         out.push_str(&format!("{}:\n", group));
         for cmd in COMMANDS.iter().filter(|c| c.group == group) {
             let names: Vec<String> = cmd
@@ -416,8 +479,21 @@ fn help_text() -> String {
     out
 }
 
+// `sfb ui <sub> …` is sugar for the flat `ui-<sub>` command, so the grouped form the user expects
+// works without a nested parser. Leaves a bare `sfb ui` untouched (falls through to unknown-command
+// help). Returns the possibly-rewritten argument vector.
+fn desugar_ui(mut argv: Vec<String>) -> Vec<String> {
+    if argv.first().map(String::as_str) == Some("ui") {
+        if let Some(sub) = argv.get(1).cloned() {
+            argv.splice(0..2, [format!("ui-{sub}")]);
+        }
+    }
+    argv
+}
+
 fn main() {
     let argv: Vec<String> = std::env::args().skip(1).collect();
+    let argv = desugar_ui(argv);
 
     let name = match argv.first() {
         Some(n) => n.as_str(),

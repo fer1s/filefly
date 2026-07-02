@@ -28,6 +28,10 @@ fn main() {
             tray::create_tray(app.handle())?;
             dock_menu::setup(app.handle());
 
+            // Headless control channel (Unix socket) so `sfb` / an MCP server can drive the UI.
+            app.manage(functions::control::ControlState::default());
+            functions::control::start(app.handle().clone());
+
             // Trim the thumbnail cache to its size budget, off the UI thread.
             if let Ok(cache_dir) = app.path().app_cache_dir() {
                 let thumbnails = cache_dir.join("thumbnails");
@@ -74,6 +78,7 @@ fn main() {
             functions::settings::get_settings,
             functions::settings::set_settings,
             functions::storage::get_app_storage,
+            functions::control::set_ui_state,
             functions::sidebar::get_sidebar_groups,
             functions::sidebar::set_sidebar_group_name,
             functions::sidebar::set_sidebar_order,

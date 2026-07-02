@@ -174,6 +174,36 @@
   cursor: pointer;
 }
 
+/* Accent picker: a row of colour-swatch radio buttons. Each swatch fills from its own --swatch RGB
+   triple (set inline, mirrors theme.css); the active one carries a ring in the current text colour
+   so it reads on any accent. Selecting one recolours the whole app live — this row is the preview. */
+.settings_modal .settings_accents {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.settings_modal .settings_accent {
+  width: var(--space-4);
+  height: var(--space-4);
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-pill);
+  background-color: rgb(var(--swatch));
+  cursor: pointer;
+  transition: transform 0.08s ease;
+}
+
+.settings_modal .settings_accent:hover {
+  transform: scale(1.15);
+}
+
+.settings_modal .settings_accent.active {
+  outline: var(--border-width-accent) solid var(--color-text-primary);
+  outline-offset: var(--space-0-5);
+}
+
 /* Action button in a settings row (e.g. the home-folder chooser). Matches the select's chrome. */
 .settings_modal .settings_button {
   flex-shrink: 0;

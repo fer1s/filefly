@@ -32,6 +32,8 @@ import { useSidebarCollapsed } from "./hooks/useSidebarCollapsed";
 import { useAppSettings } from "./hooks/useAppSettings";
 import { useDockMenu } from "./hooks/useDockMenu";
 import { useTheme } from "./hooks/useTheme";
+import { useAccent } from "./hooks/useAccent";
+import { useControlBridge } from "./hooks/useControlBridge";
 
 import { notify, setToastsEnabled, TOAST_TYPE } from "@/shared/toast";
 import { prewarmDragIcon } from "@/shared/services/api";
@@ -45,6 +47,7 @@ import {
   type StartupMode,
   type DragDropAction,
   type Theme,
+  type Accent,
 } from "@/shared/constants";
 
 const App = () => {
@@ -72,6 +75,7 @@ const App = () => {
     hideSystemRecents: settings.hideSystemRecents,
   });
   useTheme(settings.theme as Theme);
+  useAccent(settings.accentColor as Accent);
   const zoom = useZoom(fs, tabs.path, settings.defaultZoom);
   const { toasts, dismissToast } = useToasts();
   const sidebar = useSidebarCollapsed();
@@ -84,6 +88,17 @@ const App = () => {
   });
 
   const [view, setView] = useState<ViewMode>(VIEW_MODE.GRID);
+
+  // Bridge this window to the headless control channel (`sfb ui …` / MCP): mirror UI state to Rust
+  // and apply inbound navigate requests.
+  useControlBridge({
+    tabs: tabs.tabs,
+    activeTabId: tabs.activeTabId,
+    path: tabs.path,
+    view,
+    setPath: tabs.setPath,
+  });
+
   const toggleShowHidden = useCallback(() => {
     const next = !settings.showHidden;
     update({ showHidden: next });
