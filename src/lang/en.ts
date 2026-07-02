@@ -208,11 +208,8 @@ export const en = {
     sections: {
       general: "General",
       appearance: "Appearance",
-      view: "View",
-      sidebar: "Sidebar",
-      dragDrop: "Drag & Drop",
+      files: "Files & Transfers",
       notifications: "Notifications",
-      startup: "Startup",
       storage: "Storage",
     },
     showHidden: "Show hidden files",
@@ -277,6 +274,12 @@ export const en = {
     storageCache: "Cache",
     storageLoading: "Measuring…",
     storageOpen: "Open in a new file browser window",
+    folderHandler: "Default file manager",
+    folderHandlerHint:
+      "Open folders from Terminal, other apps and links in this app instead of Finder. Does not change double-clicking folders inside Finder.",
+    folderHandlerOn: "This app is now the default folder handler.",
+    folderHandlerOff: "Finder restored as the default folder handler.",
+    folderHandlerError: "Couldn't change the default folder handler.",
   },
   infoPanel: {
     title: "Info",

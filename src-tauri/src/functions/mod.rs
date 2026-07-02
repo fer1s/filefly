@@ -5,6 +5,7 @@ pub mod keymap;
 pub mod folder_columns;
 pub mod context_menu;
 pub mod control;
+pub mod handler;
 pub mod settings;
 pub mod sidebar;
 pub mod storage;

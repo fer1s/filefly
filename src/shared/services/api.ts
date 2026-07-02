@@ -403,3 +403,13 @@ export const getAppStorage = async (): Promise<AppStorageLocation[]> =>
 // relevant change; `state` is a JSON string. Keyed by the calling window's label in Rust.
 export const setUiState = async (state: string): Promise<void> =>
   await invoke("set_ui_state", { state });
+
+// Whether this app is macOS's default handler for opening folders (Terminal `open`, folder links,
+// aliases). Does NOT reflect double-clicking folders in Finder — that stays Finder. macOS only.
+export const isDefaultFolderHandler = async (): Promise<boolean> =>
+  (await invoke("is_default_folder_handler")) as boolean;
+
+// Make this app the default folder handler (enable) or restore Finder (disable). macOS only.
+export const setDefaultFolderHandler = async (
+  enable: boolean,
+): Promise<void> => await invoke("set_default_folder_handler", { enable });

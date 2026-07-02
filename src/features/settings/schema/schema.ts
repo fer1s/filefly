@@ -15,6 +15,7 @@ import StartupBelow from "../components/SettingsDialog/controls/StartupBelow";
 import StorageControl from "../components/SettingsDialog/controls/StorageControl";
 import StorageBelow from "../components/SettingsDialog/controls/StorageBelow";
 import AccentControl from "../components/SettingsDialog/controls/AccentControl";
+import FolderHandlerControl from "../components/SettingsDialog/controls/FolderHandlerControl";
 
 import { SETTINGS_SECTION } from "./sections";
 import { SETTING_KIND, type SettingDescriptor } from "./types";
@@ -27,7 +28,7 @@ const percent = (fraction: number) =>
 // (plus its AppSettings field + dictionary strings) — the dialog renders, searches, groups, and
 // wires modified/reset generically from this list.
 export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
-  // General
+  // ── General ── behavior basics, launch, and OS integration.
   {
     kind: SETTING_KIND.TOGGLE,
     key: "showHidden",
@@ -42,8 +43,37 @@ export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
     label: () => t.settings.hideSystemRecents,
     hint: () => t.settings.hideSystemRecentsHint,
   },
+  {
+    kind: SETTING_KIND.CUSTOM,
+    key: "startupMode",
+    section: SETTINGS_SECTION.GENERAL,
+    label: () => t.settings.startup,
+    hint: () => t.settings.startupHint,
+    Control: StartupControl,
+    Below: StartupBelow,
+    isModified: (settings, defaults) =>
+      settings.startupMode !== defaults.startupMode ||
+      settings.homePath !== defaults.homePath,
+    reset: (update, defaults) =>
+      update({
+        startupMode: defaults.startupMode,
+        homePath: defaults.homePath,
+      }),
+  },
+  // macOS integration. OS state (Launch Services), not an AppSettings field: the control reads/
+  // writes it live, so it's never "modified" and has no reset (synthetic key).
+  {
+    kind: SETTING_KIND.CUSTOM,
+    key: "defaultFolderHandler",
+    section: SETTINGS_SECTION.GENERAL,
+    label: () => t.settings.folderHandler,
+    hint: () => t.settings.folderHandlerHint,
+    Control: FolderHandlerControl,
+    isModified: () => false,
+    reset: () => {},
+  },
 
-  // Appearance
+  // ── Appearance ── everything visual (theme, accent, zoom, dates, sidebar).
   {
     kind: SETTING_KIND.SELECT,
     key: "theme",
@@ -68,12 +98,10 @@ export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
     reset: (update, defaults) =>
       update({ accentColor: defaults.accentColor }),
   },
-
-  // View
   {
     kind: SETTING_KIND.SELECT,
     key: "defaultZoom",
-    section: SETTINGS_SECTION.VIEW,
+    section: SETTINGS_SECTION.APPEARANCE,
     label: () => t.settings.defaultZoom,
     hint: () => t.settings.defaultZoomHint,
     options: () =>
@@ -86,7 +114,7 @@ export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
   {
     kind: SETTING_KIND.CUSTOM,
     key: "dateFormat",
-    section: SETTINGS_SECTION.VIEW,
+    section: SETTINGS_SECTION.APPEARANCE,
     label: () => t.settings.dateFormat,
     hint: () => t.settings.dateFormatHint,
     Control: DateFormatControl,
@@ -95,12 +123,10 @@ export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
       settings.dateFormat !== defaults.dateFormat,
     reset: (update, defaults) => update({ dateFormat: defaults.dateFormat }),
   },
-
-  // Sidebar
   {
     kind: SETTING_KIND.RANGE,
     key: "sidebarOpacity",
-    section: SETTINGS_SECTION.SIDEBAR,
+    section: SETTINGS_SECTION.APPEARANCE,
     label: () => t.settings.sidebarTransparency,
     hint: () => t.settings.sidebarTransparencyHint,
     min: SIDEBAR_OPACITY_MIN,
@@ -112,11 +138,11 @@ export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
     format: (opacity) => percent(SIDEBAR_OPACITY_MAX - opacity),
   },
 
-  // Drag & Drop
+  // ── Files & Transfers ── what dragging entries onto folders / out of the window does.
   {
     kind: SETTING_KIND.SELECT,
     key: "dragDropAction",
-    section: SETTINGS_SECTION.DRAG_DROP,
+    section: SETTINGS_SECTION.FILES,
     label: () => t.settings.dragDrop,
     hint: () => t.settings.dragDropHint,
     options: () => [
@@ -127,19 +153,19 @@ export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
   {
     kind: SETTING_KIND.TOGGLE,
     key: "confirmDragDrop",
-    section: SETTINGS_SECTION.DRAG_DROP,
+    section: SETTINGS_SECTION.FILES,
     label: () => t.settings.confirmDragDrop,
     hint: () => t.settings.confirmDragDropHint,
   },
   {
     kind: SETTING_KIND.TOGGLE,
     key: "dragToExternalApps",
-    section: SETTINGS_SECTION.DRAG_DROP,
+    section: SETTINGS_SECTION.FILES,
     label: () => t.settings.dragToExternalApps,
     hint: () => t.settings.dragToExternalAppsHint,
   },
 
-  // Notifications
+  // ── Notifications ──
   {
     kind: SETTING_KIND.TOGGLE,
     key: "showToasts",
@@ -155,26 +181,7 @@ export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
     hint: () => t.settings.clickableToastsHint,
   },
 
-  // Startup
-  {
-    kind: SETTING_KIND.CUSTOM,
-    key: "startupMode",
-    section: SETTINGS_SECTION.STARTUP,
-    label: () => t.settings.startup,
-    hint: () => t.settings.startupHint,
-    Control: StartupControl,
-    Below: StartupBelow,
-    isModified: (settings, defaults) =>
-      settings.startupMode !== defaults.startupMode ||
-      settings.homePath !== defaults.homePath,
-    reset: (update, defaults) =>
-      update({
-        startupMode: defaults.startupMode,
-        homePath: defaults.homePath,
-      }),
-  },
-
-  // Storage — informational: shows the app's on-disk data footprint and where it lives. Binds to no
+  // ── Storage ── informational: the app's on-disk footprint and where it lives. Binds to no
   // AppSettings field (synthetic key), so it's never "modified" and has no reset.
   {
     kind: SETTING_KIND.CUSTOM,

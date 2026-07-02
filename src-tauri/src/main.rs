@@ -79,6 +79,8 @@ fn main() {
             functions::settings::set_settings,
             functions::storage::get_app_storage,
             functions::control::set_ui_state,
+            functions::handler::is_default_folder_handler,
+            functions::handler::set_default_folder_handler,
             functions::sidebar::get_sidebar_groups,
             functions::sidebar::set_sidebar_group_name,
             functions::sidebar::set_sidebar_order,
@@ -109,6 +111,25 @@ fn main() {
                 }
             }
         })
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|app_handle, event| {
+            // macOS routes "open this folder" (Terminal `open`, folder links, aliases) here when we
+            // are the default folder handler — open each directory in a new window. Double-clicking
+            // a folder inside Finder never reaches this; Finder keeps that itself (see handler.rs).
+            #[cfg(target_os = "macos")]
+            if let tauri::RunEvent::Opened { urls } = &event {
+                for url in urls {
+                    if let Ok(path) = url.to_file_path() {
+                        if path.is_dir() {
+                            let _ = window::create_window(app_handle, Some(&path.to_string_lossy()));
+                        }
+                    }
+                }
+            }
+            #[cfg(not(target_os = "macos"))]
+            {
+                let _ = (app_handle, event);
+            }
+        });
 }
