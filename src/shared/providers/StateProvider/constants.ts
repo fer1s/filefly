@@ -64,6 +64,7 @@ export const initialState: State = {
   toggleClickableToasts: () => {},
   dragToExternalApps: true,
   toggleDragToExternalApps: () => {},
+  previewImagesInApp: false,
   savingSettings: false,
   search: "",
   setSearch: () => {},

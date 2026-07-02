@@ -39,6 +39,7 @@ const DirEntryItemComponent = ({
   focused,
   tabbable,
   onSelect,
+  onOpenFile,
 
   renaming,
   onRename,
@@ -150,7 +151,7 @@ const DirEntryItemComponent = ({
         onDoubleClick={() =>
           entry.metadata.isDir
             ? navigateToPath(entry, setPath)
-            : fs.open(entry.path)
+            : onOpenFile(entry)
         }
         ref={itemRef}
         {...(renaming ? {} : bindDrag(entry.path))}

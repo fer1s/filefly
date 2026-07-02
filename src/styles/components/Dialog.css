@@ -24,7 +24,9 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%) scale(0.9);
-  background-color: var(--color-surface-modal);
+  /* User-adjustable modal opacity (Settings › Appearance › Dialog transparency); --dialog-opacity
+     is set on the document root in App. Raw RGB channels + alpha, like the sidebar/context menu. */
+  background-color: rgba(var(--color-surface-modal-rgb), var(--dialog-opacity));
   backdrop-filter: blur(var(--blur-medium));
   border-radius: var(--radius-md);
   border: var(--border-width-default) solid var(--color-border-default);

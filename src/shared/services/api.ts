@@ -24,6 +24,8 @@ export type AppSettings = {
   sidebarOpacity: number;
   // Context-menu background opacity (alpha of the popover surface), 0..1.
   contextMenuOpacity: number;
+  // Dialog (modal) background opacity (alpha of the modal surface), 0..1.
+  dialogOpacity: number;
   // Expanded-sidebar width in px (see SIDEBAR_WIDTH_MIN/MAX).
   sidebarWidth: number;
   hideSystemRecents: boolean;
@@ -45,6 +47,8 @@ export type AppSettings = {
   dragToExternalApps: boolean;
   // Use the app's own in-window folder picker instead of the native OS (Finder) folder dialog.
   useCustomFolderPicker: boolean;
+  // Open images in the app's built-in preview (on Enter/double-click) instead of the OS default app.
+  previewImagesInApp: boolean;
 };
 
 // Load the persisted app settings (falls back to defaults when settings.toml is absent).

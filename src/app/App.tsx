@@ -141,6 +141,16 @@ const App = () => {
     setToastsEnabled(settings.showToasts);
   }, [settings.showToasts]);
 
+  // Dialogs render outside the .App subtree (their providers wrap it), so the modal-surface opacity
+  // is set on the document root where they can inherit it (see Dialog.css). Mirrors the inline
+  // --context-menu-opacity used for menus, which do live inside .App.
+  useEffect(() => {
+    document.documentElement.style.setProperty(
+      "--dialog-opacity",
+      String(settings.dialogOpacity),
+    );
+  }, [settings.dialogOpacity]);
+
   // Mirror the launch preference into localStorage so the next launch's (synchronous) tab
   // restoration can read it before settings.toml has finished loading.
   useEffect(() => {
@@ -240,6 +250,7 @@ const App = () => {
         toggleClickableToasts,
         dragToExternalApps: settings.dragToExternalApps,
         toggleDragToExternalApps,
+        previewImagesInApp: settings.previewImagesInApp,
         savingSettings,
         search: tabs.search,
         setSearch: tabs.setSearch,

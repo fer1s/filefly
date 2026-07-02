@@ -24,6 +24,9 @@ export type DirEntryItemProps = {
   // tabbable at a time: the focused one, or the first entry when nothing is focused.
   tabbable: boolean;
   onSelect: (id: string, e: MouseEvent) => void;
+  // Open this entry when it's a file (double-click); routes images to the built-in preview per the
+  // setting. Directories are navigated locally (navigateToPath), not through this.
+  onOpenFile: (entry: DirEntry) => void;
 
   renaming: boolean;
   onRename: (path: string, newName: string) => void;

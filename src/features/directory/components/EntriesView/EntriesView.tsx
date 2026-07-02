@@ -27,6 +27,7 @@ const EntriesView = ({
   renamingID,
   contextMenuRef,
   onSelect,
+  onOpenFile,
   onRename,
   onCancelRename,
   menu,
@@ -97,6 +98,7 @@ const EntriesView = ({
             focused={focused}
             tabbable={focused || (!hasFocused && index === 0)}
             onSelect={onSelect}
+            onOpenFile={onOpenFile}
             renaming={renamingID === entry.path}
             onRename={onRename}
             onCancelRename={onCancelRename}

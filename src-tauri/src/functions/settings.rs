@@ -24,6 +24,8 @@ pub struct AppSettings {
     sidebar_opacity: f64,
     // Context-menu background opacity (alpha of the popover surface), 0..1.
     context_menu_opacity: f64,
+    // Dialog (modal) background opacity (alpha of the modal surface), 0..1.
+    dialog_opacity: f64,
     // User-adjustable sidebar width (px) for the expanded rail (see SIDEBAR_WIDTH_MIN/MAX).
     sidebar_width: f64,
     // Hide this app's own background files (config/cache/temp) from the Recents listing.
@@ -48,6 +50,9 @@ pub struct AppSettings {
     drag_to_external_apps: bool,
     // Use the app's own in-window folder picker instead of the native OS (Finder) folder dialog.
     use_custom_folder_picker: bool,
+    // Open images in the app's built-in preview (on Enter/double-click) instead of the OS default
+    // app (macOS Preview).
+    preview_images_in_app: bool,
 }
 
 // Must mirror the frontend defaults (shared/constants.ts).
@@ -61,6 +66,7 @@ impl Default for AppSettings {
             date_format: "locale".to_string(),
             sidebar_opacity: 0.85,
             context_menu_opacity: 0.5,
+            dialog_opacity: 0.85,
             sidebar_width: 220.0,
             hide_system_recents: true,
             show_toasts: true,
@@ -72,6 +78,7 @@ impl Default for AppSettings {
             clickable_toasts: true,
             drag_to_external_apps: true,
             use_custom_folder_picker: false,
+            preview_images_in_app: false,
         }
     }
 }

@@ -14,8 +14,18 @@ import {
   RECENTS,
   DRAG_DROP_ACTION,
 } from "@/shared/constants";
-import { ENTRY_KIND, CLIPBOARD_MODE } from "@/features/directory/constants";
-import { classNames, isTagsPath, basename, dirname } from "@/shared/utils";
+import {
+  ENTRY_KIND,
+  CLIPBOARD_MODE,
+  IMAGE_FORMATS,
+} from "@/features/directory/constants";
+import {
+  classNames,
+  isTagsPath,
+  basename,
+  dirname,
+  extension,
+} from "@/shared/utils";
 import { notify, TOAST_TYPE } from "@/shared/toast";
 import { t } from "@/lang";
 import { DirEntry } from "@/shared/models";
@@ -63,6 +73,7 @@ const Directory = () => {
     confirmDragDrop,
     toggleConfirmDragDrop,
     dragToExternalApps,
+    previewImagesInApp,
     infoPanelOpen,
   } = useStateContext();
 
@@ -193,10 +204,22 @@ const Directory = () => {
   // Browsing the system Trash (~/.Trash): entries offer Restore instead of Move-to-Trash.
   const inTrash = path.endsWith(`/${TRASH_DIR_NAME}`);
 
+  // Open a file: images go to the in-app preview when the setting is on, everything else (and
+  // images when it's off) opens in the OS default app. Shared by Enter (below) and double-click
+  // (DirEntry via onOpenFile) so both honour the setting.
+  const openFile = useCallback(
+    (entry: DirEntry) => {
+      if (previewImagesInApp && IMAGE_FORMATS.includes(extension(entry.name)))
+        preview.open(entry.path);
+      else fs.open(entry.path);
+    },
+    [previewImagesInApp, preview, fs],
+  );
+
   const handleKeyboardOpen = useCallback(
     (entry: DirEntry) =>
-      entry.metadata.isDir ? setPath(entry.path) : fs.open(entry.path),
-    [fs, setPath],
+      entry.metadata.isDir ? setPath(entry.path) : openFile(entry),
+    [openFile, setPath],
   );
 
   const handleCancelRename = useCallback(
@@ -366,6 +389,7 @@ const Directory = () => {
             renamingID={renamingID}
             contextMenuRef={menu.ref}
             onSelect={handleSelect}
+            onOpenFile={openFile}
             onRename={fileOps.rename}
             onCancelRename={handleCancelRename}
             menu={{

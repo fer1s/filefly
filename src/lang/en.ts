@@ -260,6 +260,9 @@ export const en = {
     contextMenuTransparency: "Context menu transparency",
     contextMenuTransparencyHint:
       "How transparent right-click menu backgrounds are.",
+    dialogTransparency: "Dialog transparency",
+    dialogTransparencyHint:
+      "How transparent dialog backgrounds are (Preview, Properties, confirmations, …).",
     startup: "On launch",
     startupHint: "What to open when you start the app.",
     startupRestore: "Restore previous session",
@@ -288,6 +291,9 @@ export const en = {
     useCustomFolderPicker: "Use built-in folder picker",
     useCustomFolderPickerHint:
       "Pick folders with an in-app browser instead of the system (Finder) dialog.",
+    previewImagesInApp: "Open images in built-in preview",
+    previewImagesInAppHint:
+      "Opening an image (Enter or double-click) shows it in the app's preview instead of the system app (macOS Preview).",
     saving: "Saving settings…",
     storage: "Disk usage",
     storageHint: "Space the app's data uses on disk and where it's stored.",

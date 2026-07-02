@@ -121,6 +121,10 @@
   --color-surface-floating: rgba(0, 0, 0, 0.7);
   --color-surface-modal: rgba(20, 20, 20, 0.85);
   --color-surface-toast: rgba(40, 40, 40, 0.95);
+  /* Modal-surface background as raw RGB channels + a user-adjustable alpha, composed in Dialog.css
+     so the --dialog-opacity override (set on the document root in App) takes effect. */
+  --color-surface-modal-rgb: 20, 20, 20;
+  --dialog-opacity: 0.85;
   /* Context-menu background as raw RGB channels + a user-adjustable alpha, composed in
      ContextMenu.css (like the sidebar) so the inline --context-menu-opacity override on .App takes
      effect. The default alpha matches the old --color-surface-popover value. */
@@ -233,6 +237,7 @@
   --color-surface-popover-rgb: 252, 252, 253;
   --color-surface-floating: rgba(255, 255, 255, 0.85);
   --color-surface-modal: rgba(245, 245, 247, 0.9);
+  --color-surface-modal-rgb: 245, 245, 247;
   --color-surface-toast: rgba(250, 250, 252, 0.97);
 
   --color-overlay-faint: rgba(0, 0, 0, 0.01);

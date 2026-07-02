@@ -65,6 +65,10 @@ export const DEFAULT_SIDEBAR_OPACITY = 0.85;
 // and step as the sidebar; 0 = fully transparent (only the blur shows), 1 = opaque.
 export const DEFAULT_CONTEXT_MENU_OPACITY = 0.5;
 
+// User-adjustable dialog (modal) background opacity — Preview, Confirmation, Properties, Settings,
+// etc. Same 0..1 range and step as the sidebar; 0 = fully transparent (only the blur shows).
+export const DEFAULT_DIALOG_OPACITY = 0.85;
+
 // User-adjustable sidebar width (px), the expanded grid column. Dragging the right edge clamps
 // between MIN and MAX; the collapsed rail keeps its own fixed width. DEFAULT matches the
 // --size-sidebar-expanded token (theme.css) so first launch looks unchanged.
@@ -152,6 +156,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   dateFormat: DEFAULT_DATE_FORMAT,
   sidebarOpacity: DEFAULT_SIDEBAR_OPACITY,
   contextMenuOpacity: DEFAULT_CONTEXT_MENU_OPACITY,
+  dialogOpacity: DEFAULT_DIALOG_OPACITY,
   sidebarWidth: DEFAULT_SIDEBAR_WIDTH,
   hideSystemRecents: true,
   showToasts: true,
@@ -163,6 +168,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   clickableToasts: true,
   dragToExternalApps: true,
   useCustomFolderPicker: false,
+  previewImagesInApp: false,
 };
 
 // DOM KeyboardEvent.key names used in non-configurable key handling (navigation, input

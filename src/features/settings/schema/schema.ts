@@ -79,6 +79,13 @@ export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
     label: () => t.settings.useCustomFolderPicker,
     hint: () => t.settings.useCustomFolderPickerHint,
   },
+  {
+    kind: SETTING_KIND.TOGGLE,
+    key: "previewImagesInApp",
+    section: SETTINGS_SECTION.GENERAL,
+    label: () => t.settings.previewImagesInApp,
+    hint: () => t.settings.previewImagesInAppHint,
+  },
 
   // ── Appearance ── everything visual (theme, accent, zoom, dates, sidebar).
   {
@@ -150,6 +157,20 @@ export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
     section: SETTINGS_SECTION.APPEARANCE,
     label: () => t.settings.contextMenuTransparency,
     hint: () => t.settings.contextMenuTransparencyHint,
+    // Same 0..1 range/step as the sidebar; shown inverted as transparency.
+    min: SIDEBAR_OPACITY_MIN,
+    max: SIDEBAR_OPACITY_MAX,
+    step: SIDEBAR_OPACITY_STEP,
+    toSlider: (opacity) => SIDEBAR_OPACITY_MAX - opacity,
+    fromSlider: (transparency) => SIDEBAR_OPACITY_MAX - transparency,
+    format: (opacity) => percent(SIDEBAR_OPACITY_MAX - opacity),
+  },
+  {
+    kind: SETTING_KIND.RANGE,
+    key: "dialogOpacity",
+    section: SETTINGS_SECTION.APPEARANCE,
+    label: () => t.settings.dialogTransparency,
+    hint: () => t.settings.dialogTransparencyHint,
     // Same 0..1 range/step as the sidebar; shown inverted as transparency.
     min: SIDEBAR_OPACITY_MIN,
     max: SIDEBAR_OPACITY_MAX,

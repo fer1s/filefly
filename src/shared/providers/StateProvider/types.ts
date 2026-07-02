@@ -80,6 +80,9 @@ export type State = {
   // Whether dragging entries out of the window starts a native OS drag (drop into other apps).
   dragToExternalApps: boolean;
   toggleDragToExternalApps: () => void;
+  // Whether opening an image (Enter/double-click) shows it in the built-in preview instead of the
+  // OS default app. Read by the directory open flow.
+  previewImagesInApp: boolean;
   // True while a settings change is being written to settings.toml (drives the StatusBar spinner).
   savingSettings: boolean;
   search: string;
