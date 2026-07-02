@@ -21,6 +21,7 @@ export const initialState: State = {
   newTab: () => {},
   closeTab: () => {},
   selectTab: () => {},
+  reorderTab: () => {},
   path: "",
   setPath: () => {},
   canGoBack: false,

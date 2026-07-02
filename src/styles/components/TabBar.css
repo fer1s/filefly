@@ -70,3 +70,33 @@
 .TabBar .tab_new {
   flex-shrink: 0;
 }
+
+/* Draggable tabs: touch-action none lets the pointer gesture own horizontal moves (no native
+   scroll/selection fighting it), and grab cursors signal the affordance. */
+.TabBar .TabItem {
+  touch-action: none;
+  cursor: grab;
+  /* Non-dragged tabs ease into the gap the lifted tab opens; the dragged tab overrides this to
+     follow the pointer 1:1 (see .dragging). */
+  transition: transform 0.16s ease;
+}
+
+/* On the commit frame after a drop, the reorder already placed tabs at their final slots — snap
+   transforms to zero instantly so nothing slides. */
+.TabBar.snapping .TabItem {
+  transition: none;
+}
+
+/* The tab being dragged lifts above its neighbours and follows the pointer (transform set inline).
+   It needs an OPAQUE background: the normal tab surfaces are translucent overlays, so without this
+   the tab it's dragged over would bleed through (ghosted text). Slightly lighter than the app
+   background so it reads as elevated. */
+.TabBar .TabItem.dragging {
+  position: relative;
+  z-index: 2;
+  cursor: grabbing;
+  background-color: rgb(55, 55, 58);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.35);
+  /* Follow the pointer instantly — no lag between cursor and tab. */
+  transition: none;
+}

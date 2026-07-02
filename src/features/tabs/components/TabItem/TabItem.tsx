@@ -21,6 +21,9 @@ const TabItem = ({
   closeHotkey,
   onSelect,
   onClose,
+  bindProps,
+  dragging,
+  translate = 0,
 }: TabItemProps) => {
   const label = tabLabel(tab);
 
@@ -47,11 +50,15 @@ const TabItem = ({
 
   return (
     <div
-      className={classNames("TabItem", active && "active")}
+      {...bindProps}
+      className={classNames("TabItem", active && "active", dragging && "dragging")}
       role="tab"
       aria-selected={active}
       data-tab-id={tab.id}
       tabIndex={active ? 0 : -1}
+      // Live drag transform: the dragged tab follows the pointer; the others slide to open a gap.
+      // Layout is untouched (transform only) until the drop commits the reorder.
+      style={translate ? { transform: `translateX(${translate}px)` } : undefined}
       onClick={() => onSelect(tab.id)}
       onKeyDown={handleKeyDown}
       onAuxClick={(event) => {

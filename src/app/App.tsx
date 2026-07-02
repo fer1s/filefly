@@ -177,6 +177,7 @@ const App = () => {
         newTab: tabs.newTab,
         closeTab: tabs.closeTab,
         selectTab: tabs.selectTab,
+        reorderTab: tabs.reorderTab,
         path: tabs.path,
         setPath: tabs.setPath,
         canGoBack: tabs.canGoBack,
