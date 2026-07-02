@@ -49,6 +49,7 @@ const DirEntryItemComponent = ({
   setContextMenuElementType,
 
   bindDrag,
+  metadataTooltipDisabled,
 }: DirEntryItemProps) => {
   const itemRef = useRef<HTMLDivElement>(null);
 
@@ -130,6 +131,7 @@ const DirEntryItemComponent = ({
       contents
       delay={METADATA_TOOLTIP_DELAY}
       showOnFocus={false}
+      disabled={metadataTooltipDisabled}
       content={<EntryMetadata entry={entry} extension={extension} />}
     >
       <div

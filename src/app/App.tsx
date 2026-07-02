@@ -8,6 +8,7 @@ import {
 import { useNavigate, useLocation } from "react-router-dom";
 
 import { StateProvider } from "@/shared/providers/StateProvider";
+import { ModalProvider } from "@/shared/providers/ModalProvider";
 import { TagsProvider } from "@/shared/providers/TagsProvider";
 import {
   KeymapProvider,
@@ -189,37 +190,39 @@ const App = () => {
         toggleInfoPanel: tabs.toggleInfoPanel,
       }}
     >
-      <TagsProvider>
-        <KeymapProvider>
-          <HotkeyProvider>
-            <ShortcutHelpProvider>
-              <SettingsProvider>
-                <div
-                  className={classNames(
-                    "App",
-                    sidebar.collapsed && "collapsed",
-                  )}
-                  // Expanded-column width; the collapsed rule overrides it (see index.css).
-                  style={
-                    {
-                      "--sidebar-width": `${settings.sidebarWidth}px`,
-                    } as CSSProperties
-                  }
-                >
-                  <SideBar
-                    collapsed={sidebar.collapsed}
-                    onToggle={sidebar.toggle}
-                  />
-                  {!sidebar.collapsed && <SidebarResizeHandle />}
-                  <AppContent />
-                </div>
-              </SettingsProvider>
-              <ShortcutsDialog />
-              <ToastStack toasts={toasts} onDismiss={dismissToast} />
-            </ShortcutHelpProvider>
-          </HotkeyProvider>
-        </KeymapProvider>
-      </TagsProvider>
+      <ModalProvider>
+        <TagsProvider>
+          <KeymapProvider>
+            <HotkeyProvider>
+              <ShortcutHelpProvider>
+                <SettingsProvider settings={settings} update={update}>
+                  <div
+                    className={classNames(
+                      "App",
+                      sidebar.collapsed && "collapsed",
+                    )}
+                    // Expanded-column width; the collapsed rule overrides it (see index.css).
+                    style={
+                      {
+                        "--sidebar-width": `${settings.sidebarWidth}px`,
+                      } as CSSProperties
+                    }
+                  >
+                    <SideBar
+                      collapsed={sidebar.collapsed}
+                      onToggle={sidebar.toggle}
+                    />
+                    {!sidebar.collapsed && <SidebarResizeHandle />}
+                    <AppContent />
+                  </div>
+                </SettingsProvider>
+                <ShortcutsDialog />
+                <ToastStack toasts={toasts} onDismiss={dismissToast} />
+              </ShortcutHelpProvider>
+            </HotkeyProvider>
+          </KeymapProvider>
+        </TagsProvider>
+      </ModalProvider>
     </StateProvider>
   );
 };

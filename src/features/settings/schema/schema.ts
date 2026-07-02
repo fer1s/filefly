@@ -1,0 +1,146 @@
+import {
+  SIDEBAR_OPACITY_MIN,
+  SIDEBAR_OPACITY_MAX,
+  SIDEBAR_OPACITY_STEP,
+  DRAG_DROP_ACTION,
+} from "@/shared/constants";
+import { t } from "@/lang";
+
+import { ZOOM_OPTIONS } from "../components/SettingsDialog/constants";
+import DateFormatControl from "../components/SettingsDialog/controls/DateFormatControl";
+import DateFormatBelow from "../components/SettingsDialog/controls/DateFormatBelow";
+import StartupControl from "../components/SettingsDialog/controls/StartupControl";
+import StartupBelow from "../components/SettingsDialog/controls/StartupBelow";
+
+import { SETTINGS_SECTION } from "./sections";
+import { SETTING_KIND, type SettingDescriptor } from "./types";
+
+const percent = (fraction: number) =>
+  t.settings.zoomPercent(Math.round(fraction * 100));
+
+// The single source of truth for the settings UI. Each entry declares one setting: which section
+// it lives in, its label/hint, and how it binds to a control. Adding a setting is one entry here
+// (plus its AppSettings field + dictionary strings) — the dialog renders, searches, groups, and
+// wires modified/reset generically from this list.
+export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
+  // General
+  {
+    kind: SETTING_KIND.TOGGLE,
+    key: "showHidden",
+    section: SETTINGS_SECTION.GENERAL,
+    label: () => t.settings.showHidden,
+    hint: () => t.settings.showHiddenHint,
+  },
+  {
+    kind: SETTING_KIND.TOGGLE,
+    key: "hideSystemRecents",
+    section: SETTINGS_SECTION.GENERAL,
+    label: () => t.settings.hideSystemRecents,
+    hint: () => t.settings.hideSystemRecentsHint,
+  },
+
+  // View
+  {
+    kind: SETTING_KIND.SELECT,
+    key: "defaultZoom",
+    section: SETTINGS_SECTION.VIEW,
+    label: () => t.settings.defaultZoom,
+    hint: () => t.settings.defaultZoomHint,
+    options: () =>
+      ZOOM_OPTIONS.map((zoom) => ({
+        value: String(zoom),
+        label: percent(zoom),
+      })),
+    toValue: Number,
+  },
+  {
+    kind: SETTING_KIND.CUSTOM,
+    key: "dateFormat",
+    section: SETTINGS_SECTION.VIEW,
+    label: () => t.settings.dateFormat,
+    hint: () => t.settings.dateFormatHint,
+    Control: DateFormatControl,
+    Below: DateFormatBelow,
+    isModified: (settings, defaults) =>
+      settings.dateFormat !== defaults.dateFormat,
+    reset: (update, defaults) => update({ dateFormat: defaults.dateFormat }),
+  },
+
+  // Sidebar
+  {
+    kind: SETTING_KIND.RANGE,
+    key: "sidebarOpacity",
+    section: SETTINGS_SECTION.SIDEBAR,
+    label: () => t.settings.sidebarTransparency,
+    hint: () => t.settings.sidebarTransparencyHint,
+    min: SIDEBAR_OPACITY_MIN,
+    max: SIDEBAR_OPACITY_MAX,
+    step: SIDEBAR_OPACITY_STEP,
+    // UI is transparency (0 = solid, 1 = see-through); stored value is the inverse opacity.
+    toSlider: (opacity) => SIDEBAR_OPACITY_MAX - opacity,
+    fromSlider: (transparency) => SIDEBAR_OPACITY_MAX - transparency,
+    format: (opacity) => percent(SIDEBAR_OPACITY_MAX - opacity),
+  },
+
+  // Drag & Drop
+  {
+    kind: SETTING_KIND.SELECT,
+    key: "dragDropAction",
+    section: SETTINGS_SECTION.DRAG_DROP,
+    label: () => t.settings.dragDrop,
+    hint: () => t.settings.dragDropHint,
+    options: () => [
+      { value: DRAG_DROP_ACTION.MOVE, label: t.settings.dragDropMove },
+      { value: DRAG_DROP_ACTION.COPY, label: t.settings.dragDropCopy },
+    ],
+  },
+  {
+    kind: SETTING_KIND.TOGGLE,
+    key: "confirmDragDrop",
+    section: SETTINGS_SECTION.DRAG_DROP,
+    label: () => t.settings.confirmDragDrop,
+    hint: () => t.settings.confirmDragDropHint,
+  },
+  {
+    kind: SETTING_KIND.TOGGLE,
+    key: "dragToExternalApps",
+    section: SETTINGS_SECTION.DRAG_DROP,
+    label: () => t.settings.dragToExternalApps,
+    hint: () => t.settings.dragToExternalAppsHint,
+  },
+
+  // Notifications
+  {
+    kind: SETTING_KIND.TOGGLE,
+    key: "showToasts",
+    section: SETTINGS_SECTION.NOTIFICATIONS,
+    label: () => t.settings.showToasts,
+    hint: () => t.settings.showToastsHint,
+  },
+  {
+    kind: SETTING_KIND.TOGGLE,
+    key: "clickableToasts",
+    section: SETTINGS_SECTION.NOTIFICATIONS,
+    label: () => t.settings.clickableToasts,
+    hint: () => t.settings.clickableToastsHint,
+  },
+
+  // Startup
+  {
+    kind: SETTING_KIND.CUSTOM,
+    key: "startupMode",
+    section: SETTINGS_SECTION.STARTUP,
+    label: () => t.settings.startup,
+    hint: () => t.settings.startupHint,
+    Control: StartupControl,
+    Below: StartupBelow,
+    isModified: (settings, defaults) =>
+      settings.startupMode !== defaults.startupMode ||
+      settings.homePath !== defaults.homePath,
+    reset: (update, defaults) =>
+      update({
+        startupMode: defaults.startupMode,
+        homePath: defaults.homePath,
+      }),
+  },
+];

@@ -1,50 +1,77 @@
+import { useMemo, useState } from "react";
+
 import Dialog from "@/shared/components/patterns/Dialog";
 import DialogHeader from "@/shared/components/patterns/DialogHeader";
-import Switcher from "@/shared/components/elements/Switcher";
-import { useStateContext } from "@/shared/providers/StateProvider";
 import { useCloseOnEscape } from "@/shared/hooks/useCloseOnEscape";
-import {
-  SIDEBAR_OPACITY_MIN,
-  SIDEBAR_OPACITY_MAX,
-  SIDEBAR_OPACITY_STEP,
-  DRAG_DROP_ACTION,
-  type DragDropAction,
-} from "@/shared/constants";
 import { t } from "@/lang";
 
 import "@/styles/components/SettingsDialog.css";
 
-import { SETTINGS_TITLE_ID, ZOOM_OPTIONS } from "./constants";
-import SettingsRow from "./SettingsRow";
-import DateFormatRow from "./DateFormatRow";
-import StartupRow from "./StartupRow";
+import { useSettings } from "../../providers/SettingsProvider";
+import {
+  SETTINGS_SCHEMA,
+  SETTINGS_SECTIONS,
+  SETTINGS_SECTION,
+  type SettingsSectionId,
+} from "../../schema";
+import { SETTINGS_TITLE_ID } from "./constants";
+import { matchesQuery } from "./utils";
+import SettingsNav from "./SettingsNav";
+import SettingItem from "./SettingItem";
 import type { SettingsDialogProps } from "./types";
 
-// App settings. A shell for now with a couple of real controls; add more rows under the
-// relevant section as settings grow.
+// VS Code-style settings: a declarative schema (SETTINGS_SCHEMA) rendered generically. A search
+// box filters across every section; a left rail navigates sections when not searching. Each row
+// gets its control, a modified indicator, and reset-to-default — all driven by the descriptor.
 const SettingsDialog = ({ visible, onClose }: SettingsDialogProps) => {
-  const {
-    showHidden,
-    toggleShowHidden,
-    hideSystemRecents,
-    toggleHideSystemRecents,
-    showToasts,
-    toggleShowToasts,
-    defaultZoom,
-    setDefaultZoom,
-    sidebarOpacity,
-    setSidebarOpacity,
-    dragDropAction,
-    setDragDropAction,
-    confirmDragDrop,
-    toggleConfirmDragDrop,
-    clickableToasts,
-    toggleClickableToasts,
-    dragToExternalApps,
-    toggleDragToExternalApps,
-  } = useStateContext();
+  const { settings, update, defaults } = useSettings();
+  const [rawQuery, setRawQuery] = useState("");
+  const [activeSection, setActiveSection] = useState<SettingsSectionId>(
+    SETTINGS_SECTION.GENERAL,
+  );
 
   useCloseOnEscape(visible, onClose);
+
+  const query = rawQuery.trim().toLowerCase();
+  const searching = query !== "";
+
+  // While searching, show every matching setting; otherwise the selected section's settings.
+  const shownDescriptors = useMemo(
+    () =>
+      searching
+        ? SETTINGS_SCHEMA.filter((d) => matchesQuery(d, query))
+        : SETTINGS_SCHEMA.filter((d) => d.section === activeSection),
+    [searching, query, activeSection],
+  );
+
+  // Group the visible settings by section, in section order, dropping empty groups.
+  const groups = useMemo(
+    () =>
+      SETTINGS_SECTIONS.map((section) => ({
+        section,
+        items: shownDescriptors.filter((d) => d.section === section.id),
+      })).filter((group) => group.items.length > 0),
+    [shownDescriptors],
+  );
+
+  // Per-section match counts for the nav (totals when not searching).
+  const counts = useMemo(() => {
+    const base = searching
+      ? SETTINGS_SCHEMA.filter((d) => matchesQuery(d, query))
+      : SETTINGS_SCHEMA;
+    return SETTINGS_SECTIONS.reduce(
+      (acc, section) => {
+        acc[section.id] = base.filter((d) => d.section === section.id).length;
+        return acc;
+      },
+      {} as Record<SettingsSectionId, number>,
+    );
+  }, [searching, query]);
+
+  const selectSection = (id: SettingsSectionId) => {
+    setRawQuery("");
+    setActiveSection(id);
+  };
 
   return (
     <Dialog
@@ -59,133 +86,47 @@ const SettingsDialog = ({ visible, onClose }: SettingsDialogProps) => {
         onClose={onClose}
       />
 
-      <div className="settings_body">
-        <section className="settings_section">
-          <h5 className="settings_section_title">{t.settings.general}</h5>
+      <div className="settings_toolbar">
+        <input
+          type="search"
+          className="settings_search"
+          value={rawQuery}
+          onChange={(event) => setRawQuery(event.target.value)}
+          placeholder={t.settings.search}
+          aria-label={t.settings.search}
+          spellCheck={false}
+        />
+      </div>
 
-          <StartupRow />
+      <div className="settings_layout">
+        <SettingsNav
+          active={activeSection}
+          counts={counts}
+          onSelect={selectSection}
+        />
 
-          <SettingsRow
-            label={t.settings.showHidden}
-            hint={t.settings.showHiddenHint}
-          >
-            <Switcher checked={showHidden} onChange={toggleShowHidden} />
-          </SettingsRow>
-
-          <SettingsRow
-            label={t.settings.hideSystemRecents}
-            hint={t.settings.hideSystemRecentsHint}
-          >
-            <Switcher
-              checked={hideSystemRecents}
-              onChange={toggleHideSystemRecents}
-            />
-          </SettingsRow>
-
-          <SettingsRow
-            label={t.settings.showToasts}
-            hint={t.settings.showToastsHint}
-          >
-            <Switcher checked={showToasts} onChange={toggleShowToasts} />
-          </SettingsRow>
-
-          <SettingsRow
-            label={t.settings.dragDrop}
-            hint={t.settings.dragDropHint}
-          >
-            <select
-              className="settings_select"
-              value={dragDropAction}
-              onChange={(event) =>
-                setDragDropAction(event.target.value as DragDropAction)
-              }
-            >
-              <option value={DRAG_DROP_ACTION.MOVE}>
-                {t.settings.dragDropMove}
-              </option>
-              <option value={DRAG_DROP_ACTION.COPY}>
-                {t.settings.dragDropCopy}
-              </option>
-            </select>
-          </SettingsRow>
-
-          <SettingsRow
-            label={t.settings.confirmDragDrop}
-            hint={t.settings.confirmDragDropHint}
-          >
-            <Switcher
-              checked={confirmDragDrop}
-              onChange={toggleConfirmDragDrop}
-            />
-          </SettingsRow>
-
-          <SettingsRow
-            label={t.settings.clickableToasts}
-            hint={t.settings.clickableToastsHint}
-          >
-            <Switcher
-              checked={clickableToasts}
-              onChange={toggleClickableToasts}
-            />
-          </SettingsRow>
-
-          <SettingsRow
-            label={t.settings.dragToExternalApps}
-            hint={t.settings.dragToExternalAppsHint}
-          >
-            <Switcher
-              checked={dragToExternalApps}
-              onChange={toggleDragToExternalApps}
-            />
-          </SettingsRow>
-
-          <SettingsRow
-            label={t.settings.defaultZoom}
-            hint={t.settings.defaultZoomHint}
-          >
-            <select
-              className="settings_select"
-              value={defaultZoom}
-              onChange={(event) => setDefaultZoom(Number(event.target.value))}
-            >
-              {ZOOM_OPTIONS.map((zoom) => (
-                <option key={zoom} value={zoom}>
-                  {t.settings.zoomPercent(Math.round(zoom * 100))}
-                </option>
-              ))}
-            </select>
-          </SettingsRow>
-
-          <DateFormatRow />
-
-          <SettingsRow
-            label={t.settings.sidebarTransparency}
-            hint={t.settings.sidebarTransparencyHint}
-          >
-            {/* UI is transparency (0 = solid, 1 = fully see-through); stored value is the inverse
-                opacity, so convert both ways here. */}
-            <span className="settings_range_control">
-              <input
-                type="range"
-                className="settings_range"
-                min={SIDEBAR_OPACITY_MIN}
-                max={SIDEBAR_OPACITY_MAX}
-                step={SIDEBAR_OPACITY_STEP}
-                value={SIDEBAR_OPACITY_MAX - sidebarOpacity}
-                onChange={(event) =>
-                  setSidebarOpacity(
-                    SIDEBAR_OPACITY_MAX - Number(event.target.value),
-                  )
-                }
-              />
-              <span className="settings_range_value">
-                {t.settings.zoomPercent(
-                  Math.round((SIDEBAR_OPACITY_MAX - sidebarOpacity) * 100),
-                )}
-              </span>
-            </span>
-          </SettingsRow>
-        </section>
+        <div className="settings_panel">
+          {groups.length === 0 ? (
+            <p className="settings_empty">{t.settings.searchEmpty(rawQuery)}</p>
+          ) : (
+            groups.map((group) => (
+              <section key={group.section.id} className="settings_section">
+                <h5 className="settings_section_title">
+                  {group.section.label()}
+                </h5>
+                {group.items.map((descriptor) => (
+                  <SettingItem
+                    key={descriptor.key}
+                    descriptor={descriptor}
+                    settings={settings}
+                    update={update}
+                    defaults={defaults}
+                  />
+                ))}
+              </section>
+            ))
+          )}
+        </div>
       </div>
     </Dialog>
   );

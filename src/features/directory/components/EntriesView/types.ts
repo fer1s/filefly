@@ -23,4 +23,6 @@ export type EntriesViewProps = {
   };
   // Drag-to-move binder, forwarded to each row's root (see useEntryDragMove).
   bindDrag: EntryDragBinder;
+  // Suppress each entry's metadata hover card (dialog / preview panel open). Forwarded to rows.
+  metadataTooltipDisabled: boolean;
 };

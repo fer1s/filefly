@@ -1,10 +1,67 @@
 .settings_modal {
-  width: var(--size-properties-width);
+  width: var(--size-settings-width);
   max-width: calc(100% - var(--space-10));
 }
 
-.settings_modal .settings_body {
-  padding: var(--space-4);
+/* Search toolbar, pinned above the nav + panel. */
+.settings_modal .settings_toolbar {
+  padding: var(--space-4) var(--space-4) var(--space-2-5);
+}
+
+.settings_modal .settings_search {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  border: var(--border-width-default) solid var(--color-border-default);
+  background-color: var(--color-surface-input);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-base);
+}
+
+/* Two-pane body: category rail on the left, scrolling settings panel on the right. */
+.settings_modal .settings_layout {
+  display: flex;
+  gap: var(--space-4);
+  padding: var(--space-0) var(--space-4) var(--space-4);
+}
+
+.settings_modal .settings_nav {
+  flex-shrink: 0;
+  width: var(--size-settings-nav-width);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-0-5);
+}
+
+.settings_modal .settings_nav_item {
+  padding: var(--space-1-5) var(--space-2-5);
+  border: var(--border-width-default) solid transparent;
+  border-radius: var(--radius-sm);
+  background-color: transparent;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-base);
+  text-align: left;
+  cursor: pointer;
+}
+
+.settings_modal .settings_nav_item:hover {
+  background-color: var(--color-surface-input);
+}
+
+.settings_modal .settings_nav_item.active {
+  background-color: var(--color-surface-input);
+  border-color: var(--color-border-default);
+}
+
+.settings_modal .settings_nav_item.empty {
+  color: var(--color-text-dim);
+}
+
+.settings_modal .settings_panel {
+  flex: 1;
+  min-width: 0;
+  height: var(--size-settings-panel-height);
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
@@ -25,12 +82,17 @@
   color: var(--color-text-muted);
 }
 
+.settings_modal .settings_item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
 .settings_modal .settings_row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
-  cursor: pointer;
 }
 
 .settings_modal .settings_row_text {
@@ -40,6 +102,9 @@
 }
 
 .settings_modal .settings_row_label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1-5);
   font-size: var(--font-size-base);
   color: var(--color-text-primary);
 }
@@ -47,6 +112,55 @@
 .settings_modal .settings_row_hint {
   font-size: var(--font-size-md);
   color: var(--color-text-dim);
+}
+
+/* Dot marking a setting whose value differs from its default. */
+.settings_modal .settings_modified_dot {
+  width: var(--size-settings-dot);
+  height: var(--size-settings-dot);
+  border-radius: var(--radius-pill);
+  background-color: var(--color-selection-indicator);
+}
+
+/* Right-hand control cluster: the control plus the reset-to-default button. */
+.settings_modal .settings_item_control {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.settings_modal .settings_reset {
+  padding: var(--space-0) var(--space-1);
+  border: var(--border-width-default) solid transparent;
+  border-radius: var(--radius-sm);
+  background-color: transparent;
+  color: var(--color-text-dim);
+  font-size: var(--font-size-lg);
+  line-height: 1;
+  cursor: pointer;
+}
+
+.settings_modal .settings_reset:hover {
+  color: var(--color-text-primary);
+  background-color: var(--color-surface-input);
+}
+
+/* Full-width extra rendered below a custom setting's row (home-folder chooser). */
+.settings_modal .settings_row_below {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding-left: var(--space-4);
+}
+
+.settings_modal .settings_empty {
+  margin: var(--space-0);
+  padding: var(--space-6) var(--space-2);
+  text-align: center;
+  color: var(--color-text-dim);
+  font-size: var(--font-size-base);
 }
 
 .settings_modal .settings_select {
@@ -77,6 +191,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
+  padding-left: var(--space-4);
 }
 
 .settings_modal .settings_input {

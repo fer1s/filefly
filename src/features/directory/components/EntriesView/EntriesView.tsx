@@ -31,6 +31,7 @@ const EntriesView = ({
   onCancelRename,
   menu,
   bindDrag,
+  metadataTooltipDisabled,
 }: EntriesViewProps) => {
   const { fs, setPath, dateFormat } = useStateContext();
   const { tags: tagsByPath, loadTags } = useTags();
@@ -103,6 +104,7 @@ const EntriesView = ({
             setContextMenuElementID={menu.setId}
             setContextMenuElementType={menu.setType}
             bindDrag={bindDrag}
+            metadataTooltipDisabled={metadataTooltipDisabled}
           />
         );
       })}

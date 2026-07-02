@@ -1,3 +1,5 @@
+import type { AppSettings } from "@/shared/services/api";
+
 export const VIEW_MODE = {
   GRID: "grid",
   LIST: "list",
@@ -97,6 +99,24 @@ export type DragDropAction =
 
 // Default: move (matches most file managers).
 export const DEFAULT_DRAG_DROP_ACTION: DragDropAction = DRAG_DROP_ACTION.MOVE;
+
+// Seed settings used before settings.toml is hydrated and as the reset-to-default baseline in the
+// settings dialog. Must match the Rust defaults (functions/settings.rs).
+export const DEFAULT_SETTINGS: AppSettings = {
+  showHidden: false,
+  defaultZoom: ZOOM_DEFAULT,
+  dateFormat: DEFAULT_DATE_FORMAT,
+  sidebarOpacity: DEFAULT_SIDEBAR_OPACITY,
+  sidebarWidth: DEFAULT_SIDEBAR_WIDTH,
+  hideSystemRecents: true,
+  showToasts: true,
+  startupMode: DEFAULT_STARTUP_MODE,
+  homePath: "",
+  dragDropAction: DEFAULT_DRAG_DROP_ACTION,
+  confirmDragDrop: true,
+  clickableToasts: true,
+  dragToExternalApps: true,
+};
 
 // DOM KeyboardEvent.key names used in non-configurable key handling (navigation, input
 // submit/cancel). These are not user-rebindable bindings — see shared/keymap for those — but
