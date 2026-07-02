@@ -53,12 +53,13 @@ export const useNativeDropTarget = ({
     return null;
   };
 
-  // The folder under a Tauri drag position. Tauri documents this as physical pixels (→ divide by
-  // the device pixel ratio for CSS px), but to be robust to how the position arrives we also try
-  // it as-is; whichever lands on a row wins.
+  // The folder under a Tauri drag position. Tauri reports physical pixels, so divide by the device
+  // pixel ratio for CSS px. (We used to also retry with the raw coords as a fallback, but on a
+  // Retina display those are 2x off and can hit-test a *different* row when the drop was actually on
+  // empty space — popping a bogus move/copy confirm. Trust the dpr-corrected point only.)
   const folderAt = (posX: number, posY: number) => {
     const dpr = window.devicePixelRatio || 1;
-    return folderAtCss(posX / dpr, posY / dpr) ?? folderAtCss(posX, posY);
+    return folderAtCss(posX / dpr, posY / dpr);
   };
 
   useEffect(() => {
@@ -81,10 +82,12 @@ export const useNativeDropTarget = ({
           const el = folderAt(payload.position.x, payload.position.y);
           clearTarget();
           setActive(false);
-          // Drop target: the hovered folder, else the current directory (import on empty space).
-          const dest = el?.id ?? currentDirRef.current;
           const external = !isOwnDrag(payload.paths);
           clearOwnDragPaths();
+          // Drop target: the hovered folder. On empty space, an external drag imports into the
+          // current directory, but an own drag dropped on empty space has no target (its items
+          // already live here) — ignore it rather than prompting a pointless move.
+          const dest = el?.id ?? (external ? currentDirRef.current : undefined);
           if (dest && payload.paths.length)
             onDropFilesRef.current(payload.paths, dest, external);
         } else if (payload.type === "leave") {

@@ -12,6 +12,8 @@ use tauri::{AppHandle, Manager};
 pub struct AppSettings {
     // Show hidden entries (dotfiles) in folders.
     show_hidden: bool,
+    // Colour theme: "system" (follow OS), "light", or "dark".
+    theme: String,
     // Default folder zoom multiplier (1.0 = 100%) for folders without their own saved zoom.
     default_zoom: f64,
     // Date format: a token pattern (YYYY-MM-DD HH:mm, …) or the "locale" sentinel.
@@ -44,6 +46,7 @@ impl Default for AppSettings {
     fn default() -> Self {
         Self {
             show_hidden: false,
+            theme: "system".to_string(),
             default_zoom: 1.0,
             date_format: "locale".to_string(),
             sidebar_opacity: 0.85,

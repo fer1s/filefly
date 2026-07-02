@@ -5,6 +5,7 @@ import { t } from "@/lang";
 // descriptors with it in schema.ts.
 export const SETTINGS_SECTION = {
   GENERAL: "general",
+  APPEARANCE: "appearance",
   VIEW: "view",
   SIDEBAR: "sidebar",
   DRAG_DROP: "dragDrop",
@@ -21,6 +22,10 @@ export const SETTINGS_SECTIONS: {
   label: () => string;
 }[] = [
   { id: SETTINGS_SECTION.GENERAL, label: () => t.settings.sections.general },
+  {
+    id: SETTINGS_SECTION.APPEARANCE,
+    label: () => t.settings.sections.appearance,
+  },
   { id: SETTINGS_SECTION.VIEW, label: () => t.settings.sections.view },
   { id: SETTINGS_SECTION.SIDEBAR, label: () => t.settings.sections.sidebar },
   { id: SETTINGS_SECTION.DRAG_DROP, label: () => t.settings.sections.dragDrop },

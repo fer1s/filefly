@@ -15,7 +15,7 @@ import {
   DRAG_DROP_ACTION,
 } from "@/shared/constants";
 import { ENTRY_KIND, CLIPBOARD_MODE } from "@/features/directory/constants";
-import { classNames, isTagsPath, basename } from "@/shared/utils";
+import { classNames, isTagsPath, basename, dirname } from "@/shared/utils";
 import { notify, TOAST_TYPE } from "@/shared/toast";
 import { t } from "@/lang";
 import { DirEntry } from "@/shared/models";
@@ -124,11 +124,22 @@ const Directory = () => {
   // files dragged in from another app always copy (never move them out of their origin).
   const handleDrop = useCallback(
     (sources: string[], dest: string, external = false) => {
+      // Drop no-ops (an item already in dest, or a folder onto itself/a descendant) transfer
+      // nothing — filter them out first so dropping in the current folder's empty space doesn't
+      // pop the confirm dialog for a move/copy that would do nothing. transferTo re-checks this.
+      const targets = sources.filter(
+        (src) =>
+          src &&
+          dirname(src) !== dest &&
+          dest !== src &&
+          !dest.startsWith(`${src}/`),
+      );
+      if (!targets.length) return;
       const copy = external || settingIsCopy;
       if (confirmDragDrop) {
         setDontAskAgain(false);
-        setPendingDrop({ sources, dest, copy });
-      } else performDrop(sources, dest, copy);
+        setPendingDrop({ sources: targets, dest, copy });
+      } else performDrop(targets, dest, copy);
     },
     [confirmDragDrop, performDrop, settingIsCopy],
   );

@@ -15,6 +15,8 @@ import type { Keymap } from "@/shared/keymap/types";
 // hydrates from this on launch). Mirrors the AppSettings struct in functions/settings.rs.
 export type AppSettings = {
   showHidden: boolean;
+  // Colour theme: "system" (follow OS) | "light" | "dark" (see THEME).
+  theme: string;
   defaultZoom: number;
   dateFormat: string;
   sidebarOpacity: number;

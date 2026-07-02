@@ -3,6 +3,7 @@ import {
   SIDEBAR_OPACITY_MAX,
   SIDEBAR_OPACITY_STEP,
   DRAG_DROP_ACTION,
+  THEME,
 } from "@/shared/constants";
 import { t } from "@/lang";
 
@@ -37,6 +38,20 @@ export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
     section: SETTINGS_SECTION.GENERAL,
     label: () => t.settings.hideSystemRecents,
     hint: () => t.settings.hideSystemRecentsHint,
+  },
+
+  // Appearance
+  {
+    kind: SETTING_KIND.SELECT,
+    key: "theme",
+    section: SETTINGS_SECTION.APPEARANCE,
+    label: () => t.settings.theme,
+    hint: () => t.settings.themeHint,
+    options: () => [
+      { value: THEME.SYSTEM, label: t.settings.themeSystem },
+      { value: THEME.LIGHT, label: t.settings.themeLight },
+      { value: THEME.DARK, label: t.settings.themeDark },
+    ],
   },
 
   // View

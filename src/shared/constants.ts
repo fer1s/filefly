@@ -88,6 +88,18 @@ export type StartupMode = (typeof STARTUP_MODE)[keyof typeof STARTUP_MODE];
 // Default before the user picks: restore the previous session (preserves prior behavior).
 export const DEFAULT_STARTUP_MODE: StartupMode = STARTUP_MODE.RESTORE;
 
+// App colour theme. SYSTEM follows the OS light/dark preference; LIGHT/DARK force one.
+export const THEME = {
+  SYSTEM: "system",
+  LIGHT: "light",
+  DARK: "dark",
+} as const;
+
+export type Theme = (typeof THEME)[keyof typeof THEME];
+
+// Default: follow the system appearance.
+export const DEFAULT_THEME: Theme = THEME.SYSTEM;
+
 // What dragging entries onto a folder does: MOVE them there, or COPY them there.
 export const DRAG_DROP_ACTION = {
   MOVE: "move",
@@ -104,6 +116,7 @@ export const DEFAULT_DRAG_DROP_ACTION: DragDropAction = DRAG_DROP_ACTION.MOVE;
 // settings dialog. Must match the Rust defaults (functions/settings.rs).
 export const DEFAULT_SETTINGS: AppSettings = {
   showHidden: false,
+  theme: DEFAULT_THEME,
   defaultZoom: ZOOM_DEFAULT,
   dateFormat: DEFAULT_DATE_FORMAT,
   sidebarOpacity: DEFAULT_SIDEBAR_OPACITY,

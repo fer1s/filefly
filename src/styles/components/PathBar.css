@@ -8,6 +8,12 @@
   padding-left: var(--space-2);
 }
 
+/* The generic .shadow class carries the heavy elevation shadow; in the path bar the controls only
+   need a gentle lift, so soften it to --shadow-soft. */
+.PathBar .shadow {
+  box-shadow: var(--shadow-soft);
+}
+
 .PathBar .controls {
   display: flex;
   justify-content: center;

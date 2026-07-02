@@ -31,6 +31,7 @@ import { useDirectoryContents } from "./hooks/useDirectoryContents";
 import { useSidebarCollapsed } from "./hooks/useSidebarCollapsed";
 import { useAppSettings } from "./hooks/useAppSettings";
 import { useDockMenu } from "./hooks/useDockMenu";
+import { useTheme } from "./hooks/useTheme";
 
 import { notify, setToastsEnabled, TOAST_TYPE } from "@/shared/toast";
 import { prewarmDragIcon } from "@/shared/services/api";
@@ -43,6 +44,7 @@ import {
   type ViewMode,
   type StartupMode,
   type DragDropAction,
+  type Theme,
 } from "@/shared/constants";
 
 const App = () => {
@@ -69,6 +71,7 @@ const App = () => {
     locationPathname: location.pathname,
     hideSystemRecents: settings.hideSystemRecents,
   });
+  useTheme(settings.theme as Theme);
   const zoom = useZoom(fs, tabs.path, settings.defaultZoom);
   const { toasts, dismissToast } = useToasts();
   const sidebar = useSidebarCollapsed();

@@ -95,7 +95,7 @@
   position: relative;
   z-index: 2;
   cursor: grabbing;
-  background-color: rgb(55, 55, 58);
+  background-color: var(--color-tab-dragging);
   box-shadow: 0 4px 12px rgb(0 0 0 / 0.35);
   /* Follow the pointer instantly — no lag between cursor and tab. */
   transition: none;
