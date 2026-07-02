@@ -15,6 +15,36 @@ import TabItem from "./components/TabItem";
 
 import "@/styles/components/TabBar.css";
 
+type TabGeom = { left: number; right: number; center: number; width: number };
+
+// Clamp the raw pointer offset so the dragged tab can't leave the strip — its left edge stops at
+// the strip's left and its right edge at the last tab's end (so it never overlaps the "+" or
+// slides under the sidebar).
+const clampDx = (geom: TabGeom[] | null, index: number, mx: number): number => {
+  if (!geom) return mx;
+  const el = geom[index];
+  const minDx = geom[0].left - el.left;
+  const maxDx = geom[geom.length - 1].right - el.right;
+  return Math.max(minDx, Math.min(maxDx, mx));
+};
+
+// Where the dragged tab should land: the count of other tabs whose center sits left of the
+// pointer-projected center. Uses the RAW offset (not clamped) so a wide tab can still reach a
+// slot occupied by a narrower tab. That count is exactly the splice index.
+const dropIndex = (
+  geom: TabGeom[] | null,
+  index: number,
+  mx: number,
+): number => {
+  if (!geom) return index;
+  const draggedCenter = geom[index].center + mx;
+  let target = 0;
+  geom.forEach((g, i) => {
+    if (i !== index && g.center < draggedCenter) target += 1;
+  });
+  return target;
+};
+
 // Browser-style tab strip above the PathBar. Tabs can be dragged horizontally to reorder them
 // (@use-gesture), and the trailing "+" opens a new tab beside the last one.
 const TabBar = () => {
@@ -30,11 +60,13 @@ const TabBar = () => {
   // The tab currently being dragged and how far (px) it has moved from its resting position.
   // `dx` is the clamped offset used to render the tab (stays inside the strip). `mx` is the raw
   // pointer movement, used to pick the target slot — so intent isn't capped by the visual clamp
-  // (e.g. dragging a wide tab onto a narrower last tab still reaches the final slot).
+  // (e.g. dragging a wide tab onto a narrower last tab still reaches the final slot). `geom` is
+  // the layout snapshot taken at drag start, carried in state so render never reads the ref.
   const [drag, setDrag] = useState<{
     index: number;
     dx: number;
     mx: number;
+    geom: TabGeom[] | null;
   } | null>(null);
   // True for the single frame after a drop: the reorder just committed, so the shifted tabs are
   // already at their final layout slots and must reset their transform WITHOUT animating (else they
@@ -44,35 +76,7 @@ const TabBar = () => {
   // tab carries a live translateX, so re-measuring mid-drag would read its already-shifted rect and
   // feed back into the clamp (locking it up). Rects (not offsetLeft) because offsetLeft is relative
   // to the nearest positioned ancestor — the strip isn't one, so it'd include the sidebar width.
-  const geomRef = useRef<
-    { left: number; right: number; center: number; width: number }[] | null
-  >(null);
-
-  // Clamp the raw pointer offset so the dragged tab can't leave the strip — its left edge stops at
-  // the strip's left and its right edge at the last tab's end (so it never overlaps the "+" or
-  // slides under the sidebar).
-  const clampDx = (index: number, mx: number): number => {
-    const geom = geomRef.current;
-    if (!geom) return mx;
-    const el = geom[index];
-    const minDx = geom[0].left - el.left;
-    const maxDx = geom[geom.length - 1].right - el.right;
-    return Math.max(minDx, Math.min(maxDx, mx));
-  };
-
-  // Where the dragged tab should land: the count of other tabs whose center sits left of the
-  // pointer-projected center. Uses the RAW offset (not clamped) so a wide tab can still reach a
-  // slot occupied by a narrower tab. That count is exactly the splice index.
-  const dropIndex = (index: number, mx: number): number => {
-    const geom = geomRef.current;
-    if (!geom) return index;
-    const draggedCenter = geom[index].center + mx;
-    let target = 0;
-    geom.forEach((g, i) => {
-      if (i !== index && g.center < draggedCenter) target += 1;
-    });
-    return target;
-  };
+  const geomRef = useRef<TabGeom[] | null>(null);
 
   const bind = useDrag(
     ({ args: [index], movement: [mx], first, last }) => {
@@ -96,14 +100,14 @@ const TabBar = () => {
               })
             : null;
       }
-      const dx = clampDx(index, mx);
+      const dx = clampDx(geomRef.current, index, mx);
       if (last) {
-        reorderTab(index, dropIndex(index, mx));
+        reorderTab(index, dropIndex(geomRef.current, index, mx));
         geomRef.current = null;
         setDrag(null);
         setSnapping(true);
       } else {
-        setDrag({ index, dx, mx });
+        setDrag({ index, dx, mx, geom: geomRef.current });
       }
     },
     // filterTaps keeps a plain click firing onClick (select) instead of being read as a 0px drag.
@@ -119,8 +123,8 @@ const TabBar = () => {
 
   // Live target slot for the in-progress drag, plus the gap the lifted tab leaves behind (its own
   // width + the inter-tab gap). Recomputed every render as the drag offset changes.
-  const geom = geomRef.current;
-  const target = drag ? dropIndex(drag.index, drag.mx) : null;
+  const geom = drag?.geom ?? null;
+  const target = drag ? dropIndex(geom, drag.index, drag.mx) : null;
   const gap = geom && geom.length > 1 ? geom[1].left - geom[0].right : 0;
   const shift = drag && geom ? geom[drag.index].width + gap : 0;
 
@@ -136,7 +140,10 @@ const TabBar = () => {
   };
 
   return (
-    <div className={classNames("TabBar", snapping && "snapping")} role="tablist">
+    <div
+      className={classNames("TabBar", snapping && "snapping")}
+      role="tablist"
+    >
       <div className="tab_strip" ref={stripRef}>
         {tabs.map((tab, index) => (
           <TabItem

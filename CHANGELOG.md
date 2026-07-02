@@ -2,6 +2,25 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.3.0]
+
+### Added
+
+- Undo/redo (`35387fe`)
+- Custom dock menu (`163b1ba`)
+- Multiple windows support (`7eb69e5`)
+- Movable tabs (drag to reorder) (`9cd1125`)
+- `sfb` headless CLI sidecar sharing the filesystem cores (`47f2c9d`)
+- Homebrew cask and macOS ARM build workflow (`47f2c9d`)
+
+### Fixed
+
+- First load (`ff3e0b3`)
+
+### Changed
+
+- Settings dialog rebuilt as schema-driven with sections, controls and navigation (`a03dcca`)
+
 ## [0.2.2]
 
 ### Fixed

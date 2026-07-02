@@ -30,8 +30,7 @@ const windowSuffix = (): string => {
 };
 
 const tabsKey = (): string => `${TABS_STORAGE_KEY}${windowSuffix()}`;
-const activeTabKey = (): string =>
-  `${ACTIVE_TAB_STORAGE_KEY}${windowSuffix()}`;
+const activeTabKey = (): string => `${ACTIVE_TAB_STORAGE_KEY}${windowSuffix()}`;
 
 // A fresh tab rooted at `path` (empty string = the Volumes view). `infoPanelOpen` lets a new tab
 // inherit the current tab's panel state so opening one feels continuous.

@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useState } from "react";
 
 import Dialog from "@/shared/components/patterns/Dialog";
 import DialogHeader from "@/shared/components/patterns/DialogHeader";
@@ -29,9 +29,16 @@ const ConfirmationDialog = ({
 
   // Retain last content while the dialog fades out. Callers null their state on close, which would
   // otherwise blank the title/message before the 0.2s close animation finishes.
-  const shown = useRef({ title, message, extra });
-  if (visible) shown.current = { title, message, extra };
-  const content = visible ? { title, message, extra } : shown.current;
+  const [shown, setShown] = useState({ title, message, extra });
+  if (
+    visible &&
+    (shown.title !== title ||
+      shown.message !== message ||
+      shown.extra !== extra)
+  ) {
+    setShown({ title, message, extra });
+  }
+  const content = visible ? { title, message, extra } : shown;
 
   return (
     <Dialog
