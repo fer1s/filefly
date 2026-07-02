@@ -1,6 +1,9 @@
 [package]
 name = "sito-file-browser"
 version = "0.0.0"
+# Two binaries live here (the GUI app + the `sfb` CLI). `cargo run` / `tauri dev` need to know
+# which one is the default; the GUI app is it.
+default-run = "sito-file-browser"
 description = "A Tauri App"
 authors = ["you"]
 license = ""
