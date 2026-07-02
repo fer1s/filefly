@@ -83,18 +83,22 @@ pub fn get_entry(path: String) -> Result<DirEntry, String> {
 // This keeps the webview responsive while the (CPU/IO-bound) walk runs on a worker thread.
 #[tauri::command]
 pub async fn get_dir_size(path: String) -> u64 {
-    tauri::async_runtime::spawn_blocking(move || {
-        jwalk::WalkDir::new(path)
-            .skip_hidden(false)
-            .into_iter()
-            .filter_map(|entry| entry.ok())
-            .filter(|entry| entry.file_type().is_file())
-            .filter_map(|entry| entry.metadata().ok())
-            .map(|metadata| metadata.len())
-            .sum()
-    })
-    .await
-    .unwrap_or(0)
+    tauri::async_runtime::spawn_blocking(move || dir_size_core(&path))
+        .await
+        .unwrap_or(0)
+}
+
+// Recursively sum the apparent size of every file under `path`. Shared by the Tauri command and
+// the CLI; the command runs it on a blocking thread, the CLI calls it directly.
+pub fn dir_size_core(path: &str) -> u64 {
+    jwalk::WalkDir::new(path)
+        .skip_hidden(false)
+        .into_iter()
+        .filter_map(|entry| entry.ok())
+        .filter(|entry| entry.file_type().is_file())
+        .filter_map(|entry| entry.metadata().ok())
+        .map(|metadata| metadata.len())
+        .sum()
 }
 
 // Cap recursive search results so a query like "a" near the home dir can't return a million rows.
@@ -108,42 +112,46 @@ pub async fn search_directory(
     path: String,
     query: String,
 ) -> Result<Vec<DirEntry>, String> {
+    tauri::async_runtime::spawn_blocking(move || search_directory_core(&path, &query))
+        .await
+        .map_err(|error| error.to_string())?
+}
+
+// Recursively search under `path` for entries whose name contains `query` (case-insensitive),
+// capped at SEARCH_RESULT_LIMIT. Shared by the Tauri command (on a blocking thread) and the CLI.
+pub fn search_directory_core(path: &str, query: &str) -> Result<Vec<DirEntry>, String> {
     let needle = query.trim().to_lowercase();
     if needle.is_empty() {
         return Ok(Vec::new());
     }
 
-    tauri::async_runtime::spawn_blocking(move || {
-        let root = Path::new(&path);
-        let mut results: Vec<DirEntry> = Vec::new();
+    let root = Path::new(path);
+    let mut results: Vec<DirEntry> = Vec::new();
 
-        for entry in jwalk::WalkDir::new(&path)
-            .skip_hidden(false)
-            .into_iter()
-            .filter_map(|entry| entry.ok())
-        {
-            let entry_path = entry.path();
-            if entry_path == root {
-                continue; // the folder being searched isn't a result
-            }
-            let matches = entry_path
-                .file_name()
-                .map(|name| name.to_string_lossy().to_lowercase().contains(&needle))
-                .unwrap_or(false);
-            if matches {
-                if let Ok(found) = build_dir_entry(entry_path) {
-                    results.push(found);
-                    if results.len() >= SEARCH_RESULT_LIMIT {
-                        break;
-                    }
+    for entry in jwalk::WalkDir::new(path)
+        .skip_hidden(false)
+        .into_iter()
+        .filter_map(|entry| entry.ok())
+    {
+        let entry_path = entry.path();
+        if entry_path == root {
+            continue; // the folder being searched isn't a result
+        }
+        let matches = entry_path
+            .file_name()
+            .map(|name| name.to_string_lossy().to_lowercase().contains(&needle))
+            .unwrap_or(false);
+        if matches {
+            if let Ok(found) = build_dir_entry(entry_path) {
+                results.push(found);
+                if results.len() >= SEARCH_RESULT_LIMIT {
+                    break;
                 }
             }
         }
+    }
 
-        results
-    })
-    .await
-    .map_err(|error| error.to_string())
+    Ok(results)
 }
 
 // Extensions whose thumbnail comes from QuickLook rather than the image decoder (videos and
@@ -474,12 +482,13 @@ fn entry_total_bytes(path: &Path) -> u64 {
 }
 
 // Emit progress only when the whole-percent figure changes, so a folder with thousands of files
-// produces at most ~100 messages instead of one per file.
+// produces at most ~100 callbacks instead of one per file. `progress` is a generic sink: the Tauri
+// command sends it to an IPC Channel, the CLI ignores it (or prints).
 fn emit_progress(
     processed: u64,
     total: u64,
     last_percent: &mut i32,
-    channel: &Channel<ProgressPayload>,
+    progress: &mut dyn FnMut(u64, u64),
 ) {
     let percent = if total == 0 {
         100
@@ -488,7 +497,7 @@ fn emit_progress(
     };
     if percent != *last_percent {
         *last_percent = percent;
-        channel.send(ProgressPayload { processed, total }).ok();
+        progress(processed, total);
     }
 }
 
@@ -499,7 +508,7 @@ fn copy_dir_with_progress(
     processed: &mut u64,
     total: u64,
     last_percent: &mut i32,
-    channel: &Channel<ProgressPayload>,
+    progress: &mut dyn FnMut(u64, u64),
 ) -> std::io::Result<()> {
     fs::create_dir_all(dest)?;
     for entry in fs::read_dir(src)? {
@@ -507,36 +516,36 @@ fn copy_dir_with_progress(
         let path = entry.path();
         let target = dest.join(entry.file_name());
         if path.is_dir() {
-            copy_dir_with_progress(&path, &target, processed, total, last_percent, channel)?;
+            copy_dir_with_progress(&path, &target, processed, total, last_percent, progress)?;
         } else {
             let len = entry.metadata().map(|m| m.len()).unwrap_or(0);
             fs::copy(&path, &target)?;
             *processed += len;
-            emit_progress(*processed, total, last_percent, channel);
+            emit_progress(*processed, total, last_percent, progress);
         }
     }
     Ok(())
 }
 
-// Copy `src` into `dest` (file or directory), reporting byte progress over `channel`.
+// Copy `src` into `dest` (file or directory), reporting byte progress via the `progress` callback.
 fn copy_with_progress(
     src: &Path,
     dest: &Path,
-    channel: &Channel<ProgressPayload>,
+    progress: &mut dyn FnMut(u64, u64),
 ) -> std::io::Result<()> {
     let total = entry_total_bytes(src);
-    channel.send(ProgressPayload { processed: 0, total }).ok();
+    progress(0, total);
 
     let mut processed = 0u64;
     let mut last_percent = 0i32;
     if src.is_dir() {
-        copy_dir_with_progress(src, dest, &mut processed, total, &mut last_percent, channel)?;
+        copy_dir_with_progress(src, dest, &mut processed, total, &mut last_percent, progress)?;
     } else {
         fs::copy(src, dest)?;
     }
 
     // Always finish at 100% (covers single files and the rounding tail).
-    channel.send(ProgressPayload { processed: total, total }).ok();
+    progress(total, total);
     Ok(())
 }
 
@@ -552,17 +561,31 @@ pub async fn copy_entry(
     on_progress: Channel<ProgressPayload>,
 ) -> Result<String, String> {
     tauri::async_runtime::spawn_blocking(move || {
-        let src = Path::new(&source);
-        let name = src
-            .file_name()
-            .ok_or_else(|| "Invalid source path".to_string())?;
-        let dest = unique_dest(Path::new(&dest_dir), name);
-
-        copy_with_progress(src, &dest, &on_progress).map_err(|e| e.to_string())?;
-        Ok(dest.to_string_lossy().into_owned())
+        let mut sink = |processed, total| {
+            on_progress.send(ProgressPayload { processed, total }).ok();
+        };
+        copy_entry_core(&source, &dest_dir, &mut sink)
     })
     .await
     .map_err(|e| e.to_string())?
+}
+
+// Copy a file or directory into `dest_dir` (recursively for dirs), avoiding name collisions, and
+// return the final destination path. `progress(processed, total)` is called as bytes are copied.
+// Shared by the Tauri command and the CLI.
+pub fn copy_entry_core(
+    source: &str,
+    dest_dir: &str,
+    progress: &mut dyn FnMut(u64, u64),
+) -> Result<String, String> {
+    let src = Path::new(source);
+    let name = src
+        .file_name()
+        .ok_or_else(|| "Invalid source path".to_string())?;
+    let dest = unique_dest(Path::new(dest_dir), name);
+
+    copy_with_progress(src, &dest, progress).map_err(|e| e.to_string())?;
+    Ok(dest.to_string_lossy().into_owned())
 }
 
 // Move a file or directory into dest_dir. Fast rename when possible, copy + delete across volumes.
@@ -575,35 +598,43 @@ pub async fn move_entry(
     on_progress: Channel<ProgressPayload>,
 ) -> Result<String, String> {
     tauri::async_runtime::spawn_blocking(move || {
-        let src = Path::new(&source);
-        let name = src
-            .file_name()
-            .ok_or_else(|| "Invalid source path".to_string())?;
-        let dest = unique_dest(Path::new(&dest_dir), name);
-        let dest_path = dest.to_string_lossy().into_owned();
-
-        // Same-volume move is an instant rename — report it as immediately complete.
-        if fs::rename(src, &dest).is_ok() {
-            on_progress
-                .send(ProgressPayload {
-                    processed: 1,
-                    total: 1,
-                })
-                .ok();
-            return Ok(dest_path);
-        }
-
-        // Cross-volume: copy with progress, then remove the source.
-        copy_with_progress(src, &dest, &on_progress).map_err(|e| e.to_string())?;
-        if src.is_dir() {
-            fs::remove_dir_all(src).map_err(|e| e.to_string())?;
-        } else {
-            fs::remove_file(src).map_err(|e| e.to_string())?;
-        }
-        Ok(dest_path)
+        let mut sink = |processed, total| {
+            on_progress.send(ProgressPayload { processed, total }).ok();
+        };
+        move_entry_core(&source, &dest_dir, &mut sink)
     })
     .await
     .map_err(|e| e.to_string())?
+}
+
+// Move a file or directory into `dest_dir` (fast rename when possible, copy+delete across volumes),
+// avoiding collisions, and return the final destination path. Shared by the Tauri command and CLI.
+pub fn move_entry_core(
+    source: &str,
+    dest_dir: &str,
+    progress: &mut dyn FnMut(u64, u64),
+) -> Result<String, String> {
+    let src = Path::new(source);
+    let name = src
+        .file_name()
+        .ok_or_else(|| "Invalid source path".to_string())?;
+    let dest = unique_dest(Path::new(dest_dir), name);
+    let dest_path = dest.to_string_lossy().into_owned();
+
+    // Same-volume move is an instant rename — report it as immediately complete.
+    if fs::rename(src, &dest).is_ok() {
+        progress(1, 1);
+        return Ok(dest_path);
+    }
+
+    // Cross-volume: copy with progress, then remove the source.
+    copy_with_progress(src, &dest, progress).map_err(|e| e.to_string())?;
+    if src.is_dir() {
+        fs::remove_dir_all(src).map_err(|e| e.to_string())?;
+    } else {
+        fs::remove_file(src).map_err(|e| e.to_string())?;
+    }
+    Ok(dest_path)
 }
 
 // Create a new folder inside `parent`, picking a unique "untitled folder" name. Returns the
@@ -693,46 +724,39 @@ struct TrashOrigin {
     original: String,
 }
 
-fn trash_origins_path(app: &AppHandle) -> Result<PathBuf, String> {
-    Ok(app
-        .path()
-        .app_config_dir()
-        .map_err(|e| e.to_string())?
-        .join("trash-origins.toml"))
+fn trash_origins_path(config_dir: &Path) -> PathBuf {
+    config_dir.join("trash-origins.toml")
 }
 
-fn load_trash_origins(app: &AppHandle) -> TrashOrigins {
-    match trash_origins_path(app)
-        .and_then(|p| std::fs::read_to_string(p).map_err(|e| e.to_string()))
-    {
+fn load_trash_origins(config_dir: &Path) -> TrashOrigins {
+    match std::fs::read_to_string(trash_origins_path(config_dir)) {
         Ok(content) => toml::from_str(&content).unwrap_or_default(),
         Err(_) => TrashOrigins::default(),
     }
 }
 
-fn save_trash_origins(app: &AppHandle, origins: &TrashOrigins) {
-    if let Ok(target) = trash_origins_path(app) {
-        if let Some(parent) = target.parent() {
-            let _ = std::fs::create_dir_all(parent);
-        }
-        if let Ok(serialized) = toml::to_string_pretty(origins) {
-            let _ = std::fs::write(target, serialized);
-        }
+fn save_trash_origins(config_dir: &Path, origins: &TrashOrigins) {
+    let target = trash_origins_path(config_dir);
+    if let Some(parent) = target.parent() {
+        let _ = std::fs::create_dir_all(parent);
+    }
+    if let Ok(serialized) = toml::to_string_pretty(origins) {
+        let _ = std::fs::write(target, serialized);
     }
 }
 
 // Remember where `original` lived (by its name), replacing any prior record for the same name.
-fn record_trash_origin(app: &AppHandle, original: &str) {
+fn record_trash_origin(config_dir: &Path, original: &str) {
     let Some(name) = Path::new(original).file_name().and_then(|n| n.to_str()) else {
         return;
     };
-    let mut origins = load_trash_origins(app);
+    let mut origins = load_trash_origins(config_dir);
     origins.entries.retain(|entry| entry.name != name);
     origins.entries.push(TrashOrigin {
         name: name.to_string(),
         original: original.to_string(),
     });
-    save_trash_origins(app, &origins);
+    save_trash_origins(config_dir, &origins);
 }
 
 // Move an entry to the system Trash/Recycle Bin (reversible), recording where it came from so it
@@ -744,7 +768,15 @@ fn record_trash_origin(app: &AppHandle, original: &str) {
 // no permission needed, faster, and reliably moves the item to the volume's Trash.
 #[tauri::command]
 pub fn delete_entry(app: AppHandle, path: String) -> Result<(), String> {
-    println!("[delete_entry] trashing: {}", path);
+    let config_dir = app.path().app_config_dir().map_err(|e| e.to_string())?;
+    trash_entry_core(&config_dir, &path)
+}
+
+// Move an entry to the system Trash and record its origin (under `config_dir`) for later restore.
+// Shared by the Tauri command and the CLI.
+pub fn trash_entry_core(config_dir: &Path, path: &str) -> Result<(), String> {
+    // stderr, not stdout: the CLI reserves stdout for its JSON envelope.
+    eprintln!("[delete_entry] trashing: {}", path);
 
     let result: Result<(), String> = {
         #[cfg(target_os = "macos")]
@@ -752,16 +784,16 @@ pub fn delete_entry(app: AppHandle, path: String) -> Result<(), String> {
             use trash::macos::{DeleteMethod, TrashContextExtMacos};
             let mut ctx = trash::TrashContext::default();
             ctx.set_delete_method(DeleteMethod::NsFileManager);
-            ctx.delete(&path).map_err(|e| e.to_string())
+            ctx.delete(path).map_err(|e| e.to_string())
         }
         #[cfg(not(target_os = "macos"))]
         {
-            trash::delete(&path).map_err(|e| e.to_string())
+            trash::delete(path).map_err(|e| e.to_string())
         }
     };
 
     if result.is_ok() {
-        record_trash_origin(&app, &path);
+        record_trash_origin(config_dir, path);
     }
     result
 }
@@ -772,7 +804,18 @@ pub fn delete_entry(app: AppHandle, path: String) -> Result<(), String> {
 // already viewing the Trash to invoke this, so that's granted.
 #[tauri::command]
 pub fn restore_trashed(app: AppHandle, trashed_path: String) -> Result<Option<String>, String> {
-    let Some(name) = Path::new(&trashed_path)
+    let config_dir = app.path().app_config_dir().map_err(|e| e.to_string())?;
+    restore_trashed_core(&config_dir, &trashed_path)
+}
+
+// Restore a trashed item to its recorded original location (origins read from `config_dir`).
+// Returns the destination path, or None when there is no record for it. Shared by the Tauri
+// command and the CLI.
+pub fn restore_trashed_core(
+    config_dir: &Path,
+    trashed_path: &str,
+) -> Result<Option<String>, String> {
+    let Some(name) = Path::new(trashed_path)
         .file_name()
         .and_then(|n| n.to_str())
         .map(|s| s.to_string())
@@ -780,7 +823,7 @@ pub fn restore_trashed(app: AppHandle, trashed_path: String) -> Result<Option<St
         return Ok(None);
     };
 
-    let mut origins = load_trash_origins(&app);
+    let mut origins = load_trash_origins(config_dir);
     let Some(index) = origins.entries.iter().position(|entry| entry.name == name) else {
         return Ok(None);
     };
@@ -797,10 +840,10 @@ pub fn restore_trashed(app: AppHandle, trashed_path: String) -> Result<Option<St
     // Recreate the original folder if it's gone, and avoid clobbering an existing file there.
     std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
     let dest = unique_dest(parent, file_name);
-    std::fs::rename(&trashed_path, &dest).map_err(|e| e.to_string())?;
+    std::fs::rename(trashed_path, &dest).map_err(|e| e.to_string())?;
 
     origins.entries.remove(index);
-    save_trash_origins(&app, &origins);
+    save_trash_origins(config_dir, &origins);
     Ok(Some(dest.to_string_lossy().to_string()))
 }
 
@@ -811,16 +854,19 @@ pub async fn delete_entry_permanently(path: String) -> Result<(), String> {
     println!("[delete_entry_permanently] deleting: {}", path);
 
     // Recursive removal of a large tree can take a while — run it off the main thread.
-    tauri::async_runtime::spawn_blocking(move || {
-        let p = Path::new(&path);
-        if p.is_dir() {
-            fs::remove_dir_all(p).map_err(|e| e.to_string())
-        } else {
-            fs::remove_file(p).map_err(|e| e.to_string())
-        }
-    })
-    .await
-    .map_err(|e| e.to_string())?
+    tauri::async_runtime::spawn_blocking(move || delete_permanently_core(&path))
+        .await
+        .map_err(|e| e.to_string())?
+}
+
+// Permanently delete a file or directory (irreversible). Shared by the Tauri command and the CLI.
+pub fn delete_permanently_core(path: &str) -> Result<(), String> {
+    let p = Path::new(path);
+    if p.is_dir() {
+        fs::remove_dir_all(p).map_err(|e| e.to_string())
+    } else {
+        fs::remove_file(p).map_err(|e| e.to_string())
+    }
 }
 
 // Permanently empty the user's Trash (~/.Trash), removing every item it contains. Irreversible.
@@ -831,53 +877,57 @@ pub async fn delete_entry_permanently(path: String) -> Result<(), String> {
 // target's directory). Per-volume Trashes (/Volumes/*/.Trashes) are intentionally out of scope.
 #[tauri::command]
 pub async fn empty_trash() -> Result<u32, String> {
-    tauri::async_runtime::spawn_blocking(|| {
-        let home = std::env::var("HOME").map_err(|e| e.to_string())?;
-        let trash = Path::new(&home).join(".Trash");
-        if !trash.exists() {
-            return Ok(0);
-        }
+    tauri::async_runtime::spawn_blocking(empty_trash_core)
+        .await
+        .map_err(|e| e.to_string())?
+}
 
-        let mut removed = 0u32;
-        let mut last_err: Option<String> = None;
-        for entry in fs::read_dir(&trash).map_err(|e| e.to_string())? {
-            let path = match entry {
-                Ok(entry) => entry.path(),
-                Err(e) => {
-                    last_err = Some(e.to_string());
-                    continue;
-                }
-            };
+// Permanently empty the user's Trash (~/.Trash). Returns the count of top-level items removed.
+// Shared by the Tauri command and the CLI.
+pub fn empty_trash_core() -> Result<u32, String> {
+    let home = std::env::var("HOME").map_err(|e| e.to_string())?;
+    let trash = Path::new(&home).join(".Trash");
+    if !trash.exists() {
+        return Ok(0);
+    }
 
-            let is_dir = match fs::symlink_metadata(&path) {
-                Ok(meta) => meta.is_dir(),
-                Err(e) => {
-                    last_err = Some(e.to_string());
-                    continue;
-                }
-            };
-
-            let result = if is_dir {
-                fs::remove_dir_all(&path)
-            } else {
-                fs::remove_file(&path)
-            };
-            match result {
-                Ok(()) => removed += 1,
-                Err(e) => last_err = Some(e.to_string()),
+    let mut removed = 0u32;
+    let mut last_err: Option<String> = None;
+    for entry in fs::read_dir(&trash).map_err(|e| e.to_string())? {
+        let path = match entry {
+            Ok(entry) => entry.path(),
+            Err(e) => {
+                last_err = Some(e.to_string());
+                continue;
             }
-        }
+        };
 
-        // Surface a failure only if nothing could be removed; a partial empty still reports its count.
-        if removed == 0 {
-            if let Some(e) = last_err {
-                return Err(e);
+        let is_dir = match fs::symlink_metadata(&path) {
+            Ok(meta) => meta.is_dir(),
+            Err(e) => {
+                last_err = Some(e.to_string());
+                continue;
             }
+        };
+
+        let result = if is_dir {
+            fs::remove_dir_all(&path)
+        } else {
+            fs::remove_file(&path)
+        };
+        match result {
+            Ok(()) => removed += 1,
+            Err(e) => last_err = Some(e.to_string()),
         }
-        Ok(removed)
-    })
-    .await
-    .map_err(|e| e.to_string())?
+    }
+
+    // Surface a failure only if nothing could be removed; a partial empty still reports its count.
+    if removed == 0 {
+        if let Some(e) = last_err {
+            return Err(e);
+        }
+    }
+    Ok(removed)
 }
 
 // Most recent files to return (Finder-style "Recents").
@@ -905,41 +955,47 @@ pub async fn get_recent_files(
         Vec::new()
     };
 
-    tauri::async_runtime::spawn_blocking(move || {
-        let home = std::env::var("HOME").map_err(|e| e.to_string())?;
-        let output = std::process::Command::new("mdfind")
-            .arg("-onlyin")
-            .arg(&home)
-            .arg("kMDItemContentModificationDate >= $time.today(-30)")
-            .output()
-            .map_err(|e| e.to_string())?;
+    tauri::async_runtime::spawn_blocking(move || recent_files_core(app_dirs))
+        .await
+        .map_err(|e| e.to_string())?
+}
 
-        let is_app_file = |entry: &DirEntry| -> bool {
-            if app_dirs.iter().any(|dir| entry.path.starts_with(dir)) {
-                return true;
-            }
-            entry
-                .path
-                .file_name()
-                .and_then(|name| name.to_str())
-                .map(|name| name.starts_with(WRITE_PROBE_PREFIX))
-                .unwrap_or(false)
-        };
+// Recently modified files under $HOME (via Spotlight/`mdfind`), newest first, capped. Any path
+// under one of `app_dirs` (or a write-probe temp file) is filtered out, so passing this app's
+// config/cache dirs hides its background writes; pass an empty list to keep everything. Shared by
+// the Tauri command and the CLI.
+pub fn recent_files_core(app_dirs: Vec<PathBuf>) -> Result<Vec<DirEntry>, String> {
+    let home = std::env::var("HOME").map_err(|e| e.to_string())?;
+    let output = std::process::Command::new("mdfind")
+        .arg("-onlyin")
+        .arg(&home)
+        .arg("kMDItemContentModificationDate >= $time.today(-30)")
+        .output()
+        .map_err(|e| e.to_string())?;
 
-        let stdout = String::from_utf8_lossy(&output.stdout);
-        let mut entries: Vec<DirEntry> = stdout
-            .lines()
-            .filter(|line| !line.is_empty())
-            .filter_map(|line| build_dir_entry(PathBuf::from(line)).ok())
-            .filter(|entry| entry.metadata.is_file)
-            .filter(|entry| !is_app_file(entry))
-            .collect();
+    let is_app_file = |entry: &DirEntry| -> bool {
+        if app_dirs.iter().any(|dir| entry.path.starts_with(dir)) {
+            return true;
+        }
+        entry
+            .path
+            .file_name()
+            .and_then(|name| name.to_str())
+            .map(|name| name.starts_with(WRITE_PROBE_PREFIX))
+            .unwrap_or(false)
+    };
 
-        // Newest first, then cap.
-        entries.sort_by(|a, b| b.metadata.modified.cmp(&a.metadata.modified));
-        entries.truncate(RECENTS_LIMIT);
-        Ok(entries)
-    })
-    .await
-    .map_err(|e| e.to_string())?
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let mut entries: Vec<DirEntry> = stdout
+        .lines()
+        .filter(|line| !line.is_empty())
+        .filter_map(|line| build_dir_entry(PathBuf::from(line)).ok())
+        .filter(|entry| entry.metadata.is_file)
+        .filter(|entry| !is_app_file(entry))
+        .collect();
+
+    // Newest first, then cap.
+    entries.sort_by(|a, b| b.metadata.modified.cmp(&a.metadata.modified));
+    entries.truncate(RECENTS_LIMIT);
+    Ok(entries)
 }

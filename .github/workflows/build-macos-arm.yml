@@ -1,15 +1,16 @@
-name: Build macOS (Intel)
+name: Build macOS (Apple Silicon)
 
-# Builds the unsigned Intel (x86_64) .dmg for Macs like the 2018 MacBook Pro. Runs when you publish
-# a GitHub Release (the .dmg is attached to that release), or manually from the Actions tab (the
-# .dmg is uploaded as a run artifact). Never runs on pushes or PRs.
+# Builds the unsigned Apple Silicon (arm64) .dmg. Built ON macOS 14 (Sonoma) with a minimum system
+# version of 14.0 (see tauri.conf.json > bundle.macOS), so the SINGLE arm64 .dmg runs on both
+# Sonoma (macOS 14) and Sequoia (macOS 15) — no separate per-OS build is needed. Runs when you
+# publish a GitHub Release (the .dmg is attached to it), or manually from the Actions tab.
 on:
   release:
     types: [published]
   workflow_dispatch:
 
 concurrency:
-  group: build-macos-intel-${{ github.ref }}
+  group: build-macos-arm-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -17,9 +18,9 @@ permissions:
 
 jobs:
   build:
-    # Apple Silicon runner (always available; the Intel macos-13 runner is being retired and often
-    # never gets picked up). We cross-compile to x86_64 via --target below, so the .dmg is Intel.
-    runs-on: macos-latest
+    # Sonoma Apple Silicon runner. Building on the OLDER supported OS maximises forward
+    # compatibility: the resulting arm64 binary also runs on Sequoia.
+    runs-on: macos-14
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -38,7 +39,7 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: x86_64-apple-darwin
+          targets: aarch64-apple-darwin
 
       - name: Cache Rust build
         uses: Swatinem/rust-cache@v2
@@ -50,18 +51,18 @@ jobs:
 
       # Build the `sfb` CLI and stage it as a sidecar so the .app embeds it at Contents/MacOS/sfb.
       # Must run before `tauri build` and target the same triple the DMG is built for.
-      - name: Build sfb sidecar (x86_64)
-        run: ./scripts/build-sfb-sidecar.sh x86_64-apple-darwin
+      - name: Build sfb sidecar (aarch64)
+        run: ./scripts/build-sfb-sidecar.sh aarch64-apple-darwin
 
-      - name: Build DMG (x86_64)
-        run: pnpm tauri build --target x86_64-apple-darwin --bundles dmg
+      - name: Build DMG (aarch64)
+        run: pnpm tauri build --target aarch64-apple-darwin --bundles dmg
 
       # Manual runs have no release to attach to → keep the .dmg as a downloadable artifact.
       - name: Upload DMG artifact
         uses: actions/upload-artifact@v4
         with:
-          name: sito-file-browser-macos-intel
-          path: src-tauri/target/x86_64-apple-darwin/release/bundle/dmg/*.dmg
+          name: sito-file-browser-macos-arm
+          path: src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.dmg
           if-no-files-found: error
 
       # Release runs → attach the .dmg to the published release.
@@ -69,4 +70,4 @@ jobs:
         if: github.event_name == 'release'
         uses: softprops/action-gh-release@v2
         with:
-          files: src-tauri/target/x86_64-apple-darwin/release/bundle/dmg/*.dmg
+          files: src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.dmg

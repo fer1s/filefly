@@ -40,6 +40,10 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "externalBin": ["binaries/sfb"],
+    "macOS": {
+      "minimumSystemVersion": "14.0"
+    },
     "resources": ["icons/32x32.png"],
     "icon": [
       "icons/32x32.png",

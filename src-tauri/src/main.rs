@@ -1,13 +1,11 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-mod tray;
-mod utils;
-mod filesystem;
-mod functions;
-mod dock_menu;
-mod window;
-
+// The GUI app binary. It wires up Tauri using the shared modules from the library crate
+// (`sito_file_browser_lib`), which the `sfb` CLI also links. `generate_context!` — which validates
+// the `externalBin` sidecar at compile time — lives here, not in the lib, so building the CLI never
+// requires the sidecar to already exist.
+use sito_file_browser_lib::{dock_menu, filesystem, functions, tray, window};
 use tauri::Manager;
 
 fn main() {
@@ -33,9 +31,7 @@ fn main() {
             // Trim the thumbnail cache to its size budget, off the UI thread.
             if let Ok(cache_dir) = app.path().app_cache_dir() {
                 let thumbnails = cache_dir.join("thumbnails");
-                std::thread::spawn(move || {
-                    filesystem::fs::prune_thumbnail_cache(&thumbnails)
-                });
+                std::thread::spawn(move || filesystem::fs::prune_thumbnail_cache(&thumbnails));
             }
 
             // Apply the main window's native chrome the same way runtime-created windows get it.
@@ -96,8 +92,8 @@ fn main() {
             dock_menu::clear_recent_folders,
             window::open_new_window,
         ])
-        .on_window_event(|window, event| match event {
-            tauri::WindowEvent::CloseRequested { api, .. } => {
+        .on_window_event(|window, event| {
+            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
                 // The app lives in the tray, so closing "main" hides it (reopen from the tray)
                 // rather than quitting. Runtime windows (win-N) close normally.
                 if window.label() == "main" {
@@ -105,7 +101,6 @@ fn main() {
                     api.prevent_close();
                 }
             }
-            _ => {}
         })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
