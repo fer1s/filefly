@@ -63,8 +63,12 @@ export type RangeDescriptor = BaseDescriptor & {
   format: (stored: number) => string;
 };
 
-export type CustomDescriptor = BaseDescriptor & {
+export type CustomDescriptor = Omit<BaseDescriptor, "key"> & {
   kind: "custom";
+  // Custom entries own their modified/reset (below), so `key` only needs to be unique — it can be
+  // an AppSettings field or a synthetic id for an entry that binds to no single setting (e.g. the
+  // informational Storage panel).
+  key: string;
   // Right-hand control, and an optional full-width extra rendered below the row (e.g. the custom
   // date pattern input, or the home-folder chooser). Both may render null when not applicable.
   Control: ComponentType<CustomControlProps>;

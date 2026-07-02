@@ -376,3 +376,22 @@ export const clearRecentFolders = async (): Promise<void> =>
 // assigns a unique label and clones the main window's chrome.
 export const openNewWindow = async (): Promise<void> =>
   await invoke("open_new_window");
+
+// Open a new app window rooted at `path` (a fresh browser window that starts at the given folder,
+// e.g. one of the app's data directories from the Storage settings).
+export const openPathInNewWindow = async (path: string): Promise<void> =>
+  await invoke("open_path_in_new_window", { path });
+
+// One of the app's on-disk data locations, with its recursively-summed size in bytes. `kind` is a
+// stable id ("config" | "cache") mapped to a localized label in the UI. Mirrors StorageLocation in
+// functions/storage.rs.
+export type AppStorageLocation = {
+  kind: string;
+  path: string;
+  size: number;
+};
+
+// Where the app keeps its files on disk and how much space each location uses (config dir, cache
+// dir). Only existing directories are returned; the walk runs off the UI thread in Rust.
+export const getAppStorage = async (): Promise<AppStorageLocation[]> =>
+  (await invoke("get_app_storage")) as AppStorageLocation[];

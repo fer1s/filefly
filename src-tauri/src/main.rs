@@ -73,6 +73,7 @@ fn main() {
             functions::context_menu::get_context_menu,
             functions::settings::get_settings,
             functions::settings::set_settings,
+            functions::storage::get_app_storage,
             functions::sidebar::get_sidebar_groups,
             functions::sidebar::set_sidebar_group_name,
             functions::sidebar::set_sidebar_order,
@@ -91,6 +92,7 @@ fn main() {
             dock_menu::push_recent_folder,
             dock_menu::clear_recent_folders,
             window::open_new_window,
+            window::open_path_in_new_window,
         ])
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {

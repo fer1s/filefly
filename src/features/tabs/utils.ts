@@ -137,11 +137,26 @@ export const loadStartupConfig = (): StartupConfig => {
 export const saveStartupConfig = (config: StartupConfig): void =>
   localStorage.setItem(STARTUP_STORAGE_KEY, JSON.stringify(config));
 
+// A window opened at a specific folder carries it as a `startPath` query param (see window.rs
+// open_path_in_new_window). Read once at mount; when present it wins over the startup preference
+// so the window opens a single tab there. Percent-decoded to recover the original path.
+const startPathFromUrl = (): string | null => {
+  try {
+    return new URLSearchParams(window.location.search).get("startPath");
+  } catch {
+    // Non-Tauri context (e.g. tests) or unparsable URL — no override.
+    return null;
+  }
+};
+
 // Restore the persisted tab session, falling back to a single Volumes tab when absent/corrupt.
 // Normalises older sessions that predate per-tab fields (e.g. `infoPanelOpen`). When the launch
 // preference is a fresh session (Volumes or a home folder), the persisted tabs are ignored and a
-// single new tab is opened at the chosen location instead.
+// single new tab is opened at the chosen location instead. A `startPath` query param (a window
+// opened at a specific folder) overrides everything: open a single tab rooted there.
 export const loadTabs = (): Tab[] => {
+  const startPath = startPathFromUrl();
+  if (startPath !== null) return [makeTab(startPath)];
   const { mode, homePath } = loadStartupConfig();
   if (mode === STARTUP_MODE.VOLUMES) return [makeTab("")];
   if (mode === STARTUP_MODE.HOME) return [makeTab(homePath)];

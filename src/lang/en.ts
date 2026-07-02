@@ -213,6 +213,7 @@ export const en = {
       dragDrop: "Drag & Drop",
       notifications: "Notifications",
       startup: "Startup",
+      storage: "Storage",
     },
     showHidden: "Show hidden files",
     showHiddenHint: "Display dotfiles and other hidden entries in folders.",
@@ -260,6 +261,13 @@ export const en = {
     dragToExternalAppsHint:
       "Drag a file out of the window to drop it into other apps (Finder, Mail, …).",
     saving: "Saving settings…",
+    storage: "Disk usage",
+    storageHint: "Space the app's data uses on disk and where it's stored.",
+    storageTotal: "Total",
+    storageConfig: "Settings & data",
+    storageCache: "Cache",
+    storageLoading: "Measuring…",
+    storageOpen: "Open in a new file browser window",
   },
   infoPanel: {
     title: "Info",

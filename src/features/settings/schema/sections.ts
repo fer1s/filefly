@@ -11,6 +11,7 @@ export const SETTINGS_SECTION = {
   DRAG_DROP: "dragDrop",
   NOTIFICATIONS: "notifications",
   STARTUP: "startup",
+  STORAGE: "storage",
 } as const;
 
 export type SettingsSectionId =
@@ -34,4 +35,5 @@ export const SETTINGS_SECTIONS: {
     label: () => t.settings.sections.notifications,
   },
   { id: SETTINGS_SECTION.STARTUP, label: () => t.settings.sections.startup },
+  { id: SETTINGS_SECTION.STORAGE, label: () => t.settings.sections.storage },
 ];

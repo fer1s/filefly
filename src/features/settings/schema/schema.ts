@@ -12,6 +12,8 @@ import DateFormatControl from "../components/SettingsDialog/controls/DateFormatC
 import DateFormatBelow from "../components/SettingsDialog/controls/DateFormatBelow";
 import StartupControl from "../components/SettingsDialog/controls/StartupControl";
 import StartupBelow from "../components/SettingsDialog/controls/StartupBelow";
+import StorageControl from "../components/SettingsDialog/controls/StorageControl";
+import StorageBelow from "../components/SettingsDialog/controls/StorageBelow";
 
 import { SETTINGS_SECTION } from "./sections";
 import { SETTING_KIND, type SettingDescriptor } from "./types";
@@ -157,5 +159,19 @@ export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
         startupMode: defaults.startupMode,
         homePath: defaults.homePath,
       }),
+  },
+
+  // Storage — informational: shows the app's on-disk data footprint and where it lives. Binds to no
+  // AppSettings field (synthetic key), so it's never "modified" and has no reset.
+  {
+    kind: SETTING_KIND.CUSTOM,
+    key: "appStorage",
+    section: SETTINGS_SECTION.STORAGE,
+    label: () => t.settings.storage,
+    hint: () => t.settings.storageHint,
+    Control: StorageControl,
+    Below: StorageBelow,
+    isModified: () => false,
+    reset: () => {},
   },
 ];
