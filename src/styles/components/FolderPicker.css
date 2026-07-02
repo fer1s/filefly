@@ -1,5 +1,5 @@
 .folder_picker {
-  width: 420px;
+  width: var(--size-folder-picker-width);
   max-width: calc(100vw - var(--space-8));
   display: flex;
   flex-direction: column;
@@ -84,7 +84,7 @@
 
 /* Scrolling list of folders (or volumes at the root). */
 .folder_picker .folder_picker_list {
-  height: 280px;
+  height: var(--size-folder-picker-list-height);
   overflow-y: auto;
   padding: var(--space-2);
   display: flex;
