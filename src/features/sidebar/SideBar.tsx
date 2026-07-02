@@ -12,7 +12,7 @@ import {
   PINNED_ACTIONS,
 } from "@/shared/keymap";
 import { classNames, basename, tagsPath } from "@/shared/utils";
-import { pickFolder } from "@/shared/services/api";
+import { useFolderPicker } from "@/shared/providers/FolderPickerProvider";
 import { RECENTS, TAG_COLOR, TAG_COLOR_CLASS } from "@/shared/constants";
 import { useTags } from "@/shared/providers/TagsProvider";
 import { useSettings } from "@/features/settings";
@@ -80,6 +80,7 @@ const GROUP_META: Record<SidebarGroupId, { title: string; editable: boolean }> =
 
 const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
   const { path, volumes, setPath, sidebarOpacity } = useStateContext();
+  const { pickFolder } = useFolderPicker();
   const { allTags } = useTags();
 
   const { keymap } = useKeymap();
@@ -96,10 +97,8 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
 
   const menu = useSidebarContextMenu();
   const properties = useEntryProperties();
-  const { bind, dragStyle, registerRef, draggingId } = useGroupDragSort(
-    groups.order,
-    groups.reorder,
-  );
+  const { bind, styleFor, registerRef, draggingId, snapping } =
+    useGroupDragSort(groups.order, groups.reorder);
   // The custom item awaiting delete-confirmation (null when the dialog is closed).
   const [pendingRemoval, setPendingRemoval] = useState<{
     id: string;
@@ -147,7 +146,10 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
   // so subtract the built-in count to land at the right slot within the persisted custom items.
   const onAddItem =
     (id: string, builtinCount: number) => async (index: number) => {
-      const folder = await pickFolder();
+      // Open the custom picker at the folder currently in view (skip sentinels like Recents/tags).
+      const folder = await pickFolder({
+        startPath: path.startsWith("/") ? path : "",
+      });
       if (folder) groups.addItem(id, folder, Math.max(0, index - builtinCount));
     };
 
@@ -280,7 +282,11 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
   return (
     <div
       ref={sidebarRef}
-      className={classNames("SideBar", collapsed && "collapsed")}
+      className={classNames(
+        "SideBar",
+        collapsed && "collapsed",
+        snapping && "snapping",
+      )}
       // Drives the alpha of --color-background-sidebar (see theme.css); set by the user in Settings.
       style={{ "--sidebar-opacity": sidebarOpacity } as CSSProperties}
     >
@@ -345,7 +351,7 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
             ref={registerRef(id)}
             title={title}
             editing={editingSidebar}
-            style={dragStyle(id)}
+            style={styleFor(id)}
             dragging={draggingId === id}
             dragHandleProps={editingSidebar ? bind(id) : undefined}
             onRename={editable ? (name) => groups.rename(id, name) : undefined}

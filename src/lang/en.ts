@@ -199,6 +199,13 @@ export const en = {
       helpShortcuts: "Show shortcuts",
     },
   },
+  folderPicker: {
+    title: "Choose folder",
+    locations: "Locations",
+    choose: "Choose",
+    empty: "No folders here",
+    loading: "Loading…",
+  },
   settings: {
     title: "Settings",
     search: "Search settings",
@@ -272,6 +279,9 @@ export const en = {
     dragToExternalApps: "Drag to other apps",
     dragToExternalAppsHint:
       "Drag a file out of the window to drop it into other apps (Finder, Mail, …).",
+    useCustomFolderPicker: "Use built-in folder picker",
+    useCustomFolderPickerHint:
+      "Pick folders with an in-app browser instead of the system (Finder) dialog.",
     saving: "Saving settings…",
     storage: "Disk usage",
     storageHint: "Space the app's data uses on disk and where it's stored.",

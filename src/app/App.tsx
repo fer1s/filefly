@@ -12,6 +12,7 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { StateProvider } from "@/shared/providers/StateProvider";
 import { ModalProvider } from "@/shared/providers/ModalProvider";
 import { ConfirmProvider } from "@/shared/providers/ConfirmProvider";
+import { FolderPickerProvider } from "@/shared/providers/FolderPickerProvider";
 import { TagsProvider } from "@/shared/providers/TagsProvider";
 import {
   KeymapProvider,
@@ -254,6 +255,9 @@ const App = () => {
               {/* Inside HotkeyProvider so the confirm dialog's Escape-to-close (a MODAL-scope
                   hotkey) and modal-scope suppression actually register. */}
               <ConfirmProvider>
+              {/* Custom folder picker (vs native Finder dialog); inside HotkeyProvider/ModalProvider
+                  so its dialog gets MODAL-scope suppression and focus trapping like other dialogs. */}
+              <FolderPickerProvider useCustom={settings.useCustomFolderPicker}>
               <ShortcutHelpProvider>
                 <SettingsProvider settings={settings} update={update}>
                   <div
@@ -282,6 +286,7 @@ const App = () => {
                 <ShortcutsDialog />
                 <ToastStack toasts={toasts} onDismiss={dismissToast} />
               </ShortcutHelpProvider>
+              </FolderPickerProvider>
               </ConfirmProvider>
             </HotkeyProvider>
           </KeymapProvider>

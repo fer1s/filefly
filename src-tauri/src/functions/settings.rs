@@ -46,6 +46,8 @@ pub struct AppSettings {
     clickable_toasts: bool,
     // Whether dragging entries out of the window starts a native OS drag (drop into other apps).
     drag_to_external_apps: bool,
+    // Use the app's own in-window folder picker instead of the native OS (Finder) folder dialog.
+    use_custom_folder_picker: bool,
 }
 
 // Must mirror the frontend defaults (shared/constants.ts).
@@ -69,6 +71,7 @@ impl Default for AppSettings {
             confirm_delete: true,
             clickable_toasts: true,
             drag_to_external_apps: true,
+            use_custom_folder_picker: false,
         }
     }
 }

@@ -1,4 +1,4 @@
-import { pickFolder } from "@/shared/services/api";
+import { useFolderPicker } from "@/shared/providers/FolderPickerProvider";
 import { basename } from "@/shared/utils";
 import { STARTUP_MODE } from "@/shared/constants";
 import { t } from "@/lang";
@@ -8,10 +8,11 @@ import type { CustomControlProps } from "../../../schema";
 // Full-width extra for the startup setting: the home-folder chooser, shown only when the "home"
 // launch mode is selected. An empty home path falls back to the Volumes view on launch.
 const StartupBelow = ({ settings, update }: CustomControlProps) => {
+  const { pickFolder } = useFolderPicker();
   if (settings.startupMode !== STARTUP_MODE.HOME) return null;
 
   const onChoose = async () => {
-    const chosen = await pickFolder();
+    const chosen = await pickFolder({ startPath: settings.homePath });
     if (chosen !== null) update({ homePath: chosen });
   };
 

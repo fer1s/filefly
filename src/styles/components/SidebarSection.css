@@ -1,6 +1,15 @@
 .SideBar .SidebarSection {
   width: 100%;
   margin-bottom: var(--space-8);
+  /* Resting groups ease into the gap the lifted group opens; the dragged group overrides this to
+     follow the pointer 1:1 (see .dragging). */
+  transition: transform 0.18s ease;
+}
+
+/* On the commit frame after a drop, the reorder already placed groups at their final slots — snap
+   transforms to zero instantly so nothing slides back from the now-stale shift offset. */
+.SideBar.snapping .SidebarSection {
+  transition: none;
 }
 
 .SideBar .SidebarSection:last-child {
@@ -86,10 +95,18 @@
   font-size: var(--font-size-xs);
 }
 
-/* The group being dragged floats above the others and shows it's being lifted. */
+/* The group being dragged floats above the others and follows the pointer 1:1. It needs an OPAQUE
+   background: the sidebar surface is translucent, so without this the group it's dragged over bleeds
+   through (the ghosted text in the bug report). Solid sidebar hue + a lift shadow reads as elevated. */
 .SideBar .SidebarSection.dragging {
+  position: relative;
+  z-index: 2;
   cursor: grabbing;
-  opacity: 0.9;
+  background-color: rgb(var(--color-background-sidebar-rgb));
+  border-radius: var(--radius-sm);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.35);
+  /* Follow the pointer instantly — no lag between cursor and group. */
+  transition: none;
 }
 
 /* Chevron toggle button, points down when open and right when collapsed. */
@@ -243,6 +260,7 @@
 
 /* Respect users who prefer reduced motion: toggle instantly, no chevron spin or height slide. */
 @media (prefers-reduced-motion: reduce) {
+  .SideBar .SidebarSection,
   .SideBar .SidebarSection .section_header,
   .SideBar .SidebarSection .section_chevron svg,
   .SideBar .SidebarSection .section_content {

@@ -162,6 +162,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   confirmDelete: true,
   clickableToasts: true,
   dragToExternalApps: true,
+  useCustomFolderPicker: false,
 };
 
 // DOM KeyboardEvent.key names used in non-configurable key handling (navigation, input

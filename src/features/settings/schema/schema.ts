@@ -72,6 +72,13 @@ export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
     isModified: () => false,
     reset: () => {},
   },
+  {
+    kind: SETTING_KIND.TOGGLE,
+    key: "useCustomFolderPicker",
+    section: SETTINGS_SECTION.GENERAL,
+    label: () => t.settings.useCustomFolderPicker,
+    hint: () => t.settings.useCustomFolderPickerHint,
+  },
 
   // ── Appearance ── everything visual (theme, accent, zoom, dates, sidebar).
   {

@@ -43,6 +43,8 @@ export type AppSettings = {
   clickableToasts: boolean;
   // Whether dragging entries out of the window starts a native OS drag (drop into other apps).
   dragToExternalApps: boolean;
+  // Use the app's own in-window folder picker instead of the native OS (Finder) folder dialog.
+  useCustomFolderPicker: boolean;
 };
 
 // Load the persisted app settings (falls back to defaults when settings.toml is absent).
