@@ -79,7 +79,11 @@ export const useNativeDropTarget = ({
             }
           }
         } else if (payload.type === "drop") {
-          const el = folderAt(payload.position.x, payload.position.y);
+          // Trust the folder highlighted by the last `over` (targetElRef), NOT a fresh hit-test on
+          // the drop position: the drop position can resolve a folder even when the user released on
+          // empty space (popping a bogus move confirm for a drag that lands in the current dir). The
+          // in-app drag path already commits to the highlighted target — mirror it here.
+          const el = targetElRef.current;
           clearTarget();
           setActive(false);
           const external = !isOwnDrag(payload.paths);
