@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 
 import type { Tab } from "@/shared/models";
 
@@ -13,6 +14,7 @@ import {
   loadTabs,
   loadActiveTabId,
   saveTabs,
+  clearOrphanedWindowSessions,
 } from "../../utils";
 
 // Owns the browser-tab session: open tabs, the active one, and all navigation that acts on it
@@ -93,6 +95,14 @@ export const useTabs = () => {
   useEffect(() => {
     saveTabs(tabs, activeTabId);
   }, [tabs, activeTabId]);
+
+  // Runtime windows ("win-N") are ephemeral: drop their persisted session when they close so it
+  // doesn't accumulate in localStorage. "main" is skipped — its session is restored on launch.
+  // Purge tab sessions orphaned by closed runtime windows. Runs once at startup from the main
+  // window (when no win-N exist), so it never touches a live window's session.
+  useEffect(() => {
+    if (getCurrentWindow().label === "main") clearOrphanedWindowSessions();
+  }, []);
 
   return {
     tabs,

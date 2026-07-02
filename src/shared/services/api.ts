@@ -369,3 +369,8 @@ export const pushRecentFolder = async (path: string): Promise<void> =>
 // Clear the Dock recent-folders list.
 export const clearRecentFolders = async (): Promise<void> =>
   await invoke("clear_recent_folders");
+
+// Open a new app window (a fresh browser window with its own tab session). No-op arg; the backend
+// assigns a unique label and clones the main window's chrome.
+export const openNewWindow = async (): Promise<void> =>
+  await invoke("open_new_window");

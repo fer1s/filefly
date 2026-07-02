@@ -6,10 +6,9 @@ mod utils;
 mod filesystem;
 mod functions;
 mod dock_menu;
+mod window;
 
 use tauri::Manager;
-#[cfg(target_os = "windows")]
-use window_vibrancy::apply_acrylic;
 
 fn main() {
     tauri::Builder::default()
@@ -39,11 +38,9 @@ fn main() {
                 });
             }
 
-            #[cfg(target_os = "windows")]
-            {
-                let window = app.get_webview_window("main").unwrap();
-                apply_acrylic(&window, Some((18, 18, 18, 180)))
-                    .expect("Unsupported platform! 'apply_acrylic' is only supported on Windows");
+            // Apply the main window's native chrome the same way runtime-created windows get it.
+            if let Some(main) = app.get_webview_window("main") {
+                window::configure_window(&main);
             }
 
             Ok(())
@@ -97,11 +94,16 @@ fn main() {
             functions::folder_columns::set_folder_zoom,
             dock_menu::push_recent_folder,
             dock_menu::clear_recent_folders,
+            window::open_new_window,
         ])
         .on_window_event(|window, event| match event {
             tauri::WindowEvent::CloseRequested { api, .. } => {
-                window.hide().unwrap();
-                api.prevent_close();
+                // The app lives in the tray, so closing "main" hides it (reopen from the tray)
+                // rather than quitting. Runtime windows (win-N) close normally.
+                if window.label() == "main" {
+                    let _ = window.hide();
+                    api.prevent_close();
+                }
             }
             _ => {}
         })

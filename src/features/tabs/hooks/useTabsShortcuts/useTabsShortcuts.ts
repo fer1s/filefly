@@ -6,6 +6,8 @@ import {
 } from "@/shared/keymap";
 import type { HotkeySpec } from "@/shared/keymap";
 
+import { openNewWindow } from "@/shared/services/api";
+
 import { NEXT_TAB_DIRECTION, PREV_TAB_DIRECTION } from "./constants";
 import type { UseTabsShortcutsArgs } from "./types";
 
@@ -19,6 +21,9 @@ export const useTabsShortcuts = ({
   selectTabBySlot,
 }: UseTabsShortcutsArgs) => {
   useHotkey(KEYMAP_ACTION.NEW_TAB, newTab, { allowInInput: true });
+  useHotkey(KEYMAP_ACTION.NEW_WINDOW, () => void openNewWindow(), {
+    allowInInput: true,
+  });
   useHotkey(KEYMAP_ACTION.CLOSE_TAB, closeActiveTab, { allowInInput: true });
   useHotkey(KEYMAP_ACTION.NEXT_TAB, () => cycleTab(NEXT_TAB_DIRECTION), {
     allowInInput: true,

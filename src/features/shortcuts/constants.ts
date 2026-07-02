@@ -144,6 +144,10 @@ export const SHORTCUT_SECTIONS: readonly ShortcutSection[] = [
         actions: [KEYMAP_ACTION.NEW_TAB],
       },
       {
+        label: () => t.shortcuts.actions.newWindow,
+        actions: [KEYMAP_ACTION.NEW_WINDOW],
+      },
+      {
         label: () => t.shortcuts.actions.closeTab,
         actions: [KEYMAP_ACTION.CLOSE_TAB],
       },

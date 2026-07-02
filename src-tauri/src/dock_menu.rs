@@ -18,6 +18,7 @@ const MAX_RECENTS: usize = 8;
 /// click as `dock://action`. Add a row here to add a menu item; nothing else changes.
 #[cfg(target_os = "macos")]
 const QUICK_ACTIONS: &[(&str, &str)] = &[
+    ("new-window", "New Window"),
     ("new-tab", "New Tab"),
     ("home", "Go to Home"),
     ("volumes", "Go to Volumes"),
@@ -81,27 +82,38 @@ pub fn clear_recent_folders() {
     save_recents(&state.app, &recents);
 }
 
-/// Bring the main window to the front and emit a navigation event the frontend acts on.
+/// Bring a window to the front and open the folder there in a new tab. Emitted to that window only
+/// (not broadcast) so multiple windows don't each react.
 fn emit_navigate(path: &str) {
     let Some(state) = DOCK.get() else { return };
-    focus_main_window(&state.app);
-    use tauri::Emitter;
-    let _ = state.app.emit("dock://navigate", path.to_string());
+    if let Some(window) = focus_target_window(&state.app) {
+        use tauri::Emitter;
+        let _ = window.emit("dock://navigate", path.to_string());
+    }
 }
 
 fn emit_action(id: &str) {
     let Some(state) = DOCK.get() else { return };
-    focus_main_window(&state.app);
-    use tauri::Emitter;
-    let _ = state.app.emit("dock://action", id.to_string());
+    // "New Window" is handled entirely in Rust — there's no window yet to emit into.
+    if id == "new-window" {
+        let _ = crate::window::create_window(&state.app);
+        return;
+    }
+    if let Some(window) = focus_target_window(&state.app) {
+        use tauri::Emitter;
+        let _ = window.emit("dock://action", id.to_string());
+    }
 }
 
-fn focus_main_window(app: &AppHandle) {
-    if let Some(window) = app.get_webview_window("main") {
-        let _ = window.unminimize();
-        let _ = window.show();
-        let _ = window.set_focus();
-    }
+/// Focus the window a Dock click should act on (the frontmost, else any) and return it. Opens a
+/// fresh window if the app is running with all windows closed (living in the tray).
+fn focus_target_window(app: &AppHandle) -> Option<tauri::WebviewWindow> {
+    let window = crate::window::target_window(app)
+        .or_else(|| crate::window::create_window(app).ok())?;
+    let _ = window.unminimize();
+    let _ = window.show();
+    let _ = window.set_focus();
+    Some(window)
 }
 
 // ---------------------------------------------------------------------------

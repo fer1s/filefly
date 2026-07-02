@@ -1,6 +1,16 @@
 use tauri::menu::{Menu, MenuItem, PredefinedMenuItem};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
-use tauri::{AppHandle, Manager, Runtime};
+use tauri::{AppHandle, Manager, Runtime, WebviewWindow};
+
+// The window a single-window action (center) should target: the focused one, else any.
+fn focused_or_first<R: Runtime>(app: &AppHandle<R>) -> Option<WebviewWindow<R>> {
+    let windows = app.webview_windows();
+    windows
+        .values()
+        .find(|w| w.is_focused().unwrap_or(false))
+        .or_else(|| windows.values().next())
+        .cloned()
+}
 
 pub fn create_tray<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
     let center_window = MenuItem::with_id(app, "center_window", "Center Window", true, None::<&str>)?;
@@ -17,12 +27,13 @@ pub fn create_tray<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
         .on_menu_event(|app, event| match event.id.as_ref() {
             "quit" => app.exit(0),
             "hide" => {
-                if let Some(window) = app.get_webview_window("main") {
+                // Hide every window (the whole app tucks into the tray).
+                for window in app.webview_windows().values() {
                     let _ = window.hide();
                 }
             }
             "center_window" => {
-                if let Some(window) = app.get_webview_window("main") {
+                if let Some(window) = focused_or_first(app) {
                     let _ = window.center();
                 }
             }
@@ -36,8 +47,12 @@ pub fn create_tray<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
             } = event
             {
                 let app = tray.app_handle();
-                if let Some(window) = app.get_webview_window("main") {
+                // Bring the whole app back: show all windows, focus one.
+                for window in app.webview_windows().values() {
                     let _ = window.show();
+                }
+                if let Some(window) = focused_or_first(app) {
+                    let _ = window.set_focus();
                 }
             }
         })

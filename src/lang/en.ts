@@ -190,6 +190,7 @@ export const en = {
       previewZoomIn: "Zoom in (image)",
       previewZoomOut: "Zoom out (image)",
       newTab: "New tab",
+      newWindow: "New window",
       closeTab: "Close tab",
       nextTab: "Next tab",
       prevTab: "Previous tab",
