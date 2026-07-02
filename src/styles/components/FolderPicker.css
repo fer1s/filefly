@@ -3,14 +3,99 @@
   max-width: calc(100vw - var(--space-8));
   display: flex;
   flex-direction: column;
+  /* Clip content to the dialog's rounded bounds so the folder list can never spill past its edges. */
+  overflow: hidden;
 }
 
-/* Up button + breadcrumb trail. */
+/* Two panes: the Favorites/Locations source list, then the current folder's contents. minmax(0,1fr)
+   + min-height:0 constrain the panes to the fixed body height so their lists scroll instead of
+   overflowing (grid/flex items default to min-height:auto, which refuses to shrink below content). */
+.folder_picker .folder_picker_body {
+  display: grid;
+  grid-template-columns: var(--size-folder-picker-source-width) 1fr;
+  grid-template-rows: minmax(0, 1fr);
+  height: var(--size-folder-picker-list-height);
+  min-height: 0;
+  border-bottom: var(--border-width-default) solid var(--color-border-soft);
+}
+
+/* ── Source list (left) ── */
+.folder_picker .folder_picker_source {
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--space-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  background-color: var(--color-surface-input);
+  border-right: var(--border-width-default) solid var(--color-border-soft);
+}
+
+.folder_picker .folder_picker_source_group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-0-25);
+}
+
+.folder_picker .folder_picker_source_title {
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+}
+
+.folder_picker .folder_picker_source_item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  text-align: left;
+  padding: var(--space-1-5) var(--space-2);
+  border-radius: var(--radius-sm);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-base);
+}
+
+.folder_picker .folder_picker_source_item:hover {
+  background-color: var(--color-overlay-hover);
+  color: var(--color-text-primary);
+}
+
+.folder_picker .folder_picker_source_item.active {
+  background-color: var(--color-selection-background);
+  color: var(--color-text-primary);
+}
+
+.folder_picker .folder_picker_source_item .Icon {
+  width: var(--size-icon-medium);
+  color: var(--color-accent);
+  flex: none;
+}
+
+.folder_picker .folder_picker_source_label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Main pane (right) ── */
+.folder_picker .folder_picker_main {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
 .folder_picker .folder_picker_nav {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  padding: var(--space-2) var(--space-4);
+  padding: var(--space-2) var(--space-3);
   border-bottom: var(--border-width-default) solid var(--color-border-soft);
 }
 
@@ -82,9 +167,10 @@
   color: var(--color-text-muted);
 }
 
-/* Scrolling list of folders (or volumes at the root). */
+/* Scrolling folder list. */
 .folder_picker .folder_picker_list {
-  height: var(--size-folder-picker-list-height);
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   padding: var(--space-2);
   display: flex;
@@ -135,12 +221,29 @@
   font-size: var(--font-size-sm);
 }
 
+/* ── Footer actions ── */
 .folder_picker .folder_picker_actions {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: space-between;
   gap: var(--space-2-5);
   padding: var(--space-3) var(--space-4);
-  border-top: var(--border-width-default) solid var(--color-border-soft);
+}
+
+/* Buttons inherit the large app base font otherwise; keep them at the control size. */
+.folder_picker .folder_picker_actions .Button {
+  font-size: var(--font-size-base);
+}
+
+.folder_picker .folder_picker_actions_right {
+  display: flex;
+  gap: var(--space-2-5);
+}
+
+.folder_picker .folder_picker_newfolder {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1-5);
 }
 
 .folder_picker .folder_picker_choose {
@@ -154,7 +257,8 @@
   border-color: var(--color-accent-hover);
 }
 
-.folder_picker .folder_picker_choose:disabled {
+.folder_picker .folder_picker_choose:disabled,
+.folder_picker .folder_picker_newfolder:disabled {
   opacity: 0.4;
   cursor: default;
 }

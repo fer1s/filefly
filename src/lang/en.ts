@@ -201,10 +201,16 @@ export const en = {
   },
   folderPicker: {
     title: "Choose folder",
+    favorites: "Favorites",
     locations: "Locations",
     choose: "Choose",
+    newFolder: "New Folder",
     empty: "No folders here",
     loading: "Loading…",
+    home: "Home",
+    desktop: "Desktop",
+    documents: "Documents",
+    downloads: "Downloads",
   },
   settings: {
     title: "Settings",

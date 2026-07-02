@@ -66,8 +66,9 @@
   --size-settings-panel-height: 420px;
   --size-settings-dot: var(--space-1-5);
   --size-confirmation-width: 380px;
-  --size-folder-picker-width: 420px;
-  --size-folder-picker-list-height: 280px;
+  --size-folder-picker-width: 680px;
+  --size-folder-picker-source-width: 176px;
+  --size-folder-picker-list-height: 340px;
   --size-info-panel-width: 300px;
   --size-info-preview-height: 240px;
   --size-tab-height: 30px;

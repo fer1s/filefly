@@ -9,12 +9,25 @@
   );
 }
 
+/* Pinned to the top of the scrolling sidebar. It's pulled out into the scroll container's padding
+   (see .App > .SideBar) so it spans the full width and sticks flush to the very top, with the
+   padding re-added internally; an opaque background keeps scrolled content from showing behind it.
+   z-index sits above a dragged group (SidebarSection.dragging, z-index 2) so groups slide under. */
 .SideBar .sidebar_header {
-  width: 100%;
-  margin-bottom: var(--space-4);
+  position: sticky;
+  /* Pin flush to the true top: the scroll container has padding-top (space-4), so top:0 would pin
+     the header BELOW it, letting scrolled content show in that band. Offsetting top by the negative
+     padding pins it at viewport 0; the negative margins pull the header out over the container's
+     padding so it spans full width, and its own padding re-adds the inset. */
+  top: calc(-1 * var(--space-4));
+  z-index: 3;
+  margin: calc(-1 * var(--space-4)) calc(-1 * var(--space-4)) 0
+    calc(-1 * var(--space-2));
+  padding: var(--space-4) var(--space-4) var(--space-4) var(--space-2);
   display: flex;
   align-items: center;
   gap: var(--space-2-5);
+  background-color: rgb(var(--color-background-sidebar-rgb));
 }
 
 /* The edit toggle stays highlighted while sidebar edit mode is on. */
