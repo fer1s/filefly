@@ -137,17 +137,26 @@
   user-select: none;
 }
 
-.SideBar section .section_content .folder_item:hover,
 .SideBar section .section_content .folder_item.active {
   background-color: var(--color-overlay-active);
   border: var(--border-width-default) solid var(--color-border-default);
 }
 
-.SideBar section .section_content .folder_item:hover svg,
-.SideBar section .section_content .folder_item:hover p,
 .SideBar section .section_content .folder_item.active svg,
 .SideBar section .section_content .folder_item.active p {
   color: var(--color-text-primary);
+}
+
+/* Soft-primary hover (accent tint + accent text/icon), matching the IconButton ghost hover. Placed
+   after the active rule so hovering an active row still shows the accent. */
+.SideBar section .section_content .folder_item:hover {
+  background-color: rgba(var(--color-accent-rgb), 0.14);
+  border: var(--border-width-default) solid rgba(var(--color-accent-rgb), 0.4);
+}
+
+.SideBar section .section_content .folder_item:hover svg,
+.SideBar section .section_content .folder_item:hover p {
+  color: var(--color-accent);
 }
 
 .SideBar section .section_content .drive_item {
@@ -214,17 +223,25 @@
   width: 90%;
 }
 
-.SideBar section .section_content .drive_item:hover,
 .SideBar section .section_content .drive_item.active {
   background-color: var(--color-overlay-active);
   border: var(--border-width-default) solid var(--color-border-default);
 }
 
-.SideBar section .section_content .drive_item:hover svg,
-.SideBar section .section_content .drive_item:hover .details p,
 .SideBar section .section_content .drive_item.active svg,
 .SideBar section .section_content .drive_item.active .details p {
   color: var(--color-text-primary);
+}
+
+/* Soft-primary hover (matches folder rows + IconButton), placed after active so it wins on hover. */
+.SideBar section .section_content .drive_item:hover {
+  background-color: rgba(var(--color-accent-rgb), 0.14);
+  border: var(--border-width-default) solid rgba(var(--color-accent-rgb), 0.4);
+}
+
+.SideBar section .section_content .drive_item:hover svg,
+.SideBar section .section_content .drive_item:hover .details p {
+  color: var(--color-accent);
 }
 
 /* "Add group" button, shown at the bottom of the sidebar in edit mode. Full-width dashed row with

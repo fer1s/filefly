@@ -71,6 +71,9 @@ export type State = {
   // Whether a confirmation dialog is shown before a drag-and-drop move/copy.
   confirmDragDrop: boolean;
   toggleConfirmDragDrop: () => void;
+  // Whether a confirmation dialog is shown before moving entries to the Trash (permanent delete
+  // always confirms regardless). Read by the delete flow (useFileOperations).
+  confirmDelete: boolean;
   // Whether success toasts are clickable to jump to the affected file/folder.
   clickableToasts: boolean;
   toggleClickableToasts: () => void;

@@ -22,6 +22,8 @@ export type AppSettings = {
   defaultZoom: number;
   dateFormat: string;
   sidebarOpacity: number;
+  // Context-menu background opacity (alpha of the popover surface), 0..1.
+  contextMenuOpacity: number;
   // Expanded-sidebar width in px (see SIDEBAR_WIDTH_MIN/MAX).
   sidebarWidth: number;
   hideSystemRecents: boolean;
@@ -34,6 +36,9 @@ export type AppSettings = {
   dragDropAction: string;
   // Whether a confirmation dialog is shown before a drag-and-drop move/copy.
   confirmDragDrop: boolean;
+  // Whether a confirmation dialog is shown before moving entries to the Trash (permanent delete
+  // always confirms regardless).
+  confirmDelete: boolean;
   // Whether success toasts are clickable to jump to the affected file/folder.
   clickableToasts: boolean;
   // Whether dragging entries out of the window starts a native OS drag (drop into other apps).

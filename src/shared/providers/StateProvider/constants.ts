@@ -59,6 +59,7 @@ export const initialState: State = {
   setDragDropAction: () => {},
   confirmDragDrop: true,
   toggleConfirmDragDrop: () => {},
+  confirmDelete: true,
   clickableToasts: true,
   toggleClickableToasts: () => {},
   dragToExternalApps: true,

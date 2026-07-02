@@ -130,20 +130,18 @@
   gap: var(--space-2);
 }
 
-.settings_modal .settings_reset {
-  padding: var(--space-0) var(--space-1);
-  border: var(--border-width-default) solid transparent;
-  border-radius: var(--radius-sm);
-  background-color: transparent;
-  color: var(--color-text-dim);
-  font-size: var(--font-size-lg);
-  line-height: 1;
-  cursor: pointer;
+/* Reset-to-default lives on the LEFT of the row and keeps its slot even when unmodified — only
+   hidden, never removed — so toggling it never reflows the row and shifts a control (e.g. a slider
+   being dragged) out from under the pressed pointer. */
+.settings_modal .settings_reset.hidden {
+  visibility: hidden;
+  pointer-events: none;
 }
 
-.settings_modal .settings_reset:hover {
-  color: var(--color-text-primary);
-  background-color: var(--color-surface-input);
+/* Text fills the row so the control stays pinned right and the reset button stays pinned left. */
+.settings_modal .settings_row > .settings_row_text {
+  flex: 1;
+  min-width: 0;
 }
 
 /* Full-width extra rendered below a custom setting's row (home-folder chooser). */

@@ -32,14 +32,17 @@
   cursor: pointer;
 }
 
-/* Destructive confirm: danger colours, matching the close button's danger treatment. */
+/* Destructive confirm: a solid saturated-red button with white text. Solid (not the soft tinted
+   danger surface) so contrast is strong and identical in light and dark — the tinted style went
+   muddy in light and failed contrast in dark. */
 .confirmation_modal .confirmation_confirm.destructive {
-  background-color: var(--color-danger-surface);
-  border-color: var(--color-danger-border);
-  color: var(--color-danger);
+  background-color: var(--color-danger-solid);
+  border-color: var(--color-danger-solid);
+  color: #fff;
 }
 
 .confirmation_modal .confirmation_confirm.destructive:hover {
-  background-color: var(--color-danger);
-  color: var(--color-text);
+  background-color: var(--color-danger-solid-hover);
+  border-color: var(--color-danger-solid-hover);
+  color: #fff;
 }

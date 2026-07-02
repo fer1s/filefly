@@ -137,6 +137,20 @@ export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
     fromSlider: (transparency) => SIDEBAR_OPACITY_MAX - transparency,
     format: (opacity) => percent(SIDEBAR_OPACITY_MAX - opacity),
   },
+  {
+    kind: SETTING_KIND.RANGE,
+    key: "contextMenuOpacity",
+    section: SETTINGS_SECTION.APPEARANCE,
+    label: () => t.settings.contextMenuTransparency,
+    hint: () => t.settings.contextMenuTransparencyHint,
+    // Same 0..1 range/step as the sidebar; shown inverted as transparency.
+    min: SIDEBAR_OPACITY_MIN,
+    max: SIDEBAR_OPACITY_MAX,
+    step: SIDEBAR_OPACITY_STEP,
+    toSlider: (opacity) => SIDEBAR_OPACITY_MAX - opacity,
+    fromSlider: (transparency) => SIDEBAR_OPACITY_MAX - transparency,
+    format: (opacity) => percent(SIDEBAR_OPACITY_MAX - opacity),
+  },
 
   // ── Files & Transfers ── what dragging entries onto folders / out of the window does.
   {
@@ -156,6 +170,13 @@ export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
     section: SETTINGS_SECTION.FILES,
     label: () => t.settings.confirmDragDrop,
     hint: () => t.settings.confirmDragDropHint,
+  },
+  {
+    kind: SETTING_KIND.TOGGLE,
+    key: "confirmDelete",
+    section: SETTINGS_SECTION.FILES,
+    label: () => t.settings.confirmDelete,
+    hint: () => t.settings.confirmDeleteHint,
   },
   {
     kind: SETTING_KIND.TOGGLE,

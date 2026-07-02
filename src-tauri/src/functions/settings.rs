@@ -22,6 +22,8 @@ pub struct AppSettings {
     date_format: String,
     // Sidebar background opacity (alpha of --color-background-sidebar), 0..1.
     sidebar_opacity: f64,
+    // Context-menu background opacity (alpha of the popover surface), 0..1.
+    context_menu_opacity: f64,
     // User-adjustable sidebar width (px) for the expanded rail (see SIDEBAR_WIDTH_MIN/MAX).
     sidebar_width: f64,
     // Hide this app's own background files (config/cache/temp) from the Recents listing.
@@ -37,6 +39,9 @@ pub struct AppSettings {
     drag_drop_action: String,
     // Whether a confirmation dialog is shown before a drag-and-drop move/copy.
     confirm_drag_drop: bool,
+    // Whether a confirmation dialog is shown before moving entries to the Trash (permanent delete
+    // always confirms regardless).
+    confirm_delete: bool,
     // Whether success toasts are clickable to jump to the affected file/folder.
     clickable_toasts: bool,
     // Whether dragging entries out of the window starts a native OS drag (drop into other apps).
@@ -53,6 +58,7 @@ impl Default for AppSettings {
             default_zoom: 1.0,
             date_format: "locale".to_string(),
             sidebar_opacity: 0.85,
+            context_menu_opacity: 0.5,
             sidebar_width: 220.0,
             hide_system_recents: true,
             show_toasts: true,
@@ -60,6 +66,7 @@ impl Default for AppSettings {
             home_path: String::new(),
             drag_drop_action: "move".to_string(),
             confirm_drag_drop: true,
+            confirm_delete: true,
             clickable_toasts: true,
             drag_to_external_apps: true,
         }

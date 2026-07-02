@@ -118,6 +118,11 @@
   --color-surface-floating: rgba(0, 0, 0, 0.7);
   --color-surface-modal: rgba(20, 20, 20, 0.85);
   --color-surface-toast: rgba(40, 40, 40, 0.95);
+  /* Context-menu background as raw RGB channels + a user-adjustable alpha, composed in
+     ContextMenu.css (like the sidebar) so the inline --context-menu-opacity override on .App takes
+     effect. The default alpha matches the old --color-surface-popover value. */
+  --color-surface-popover-rgb: 0, 0, 0;
+  --context-menu-opacity: 0.5;
 
   --color-overlay-faint: rgba(255, 255, 255, 0.01);
   --color-overlay-soft: rgba(255, 255, 255, 0.03);
@@ -157,8 +162,16 @@
   --color-danger-hover: rgb(255, 38, 38);
   --color-danger-surface: rgba(120, 30, 30, 0.95);
   --color-danger-border: rgba(255, 80, 80, 0.5);
+  /* Solid danger BUTTON fill (+ white text). Shared across themes — the danger tokens above are
+     text/surface-oriented and go light-red in dark mode, which fails contrast under white text; a
+     saturated red reads correctly on any surface (white on it ≈ 5.8:1 normal, 8:1 hover). */
+  --color-danger-solid: rgb(197, 34, 31);
+  --color-danger-solid-hover: rgb(160, 24, 19);
   --color-success-surface: rgba(30, 90, 50, 0.95);
   --color-success-border: rgba(80, 220, 130, 0.5);
+  /* Solid success fill (+ white text) for coloured toasts. Shared across themes — white on it is
+     ≈6:1. Mirrors --color-danger-solid. */
+  --color-success-solid: rgb(30, 110, 62);
   --color-link: var(--color-accent);
 
   /* Finder tag colours (indices 1..7: gray, green, purple, blue, yellow, red, orange). */
@@ -211,6 +224,10 @@
   --color-surface-interactive: rgba(0, 0, 0, 0.1);
   --color-surface-backdrop: rgba(0, 0, 0, 0.25);
   --color-surface-popover: rgba(0, 0, 0, 0.15);
+  /* Light base for the context menu: a near-white surface so an opaque menu reads as a light panel
+     (not black) and dark item text stays legible. The dark theme keeps a near-black base (:root).
+     Only the alpha (--context-menu-opacity) is user-driven. */
+  --color-surface-popover-rgb: 252, 252, 253;
   --color-surface-floating: rgba(255, 255, 255, 0.85);
   --color-surface-modal: rgba(245, 245, 247, 0.9);
   --color-surface-toast: rgba(250, 250, 252, 0.97);
@@ -239,6 +256,14 @@
   --color-scrollbar-thumb: #bcbcbc;
   --color-range-track: #d4d4d4;
   --color-audio-time: #6d6d6d;
+
+  /* Danger for a light surface. The :root defaults are tuned for the dark theme (light-red text on
+     a dark maroon fill); on white those read muddy, so override to a saturated red that stays legible
+     as text (≈5.9:1 on white) and as a soft tinted button fill. */
+  --color-danger: rgb(197, 34, 31);
+  --color-danger-hover: rgb(160, 24, 19);
+  --color-danger-surface: rgba(197, 34, 31, 0.1);
+  --color-danger-border: rgba(197, 34, 31, 0.35);
 }
 
 /* Accent presets. Each sets only the base RGB triple; selection/focus/link tokens compose from it

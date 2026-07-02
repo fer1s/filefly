@@ -1,8 +1,9 @@
 import { useCallback, useState } from "react";
-import { ask, open as openDialog } from "@tauri-apps/plugin-dialog";
+import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { homeDir, join } from "@tauri-apps/api/path";
 
 import { useStateContext } from "@/shared/providers/StateProvider";
+import { useConfirm } from "@/shared/providers/ConfirmProvider";
 import { notify, TOAST_TYPE } from "@/shared/toast";
 import { basename, dirname } from "@/shared/utils";
 import { TRASH_DIR_NAME } from "@/shared/constants";
@@ -34,7 +35,8 @@ export const useFileOperations = ({
   setSelectedIDs,
   revealEntries,
 }: UseFileOperationsArgs) => {
-  const { fs, clickableToasts } = useStateContext();
+  const { fs, clickableToasts, confirmDelete } = useStateContext();
+  const { confirm } = useConfirm();
   const [clipboard, setClipboard] = useState<Clipboard>(null);
   const {
     record,
@@ -73,13 +75,17 @@ export const useFileOperations = ({
       if (!targets.length || !targets[0]) return;
 
       const label = entryLabel(targets);
-      const confirmed = await ask(
-        permanent
-          ? t.directory.confirmDeletePermanently(label)
-          : t.directory.confirmDelete(label),
-        { title: t.directory.deleteTitle, kind: "warning" },
-      );
-      if (!confirmed) return;
+      // Trash confirmation is opt-out via the setting; permanent delete (irreversible) always asks.
+      if (permanent || confirmDelete) {
+        const confirmed = await confirm({
+          title: t.directory.deleteTitle,
+          message: permanent
+            ? t.directory.confirmDeletePermanently(label)
+            : t.directory.confirmDelete(label),
+          destructive: true,
+        });
+        if (!confirmed) return;
+      }
 
       const progressLabel = permanent
         ? t.directory.deletingPermanently
@@ -126,7 +132,16 @@ export const useFileOperations = ({
       setSelectedIDs([]);
       refreshDir();
     },
-    [fs, refreshDir, setSelectedIDs, revealEntries, clickableToasts, record],
+    [
+      fs,
+      refreshDir,
+      setSelectedIDs,
+      revealEntries,
+      clickableToasts,
+      record,
+      confirm,
+      confirmDelete,
+    ],
   );
 
   const remove = useCallback(

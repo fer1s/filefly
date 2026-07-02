@@ -11,6 +11,7 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 
 import { StateProvider } from "@/shared/providers/StateProvider";
 import { ModalProvider } from "@/shared/providers/ModalProvider";
+import { ConfirmProvider } from "@/shared/providers/ConfirmProvider";
 import { TagsProvider } from "@/shared/providers/TagsProvider";
 import {
   KeymapProvider,
@@ -233,6 +234,7 @@ const App = () => {
         setDragDropAction: (dragDropAction) => update({ dragDropAction }),
         confirmDragDrop: settings.confirmDragDrop,
         toggleConfirmDragDrop,
+        confirmDelete: settings.confirmDelete,
         clickableToasts: settings.clickableToasts,
         toggleClickableToasts,
         dragToExternalApps: settings.dragToExternalApps,
@@ -249,6 +251,9 @@ const App = () => {
         <TagsProvider>
           <KeymapProvider>
             <HotkeyProvider>
+              {/* Inside HotkeyProvider so the confirm dialog's Escape-to-close (a MODAL-scope
+                  hotkey) and modal-scope suppression actually register. */}
+              <ConfirmProvider>
               <ShortcutHelpProvider>
                 <SettingsProvider settings={settings} update={update}>
                   <div
@@ -260,6 +265,9 @@ const App = () => {
                     style={
                       {
                         "--sidebar-width": `${settings.sidebarWidth}px`,
+                        // Alpha of the context-menu background (see ContextMenu.css); menus are
+                        // descendants of .App, so they inherit this override.
+                        "--context-menu-opacity": settings.contextMenuOpacity,
                       } as CSSProperties
                     }
                   >
@@ -274,6 +282,7 @@ const App = () => {
                 <ShortcutsDialog />
                 <ToastStack toasts={toasts} onDismiss={dismissToast} />
               </ShortcutHelpProvider>
+              </ConfirmProvider>
             </HotkeyProvider>
           </KeymapProvider>
         </TagsProvider>

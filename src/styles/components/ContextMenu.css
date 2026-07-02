@@ -4,7 +4,12 @@
   max-height: var(--size-context-menu-max-height);
   max-width: var(--size-context-menu-max-width);
   overflow-y: auto;
-  background-color: var(--color-surface-popover);
+  /* Composed from raw channels + a user-adjustable alpha (Settings → Appearance → Context menu
+     transparency); the --context-menu-opacity override is set inline on .App (see App.tsx). */
+  background-color: rgba(
+    var(--color-surface-popover-rgb),
+    var(--context-menu-opacity)
+  );
   backdrop-filter: blur(var(--blur-medium));
   border-radius: var(--radius-sm);
   border: var(--border-width-default) solid var(--color-border-default);
@@ -57,8 +62,15 @@
   transition: all 0.2s ease-in-out;
 }
 
+/* Soft-primary hover: a faint accent-tinted fill with accent label/icon, matching IconButton's
+   ghost hover (and the sidebar rows). Danger items override this with their solid-red hover below. */
 .context_menu .context_menu_item.ctx_button:hover {
-  background-color: var(--color-overlay-hover);
+  background-color: rgba(var(--color-accent-rgb), 0.14);
+  color: var(--color-accent);
+}
+
+.context_menu .context_menu_item.ctx_button:hover svg {
+  color: var(--color-accent);
 }
 
 /* Fixed-width icon column so every label starts at the same x. */
@@ -96,11 +108,13 @@
   color: var(--color-danger);
 }
 
-/* On hover the danger surface is a solid dark red in both themes, so every part of the row —
-   label, icon, and the hotkey glyphs (which otherwise stay text-muted, dark and unreadable in
-   light mode) — flips to a light on-danger colour. */
+/* On hover the row fills with the solid danger colour (saturated red, ≈5.8:1 under white) in both
+   themes, so every part of the row — label, icon, and the hotkey glyphs (which otherwise stay
+   text-muted, dark and unreadable in light mode) — flips to a light on-danger colour.
+   Uses --color-danger-solid, not --color-danger-surface: the latter is a faint tint (for red-text-
+   on-tint hovers like the close button) and washes out under white text. */
 .context_menu .context_menu_item.ctx_button.ctx_danger:hover {
-  background-color: var(--color-danger-surface);
+  background-color: var(--color-danger-solid);
 }
 
 .context_menu .context_menu_item.ctx_button.ctx_danger:hover,

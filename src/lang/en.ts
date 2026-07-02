@@ -244,6 +244,9 @@ export const en = {
     dateFormatPreview: (sample: string) => `Preview: ${sample}`,
     sidebarTransparency: "Sidebar transparency",
     sidebarTransparencyHint: "How transparent the sidebar background is.",
+    contextMenuTransparency: "Context menu transparency",
+    contextMenuTransparencyHint:
+      "How transparent right-click menu backgrounds are.",
     startup: "On launch",
     startupHint: "What to open when you start the app.",
     startupRestore: "Restore previous session",
@@ -260,6 +263,9 @@ export const en = {
     dragDropCopy: "Copy",
     confirmDragDrop: "Confirm drag and drop",
     confirmDragDropHint: "Ask before moving or copying dragged files.",
+    confirmDelete: "Confirm before Trash",
+    confirmDeleteHint:
+      "Ask before moving items to the Trash. Permanent delete always asks.",
     clickableToasts: "Clickable notifications",
     clickableToastsHint:
       "Click a notification to jump to the affected file or folder.",

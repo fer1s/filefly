@@ -1,15 +1,24 @@
+import { faRotateLeft } from "@fortawesome/free-solid-svg-icons";
+
+import IconButton, {
+  ICON_BUTTON_SIZE,
+} from "@/shared/components/elements/IconButton";
+import { classNames } from "@/shared/utils";
 import { t } from "@/lang";
 
 import { SETTING_KIND } from "../../schema";
-import { RESET_GLYPH } from "./constants";
 import ToggleControl from "./controls/ToggleControl";
 import SelectControl from "./controls/SelectControl";
 import RangeControl from "./controls/RangeControl";
 import type { SettingItemProps } from "./types";
 
-// One settings entry rendered generically from its descriptor: label + hint, the control chosen by
-// `kind` (custom kinds bring their own), a "modified" dot when the value differs from its default,
-// and a reset-to-default button. Custom kinds may also render a full-width extra below the row.
+// One settings entry rendered generically from its descriptor: a reset-to-default button (left),
+// label + hint, and the control chosen by `kind` (custom kinds bring their own). Custom kinds may
+// also render a full-width extra below the row.
+//
+// The reset lives on the LEFT and keeps its slot reserved (hidden, not removed, when unmodified):
+// if it toggled next to the control, landing a dragged slider on its default would remove the
+// button, reflow the row, and shift the slider out from under the still-pressed pointer.
 const SettingItem = ({
   descriptor,
   settings,
@@ -66,33 +75,20 @@ const SettingItem = ({
   return (
     <div className="settings_item">
       <div className="settings_row">
+        <IconButton
+          icon={faRotateLeft}
+          size={ICON_BUTTON_SIZE.SM}
+          tooltip={t.settings.reset}
+          aria-label={t.settings.reset}
+          className={classNames("settings_reset", !modified && "hidden")}
+          onClick={onReset}
+          disabled={!modified}
+        />
         <span className="settings_row_text">
-          <span className="settings_row_label">
-            {descriptor.label()}
-            {modified && (
-              <span
-                className="settings_modified_dot"
-                title={t.settings.modified}
-                aria-label={t.settings.modified}
-              />
-            )}
-          </span>
+          <span className="settings_row_label">{descriptor.label()}</span>
           <span className="settings_row_hint">{descriptor.hint()}</span>
         </span>
-        <span className="settings_item_control">
-          {control()}
-          {modified && (
-            <button
-              type="button"
-              className="settings_reset"
-              onClick={onReset}
-              title={t.settings.reset}
-              aria-label={t.settings.reset}
-            >
-              {RESET_GLYPH}
-            </button>
-          )}
-        </span>
+        <span className="settings_item_control">{control()}</span>
       </div>
       {Below && <Below settings={settings} update={update} />}
     </div>
