@@ -1,0 +1,1 @@
+export { useDockMenu } from "./useDockMenu";

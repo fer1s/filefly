@@ -360,3 +360,12 @@ const invokeWithPathArg = async (
       console.error("Path is either not valid or does not exist:\n" + err);
       return;
     });
+
+// Record a folder the user navigated to in the app's own recent-folders list (backs the macOS
+// Dock right-click menu). Deduped/capped/persisted in Rust; safe to call on every navigation.
+export const pushRecentFolder = async (path: string): Promise<void> =>
+  await invoke("push_recent_folder", { path });
+
+// Clear the Dock recent-folders list.
+export const clearRecentFolders = async (): Promise<void> =>
+  await invoke("clear_recent_folders");

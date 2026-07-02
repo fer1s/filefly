@@ -5,6 +5,7 @@ mod tray;
 mod utils;
 mod filesystem;
 mod functions;
+mod dock_menu;
 
 use tauri::Manager;
 #[cfg(target_os = "windows")]
@@ -28,6 +29,7 @@ fn main() {
         .plugin(tauri_plugin_drag::init())
         .setup(|app| {
             tray::create_tray(app.handle())?;
+            dock_menu::setup(app.handle());
 
             // Trim the thumbnail cache to its size budget, off the UI thread.
             if let Ok(cache_dir) = app.path().app_cache_dir() {
@@ -93,6 +95,8 @@ fn main() {
             functions::folder_columns::set_folder_sort,
             functions::folder_columns::get_folder_zoom,
             functions::folder_columns::set_folder_zoom,
+            dock_menu::push_recent_folder,
+            dock_menu::clear_recent_folders,
         ])
         .on_window_event(|window, event| match event {
             tauri::WindowEvent::CloseRequested { api, .. } => {

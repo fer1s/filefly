@@ -33,9 +33,13 @@ ab_glyph = "0.2"
 arboard = "3"
 
 # Finder tags live in a macOS extended attribute (a binary plist) — only needed there.
+# objc2 crates drive the custom Dock right-click menu (recent folders + quick actions).
 [target.'cfg(target_os = "macos")'.dependencies]
 xattr = "1"
 plist = "1"
+objc2 = "0.6"
+objc2-foundation = { version = "0.3", features = ["NSString"] }
+objc2-app-kit = { version = "0.3", features = ["NSApplication", "NSMenu", "NSMenuItem", "NSResponder", "NSRunningApplication"] }
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem

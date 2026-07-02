@@ -30,6 +30,7 @@ import { useZoom } from "./hooks/useZoom";
 import { useDirectoryContents } from "./hooks/useDirectoryContents";
 import { useSidebarCollapsed } from "./hooks/useSidebarCollapsed";
 import { useAppSettings } from "./hooks/useAppSettings";
+import { useDockMenu } from "./hooks/useDockMenu";
 
 import { notify, setToastsEnabled, TOAST_TYPE } from "@/shared/toast";
 import { prewarmDragIcon } from "@/shared/services/api";
@@ -71,6 +72,13 @@ const App = () => {
   const zoom = useZoom(fs, tabs.path, settings.defaultZoom);
   const { toasts, dismissToast } = useToasts();
   const sidebar = useSidebarCollapsed();
+
+  // Feed the macOS Dock right-click menu (recent folders + quick actions) and handle its clicks.
+  useDockMenu({
+    path: tabs.path,
+    newTab: tabs.newTab,
+    homePath: settings.homePath,
+  });
 
   const [view, setView] = useState<ViewMode>(VIEW_MODE.GRID);
   const toggleShowHidden = useCallback(() => {
