@@ -262,23 +262,33 @@ export type CopyProgress = { processed: number; total: number };
 
 // Filesystem operations. These throw on error (the Rust command returns a Result) so callers can surface it.
 // copy/move stream byte progress over an IPC Channel; pass `onProgress` to observe it.
+// copy/move resolve to the final destination path, which differs from destDir/basename when a
+// name collision triggered a rename (e.g. "file (1).txt").
 export const copyEntry = async (
   source: string,
   destDir: string,
   onProgress?: (progress: CopyProgress) => void,
-): Promise<void> => {
+): Promise<string> => {
   const channel = new Channel<CopyProgress>();
   if (onProgress) channel.onmessage = onProgress;
-  await invoke("copy_entry", { source, destDir, onProgress: channel });
+  return (await invoke("copy_entry", {
+    source,
+    destDir,
+    onProgress: channel,
+  })) as string;
 };
 export const moveEntry = async (
   source: string,
   destDir: string,
   onProgress?: (progress: CopyProgress) => void,
-): Promise<void> => {
+): Promise<string> => {
   const channel = new Channel<CopyProgress>();
   if (onProgress) channel.onmessage = onProgress;
-  await invoke("move_entry", { source, destDir, onProgress: channel });
+  return (await invoke("move_entry", {
+    source,
+    destDir,
+    onProgress: channel,
+  })) as string;
 };
 export const renameEntry = async (
   path: string,
@@ -350,3 +360,17 @@ const invokeWithPathArg = async (
       console.error("Path is either not valid or does not exist:\n" + err);
       return;
     });
+
+// Record a folder the user navigated to in the app's own recent-folders list (backs the macOS
+// Dock right-click menu). Deduped/capped/persisted in Rust; safe to call on every navigation.
+export const pushRecentFolder = async (path: string): Promise<void> =>
+  await invoke("push_recent_folder", { path });
+
+// Clear the Dock recent-folders list.
+export const clearRecentFolders = async (): Promise<void> =>
+  await invoke("clear_recent_folders");
+
+// Open a new app window (a fresh browser window with its own tab session). No-op arg; the backend
+// assigns a unique label and clones the main window's chrome.
+export const openNewWindow = async (): Promise<void> =>
+  await invoke("open_new_window");

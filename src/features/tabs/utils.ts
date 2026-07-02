@@ -8,11 +8,29 @@ import {
 } from "@/shared/constants";
 import type { Tab } from "@/shared/models";
 
+import { getCurrentWindow } from "@tauri-apps/api/window";
+
 import {
   TABS_STORAGE_KEY,
   ACTIVE_TAB_STORAGE_KEY,
   STARTUP_STORAGE_KEY,
 } from "./constants";
+
+// Tab sessions are per-window: localStorage is shared across all windows of the same origin, so
+// each window namespaces its keys by its label. "main" keeps the bare keys for backward compat
+// (its session restores on launch); runtime windows ("win-N") get their own, starting fresh.
+const windowSuffix = (): string => {
+  try {
+    const label = getCurrentWindow().label;
+    return label === "main" ? "" : `:${label}`;
+  } catch {
+    // Non-Tauri context (e.g. tests) — behave like the single-window default.
+    return "";
+  }
+};
+
+const tabsKey = (): string => `${TABS_STORAGE_KEY}${windowSuffix()}`;
+const activeTabKey = (): string => `${ACTIVE_TAB_STORAGE_KEY}${windowSuffix()}`;
 
 // A fresh tab rooted at `path` (empty string = the Volumes view). `infoPanelOpen` lets a new tab
 // inherit the current tab's panel state so opening one feels continuous.
@@ -128,7 +146,7 @@ export const loadTabs = (): Tab[] => {
   if (mode === STARTUP_MODE.VOLUMES) return [makeTab("")];
   if (mode === STARTUP_MODE.HOME) return [makeTab(homePath)];
   try {
-    const raw = localStorage.getItem(TABS_STORAGE_KEY);
+    const raw = localStorage.getItem(tabsKey());
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length > 0 && parsed.every(isTab))
@@ -145,11 +163,27 @@ export const loadTabs = (): Tab[] => {
 
 // The persisted active tab id, validated against the loaded tabs.
 export const loadActiveTabId = (tabs: Tab[]): string => {
-  const saved = localStorage.getItem(ACTIVE_TAB_STORAGE_KEY);
+  const saved = localStorage.getItem(activeTabKey());
   return tabs.some((tab) => tab.id === saved) ? (saved as string) : tabs[0].id;
 };
 
 export const saveTabs = (tabs: Tab[], activeTabId: string): void => {
-  localStorage.setItem(TABS_STORAGE_KEY, JSON.stringify(tabs));
-  localStorage.setItem(ACTIVE_TAB_STORAGE_KEY, activeTabId);
+  localStorage.setItem(tabsKey(), JSON.stringify(tabs));
+  localStorage.setItem(activeTabKey(), activeTabId);
+};
+
+// Remove tab sessions left behind by runtime windows ("win-N"). Those windows are ephemeral — they
+// aren't recreated on launch — so their keyed sessions would otherwise accumulate in localStorage
+// forever. Called once from the main window at startup, when no runtime windows exist yet, so it
+// can't clobber a live window's session. Doing it here (rather than on window close) avoids
+// depending on close/unload events, which Tauri's onCloseRequested blocks and WKWebView fires
+// unreliably.
+export const clearOrphanedWindowSessions = (): void => {
+  const prefixes = [`${TABS_STORAGE_KEY}:`, `${ACTIVE_TAB_STORAGE_KEY}:`];
+  for (let i = localStorage.length - 1; i >= 0; i--) {
+    const key = localStorage.key(i);
+    if (key && prefixes.some((prefix) => key.startsWith(prefix))) {
+      localStorage.removeItem(key);
+    }
+  }
 };

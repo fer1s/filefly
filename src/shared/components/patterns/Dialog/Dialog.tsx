@@ -2,6 +2,8 @@ import { useEffect, useRef } from "react";
 
 import { classNames } from "@/shared/utils";
 import { KEY } from "@/shared/constants";
+import { HOTKEY_SCOPE, useHotkeyScope } from "@/shared/keymap";
+import { useModal } from "@/shared/providers/ModalProvider";
 
 import "@/styles/components/Dialog.css";
 
@@ -19,6 +21,20 @@ const Dialog = ({
   labelledBy,
 }: DialogProps) => {
   const dialogRef = useRef<HTMLDivElement>(null);
+  const { open: registerModal, close: unregisterModal } = useModal();
+
+  // Activate the MODAL hotkey scope while open: the dispatcher then suppresses every lower-scope
+  // hotkey (clipboard, tabs, zoom, history nav, …), so keymap actions can't leak to the directory
+  // behind the dialog. Centralised here so every dialog gets it, not just those using Escape-close.
+  useHotkeyScope(HOTKEY_SCOPE.MODAL, visible);
+
+  // Mark a modal as open while visible so non-keymap keyboard handlers (the directory's raw arrow /
+  // type-to-find listener) also stand down. The backdrop already blocks the mouse.
+  useEffect(() => {
+    if (!visible) return;
+    registerModal();
+    return unregisterModal;
+  }, [visible, registerModal, unregisterModal]);
 
   // While open: move focus inside, trap Tab within the dialog, and restore focus to whatever
   // was focused before when it closes.

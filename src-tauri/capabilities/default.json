@@ -1,8 +1,8 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Capabilities for the main window: window controls, path resolution, asset protocol and the opener/fs/dialog plugins.",
-  "windows": ["main"],
+  "description": "Capabilities for the main window and runtime windows (win-N): window controls, path resolution, asset protocol and the opener/fs/dialog plugins.",
+  "windows": ["main", "win-*"],
   "permissions": [
     "core:default",
     "core:window:allow-minimize",
@@ -12,6 +12,8 @@
     "core:window:allow-is-maximized",
     "core:window:allow-hide",
     "core:window:allow-show",
+    "core:window:allow-set-focus",
+    "core:window:allow-unminimize",
     "core:window:allow-center",
     "core:window:allow-start-dragging",
     "core:path:default",

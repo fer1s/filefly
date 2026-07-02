@@ -1,4 +1,4 @@
-import { HOTKEY_SCOPE, SCOPE_PRECEDENCE } from "./scopes";
+import { HOTKEY_SCOPE, SCOPE_PRECEDENCE, EXCLUSIVE_SCOPES } from "./scopes";
 import type { HotkeyScope } from "./scopes";
 import type { HotkeyEntry, Keymap } from "./types";
 import { matchesBinding } from "./utils";
@@ -30,8 +30,17 @@ export const resolve = (
   keymap: Keymap,
 ): HotkeyEntry[] => {
   const editable = isEditableTarget(event.target);
+  // If an exclusive layer (a modal dialog) is active, suppress everything in lower-precedence
+  // scopes — the modal owns the keyboard, so background handlers must not fire.
+  const blockingFloor = Math.max(
+    0,
+    ...[...activeScopes]
+      .filter((scope) => EXCLUSIVE_SCOPES.has(scope))
+      .map((scope) => SCOPE_PRECEDENCE[scope]),
+  );
   return registry
     .filter((e) => e.scope === HOTKEY_SCOPE.GLOBAL || activeScopes.has(e.scope))
+    .filter((e) => SCOPE_PRECEDENCE[e.scope] >= blockingFloor)
     .filter((e) => !editable || e.allowInInput)
     .filter((e) => entryMatches(e, event, keymap))
     .sort(

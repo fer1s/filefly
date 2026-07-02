@@ -22,3 +22,11 @@ export const SCOPE_PRECEDENCE: Record<HotkeyScope, number> = {
   menu: 30,
   modal: 40,
 };
+
+// Scopes that fully capture input: while one is active, hotkeys in lower-precedence scopes don't
+// fire at all (not just "lose" — they're suppressed). A modal dialog or an open context menu owns
+// the keyboard, so nothing behind it (directory nav, clipboard, tab/zoom shortcuts) should react.
+export const EXCLUSIVE_SCOPES: ReadonlySet<HotkeyScope> = new Set([
+  HOTKEY_SCOPE.MENU,
+  HOTKEY_SCOPE.MODAL,
+]);

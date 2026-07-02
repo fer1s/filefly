@@ -3,9 +3,16 @@ import { ZOOM_MIN, ZOOM_MAX, ZOOM_STEP } from "@/shared/constants";
 // Ties the dialog's heading to its accessible name (aria-labelledby).
 export const SETTINGS_TITLE_ID = "settings_title";
 
+// Glyph on the reset-to-default button (a counter-clockwise arrow). Kept as a constant so it isn't
+// a bare literal in JSX; the button's accessible name comes from its aria-label.
+export const RESET_GLYPH = "↺";
+
 // Dropdown sentinel for the "Custom…" date-format option (reveals the pattern input). Distinct
 // from any real format value.
 export const DATE_FORMAT_CUSTOM = "custom";
+
+// Starter pattern seeded into the custom input when switching to "Custom…" from a preset.
+export const DATE_FORMAT_CUSTOM_SEED = "YYYY-MM-DD HH:mm";
 
 // Built-in date-format patterns offered in the dropdown (each shown as a live sample).
 export const DATE_FORMAT_PRESETS: readonly string[] = [

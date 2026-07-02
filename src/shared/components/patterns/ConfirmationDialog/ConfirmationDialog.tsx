@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import Dialog from "@/shared/components/patterns/Dialog";
 import DialogHeader from "@/shared/components/patterns/DialogHeader";
 import Button from "@/shared/components/elements/Button";
@@ -25,6 +27,19 @@ const ConfirmationDialog = ({
 }: ConfirmationDialogProps) => {
   useCloseOnEscape(visible, onClose);
 
+  // Retain last content while the dialog fades out. Callers null their state on close, which would
+  // otherwise blank the title/message before the 0.2s close animation finishes.
+  const [shown, setShown] = useState({ title, message, extra });
+  if (
+    visible &&
+    (shown.title !== title ||
+      shown.message !== message ||
+      shown.extra !== extra)
+  ) {
+    setShown({ title, message, extra });
+  }
+  const content = visible ? { title, message, extra } : shown;
+
   return (
     <Dialog
       visible={visible}
@@ -33,14 +48,16 @@ const ConfirmationDialog = ({
       labelledBy={CONFIRMATION_TITLE_ID}
     >
       <DialogHeader
-        title={title}
+        title={content.title}
         titleId={CONFIRMATION_TITLE_ID}
         onClose={onClose}
       />
 
       <div className="confirmation_body">
-        <p className="confirmation_message">{message}</p>
-        {extra && <div className="confirmation_extra">{extra}</div>}
+        <p className="confirmation_message">{content.message}</p>
+        {content.extra && (
+          <div className="confirmation_extra">{content.extra}</div>
+        )}
         <div className="confirmation_actions">
           <Button className="confirmation_cancel" onClick={onClose}>
             {cancelLabel ?? t.common.cancel}

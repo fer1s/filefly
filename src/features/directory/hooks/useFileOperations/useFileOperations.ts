@@ -9,7 +9,17 @@ import { TRASH_DIR_NAME } from "@/shared/constants";
 import { t } from "@/lang";
 import { CLIPBOARD_MODE } from "@/features/directory/constants";
 
-import { withName, entryLabel, destPaths } from "./utils";
+import { useHistory } from "../useHistory";
+
+import {
+  withName,
+  entryLabel,
+  moveHistoryEntry,
+  copyHistoryEntry,
+  trashHistoryEntry,
+  renameHistoryEntry,
+  type Transfer,
+} from "./utils";
 import type {
   Clipboard,
   OperationProgress,
@@ -26,6 +36,13 @@ export const useFileOperations = ({
 }: UseFileOperationsArgs) => {
   const { fs, clickableToasts } = useStateContext();
   const [clipboard, setClipboard] = useState<Clipboard>(null);
+  const {
+    record,
+    undo: undoHistory,
+    redo: redoHistory,
+    canUndo,
+    canRedo,
+  } = useHistory();
 
   // The onAction for a clickable "jump to the file" toast — or undefined when the setting is off,
   // which leaves the toast a plain (dismiss-only) notification.
@@ -69,10 +86,13 @@ export const useFileOperations = ({
         : t.directory.deleting;
       setProgress({ label: progressLabel, done: 0, total: targets.length });
       let failed = 0;
+      // The items that actually reached the Trash — the ones a trash undo can put back.
+      const trashed: string[] = [];
       try {
         for (const target of targets) {
           try {
             await (permanent ? fs.deletePermanently(target) : fs.trash(target));
+            if (!permanent) trashed.push(target);
           } catch (err) {
             failed++;
             notify(
@@ -84,6 +104,12 @@ export const useFileOperations = ({
         }
       } finally {
         setProgress(null);
+      }
+
+      // A trash is reversible (put-back); a permanent delete is not, so it's never recorded.
+      if (trashed.length) {
+        const trashDir = await join(await homeDir(), TRASH_DIR_NAME);
+        record(trashHistoryEntry(fs, trashed, trashDir, entryLabel(trashed)));
       }
 
       if (!failed)
@@ -100,7 +126,7 @@ export const useFileOperations = ({
       setSelectedIDs([]);
       refreshDir();
     },
-    [fs, refreshDir, setSelectedIDs, revealEntries, clickableToasts],
+    [fs, refreshDir, setSelectedIDs, revealEntries, clickableToasts, record],
   );
 
   const remove = useCallback(
@@ -144,8 +170,7 @@ export const useFileOperations = ({
         if (typeof dir === "string") {
           for (const target of unresolved) {
             try {
-              await fs.move(target, dir);
-              restoredPaths.push(...destPaths([target], dir));
+              restoredPaths.push(await fs.move(target, dir));
             } catch (err) {
               notify(
                 t.errors.restore(basename(target), String(err)),
@@ -183,11 +208,15 @@ export const useFileOperations = ({
 
     setProgress({ label: progressLabel, done: 0, total: 0 });
     let failed = 0;
+    // Source → real destination (conflict-renamed if needed), for the reveal toast and undo.
+    const transfers: Transfer[] = [];
     try {
       for (const source of clipboard.paths) {
         try {
-          if (isCopy) await fs.copy(source, path, onProgress);
-          else await fs.move(source, path, onProgress);
+          const to = isCopy
+            ? await fs.copy(source, path, onProgress)
+            : await fs.move(source, path, onProgress);
+          transfers.push({ from: source, to });
         } catch (err) {
           failed++;
           notify(
@@ -200,20 +229,29 @@ export const useFileOperations = ({
       setProgress(null);
     }
 
+    if (transfers.length)
+      record(
+        isCopy
+          ? copyHistoryEntry(fs, transfers, path, label)
+          : moveHistoryEntry(fs, transfers, label),
+      );
+
     if (!failed) {
       // Files land in the current folder; the toast jumps here and selects them.
-      const landed = destPaths(clipboard.paths, path);
       notify(
         isCopy ? t.directory.pasted(label) : t.directory.moved(label),
         TOAST_TYPE.SUCCESS,
-        revealAction(path, landed),
+        revealAction(
+          path,
+          transfers.map((tr) => tr.to),
+        ),
       );
     }
 
     if (clipboard.mode === CLIPBOARD_MODE.CUT) setClipboard(null);
     setSelectedIDs([]);
     refreshDir();
-  }, [clipboard, path, fs, refreshDir, setSelectedIDs, revealAction]);
+  }, [clipboard, path, fs, refreshDir, setSelectedIDs, revealAction, record]);
 
   // Transfer (move or copy) a set of entries into a destination folder (drag-and-drop). Unlike
   // paste it takes an explicit destination rather than the current folder, and skips no-op /
@@ -239,11 +277,15 @@ export const useFileOperations = ({
 
       setProgress({ label: progressLabel, done: 0, total: 0 });
       let failed = 0;
+      // Source → real destination (conflict-renamed if needed), for the reveal toast and undo.
+      const transfers: Transfer[] = [];
       try {
         for (const source of valid) {
           try {
-            if (isCopy) await fs.copy(source, destDir, onProgress);
-            else await fs.move(source, destDir, onProgress);
+            const to = isCopy
+              ? await fs.copy(source, destDir, onProgress)
+              : await fs.move(source, destDir, onProgress);
+            transfers.push({ from: source, to });
           } catch (err) {
             failed++;
             notify(
@@ -256,19 +298,28 @@ export const useFileOperations = ({
         setProgress(null);
       }
 
+      if (transfers.length)
+        record(
+          isCopy
+            ? copyHistoryEntry(fs, transfers, destDir, label)
+            : moveHistoryEntry(fs, transfers, label),
+        );
+
       if (!failed) {
         // The toast jumps to the destination folder and selects what landed there.
-        const landed = destPaths(valid, destDir);
         notify(
           isCopy ? t.directory.pasted(label) : t.directory.moved(label),
           TOAST_TYPE.SUCCESS,
-          revealAction(destDir, landed),
+          revealAction(
+            destDir,
+            transfers.map((tr) => tr.to),
+          ),
         );
       }
       setSelectedIDs([]);
       refreshDir();
     },
-    [fs, refreshDir, setSelectedIDs, revealAction],
+    [fs, refreshDir, setSelectedIDs, revealAction, record],
   );
 
   const moveTo = useCallback(
@@ -286,6 +337,15 @@ export const useFileOperations = ({
       try {
         await fs.rename(targetPath, newName);
         notify(t.directory.renamed(newName), TOAST_TYPE.SUCCESS);
+        record(
+          renameHistoryEntry(
+            fs,
+            dirname(targetPath),
+            basename(targetPath),
+            newName,
+            `"${newName}"`,
+          ),
+        );
         // Keep the renamed entry selected: its path changed (same folder, new name), so
         // re-select it by the new path once the listing refreshes below.
         setSelectedIDs([withName(targetPath, newName)]);
@@ -294,8 +354,33 @@ export const useFileOperations = ({
       }
       refreshDir();
     },
-    [fs, refreshDir, setSelectedIDs],
+    [fs, refreshDir, setSelectedIDs, record],
   );
+
+  // Reverse / replay the last reversible action (Cmd/Ctrl+Z, Cmd/Ctrl+Shift+Z). The history
+  // entry does the filesystem work; here we surface the result and refresh the current folder
+  // (the change may be in another folder, which the directory watcher picks up on its own).
+  const undo = useCallback(async () => {
+    try {
+      const entry = await undoHistory();
+      if (entry) notify(t.directory.undone(entry.label), TOAST_TYPE.SUCCESS);
+    } catch (err) {
+      notify(t.errors.undo(String(err)), TOAST_TYPE.ERROR);
+    }
+    setSelectedIDs([]);
+    refreshDir();
+  }, [undoHistory, refreshDir, setSelectedIDs]);
+
+  const redo = useCallback(async () => {
+    try {
+      const entry = await redoHistory();
+      if (entry) notify(t.directory.redone(entry.label), TOAST_TYPE.SUCCESS);
+    } catch (err) {
+      notify(t.errors.redo(String(err)), TOAST_TYPE.ERROR);
+    }
+    setSelectedIDs([]);
+    refreshDir();
+  }, [redoHistory, refreshDir, setSelectedIDs]);
 
   return {
     clipboard,
@@ -308,6 +393,10 @@ export const useFileOperations = ({
     moveTo,
     copyTo,
     rename,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
     progress,
   };
 };

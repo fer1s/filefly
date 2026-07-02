@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 
 import type { Tab } from "@/shared/models";
 
@@ -13,6 +14,7 @@ import {
   loadTabs,
   loadActiveTabId,
   saveTabs,
+  clearOrphanedWindowSessions,
 } from "../../utils";
 
 // Owns the browser-tab session: open tabs, the active one, and all navigation that acts on it
@@ -89,10 +91,35 @@ export const useTabs = () => {
 
   const selectTab = useCallback((id: string) => setActiveTabId(id), []);
 
+  // Move the tab at `from` to position `to` (drag-to-reorder). Bounds-checked; a no-op move
+  // leaves the array reference unchanged so React skips the re-render.
+  const reorderTab = useCallback((from: number, to: number) => {
+    setTabs((prev) => {
+      if (
+        from === to ||
+        from < 0 ||
+        to < 0 ||
+        from >= prev.length ||
+        to >= prev.length
+      )
+        return prev;
+      const next = [...prev];
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved);
+      return next;
+    });
+  }, []);
+
   // Persist the tab session whenever it changes.
   useEffect(() => {
     saveTabs(tabs, activeTabId);
   }, [tabs, activeTabId]);
+
+  // Purge tab sessions orphaned by closed runtime windows. Runs once at startup from the main
+  // window (when no win-N exist), so it never touches a live window's session.
+  useEffect(() => {
+    if (getCurrentWindow().label === "main") clearOrphanedWindowSessions();
+  }, []);
 
   return {
     tabs,
@@ -111,5 +138,6 @@ export const useTabs = () => {
     newTab,
     closeTab,
     selectTab,
+    reorderTab,
   };
 };

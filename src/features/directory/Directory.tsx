@@ -7,6 +7,7 @@ import {
 } from "react";
 
 import { useStateContext } from "@/shared/providers/StateProvider";
+import { useModal } from "@/shared/providers/ModalProvider";
 import {
   VIEW_MODE,
   TRASH_DIR_NAME,
@@ -62,6 +63,7 @@ const Directory = () => {
     confirmDragDrop,
     toggleConfirmDragDrop,
     dragToExternalApps,
+    infoPanelOpen,
   } = useStateContext();
 
   const [typeaheadQuery, setTypeaheadQuery] = useState("");
@@ -88,6 +90,10 @@ const Directory = () => {
     searchActive,
     searching,
   } = useDirectory();
+
+  // A modal dialog owns the keyboard while open. Keymap actions are already suppressed by the
+  // dispatcher (MODAL scope), but the arrow / type-to-find nav is a raw listener, so gate it here.
+  const { anyOpen: anyModalOpen } = useModal();
 
   // Rubber-band selection over the empty floor of the directory.
   const directoryRef = useRef<HTMLDivElement>(null);
@@ -167,6 +173,12 @@ const Directory = () => {
   const menu = useContextMenu();
   const isCurrentDirectory =
     menu.elementType === ENTRY_KIND.DIRECTORY && menu.elementID === path;
+
+  // Suppress the per-entry metadata hover card when the directory isn't the focused surface: a
+  // dialog is open, a context menu is open, the full-screen preview is up, or the info panel
+  // already shows that metadata. (Losing app focus hides it too, handled inside Tooltip.)
+  const metadataTooltipDisabled =
+    anyModalOpen || menu.visible || preview.visible || infoPanelOpen;
   // Browsing the system Trash (~/.Trash): entries offer Restore instead of Move-to-Trash.
   const inTrash = path.endsWith(`/${TRASH_DIR_NAME}`);
 
@@ -224,7 +236,11 @@ const Directory = () => {
   useKeyboardNav({
     items: sorted,
     view,
-    enabled: !preview.visible && !properties.visible,
+    // Stand down while an overlay owns the keyboard: a modal dialog, or the context menu (whose
+    // own arrow keys roam its items — see ContextMenu). Otherwise the raw arrow listener would
+    // move the directory selection behind the menu at the same time.
+    enabled:
+      !preview.visible && !properties.visible && !anyModalOpen && !menu.visible,
     selectedIDs,
     setSelectedIDs,
     onOpen: handleKeyboardOpen,
@@ -239,6 +255,8 @@ const Directory = () => {
     onCopy: fileOps.copy,
     onCut: fileOps.cut,
     onPaste: fileOps.paste,
+    onUndo: fileOps.undo,
+    onRedo: fileOps.redo,
     onDelete: fileOps.remove,
     onDeletePermanently: fileOps.removePermanently,
     // Rename only makes sense for a single entry.
@@ -345,6 +363,7 @@ const Directory = () => {
               setType: menu.setElementType,
             }}
             bindDrag={bindDrag}
+            metadataTooltipDisabled={metadataTooltipDisabled}
           />
         )}
 

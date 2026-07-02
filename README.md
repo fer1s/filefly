@@ -52,7 +52,41 @@ npm run tauri dev
 
 This installs the Rust packages if they are not on disk yet; this happens only once.
 
-## 4. macOS: Full Disk Access (for the Trash)
+## 4. The `sfb` command-line tool
+
+The app ships an AI-friendly CLI, **`sfb`**, that drives the same file operations the GUI does
+(list, search, copy, move, trash, tags, …). It prints a JSON envelope on stdout and uses exit codes,
+so agents and scripts can call it directly. Run `sfb schema` for a machine-readable list of every
+command and its arguments, or `sfb help` for human-readable help.
+
+```bash
+sfb list --path ~/Documents
+sfb search --path ~ --query invoice
+sfb tags-set --path report.pdf --tags '[{"name":"Work","color":4}]'
+sfb delete --path old.log --force   # destructive ops require --force
+```
+
+`sfb` is embedded inside the app bundle at `Sito File Browser.app/Contents/MacOS/sfb`. How it lands
+on your `PATH` depends on how you installed the app:
+
+- **Homebrew (Cask).** `brew install --cask <tap>/sito-file-browser` installs the app to
+  `/Applications` and symlinks `sfb` onto your `PATH` automatically (see
+  [`homebrew/sito-file-browser.rb`](./homebrew/sito-file-browser.rb)). Nothing else to do.
+- **Dragged the `.dmg` into Applications.** Add the symlink once yourself:
+
+  ```bash
+  sudo ln -sf "/Applications/Sito File Browser.app/Contents/MacOS/sfb" /usr/local/bin/sfb
+  ```
+
+  (`/usr/local/bin` is on the default `PATH`. Use `~/.local/bin` or another PATH dir if you prefer
+  not to use `sudo`.)
+
+> **Building it yourself:** `sfb` is bundled as a Tauri sidecar. Run
+> `./scripts/build-sfb-sidecar.sh` (stages `src-tauri/binaries/sfb-<triple>`) **before**
+> `npm run tauri build`. CI does this automatically. For a cross-compile, pass the triple, e.g.
+> `./scripts/build-sfb-sidecar.sh x86_64-apple-darwin`.
+
+## 5. macOS: Full Disk Access (for the Trash)
 
 macOS protects some folders (like the **Trash**, `~/.Trash`) behind a privacy permission. Without it the app shows a "Can't read this folder" notice when you open the Trash, with a button to open the right settings pane.
 

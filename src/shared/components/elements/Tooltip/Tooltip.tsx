@@ -29,6 +29,7 @@ const Tooltip = ({
   delay = 0,
   showOnFocus = true,
   placement = TOOLTIP_PLACEMENT.BOTTOM,
+  disabled = false,
   className,
   children,
 }: TooltipProps) => {
@@ -74,6 +75,7 @@ const Tooltip = ({
   };
 
   const show = () => {
+    if (disabled) return;
     if (delay <= 0) return setOpen(true);
     clearShowTimer();
     setPending(true);
@@ -104,10 +106,13 @@ const Tooltip = ({
     // Capture phase so scroll on any nested overflow container is caught, not just the window.
     window.addEventListener("scroll", hide, true);
     window.addEventListener("resize", hide);
+    // Losing app focus (Cmd+Tab, clicking another window) should drop the bubble too.
+    window.addEventListener("blur", hide);
     return () => {
       document.removeEventListener("keydown", handleKey);
       window.removeEventListener("scroll", hide, true);
       window.removeEventListener("resize", hide);
+      window.removeEventListener("blur", hide);
     };
   }, [open, pending, hide]);
 
@@ -126,6 +131,7 @@ const Tooltip = ({
     >
       {children}
       {open &&
+        !disabled &&
         createPortal(
           <span
             ref={bubbleRef}

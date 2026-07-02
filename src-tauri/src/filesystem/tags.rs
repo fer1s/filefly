@@ -12,6 +12,32 @@ pub struct Tag {
     color: u8,
 }
 
+impl Tag {
+    // Construct a tag from a name and Finder colour index (0 = none, 1..=7 = standard colours).
+    // Used by the CLI, which builds tags from flags rather than deserializing IPC payloads.
+    pub fn new(name: String, color: u8) -> Self {
+        Tag { name, color }
+    }
+}
+
+// Plain (non-Tauri) cores shared with the CLI. The Tauri commands below run these on a blocking
+// thread; the CLI calls them directly.
+pub fn read_tags(path: &str) -> Vec<Tag> {
+    imp::read(path)
+}
+
+pub fn write_tags(path: &str, tags: &[Tag]) -> Result<(), String> {
+    imp::write(path, tags)
+}
+
+pub fn find_tagged_core(tag: &str) -> Vec<DirEntry> {
+    imp::find(tag)
+}
+
+pub fn list_all_tags_core() -> Vec<Tag> {
+    imp::list_all()
+}
+
 // macOS stores Finder tags in the extended attribute `com.apple.metadata:_kMDItemUserTags`, a
 // binary plist holding an array of strings, each `"Name\nColorIndex"` (the colour part is absent
 // for an uncoloured tag). We read the real attribute so tags stay in sync with Finder.

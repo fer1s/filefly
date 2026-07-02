@@ -79,7 +79,7 @@ const GROUP_META: Record<SidebarGroupId, { title: string; editable: boolean }> =
   };
 
 const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
-  const { path, volumes, setPath, newTab, sidebarOpacity } = useStateContext();
+  const { path, volumes, setPath, sidebarOpacity } = useStateContext();
   const { allTags } = useTags();
 
   const { keymap } = useKeymap();
@@ -306,17 +306,6 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
           hotkey={formatBinding(keymap[KEYMAP_ACTION.OPEN_SETTINGS])}
           onClick={openSettings}
           aria-label={t.sidebar.settings}
-        />
-        <IconButton
-          icon={faPlus}
-          variant={ICON_BUTTON_VARIANT.BOXED}
-          size={ICON_BUTTON_SIZE.MD}
-          className="new_tab_toggle"
-          tooltip={t.tabs.newTab}
-          tooltipPlacement={TOOLTIP_PLACEMENT.RIGHT}
-          hotkey={formatBinding(keymap[KEYMAP_ACTION.NEW_TAB])}
-          onClick={() => newTab()}
-          aria-label={t.tabs.newTab}
         />
         <IconButton
           icon={faPenToSquare}

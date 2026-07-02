@@ -9,6 +9,22 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+# Shared library crate: the file-operation cores live here so the GUI app and the `sfb` CLI drive
+# identical logic. Both binaries below link this.
+[lib]
+name = "sito_file_browser_lib"
+path = "src/lib.rs"
+
+# The Tauri GUI application (must keep the package name so `tauri build`/bundling finds it).
+[[bin]]
+name = "sito-file-browser"
+path = "src/main.rs"
+
+# Headless, AI-friendly CLI over the same filesystem cores. JSON in/out, `sfb schema` self-describes.
+[[bin]]
+name = "sfb"
+path = "src/bin/sfb.rs"
+
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
 
@@ -33,9 +49,13 @@ ab_glyph = "0.2"
 arboard = "3"
 
 # Finder tags live in a macOS extended attribute (a binary plist) — only needed there.
+# objc2 crates drive the custom Dock right-click menu (recent folders + quick actions).
 [target.'cfg(target_os = "macos")'.dependencies]
 xattr = "1"
 plist = "1"
+objc2 = "0.6"
+objc2-foundation = { version = "0.3", features = ["NSString"] }
+objc2-app-kit = { version = "0.3", features = ["NSApplication", "NSMenu", "NSMenuItem", "NSResponder", "NSRunningApplication"] }
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem

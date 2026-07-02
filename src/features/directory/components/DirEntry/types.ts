@@ -39,4 +39,7 @@ export type DirEntryItemProps = {
   // Drag-to-move binder (@use-gesture), spread onto the row's root. Identity-stable so the
   // memo isn't broken; call with this entry's path to move it (or the whole selection).
   bindDrag: EntryDragBinder;
+  // Suppress this row's metadata hover card (a dialog / preview panel is open). Same value for
+  // every row, so it only re-renders them on the rare open/close.
+  metadataTooltipDisabled: boolean;
 };

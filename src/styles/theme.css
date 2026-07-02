@@ -61,6 +61,10 @@
   --size-toast-max-width: 320px;
   --size-properties-width: 400px;
   --size-shortcuts-width: 560px;
+  --size-settings-width: 640px;
+  --size-settings-nav-width: 148px;
+  --size-settings-panel-height: 420px;
+  --size-settings-dot: var(--space-1-5);
   --size-confirmation-width: 380px;
   --size-info-panel-width: 300px;
   --size-info-preview-height: 240px;

@@ -21,6 +21,9 @@ export const useAppSettings = () => {
   // True once the disk load has resolved, so a pending write never clobbers settings.toml with
   // the defaults before hydration has happened.
   const hydrated = useRef(false);
+  // Same signal as a render value, so the app can wait for real settings (sidebar width, opacity…)
+  // before revealing the window and avoid a defaults→loaded flash on launch.
+  const [ready, setReady] = useState(false);
 
   // Write the latest settings to disk, clearing the spinner when it resolves.
   const write = useCallback(() => {
@@ -50,7 +53,8 @@ export const useAppSettings = () => {
       .catch((error) => {
         hydrated.current = true;
         console.error("Failed to load settings:\n" + error);
-      });
+      })
+      .finally(() => setReady(true));
   }, []);
 
   // Flush any pending write when the window is hidden/closed (it hides to the tray, so a quit
@@ -80,5 +84,5 @@ export const useAppSettings = () => {
     [write],
   );
 
-  return { settings, update, saving };
+  return { settings, update, saving, ready };
 };

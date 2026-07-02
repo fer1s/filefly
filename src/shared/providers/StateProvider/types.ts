@@ -17,6 +17,8 @@ export type State = {
   newTab: (path?: string) => void;
   closeTab: (id: string) => void;
   selectTab: (id: string) => void;
+  // Reorder tabs by moving the one at index `from` to index `to` (drag-to-reorder).
+  reorderTab: (from: number, to: number) => void;
   path: string;
   setPath: (path: string) => void;
   canGoBack: boolean;
