@@ -18,6 +18,7 @@
         "resizable": true,
         "title": "File Browser",
         "label": "main",
+        "visible": false,
         "width": 950,
         "minWidth": 950,
         "height": 600,

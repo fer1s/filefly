@@ -21,6 +21,18 @@ export const useDirectoryContents = ({
   const [volumes, setVolumes] = useState<Volume[]>([]);
   const [dirContent, setDirContent] = useState<DirEntry[]>([]);
   const [accessDenied, setAccessDenied] = useState<boolean>(false);
+  // Flips true once the first listing (a folder, or the Volumes view at the root) has loaded, so
+  // the app can reveal the window with real content instead of an empty shell. Latched once.
+  const [ready, setReady] = useState(false);
+  const readyRef = useRef(false);
+  const markReady = useCallback(() => {
+    if (readyRef.current) return;
+    readyRef.current = true;
+    setReady(true);
+  }, []);
+  // Which view the app launched on: at the root the Volumes list *is* the content, so readiness
+  // waits on the volume load; on a folder it waits on that folder's listing. Captured once.
+  const startedOnVolumes = useRef(path === "");
 
   const fetchVolumes = useCallback(
     async () => setVolumes(await fs.listVolumes()),
@@ -102,11 +114,13 @@ export const useDirectoryContents = ({
     let cancelled = false;
     fs.listVolumes().then((nextVolumes) => {
       if (!cancelled) setVolumes(nextVolumes);
+      // Launched at the root → volumes are the first painted content.
+      if (startedOnVolumes.current) markReady();
     });
     return () => {
       cancelled = true;
     };
-  }, [fs]);
+  }, [fs, markReady]);
 
   // Keep the volume list in sync as external disks are attached/removed — they mount under
   // /Volumes, so a change there means re-list. Debounced; harmless no-op where /Volumes is
@@ -149,13 +163,14 @@ export const useDirectoryContents = ({
       if (cancelled) return;
       setDirContent(files);
       setAccessDenied(denied);
+      markReady();
       if (locationPathname !== ROUTES.directory && path !== "")
         navigate(ROUTES.directory);
     });
     return () => {
       cancelled = true;
     };
-  }, [loadDirectory, locationPathname, navigate, path]);
+  }, [loadDirectory, locationPathname, navigate, path, markReady]);
 
   return {
     volumes,
@@ -164,5 +179,6 @@ export const useDirectoryContents = ({
     setDirContent,
     accessDenied,
     refreshDir,
+    ready,
   };
 };

@@ -3,9 +3,11 @@ import {
   useEffect,
   useMemo,
   useCallback,
+  useRef,
   type CSSProperties,
 } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 
 import { StateProvider } from "@/shared/providers/StateProvider";
 import { ModalProvider } from "@/shared/providers/ModalProvider";
@@ -53,7 +55,12 @@ const App = () => {
   // together into the shared context (see ARCHITECTURE_RULES §6, §4).
   const tabs = useTabs();
   // App-wide settings persisted in settings.toml; hydrated on launch.
-  const { settings, update, saving: savingSettings } = useAppSettings();
+  const {
+    settings,
+    update,
+    saving: savingSettings,
+    ready: settingsReady,
+  } = useAppSettings();
   const directory = useDirectoryContents({
     fs,
     path: tabs.path,
@@ -121,6 +128,27 @@ const App = () => {
     void prewarmDragIcon();
     void prewarmDragGlyphs();
   }, []);
+
+  // The window launches hidden (tauri.conf visible:false) to avoid a blank-window flash while the
+  // webview cold-starts and the first listing loads. Reveal it once settings and the initial
+  // listing are ready so it appears fully painted. A fallback timer guarantees the window is never
+  // left hidden if some load hangs.
+  const windowShown = useRef(false);
+  const revealWindow = useCallback(() => {
+    if (windowShown.current) return;
+    windowShown.current = true;
+    const win = getCurrentWindow();
+    void win.show();
+    void win.setFocus();
+  }, []);
+  const contentReady = settingsReady && directory.ready;
+  useEffect(() => {
+    if (contentReady) revealWindow();
+  }, [contentReady, revealWindow]);
+  useEffect(() => {
+    const fallback = window.setTimeout(revealWindow, 4000);
+    return () => window.clearTimeout(fallback);
+  }, [revealWindow]);
 
   // The OS/webview context menu is replaced by the app's own; suppress it everywhere.
   useEffect(() => {
