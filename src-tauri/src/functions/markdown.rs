@@ -1,15 +1,21 @@
 use markdown::to_html;
 
+// Render a markdown *string* to HTML. Takes the content (not a path) so the in-app preview can
+// render unsaved edits held in the editor, not just what's on disk.
 #[tauri::command]
-pub fn md_to_html(path: String) -> String {
-    // Check if path exists and is a file
-    if std::path::Path::new(&path).exists() && std::path::Path::new(&path).is_file() {
-        // Read file and convert to html
-        let file = std::fs::read_to_string(&path).unwrap();
-        let html = to_html(&file);
+pub fn md_render(content: String) -> String {
+    to_html(&content)
+}
 
-        return html;
-    } else {
-        return "Error: File not found".to_string();
-    }
+// Read a text file's raw contents (the markdown source for the editor). Returns the error string
+// on failure so the UI can surface it instead of panicking.
+#[tauri::command]
+pub fn read_text_file(path: String) -> Result<String, String> {
+    std::fs::read_to_string(&path).map_err(|e| e.to_string())
+}
+
+// Overwrite a text file with `content` (Cmd+S from the markdown editor). Errors bubble up to the UI.
+#[tauri::command]
+pub fn write_text_file(path: String, content: String) -> Result<(), String> {
+    std::fs::write(&path, content).map_err(|e| e.to_string())
 }

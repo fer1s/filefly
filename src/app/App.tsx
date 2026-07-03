@@ -256,6 +256,7 @@ const App = () => {
         dragToExternalApps: settings.dragToExternalApps,
         toggleDragToExternalApps,
         previewImagesInApp: settings.previewImagesInApp,
+        previewMarkdownInApp: settings.previewMarkdownInApp,
         savingSettings,
         search: tabs.search,
         setSearch: tabs.setSearch,
@@ -296,6 +297,10 @@ const App = () => {
                               // descendants of .App, so they inherit this override.
                               "--context-menu-opacity":
                                 settings.contextMenuOpacity,
+                              // Alpha of the preview controls pill (see Preview.css); the pill is a
+                              // descendant of .App, so it inherits this override.
+                              "--preview-controls-opacity":
+                                settings.previewControlsOpacity,
                             } as CSSProperties
                           }
                         >

@@ -122,8 +122,19 @@ export class FileSystemManager {
     return api.openInTerminal(path);
   }
 
-  markdownPreview(path: string): Promise<string> {
-    return api.generateMarkdownPreview(path);
+  // Render a markdown source string to HTML (renders the live editor draft, so unsaved edits show).
+  renderMarkdown(content: string): Promise<string> {
+    return api.renderMarkdown(content);
+  }
+
+  // Read a text file's raw contents (markdown source for the built-in editor).
+  readText(path: string): Promise<string> {
+    return api.readTextFile(path);
+  }
+
+  // Overwrite a text file with `content` (Cmd+S from the markdown editor).
+  writeText(path: string, content: string): Promise<void> {
+    return api.writeTextFile(path, content);
   }
 
   // Resolve to the final destination path (differs from destDir/basename on conflict-rename).

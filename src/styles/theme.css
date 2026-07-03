@@ -56,6 +56,9 @@
   --size-icon-small: var(--space-3);
   --size-icon-medium: var(--space-4);
   --size-preview-header: var(--space-12);
+  /* macOS native window title-bar height — used for dialog/preview headers on macOS so they match
+     the OS chrome (compact bar + 13px title) instead of the taller cross-platform header. */
+  --size-titlebar-mac: 28px;
   --size-audio-progress: 180px;
   --size-audio-volume: 100px;
   --size-toast-max-width: 320px;
@@ -130,6 +133,9 @@
      effect. The default alpha matches the old --color-surface-popover value. */
   --color-surface-popover-rgb: 0, 0, 0;
   --context-menu-opacity: 0.5;
+  /* Alpha of the preview floating-controls pill (see Preview.css); overridden inline on .App from
+     the Preview controls transparency setting. */
+  --preview-controls-opacity: 0.5;
 
   --color-overlay-faint: rgba(255, 255, 255, 0.01);
   --color-overlay-soft: rgba(255, 255, 255, 0.03);

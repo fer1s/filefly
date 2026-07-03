@@ -88,6 +88,13 @@ export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
   },
   {
     kind: SETTING_KIND.TOGGLE,
+    key: "previewMarkdownInApp",
+    section: SETTINGS_SECTION.GENERAL,
+    label: () => t.settings.previewMarkdownInApp,
+    hint: () => t.settings.previewMarkdownInAppHint,
+  },
+  {
+    kind: SETTING_KIND.TOGGLE,
     key: "confirmExportOverwrite",
     section: SETTINGS_SECTION.FILES,
     label: () => t.settings.confirmExportOverwrite,
@@ -163,6 +170,20 @@ export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
     section: SETTINGS_SECTION.APPEARANCE,
     label: () => t.settings.contextMenuTransparency,
     hint: () => t.settings.contextMenuTransparencyHint,
+    // Same 0..1 range/step as the sidebar; shown inverted as transparency.
+    min: SIDEBAR_OPACITY_MIN,
+    max: SIDEBAR_OPACITY_MAX,
+    step: SIDEBAR_OPACITY_STEP,
+    toSlider: (opacity) => SIDEBAR_OPACITY_MAX - opacity,
+    fromSlider: (transparency) => SIDEBAR_OPACITY_MAX - transparency,
+    format: (opacity) => percent(SIDEBAR_OPACITY_MAX - opacity),
+  },
+  {
+    kind: SETTING_KIND.RANGE,
+    key: "previewControlsOpacity",
+    section: SETTINGS_SECTION.APPEARANCE,
+    label: () => t.settings.previewControlsTransparency,
+    hint: () => t.settings.previewControlsTransparencyHint,
     // Same 0..1 range/step as the sidebar; shown inverted as transparency.
     min: SIDEBAR_OPACITY_MIN,
     max: SIDEBAR_OPACITY_MAX,

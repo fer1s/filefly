@@ -84,6 +84,9 @@ export type State = {
   // Whether opening an image (Enter/double-click) shows it in the built-in preview instead of the
   // OS default app. Read by the directory open flow.
   previewImagesInApp: boolean;
+  // Whether opening a markdown file (Enter/double-click) shows it in the built-in preview instead
+  // of the OS default app. Read by the directory open flow.
+  previewMarkdownInApp: boolean;
   // True while a settings change is being written to settings.toml (drives the StatusBar spinner).
   savingSettings: boolean;
   search: string;

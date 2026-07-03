@@ -8,6 +8,9 @@ export const en = {
     dismiss: "Dismiss",
     clickToReveal: "Click to show",
     copied: "Copied",
+    saved: "Saved",
+    save: "Save",
+    edit: "Edit",
     preview: "Preview",
     previous: "Previous",
     next: "Next",
@@ -311,6 +314,9 @@ export const en = {
     contextMenuTransparency: "Context menu transparency",
     contextMenuTransparencyHint:
       "How transparent right-click menu backgrounds are.",
+    previewControlsTransparency: "Preview controls transparency",
+    previewControlsTransparencyHint:
+      "How transparent the preview's floating controls bar is.",
     dialogTransparency: "Dialog transparency",
     dialogTransparencyHint:
       "How transparent dialog backgrounds are (Preview, Properties, confirmations, …).",
@@ -345,6 +351,9 @@ export const en = {
     previewImagesInApp: "Open images in built-in preview",
     previewImagesInAppHint:
       "Opening an image (Enter or double-click) shows it in the app's preview instead of the system app (macOS Preview).",
+    previewMarkdownInApp: "Open markdown in built-in preview",
+    previewMarkdownInAppHint:
+      "Opening a markdown file (Enter or double-click) shows it in the app's preview — where you can also edit it — instead of the system app.",
     saving: "Saving settings…",
     storage: "Disk usage",
     storageHint: "Space the app's data uses on disk and where it's stored.",
@@ -459,6 +468,17 @@ export const en = {
     properties: (reason: string) => `Could not read properties: ${reason}`,
     emptyTrash: (reason: string) => `Could not empty the Trash: ${reason}`,
     eject: (reason: string) => `Could not eject: ${reason}`,
+    save: (reason: string) => `Could not save: ${reason}`,
+    read: (reason: string) => `Could not read file: ${reason}`,
+  },
+  markdownEditor: {
+    unsavedTitle: "Unsaved changes",
+    unsavedMessage: "You have unsaved edits. Discard them?",
+    discard: "Discard",
+    findPlaceholder: "Find in file",
+    noResults: "No results",
+    previousMatch: "Previous match",
+    nextMatch: "Next match",
   },
 };
 

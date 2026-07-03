@@ -18,6 +18,7 @@ import {
   ENTRY_KIND,
   CLIPBOARD_MODE,
   IMAGE_FORMATS,
+  MARKDOWN_FORMAT,
 } from "@/features/directory/constants";
 import {
   classNames,
@@ -74,6 +75,7 @@ const Directory = () => {
     toggleConfirmDragDrop,
     dragToExternalApps,
     previewImagesInApp,
+    previewMarkdownInApp,
     infoPanelOpen,
   } = useStateContext();
 
@@ -204,16 +206,19 @@ const Directory = () => {
   // Browsing the system Trash (~/.Trash): entries offer Restore instead of Move-to-Trash.
   const inTrash = path.endsWith(`/${TRASH_DIR_NAME}`);
 
-  // Open a file: images go to the in-app preview when the setting is on, everything else (and
-  // images when it's off) opens in the OS default app. Shared by Enter (below) and double-click
-  // (DirEntry via onOpenFile) so both honour the setting.
+  // Open a file: images/markdown go to the in-app preview when their setting is on, everything
+  // else (and those when it's off) opens in the OS default app. Shared by Enter (below) and
+  // double-click (DirEntry via onOpenFile) so both honour the setting.
   const openFile = useCallback(
     (entry: DirEntry) => {
-      if (previewImagesInApp && IMAGE_FORMATS.includes(extension(entry.name)))
-        preview.open(entry.path);
+      const ext = extension(entry.name);
+      const inApp =
+        (previewImagesInApp && IMAGE_FORMATS.includes(ext)) ||
+        (previewMarkdownInApp && ext === MARKDOWN_FORMAT);
+      if (inApp) preview.open(entry.path);
       else fs.open(entry.path);
     },
-    [previewImagesInApp, preview, fs],
+    [previewImagesInApp, previewMarkdownInApp, preview, fs],
   );
 
   const handleKeyboardOpen = useCallback(

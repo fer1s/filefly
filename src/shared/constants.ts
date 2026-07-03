@@ -65,6 +65,10 @@ export const DEFAULT_SIDEBAR_OPACITY = 0.85;
 // and step as the sidebar; 0 = fully transparent (only the blur shows), 1 = opaque.
 export const DEFAULT_CONTEXT_MENU_OPACITY = 0.5;
 
+// User-adjustable opacity of the preview floating-controls pill (alpha of the popover surface).
+// Same 0..1 range and step as the sidebar; 0 = fully transparent (only the blur shows).
+export const DEFAULT_PREVIEW_CONTROLS_OPACITY = 0.5;
+
 // User-adjustable dialog (modal) background opacity — Preview, Confirmation, Properties, Settings,
 // etc. Same 0..1 range and step as the sidebar; 0 = fully transparent (only the blur shows).
 export const DEFAULT_DIALOG_OPACITY = 0.85;
@@ -156,6 +160,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   dateFormat: DEFAULT_DATE_FORMAT,
   sidebarOpacity: DEFAULT_SIDEBAR_OPACITY,
   contextMenuOpacity: DEFAULT_CONTEXT_MENU_OPACITY,
+  previewControlsOpacity: DEFAULT_PREVIEW_CONTROLS_OPACITY,
   dialogOpacity: DEFAULT_DIALOG_OPACITY,
   sidebarWidth: DEFAULT_SIDEBAR_WIDTH,
   hideSystemRecents: true,
@@ -169,6 +174,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   dragToExternalApps: true,
   useCustomFolderPicker: false,
   previewImagesInApp: false,
+  previewMarkdownInApp: false,
   confirmExportOverwrite: false,
 };
 
@@ -178,6 +184,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
 export const KEY = {
   ENTER: "Enter",
   ESCAPE: "Escape",
+  S: "s",
+  F: "f",
   BACKSPACE: "Backspace",
   SPACE: " ",
   TAB: "Tab",

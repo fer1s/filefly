@@ -24,6 +24,8 @@ export type AppSettings = {
   sidebarOpacity: number;
   // Context-menu background opacity (alpha of the popover surface), 0..1.
   contextMenuOpacity: number;
+  // Preview floating-controls pill background opacity (alpha of the popover surface), 0..1.
+  previewControlsOpacity: number;
   // Dialog (modal) background opacity (alpha of the modal surface), 0..1.
   dialogOpacity: number;
   // Expanded-sidebar width in px (see SIDEBAR_WIDTH_MIN/MAX).
@@ -49,6 +51,9 @@ export type AppSettings = {
   useCustomFolderPicker: boolean;
   // Open images in the app's built-in preview (on Enter/double-click) instead of the OS default app.
   previewImagesInApp: boolean;
+  // Open markdown files in the app's built-in preview (on Enter/double-click) instead of the OS
+  // default app.
+  previewMarkdownInApp: boolean;
   // On export, ask before replacing an existing settings.toml. When off (default), a unique
   // filename is used instead so nothing is overwritten silently.
   confirmExportOverwrite: boolean;
@@ -318,9 +323,19 @@ export const openInTerminal = async (path: string): Promise<void> => {
   }
 };
 
-// Generate markdown preview invokement method
-export const generateMarkdownPreview = async (path: string): Promise<string> =>
-  (await invokeWithPathArg("md_to_html", path)) as string;
+// Render a markdown source string to HTML (renders the in-editor draft, so unsaved edits preview).
+export const renderMarkdown = async (content: string): Promise<string> =>
+  (await invoke("md_render", { content })) as string;
+
+// Read a text file's raw contents (the markdown source for the built-in editor). Throws on failure.
+export const readTextFile = async (path: string): Promise<string> =>
+  (await invoke("read_text_file", { path })) as string;
+
+// Overwrite a text file with `content` (Cmd+S from the markdown editor). Throws on failure.
+export const writeTextFile = async (
+  path: string,
+  content: string,
+): Promise<void> => await invoke("write_text_file", { path, content });
 
 // Byte progress streamed from a copy/move while it runs.
 export type CopyProgress = { processed: number; total: number };
@@ -413,18 +428,6 @@ export const startNativeDrag = (
   if (!paths.length || !image) return;
   void startDrag({ item: paths, icon: image, mode });
 };
-
-// Helper function to invoke methods with a path argument
-const invokeWithPathArg = async (
-  method: "md_to_html",
-  path: string,
-): Promise<string | void> =>
-  await invoke(method, { path: path })
-    .then((value) => value as string | void)
-    .catch((err) => {
-      console.error("Path is either not valid or does not exist:\n" + err);
-      return;
-    });
 
 // Record a folder the user navigated to in the app's own recent-folders list (backs the macOS
 // Dock right-click menu). Deduped/capped/persisted in Rust; safe to call on every navigation.

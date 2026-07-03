@@ -24,6 +24,8 @@ pub struct AppSettings {
     sidebar_opacity: f64,
     // Context-menu background opacity (alpha of the popover surface), 0..1.
     context_menu_opacity: f64,
+    // Preview floating-controls pill background opacity (alpha of the popover surface), 0..1.
+    preview_controls_opacity: f64,
     // Dialog (modal) background opacity (alpha of the modal surface), 0..1.
     dialog_opacity: f64,
     // User-adjustable sidebar width (px) for the expanded rail (see SIDEBAR_WIDTH_MIN/MAX).
@@ -53,6 +55,9 @@ pub struct AppSettings {
     // Open images in the app's built-in preview (on Enter/double-click) instead of the OS default
     // app (macOS Preview).
     preview_images_in_app: bool,
+    // Open markdown files in the app's built-in preview (on Enter/double-click) instead of the OS
+    // default app.
+    preview_markdown_in_app: bool,
     // On export, ask before replacing an existing settings.toml. When off (default), a unique
     // filename is used instead so nothing is overwritten silently.
     confirm_export_overwrite: bool,
@@ -69,6 +74,7 @@ impl Default for AppSettings {
             date_format: "locale".to_string(),
             sidebar_opacity: 0.85,
             context_menu_opacity: 0.5,
+            preview_controls_opacity: 0.5,
             dialog_opacity: 0.85,
             sidebar_width: 220.0,
             hide_system_recents: true,
@@ -82,6 +88,7 @@ impl Default for AppSettings {
             drag_to_external_apps: true,
             use_custom_folder_picker: false,
             preview_images_in_app: false,
+            preview_markdown_in_app: false,
             confirm_export_overwrite: false,
         }
     }
