@@ -2,6 +2,55 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.4.0]
+
+### Added
+
+- Light theme with a light/dark theme switcher (`cff2bf8`)
+- Accent colour palette — pick the app's accent colour (`c709c9e`, `a1bfd27`)
+- Finder tag colours (`3da34d9`)
+- Storage panel — the app's on-disk data locations and their sizes in Settings (`214ccb2`)
+- "Default folder handler" toggle — make the app macOS's default folder opener (`ba403fa`)
+- Custom in-app folder picker and file picker (`5505d0b`, `7a0b8c6`)
+- Search filters (`95c98fb`)
+- Built-in markdown preview + editor (`923e76d`)
+- Preview panel find bar (`88e2ba8`)
+- Preview panel resize / maximize (`1cd3438`)
+- Draggable dialogs + macOS header sizing (`4d8eb38`)
+- Transparency toggles (context menu / dialog / preview controls) and open-in-preview (`8d695b9`)
+- Register the app as the system default file browser (`5a08b8f`)
+- `sfb` headless UI control: tab commands and live UI-state probe (`d147202`, `d4b65b6`, `5911017`, `88e2ba8`)
+- Dev error overlay (`5f87505`)
+- Inline rename improvements (`66d0c8c`, `a0fe422`)
+
+### Fixed
+
+- Drag and drop: drop on empty space, drop on folder, entry drag, and sidebar drag (`e56963f`, `d4b65b6`, `261dad4`, `5505d0b`)
+- Sidebar sticky positioning (`1bcf1e7`)
+- Tab creation crash (`b799f56`)
+- Clicking a tab no longer starts a reorder — a jittery click stays a click via a drag threshold (`6a10c64`, `ee9af2c`)
+- Rename box unreadable on the light theme (was a dark scrim surface; now a solid theme surface) (`fed398a`)
+- Dialog crash when closing via the header ✕ (a cancelled drag left `memo` undefined) (`008788f`)
+- No hover state on disabled controls (`4d54e04`)
+- Enter with cancellation on inline edits (`00426b1`)
+
+### Refactored
+
+`ARCHITECTURE_RULES.md` compliance pass across the React app:
+
+- Design tokens — replaced literal CSS values with `theme.css` tokens (`8f7e027`)
+- Unit-level file structure — extracted inline constants/types/helpers to sibling files (`cdc7a4f`)
+- No magic literals — closed-set const objects and named constants (`18fd942`)
+- Manager/provider access — added `SettingsManager`; filesystem drag and folder creation now go through `FileSystemManager` (`008788f`)
+
+### Docs
+
+- Architecture rules (`60ae26f`, `80cb738`, `b00956a`)
+
+### Chore
+
+- Format / lint (`25385f1`, `b00956a`)
+
 ## [0.3.0]
 
 ### Added
