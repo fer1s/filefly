@@ -190,7 +190,7 @@ body.is-entry-dragging .drag_ghost {
   width: 100%;
   min-width: 0;
   padding: var(--space-0-5) var(--space-1);
-  background-color: var(--color-surface-backdrop);
+  background-color: var(--color-surface-solid);
   border: var(--border-width-default) solid var(--color-selection-focus);
   border-radius: var(--radius-sm);
   color: var(--color-text-primary);
