@@ -45,7 +45,6 @@ import { useContextMenu } from "./hooks/useContextMenu";
 import { useWritability } from "./hooks/useWritability";
 import { useDirectory } from "./providers/DirectoryProvider";
 
-import { startNativeDrag } from "@/shared/services/api";
 import ConfirmationDialog from "@/shared/components/patterns/ConfirmationDialog";
 import Switcher from "@/shared/components/elements/Switcher";
 import ListHeader from "./components/ListHeader";
@@ -159,8 +158,8 @@ const Directory = () => {
   // to "move" makes external apps (e.g. WhatsApp) reject the drop, so we let each target choose the
   // operation. The in-app move/copy is still decided by handleDrop per the drag-and-drop setting.
   const handleDragOut = useCallback(
-    (sources: string[], icon?: string) => startNativeDrag(sources, icon),
-    [],
+    (sources: string[], icon?: string) => fs.startNativeDrag(sources, icon),
+    [fs],
   );
 
   // Drag entries onto a folder row (the whole selection if the dragged entry is part of it).

@@ -5,7 +5,7 @@ import DialogHeader from "@/shared/components/patterns/DialogHeader";
 import Button from "@/shared/components/elements/Button";
 import Icon from "@/shared/components/elements/Icon";
 import { useCloseOnEscape } from "@/shared/hooks/useCloseOnEscape";
-import { createFolder } from "@/shared/services/api";
+import { useStateContext } from "@/shared/providers/StateProvider";
 import { classNames, dirname } from "@/shared/utils";
 import { t } from "@/lang";
 
@@ -54,6 +54,7 @@ const PathPickerDialog = ({
 }: PathPickerDialogProps) => {
   useCloseOnEscape(visible, onClose);
 
+  const { fs } = useStateContext();
   const isFileMode = config.kind === PICK_KIND.FILE;
 
   // Empty rawPath falls back to the home folder (resolved async) as the default open location.
@@ -115,7 +116,7 @@ const PathPickerDialog = ({
 
   const onNewFolder = async () => {
     if (!path) return;
-    const created = await createFolder(path);
+    const created = await fs.createFolder(path);
     setReloadKey((key) => key + 1);
     setSelected(created);
   };

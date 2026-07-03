@@ -49,7 +49,12 @@ const Dialog = ({
         cancel();
         return;
       }
-      const base = (first ? offset : memo) as { x: number; y: number };
+      // `memo` is undefined when the first event cancelled (grab landed on a button/close): the
+      // trailing pointerup still fires a callback, so guard against a missing base instead of
+      // dereferencing it. A cancelled gesture simply doesn't move the dialog.
+      const base = (first ? offset : memo) as
+        { x: number; y: number } | undefined;
+      if (!base) return;
       setOffset({ x: base.x + mx, y: base.y + my });
       setDragging(!last);
       return base;

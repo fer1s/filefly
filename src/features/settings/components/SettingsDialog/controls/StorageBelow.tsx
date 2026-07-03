@@ -1,13 +1,11 @@
 import { useEffect, useState } from "react";
 
-import {
-  getAppStorage,
-  openPathInNewWindow,
-  type AppStorageLocation,
-} from "@/shared/services/api";
+import type { AppStorageLocation } from "@/shared/services/api";
 import { formatBytes } from "@/shared/utils";
 import { STORAGE_KIND } from "@/shared/constants";
 import { t } from "@/lang";
+
+import { useSettings } from "../../../providers/SettingsProvider";
 
 // Map a backend storage `kind` to its localized label. Falls back to the raw id for any future
 // kind the dictionary doesn't know yet.
@@ -23,11 +21,13 @@ const kindLabel = (kind: string): string => {
 // the panel shows a loading hint until the walk resolves. Fetched when the section first renders.
 // Takes no props (the schema renders it with CustomControlProps, which it ignores).
 const StorageBelow = () => {
+  const { manager } = useSettings();
   const [locations, setLocations] = useState<AppStorageLocation[] | null>(null);
 
   useEffect(() => {
     let active = true;
-    void getAppStorage()
+    void manager
+      .getStorage()
       .then((result) => {
         if (active) setLocations(result);
       })
@@ -37,7 +37,7 @@ const StorageBelow = () => {
     return () => {
       active = false;
     };
-  }, []);
+  }, [manager]);
 
   if (locations === null)
     return (
@@ -64,7 +64,7 @@ const StorageBelow = () => {
               type="button"
               className="settings_storage_path"
               title={t.settings.storageOpen}
-              onClick={() => void openPathInNewWindow(location.path)}
+              onClick={() => void manager.openPath(location.path)}
             >
               {location.path}
             </button>

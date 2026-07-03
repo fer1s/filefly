@@ -12,7 +12,6 @@ import { useStateContext } from "@/shared/providers/StateProvider";
 import { useConfirm } from "@/shared/providers/ConfirmProvider";
 import { useFilePicker } from "@/shared/providers/FilePickerProvider";
 import { useFolderPicker } from "@/shared/providers/FolderPickerProvider";
-import { importSettings, exportSettings } from "@/shared/services/api";
 import { notify, TOAST_TYPE } from "@/shared/toast";
 import { t } from "@/lang";
 
@@ -35,7 +34,7 @@ import type { SettingsDialogProps } from "./types";
 // box filters across every section; a left rail navigates sections when not searching. Each row
 // gets its control, a modified indicator, and reset-to-default — all driven by the descriptor.
 const SettingsDialog = ({ visible, onClose }: SettingsDialogProps) => {
-  const { settings, update, defaults } = useSettings();
+  const { settings, update, defaults, manager } = useSettings();
   const [rawQuery, setRawQuery] = useState("");
   const [activeSection, setActiveSection] = useState<SettingsSectionId>(
     SETTINGS_SECTION.GENERAL,
@@ -95,12 +94,12 @@ const SettingsDialog = ({ visible, onClose }: SettingsDialogProps) => {
     const file = await pickFile({ extensions: ["toml"] });
     if (!file) return;
     try {
-      update(await importSettings(file));
+      update(await manager.importSettings(file));
       notify(t.settings.imported, TOAST_TYPE.SUCCESS);
     } catch (err) {
       notify(t.settings.importError(String(err)), TOAST_TYPE.ERROR);
     }
-  }, [pickFile, update]);
+  }, [pickFile, update, manager]);
 
   // Export: pick a destination folder, write the current settings there as settings.toml.
   // With "confirm before overwriting" on, a pre-existing settings.toml prompts a confirmation
@@ -114,7 +113,7 @@ const SettingsDialog = ({ visible, onClose }: SettingsDialogProps) => {
       notify(t.settings.exported(path), TOAST_TYPE.SUCCESS, () => setPath(dir));
     try {
       if (settings.confirmExportOverwrite) {
-        const first = await exportSettings(dir, settings, false, false);
+        const first = await manager.exportSettings(dir, settings, false, false);
         if (first.existed) {
           const ok = await confirm({
             title: t.settings.exportSettings,
@@ -123,19 +122,29 @@ const SettingsDialog = ({ visible, onClose }: SettingsDialogProps) => {
             destructive: true,
           });
           if (!ok) return;
-          const written = await exportSettings(dir, settings, false, true);
+          const written = await manager.exportSettings(
+            dir,
+            settings,
+            false,
+            true,
+          );
           if (written.path) reveal(written.path);
         } else if (first.path) {
           reveal(first.path);
         }
       } else {
-        const written = await exportSettings(dir, settings, true, false);
+        const written = await manager.exportSettings(
+          dir,
+          settings,
+          true,
+          false,
+        );
         if (written.path) reveal(written.path);
       }
     } catch (err) {
       notify(t.settings.exportError(String(err)), TOAST_TYPE.ERROR);
     }
-  }, [pickFolder, settings, setPath, confirm]);
+  }, [pickFolder, settings, setPath, confirm, manager]);
 
   return (
     <Dialog
