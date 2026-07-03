@@ -46,3 +46,22 @@ pub async fn get_app_storage(app: AppHandle) -> Result<Vec<StorageLocation>, Str
     .await
     .map_err(|error| error.to_string())
 }
+
+// Reclaim the app's cache directory (thumbnails and other regenerable files). Only the cache is
+// cleared — never the config dir, which holds settings.toml, the sidebar, and the trash ledger.
+// The whole cache dir is removed; it's recreated lazily the next time something is cached. A
+// missing cache dir (fresh install / already cleared) is a no-op success. Backs the "clear" button
+// in the Storage settings panel. spawn_blocking because the recursive delete must stay off the UI
+// thread.
+#[tauri::command]
+pub async fn clear_app_cache(app: AppHandle) -> Result<(), String> {
+    let cache = app.path().app_cache_dir().map_err(|e| e.to_string())?;
+    tauri::async_runtime::spawn_blocking(move || {
+        if cache.exists() {
+            std::fs::remove_dir_all(&cache).map_err(|e| e.to_string())?;
+        }
+        Ok(())
+    })
+    .await
+    .map_err(|error| error.to_string())?
+}

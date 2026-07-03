@@ -75,15 +75,17 @@ const SettingItem = ({
   return (
     <div className="settings_item">
       <div className="settings_row">
-        <IconButton
-          icon={faRotateLeft}
-          size={ICON_BUTTON_SIZE.SM}
-          tooltip={t.settings.reset}
-          aria-label={t.settings.reset}
-          className={classNames("settings_reset", !modified && "hidden")}
-          onClick={onReset}
-          disabled={!modified}
-        />
+        {!descriptor.noReset && (
+          <IconButton
+            icon={faRotateLeft}
+            size={ICON_BUTTON_SIZE.SM}
+            tooltip={t.settings.reset}
+            aria-label={t.settings.reset}
+            className={classNames("settings_reset", !modified && "hidden")}
+            onClick={onReset}
+            disabled={!modified}
+          />
+        )}
         <span className="settings_row_text">
           <span className="settings_row_label">{descriptor.label()}</span>
           <span className="settings_row_hint">{descriptor.hint()}</span>

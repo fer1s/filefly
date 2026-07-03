@@ -269,5 +269,8 @@ export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
     Below: StorageBelow,
     isModified: () => false,
     reset: () => {},
+    // Informational only — never resettable, so drop the reset gutter that would otherwise
+    // left-indent this row out of line with the full-width storage panel below it.
+    noReset: true,
   },
 ];

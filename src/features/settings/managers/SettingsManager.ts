@@ -20,6 +20,11 @@ export class SettingsManager {
     return api.openPathInNewWindow(path);
   }
 
+  // Reclaim the app's cache (thumbnails etc.); leaves config/data untouched. Storage panel button.
+  clearCache(): Promise<void> {
+    return api.clearAppCache();
+  }
+
   // Whether this app is macOS's default folder handler (Launch Services).
   isDefaultFolderHandler(): Promise<boolean> {
     return api.isDefaultFolderHandler();

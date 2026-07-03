@@ -36,6 +36,10 @@ type BaseDescriptor = {
   // Lazily resolved so labels/hints honor the active i18n dictionary; also matched by the search.
   label: () => string;
   hint: () => string;
+  // Drop the reset-to-default affordance entirely (button AND its reserved slot) for rows that can
+  // never be "modified" — e.g. the informational Storage panel. Without this the row keeps the
+  // empty reset gutter, which left-indents it out of line with the full-width content below.
+  noReset?: boolean;
 };
 
 export type ToggleDescriptor = BaseDescriptor & {
