@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 
 import type { Tab } from "@/shared/models";
+import { MAIN_WINDOW_LABEL } from "@/shared/constants";
+import { DEFAULT_FILTERS, type SearchFilters } from "@/shared/search/filters";
 
 import {
   makeTab,
@@ -58,6 +60,12 @@ export const useTabs = () => {
     [updateActiveTab],
   );
 
+  const setFilters = useCallback(
+    (nextFilters: SearchFilters) =>
+      updateActiveTab((tab) => ({ ...tab, filters: nextFilters })),
+    [updateActiveTab],
+  );
+
   const toggleInfoPanel = useCallback(
     () =>
       updateActiveTab((tab) => ({ ...tab, infoPanelOpen: !tab.infoPanelOpen })),
@@ -68,7 +76,10 @@ export const useTabs = () => {
   // the new tab there instead (e.g. the sidebar's "Open in new tab"). Panel state is inherited.
   const newTab = useCallback(
     (nextPath?: string) => {
-      const tab = makeTab(nextPath ?? path, infoPanelOpen);
+      // Guard against being wired straight to an event handler (onClick / useHotkey), which would
+      // otherwise pass the DOM event as `nextPath` and make the tab's path a non-string → crash.
+      const start = typeof nextPath === "string" ? nextPath : path;
+      const tab = makeTab(start, infoPanelOpen);
       setTabs((prev) => [...prev, tab]);
       setActiveTabId(tab.id);
     },
@@ -118,7 +129,8 @@ export const useTabs = () => {
   // Purge tab sessions orphaned by closed runtime windows. Runs once at startup from the main
   // window (when no win-N exist), so it never touches a live window's session.
   useEffect(() => {
-    if (getCurrentWindow().label === "main") clearOrphanedWindowSessions();
+    if (getCurrentWindow().label === MAIN_WINDOW_LABEL)
+      clearOrphanedWindowSessions();
   }, []);
 
   return {
@@ -127,6 +139,7 @@ export const useTabs = () => {
     activeTab,
     path,
     search: activeTab.search,
+    filters: activeTab.filters ?? DEFAULT_FILTERS,
     infoPanelOpen,
     canGoBack: canGoBack(activeTab),
     canGoForward: canGoForward(activeTab),
@@ -134,6 +147,7 @@ export const useTabs = () => {
     goBack,
     goForward,
     setSearch,
+    setFilters,
     toggleInfoPanel,
     newTab,
     closeTab,

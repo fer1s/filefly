@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import type { AppSettings } from "@/shared/services/api";
 
 import type { SettingsUpdate } from "../../schema";
+import type { SettingsManager } from "../../managers/SettingsManager";
 
 export type SettingsProviderProps = {
   children: ReactNode;
@@ -21,4 +22,7 @@ export type SettingsContextValue = {
   settings: AppSettings;
   update: SettingsUpdate;
   defaults: AppSettings;
+  // Domain operations for the settings dialog (storage, default-folder-handler, import/export),
+  // so the controls go through the manager instead of calling the Tauri service directly.
+  manager: SettingsManager;
 };

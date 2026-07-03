@@ -1,9 +1,10 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import { DEFAULT_SETTINGS } from "@/shared/constants";
 
 import { SettingsContextProvider } from "./SettingsContext";
 import type { SettingsProviderProps } from "./types";
+import { SettingsManager } from "../../managers/SettingsManager";
 import { useSettingsShortcut } from "../../hooks/useSettingsShortcut";
 import SettingsDialog from "../../components/SettingsDialog";
 
@@ -15,6 +16,7 @@ export const SettingsProvider = ({
   update,
 }: SettingsProviderProps) => {
   const [visible, setVisible] = useState(false);
+  const manager = useMemo(() => new SettingsManager(), []);
 
   const open = useCallback(() => setVisible(true), []);
   const close = useCallback(() => setVisible(false), []);
@@ -23,7 +25,14 @@ export const SettingsProvider = ({
 
   return (
     <SettingsContextProvider
-      value={{ open, close, settings, update, defaults: DEFAULT_SETTINGS }}
+      value={{
+        open,
+        close,
+        settings,
+        update,
+        defaults: DEFAULT_SETTINGS,
+        manager,
+      }}
     >
       {children}
       <SettingsDialog visible={visible} onClose={close} />

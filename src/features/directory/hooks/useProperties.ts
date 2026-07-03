@@ -7,7 +7,8 @@ import { DirEntry } from "@/shared/models";
 
 // State for the Properties modal. `open` resolves the entry for the given path:
 // the current directory is fetched fresh (it isn't in `dirContent`), other entries
-// are looked up in the already-loaded listing.
+// are looked up in the already-loaded listing, falling back to a fresh fetch when
+// absent (e.g. search results live in subfolders, not in `dirContent`).
 export const useProperties = () => {
   const { fs, dirContent } = useStateContext();
   const [entry, setEntry] = useState<DirEntry | null>(null);
@@ -17,7 +18,8 @@ export const useProperties = () => {
     try {
       const resolved = isCurrentDirectory
         ? await fs.getEntry(targetId)
-        : dirContent.find((item) => item.path === targetId);
+        : (dirContent.find((item) => item.path === targetId) ??
+          (await fs.getEntry(targetId)));
 
       if (!resolved) return;
       setEntry(resolved);

@@ -1,8 +1,18 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
+import { faFileImport, faFileExport } from "@fortawesome/free-solid-svg-icons";
 
 import Dialog from "@/shared/components/patterns/Dialog";
 import DialogHeader from "@/shared/components/patterns/DialogHeader";
+import IconButton, {
+  ICON_BUTTON_VARIANT,
+  ICON_BUTTON_SIZE,
+} from "@/shared/components/elements/IconButton";
 import { useCloseOnEscape } from "@/shared/hooks/useCloseOnEscape";
+import { useStateContext } from "@/shared/providers/StateProvider";
+import { useConfirm } from "@/shared/providers/ConfirmProvider";
+import { useFilePicker } from "@/shared/providers/FilePickerProvider";
+import { useFolderPicker } from "@/shared/providers/FolderPickerProvider";
+import { notify, TOAST_TYPE } from "@/shared/toast";
 import { t } from "@/lang";
 
 import "@/styles/components/SettingsDialog.css";
@@ -24,7 +34,7 @@ import type { SettingsDialogProps } from "./types";
 // box filters across every section; a left rail navigates sections when not searching. Each row
 // gets its control, a modified indicator, and reset-to-default — all driven by the descriptor.
 const SettingsDialog = ({ visible, onClose }: SettingsDialogProps) => {
-  const { settings, update, defaults } = useSettings();
+  const { settings, update, defaults, manager } = useSettings();
   const [rawQuery, setRawQuery] = useState("");
   const [activeSection, setActiveSection] = useState<SettingsSectionId>(
     SETTINGS_SECTION.GENERAL,
@@ -73,6 +83,69 @@ const SettingsDialog = ({ visible, onClose }: SettingsDialogProps) => {
     setActiveSection(id);
   };
 
+  const { pickFile } = useFilePicker();
+  const { pickFolder } = useFolderPicker();
+  const { setPath } = useStateContext();
+  const { confirm } = useConfirm();
+
+  // Import: pick a .toml, parse it (backend fills missing keys from defaults), then apply through
+  // the normal patch writer — which persists it to settings.toml like any other change.
+  const handleImport = useCallback(async () => {
+    const file = await pickFile({ extensions: ["toml"] });
+    if (!file) return;
+    try {
+      update(await manager.importSettings(file));
+      notify(t.settings.imported, TOAST_TYPE.SUCCESS);
+    } catch (err) {
+      notify(t.settings.importError(String(err)), TOAST_TYPE.ERROR);
+    }
+  }, [pickFile, update, manager]);
+
+  // Export: pick a destination folder, write the current settings there as settings.toml.
+  // With "confirm before overwriting" on, a pre-existing settings.toml prompts a confirmation
+  // (and is only replaced on accept); with it off (default), a unique filename is used instead so
+  // nothing is overwritten silently. Clicking the success toast opens the destination folder in
+  // the browser behind the still-open dialog (navigation happens on the active tab underneath).
+  const handleExport = useCallback(async () => {
+    const dir = await pickFolder();
+    if (!dir) return;
+    const reveal = (path: string) =>
+      notify(t.settings.exported(path), TOAST_TYPE.SUCCESS, () => setPath(dir));
+    try {
+      if (settings.confirmExportOverwrite) {
+        const first = await manager.exportSettings(dir, settings, false, false);
+        if (first.existed) {
+          const ok = await confirm({
+            title: t.settings.exportSettings,
+            message: t.settings.exportExists,
+            confirmLabel: t.settings.overwrite,
+            destructive: true,
+          });
+          if (!ok) return;
+          const written = await manager.exportSettings(
+            dir,
+            settings,
+            false,
+            true,
+          );
+          if (written.path) reveal(written.path);
+        } else if (first.path) {
+          reveal(first.path);
+        }
+      } else {
+        const written = await manager.exportSettings(
+          dir,
+          settings,
+          true,
+          false,
+        );
+        if (written.path) reveal(written.path);
+      }
+    } catch (err) {
+      notify(t.settings.exportError(String(err)), TOAST_TYPE.ERROR);
+    }
+  }, [pickFolder, settings, setPath, confirm, manager]);
+
   return (
     <Dialog
       visible={visible}
@@ -96,6 +169,24 @@ const SettingsDialog = ({ visible, onClose }: SettingsDialogProps) => {
           aria-label={t.settings.search}
           spellCheck={false}
         />
+        <div className="settings_toolbar_actions">
+          <IconButton
+            icon={faFileImport}
+            onClick={handleImport}
+            variant={ICON_BUTTON_VARIANT.BOXED}
+            size={ICON_BUTTON_SIZE.LG}
+            tooltip={t.settings.importSettings}
+            aria-label={t.settings.importSettings}
+          />
+          <IconButton
+            icon={faFileExport}
+            onClick={handleExport}
+            variant={ICON_BUTTON_VARIANT.BOXED}
+            size={ICON_BUTTON_SIZE.LG}
+            tooltip={t.settings.exportSettings}
+            aria-label={t.settings.exportSettings}
+          />
+        </div>
       </div>
 
       <div className="settings_layout">

@@ -1,5 +1,6 @@
 import * as api from "@/shared/services/api";
 import { DirEntry, Volume, Tag } from "@/shared/models";
+import type { DragDropAction } from "@/shared/constants";
 
 // Encapsulates all filesystem domain operations. Views/components consume this through the provider
 // instead of calling the Tauri service (`api`) directly. Also owns data shaping (filtering, sorting).
@@ -122,8 +123,19 @@ export class FileSystemManager {
     return api.openInTerminal(path);
   }
 
-  markdownPreview(path: string): Promise<string> {
-    return api.generateMarkdownPreview(path);
+  // Render a markdown source string to HTML (renders the live editor draft, so unsaved edits show).
+  renderMarkdown(content: string): Promise<string> {
+    return api.renderMarkdown(content);
+  }
+
+  // Read a text file's raw contents (markdown source for the built-in editor).
+  readText(path: string): Promise<string> {
+    return api.readTextFile(path);
+  }
+
+  // Overwrite a text file with `content` (Cmd+S from the markdown editor).
+  writeText(path: string, content: string): Promise<void> {
+    return api.writeTextFile(path, content);
   }
 
   // Resolve to the final destination path (differs from destDir/basename on conflict-rename).
@@ -179,5 +191,11 @@ export class FileSystemManager {
 
   openFullDiskAccessSettings(): Promise<void> {
     return api.openFullDiskAccessSettings();
+  }
+
+  // Start a native OS drag of real files, so they can be dropped into other apps (Finder, Mail, …)
+  // and back into our own window. `mode` sets the OS drop-effect badge (move vs copy).
+  startNativeDrag(paths: string[], icon?: string, mode?: DragDropAction): void {
+    api.startNativeDrag(paths, icon, mode);
   }
 }

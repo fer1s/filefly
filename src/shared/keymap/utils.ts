@@ -1,12 +1,9 @@
 import { KEY_GLYPH } from "./constants";
-import type { KeyBinding } from "./types";
+import type { KeyBinding, BindingOrList } from "./types";
 
 export const isMacPlatform = (): boolean =>
   typeof navigator !== "undefined" &&
   navigator.platform.toUpperCase().includes("MAC");
-
-// An action's binding may be a single chord or several alternatives (e.g. Alt+Left *and* Cmd+[).
-type BindingOrList = KeyBinding | KeyBinding[];
 
 // Whether the event matches one specific chord.
 const matchesOne = (event: KeyboardEvent, binding: KeyBinding): boolean => {

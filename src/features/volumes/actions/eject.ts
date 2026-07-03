@@ -1,26 +1,20 @@
 import { faEject } from "@fortawesome/free-solid-svg-icons";
 
-import { notify, TOAST_TYPE } from "@/shared/toast";
+import { ejectVolume } from "@/shared/services/ejectVolume";
 import { t } from "@/lang";
 
 import { VOLUME_ACTION } from "./constants";
 import type { VolumeAction } from "./types";
 
-// Eject a removable volume, then refresh the list so the device disappears. Only shown for
-// removable volumes.
+// Eject an ejectable volume, then refresh the list so the device disappears. Only shown for
+// ejectable volumes (removable media or anything mounted under /Volumes).
 export const ejectAction: VolumeAction = {
   id: VOLUME_ACTION.EJECT,
   label: () => t.contextMenu.eject,
   icon: faEject,
-  isVisible: (ctx) => ctx.isRemovable,
-  run: async ({ fs, path, name, refreshVolumes, onClose }) => {
+  isVisible: (ctx) => ctx.isEjectable,
+  run: async ({ fs, path, refreshVolumes, onClose }) => {
     onClose();
-    try {
-      await fs.ejectVolume(path);
-      notify(t.volumes.ejected(name), TOAST_TYPE.SUCCESS);
-      refreshVolumes();
-    } catch (error) {
-      notify(t.errors.eject(String(error)), TOAST_TYPE.ERROR);
-    }
+    await ejectVolume(fs, path, refreshVolumes);
   },
 };

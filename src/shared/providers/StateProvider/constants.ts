@@ -9,6 +9,8 @@ import {
   DEFAULT_DRAG_DROP_ACTION,
 } from "@/shared/constants";
 
+import { DEFAULT_FILTERS } from "@/shared/search/filters";
+
 import type { State } from "./types";
 
 // Default context value; also the seed used before the App provider mounts.
@@ -59,13 +61,18 @@ export const initialState: State = {
   setDragDropAction: () => {},
   confirmDragDrop: true,
   toggleConfirmDragDrop: () => {},
+  confirmDelete: true,
   clickableToasts: true,
   toggleClickableToasts: () => {},
   dragToExternalApps: true,
   toggleDragToExternalApps: () => {},
+  previewImagesInApp: false,
+  previewMarkdownInApp: false,
   savingSettings: false,
   search: "",
   setSearch: () => {},
+  filters: DEFAULT_FILTERS,
+  setFilters: () => {},
   refreshDir: () => {},
   infoPanelOpen: false,
   toggleInfoPanel: () => {},

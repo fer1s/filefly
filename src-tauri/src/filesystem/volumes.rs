@@ -12,6 +12,10 @@ pub struct Volume {
     total_space: String,
     disk_usage: DiskUsage,
     is_removable: bool,
+    // Whether the volume can be ejected/unmounted: removable media, or anything mounted under
+    // /Volumes (external disks, disk images, extra partitions) — what Finder offers to eject. The
+    // boot volume ("/") and internal helper volumes (/System/Volumes/…) are never ejectable.
+    is_ejectable: bool,
     // Lowercased filesystem type (e.g. "ntfs", "apfs", "exfat"). Used to warn about read-only
     // NTFS on macOS (which has no native write support).
     file_system: String,
@@ -97,6 +101,8 @@ pub fn get_volumes() -> Vec<Volume> {
             total_space: format_bytes(&total_space),
             disk_usage: format_disk_usage(&available_space, &total_space),
             is_removable: disk.is_removable(),
+            is_ejectable: disk.is_removable()
+                || disk.mount_point().starts_with("/Volumes/"),
             file_system: disk.file_system().to_string_lossy().to_lowercase(),
             total_bytes: total_space,
             available_bytes: available_space,

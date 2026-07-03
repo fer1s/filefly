@@ -15,14 +15,33 @@
   color: var(--color-text-secondary);
 }
 
-/* Right-aligned progress indicators (computing sizes, loading previews). With two present, the
-   first absorbs the free space and both sit together on the right. */
+/* Active-search indicator: the query still filtering the view. Sits at the far left, ahead of the
+   item count, so a restored session makes it obvious you're looking at search results. */
+.directory_page .status_bar .searching {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--color-text-secondary);
+  max-width: var(--space-80);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* Right-aligned progress indicators (computing sizes, loading previews, saving, batch progress). */
 .directory_page .status_bar .busy {
   margin-left: auto;
   display: flex;
   align-items: center;
   gap: var(--space-1);
   color: var(--color-text-secondary);
+}
+
+/* Only the FIRST busy item absorbs the free space (margin-left:auto above). Every subsequent one
+   resets it to 0 so the whole group stays together on the right (separated by the flex gap) instead
+   of each grabbing free space and spreading to opposite ends. */
+.directory_page .status_bar .busy ~ .busy {
+  margin-left: 0;
 }
 
 /* Item-level progress bar for copy / move / delete batches. */

@@ -15,6 +15,11 @@
   min-width: 0;
   overflow-x: auto;
   scrollbar-width: none;
+  /* overflow-x:auto also clips the vertical axis, cropping the lifted (dragging/active) tab's
+     shadow. Pad the clip box and cancel it with an equal negative margin so the strip stays put
+     but the shadow has room to render. */
+  padding-block: var(--space-4);
+  margin-block: calc(-1 * var(--space-4));
 }
 
 .TabBar .tab_strip::-webkit-scrollbar {
@@ -72,10 +77,12 @@
 }
 
 /* Draggable tabs: touch-action none lets the pointer gesture own horizontal moves (no native
-   scroll/selection fighting it), and grab cursors signal the affordance. */
+   scroll/selection fighting it). Cursor stays a pointer at rest (tabs are click-to-select, like a
+   browser's) and only becomes `grabbing` mid-drag (see .dragging) — a resting `grab` cursor made a
+   plain click feel like it was starting a drag. */
 .TabBar .TabItem {
   touch-action: none;
-  cursor: grab;
+  cursor: pointer;
   /* Non-dragged tabs ease into the gap the lifted tab opens; the dragged tab overrides this to
      follow the pointer 1:1 (see .dragging). */
   transition: transform 0.16s ease;
@@ -95,8 +102,8 @@
   position: relative;
   z-index: 2;
   cursor: grabbing;
-  background-color: rgb(55, 55, 58);
-  box-shadow: 0 4px 12px rgb(0 0 0 / 0.35);
+  background-color: var(--color-tab-dragging);
+  box-shadow: var(--shadow-lift);
   /* Follow the pointer instantly — no lag between cursor and tab. */
   transition: none;
 }

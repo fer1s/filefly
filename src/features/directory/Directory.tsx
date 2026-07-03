@@ -14,13 +14,25 @@ import {
   RECENTS,
   DRAG_DROP_ACTION,
 } from "@/shared/constants";
-import { ENTRY_KIND, CLIPBOARD_MODE } from "@/features/directory/constants";
-import { classNames, isTagsPath, basename } from "@/shared/utils";
+import {
+  ENTRY_KIND,
+  CLIPBOARD_MODE,
+  IMAGE_FORMATS,
+  MARKDOWN_FORMAT,
+} from "@/features/directory/constants";
+import {
+  classNames,
+  isTagsPath,
+  basename,
+  dirname,
+  extension,
+} from "@/shared/utils";
 import { notify, TOAST_TYPE } from "@/shared/toast";
 import { t } from "@/lang";
 import { DirEntry } from "@/shared/models";
 
 import { COLUMN_KEYS, buildListGrid } from "./columns";
+import type { PendingDrop } from "./types";
 import { useColumnVisibility } from "./hooks/useColumnVisibility";
 import { useFolderView } from "./hooks/useFolderView";
 import { useMarqueeSelection } from "./hooks/useMarqueeSelection";
@@ -33,7 +45,6 @@ import { useContextMenu } from "./hooks/useContextMenu";
 import { useWritability } from "./hooks/useWritability";
 import { useDirectory } from "./providers/DirectoryProvider";
 
-import { startNativeDrag } from "@/shared/services/api";
 import ConfirmationDialog from "@/shared/components/patterns/ConfirmationDialog";
 import Switcher from "@/shared/components/elements/Switcher";
 import ListHeader from "./components/ListHeader";
@@ -63,6 +74,8 @@ const Directory = () => {
     confirmDragDrop,
     toggleConfirmDragDrop,
     dragToExternalApps,
+    previewImagesInApp,
+    previewMarkdownInApp,
     infoPanelOpen,
   } = useStateContext();
 
@@ -104,11 +117,7 @@ const Directory = () => {
 
   // Drag entries onto a folder to move (default) or copy them there, per the drag-and-drop
   // settings. A pending drop is held until the user confirms, when confirmation is enabled.
-  const [pendingDrop, setPendingDrop] = useState<{
-    sources: string[];
-    dest: string;
-    copy: boolean;
-  } | null>(null);
+  const [pendingDrop, setPendingDrop] = useState<PendingDrop | null>(null);
   // "Don't ask again" toggle inside the confirm dialog; on accept it turns off future confirms.
   const [dontAskAgain, setDontAskAgain] = useState(false);
 
@@ -124,11 +133,22 @@ const Directory = () => {
   // files dragged in from another app always copy (never move them out of their origin).
   const handleDrop = useCallback(
     (sources: string[], dest: string, external = false) => {
+      // Drop no-ops (an item already in dest, or a folder onto itself/a descendant) transfer
+      // nothing — filter them out first so dropping in the current folder's empty space doesn't
+      // pop the confirm dialog for a move/copy that would do nothing. transferTo re-checks this.
+      const targets = sources.filter(
+        (src) =>
+          src &&
+          dirname(src) !== dest &&
+          dest !== src &&
+          !dest.startsWith(`${src}/`),
+      );
+      if (!targets.length) return;
       const copy = external || settingIsCopy;
       if (confirmDragDrop) {
         setDontAskAgain(false);
-        setPendingDrop({ sources, dest, copy });
-      } else performDrop(sources, dest, copy);
+        setPendingDrop({ sources: targets, dest, copy });
+      } else performDrop(targets, dest, copy);
     },
     [confirmDragDrop, performDrop, settingIsCopy],
   );
@@ -138,8 +158,8 @@ const Directory = () => {
   // to "move" makes external apps (e.g. WhatsApp) reject the drop, so we let each target choose the
   // operation. The in-app move/copy is still decided by handleDrop per the drag-and-drop setting.
   const handleDragOut = useCallback(
-    (sources: string[], icon?: string) => startNativeDrag(sources, icon),
-    [],
+    (sources: string[], icon?: string) => fs.startNativeDrag(sources, icon),
+    [fs],
   );
 
   // Drag entries onto a folder row (the whole selection if the dragged entry is part of it).
@@ -182,10 +202,25 @@ const Directory = () => {
   // Browsing the system Trash (~/.Trash): entries offer Restore instead of Move-to-Trash.
   const inTrash = path.endsWith(`/${TRASH_DIR_NAME}`);
 
+  // Open a file: images/markdown go to the in-app preview when their setting is on, everything
+  // else (and those when it's off) opens in the OS default app. Shared by Enter (below) and
+  // double-click (DirEntry via onOpenFile) so both honour the setting.
+  const openFile = useCallback(
+    (entry: DirEntry) => {
+      const ext = extension(entry.name);
+      const inApp =
+        (previewImagesInApp && IMAGE_FORMATS.includes(ext)) ||
+        (previewMarkdownInApp && ext === MARKDOWN_FORMAT);
+      if (inApp) preview.open(entry.path);
+      else fs.open(entry.path);
+    },
+    [previewImagesInApp, previewMarkdownInApp, preview, fs],
+  );
+
   const handleKeyboardOpen = useCallback(
     (entry: DirEntry) =>
-      entry.metadata.isDir ? setPath(entry.path) : fs.open(entry.path),
-    [fs, setPath],
+      entry.metadata.isDir ? setPath(entry.path) : openFile(entry),
+    [openFile, setPath],
   );
 
   const handleCancelRename = useCallback(
@@ -355,6 +390,7 @@ const Directory = () => {
             renamingID={renamingID}
             contextMenuRef={menu.ref}
             onSelect={handleSelect}
+            onOpenFile={openFile}
             onRename={fileOps.rename}
             onCancelRename={handleCancelRename}
             menu={{
@@ -375,6 +411,8 @@ const Directory = () => {
       <StatusBar
         total={filtered.length}
         selected={selectedIDs.length}
+        search={searchActive ? search : ""}
+        searchLoading={searching}
         computingSizes={computingSizes}
         savingSettings={savingSettings}
         progress={fileOps.progress}

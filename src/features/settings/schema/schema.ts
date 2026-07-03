@@ -3,6 +3,7 @@ import {
   SIDEBAR_OPACITY_MAX,
   SIDEBAR_OPACITY_STEP,
   DRAG_DROP_ACTION,
+  THEME,
 } from "@/shared/constants";
 import { t } from "@/lang";
 
@@ -11,6 +12,10 @@ import DateFormatControl from "../components/SettingsDialog/controls/DateFormatC
 import DateFormatBelow from "../components/SettingsDialog/controls/DateFormatBelow";
 import StartupControl from "../components/SettingsDialog/controls/StartupControl";
 import StartupBelow from "../components/SettingsDialog/controls/StartupBelow";
+import StorageControl from "../components/SettingsDialog/controls/StorageControl";
+import StorageBelow from "../components/SettingsDialog/controls/StorageBelow";
+import AccentControl from "../components/SettingsDialog/controls/AccentControl";
+import FolderHandlerControl from "../components/SettingsDialog/controls/FolderHandlerControl";
 
 import { SETTINGS_SECTION } from "./sections";
 import { SETTING_KIND, type SettingDescriptor } from "./types";
@@ -23,7 +28,7 @@ const percent = (fraction: number) =>
 // (plus its AppSettings field + dictionary strings) — the dialog renders, searches, groups, and
 // wires modified/reset generically from this list.
 export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
-  // General
+  // ── General ── behavior basics, launch, and OS integration.
   {
     kind: SETTING_KIND.TOGGLE,
     key: "showHidden",
@@ -38,12 +43,92 @@ export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
     label: () => t.settings.hideSystemRecents,
     hint: () => t.settings.hideSystemRecentsHint,
   },
+  {
+    kind: SETTING_KIND.CUSTOM,
+    key: "startupMode",
+    section: SETTINGS_SECTION.GENERAL,
+    label: () => t.settings.startup,
+    hint: () => t.settings.startupHint,
+    Control: StartupControl,
+    Below: StartupBelow,
+    isModified: (settings, defaults) =>
+      settings.startupMode !== defaults.startupMode ||
+      settings.homePath !== defaults.homePath,
+    reset: (update, defaults) =>
+      update({
+        startupMode: defaults.startupMode,
+        homePath: defaults.homePath,
+      }),
+  },
+  // macOS integration. OS state (Launch Services), not an AppSettings field: the control reads/
+  // writes it live, so it's never "modified" and has no reset (synthetic key).
+  {
+    kind: SETTING_KIND.CUSTOM,
+    key: "defaultFolderHandler",
+    section: SETTINGS_SECTION.GENERAL,
+    label: () => t.settings.folderHandler,
+    hint: () => t.settings.folderHandlerHint,
+    Control: FolderHandlerControl,
+    isModified: () => false,
+    reset: () => {},
+  },
+  {
+    kind: SETTING_KIND.TOGGLE,
+    key: "useCustomFolderPicker",
+    section: SETTINGS_SECTION.GENERAL,
+    label: () => t.settings.useCustomFolderPicker,
+    hint: () => t.settings.useCustomFolderPickerHint,
+  },
+  {
+    kind: SETTING_KIND.TOGGLE,
+    key: "previewImagesInApp",
+    section: SETTINGS_SECTION.GENERAL,
+    label: () => t.settings.previewImagesInApp,
+    hint: () => t.settings.previewImagesInAppHint,
+  },
+  {
+    kind: SETTING_KIND.TOGGLE,
+    key: "previewMarkdownInApp",
+    section: SETTINGS_SECTION.GENERAL,
+    label: () => t.settings.previewMarkdownInApp,
+    hint: () => t.settings.previewMarkdownInAppHint,
+  },
+  {
+    kind: SETTING_KIND.TOGGLE,
+    key: "confirmExportOverwrite",
+    section: SETTINGS_SECTION.FILES,
+    label: () => t.settings.confirmExportOverwrite,
+    hint: () => t.settings.confirmExportOverwriteHint,
+  },
 
-  // View
+  // ── Appearance ── everything visual (theme, accent, zoom, dates, sidebar).
+  {
+    kind: SETTING_KIND.SELECT,
+    key: "theme",
+    section: SETTINGS_SECTION.APPEARANCE,
+    label: () => t.settings.theme,
+    hint: () => t.settings.themeHint,
+    options: () => [
+      { value: THEME.SYSTEM, label: t.settings.themeSystem },
+      { value: THEME.LIGHT, label: t.settings.themeLight },
+      { value: THEME.DARK, label: t.settings.themeDark },
+    ],
+  },
+  {
+    kind: SETTING_KIND.CUSTOM,
+    key: "accentColor",
+    section: SETTINGS_SECTION.APPEARANCE,
+    label: () => t.settings.accent,
+    hint: () => t.settings.accentHint,
+    Control: AccentControl,
+    isModified: (settings, defaults) =>
+      settings.accentColor !== defaults.accentColor,
+    reset: (update, defaults) => update({ accentColor: defaults.accentColor }),
+  },
   {
     kind: SETTING_KIND.SELECT,
     key: "defaultZoom",
-    section: SETTINGS_SECTION.VIEW,
+    section: SETTINGS_SECTION.APPEARANCE,
     label: () => t.settings.defaultZoom,
     hint: () => t.settings.defaultZoomHint,
     options: () =>
@@ -56,7 +141,7 @@ export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
   {
     kind: SETTING_KIND.CUSTOM,
     key: "dateFormat",
-    section: SETTINGS_SECTION.VIEW,
+    section: SETTINGS_SECTION.APPEARANCE,
     label: () => t.settings.dateFormat,
     hint: () => t.settings.dateFormatHint,
     Control: DateFormatControl,
@@ -65,12 +150,10 @@ export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
       settings.dateFormat !== defaults.dateFormat,
     reset: (update, defaults) => update({ dateFormat: defaults.dateFormat }),
   },
-
-  // Sidebar
   {
     kind: SETTING_KIND.RANGE,
     key: "sidebarOpacity",
-    section: SETTINGS_SECTION.SIDEBAR,
+    section: SETTINGS_SECTION.APPEARANCE,
     label: () => t.settings.sidebarTransparency,
     hint: () => t.settings.sidebarTransparencyHint,
     min: SIDEBAR_OPACITY_MIN,
@@ -81,12 +164,54 @@ export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
     fromSlider: (transparency) => SIDEBAR_OPACITY_MAX - transparency,
     format: (opacity) => percent(SIDEBAR_OPACITY_MAX - opacity),
   },
+  {
+    kind: SETTING_KIND.RANGE,
+    key: "contextMenuOpacity",
+    section: SETTINGS_SECTION.APPEARANCE,
+    label: () => t.settings.contextMenuTransparency,
+    hint: () => t.settings.contextMenuTransparencyHint,
+    // Same 0..1 range/step as the sidebar; shown inverted as transparency.
+    min: SIDEBAR_OPACITY_MIN,
+    max: SIDEBAR_OPACITY_MAX,
+    step: SIDEBAR_OPACITY_STEP,
+    toSlider: (opacity) => SIDEBAR_OPACITY_MAX - opacity,
+    fromSlider: (transparency) => SIDEBAR_OPACITY_MAX - transparency,
+    format: (opacity) => percent(SIDEBAR_OPACITY_MAX - opacity),
+  },
+  {
+    kind: SETTING_KIND.RANGE,
+    key: "previewControlsOpacity",
+    section: SETTINGS_SECTION.APPEARANCE,
+    label: () => t.settings.previewControlsTransparency,
+    hint: () => t.settings.previewControlsTransparencyHint,
+    // Same 0..1 range/step as the sidebar; shown inverted as transparency.
+    min: SIDEBAR_OPACITY_MIN,
+    max: SIDEBAR_OPACITY_MAX,
+    step: SIDEBAR_OPACITY_STEP,
+    toSlider: (opacity) => SIDEBAR_OPACITY_MAX - opacity,
+    fromSlider: (transparency) => SIDEBAR_OPACITY_MAX - transparency,
+    format: (opacity) => percent(SIDEBAR_OPACITY_MAX - opacity),
+  },
+  {
+    kind: SETTING_KIND.RANGE,
+    key: "dialogOpacity",
+    section: SETTINGS_SECTION.APPEARANCE,
+    label: () => t.settings.dialogTransparency,
+    hint: () => t.settings.dialogTransparencyHint,
+    // Same 0..1 range/step as the sidebar; shown inverted as transparency.
+    min: SIDEBAR_OPACITY_MIN,
+    max: SIDEBAR_OPACITY_MAX,
+    step: SIDEBAR_OPACITY_STEP,
+    toSlider: (opacity) => SIDEBAR_OPACITY_MAX - opacity,
+    fromSlider: (transparency) => SIDEBAR_OPACITY_MAX - transparency,
+    format: (opacity) => percent(SIDEBAR_OPACITY_MAX - opacity),
+  },
 
-  // Drag & Drop
+  // ── Files & Transfers ── what dragging entries onto folders / out of the window does.
   {
     kind: SETTING_KIND.SELECT,
     key: "dragDropAction",
-    section: SETTINGS_SECTION.DRAG_DROP,
+    section: SETTINGS_SECTION.FILES,
     label: () => t.settings.dragDrop,
     hint: () => t.settings.dragDropHint,
     options: () => [
@@ -97,19 +222,26 @@ export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
   {
     kind: SETTING_KIND.TOGGLE,
     key: "confirmDragDrop",
-    section: SETTINGS_SECTION.DRAG_DROP,
+    section: SETTINGS_SECTION.FILES,
     label: () => t.settings.confirmDragDrop,
     hint: () => t.settings.confirmDragDropHint,
   },
   {
     kind: SETTING_KIND.TOGGLE,
+    key: "confirmDelete",
+    section: SETTINGS_SECTION.FILES,
+    label: () => t.settings.confirmDelete,
+    hint: () => t.settings.confirmDeleteHint,
+  },
+  {
+    kind: SETTING_KIND.TOGGLE,
     key: "dragToExternalApps",
-    section: SETTINGS_SECTION.DRAG_DROP,
+    section: SETTINGS_SECTION.FILES,
     label: () => t.settings.dragToExternalApps,
     hint: () => t.settings.dragToExternalAppsHint,
   },
 
-  // Notifications
+  // ── Notifications ──
   {
     kind: SETTING_KIND.TOGGLE,
     key: "showToasts",
@@ -125,22 +257,17 @@ export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
     hint: () => t.settings.clickableToastsHint,
   },
 
-  // Startup
+  // ── Storage ── informational: the app's on-disk footprint and where it lives. Binds to no
+  // AppSettings field (synthetic key), so it's never "modified" and has no reset.
   {
     kind: SETTING_KIND.CUSTOM,
-    key: "startupMode",
-    section: SETTINGS_SECTION.STARTUP,
-    label: () => t.settings.startup,
-    hint: () => t.settings.startupHint,
-    Control: StartupControl,
-    Below: StartupBelow,
-    isModified: (settings, defaults) =>
-      settings.startupMode !== defaults.startupMode ||
-      settings.homePath !== defaults.homePath,
-    reset: (update, defaults) =>
-      update({
-        startupMode: defaults.startupMode,
-        homePath: defaults.homePath,
-      }),
+    key: "appStorage",
+    section: SETTINGS_SECTION.STORAGE,
+    label: () => t.settings.storage,
+    hint: () => t.settings.storageHint,
+    Control: StorageControl,
+    Below: StorageBelow,
+    isModified: () => false,
+    reset: () => {},
   },
 ];

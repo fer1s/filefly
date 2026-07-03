@@ -12,38 +12,11 @@ import IconButton, {
 import { t } from "@/lang";
 
 import TabItem from "./components/TabItem";
+import { clampDx, dropIndex } from "./utils";
+import { TAB_DRAG_THRESHOLD_PX } from "./constants";
+import type { TabGeom, TabDragState } from "./types";
 
 import "@/styles/components/TabBar.css";
-
-type TabGeom = { left: number; right: number; center: number; width: number };
-
-// Clamp the raw pointer offset so the dragged tab can't leave the strip — its left edge stops at
-// the strip's left and its right edge at the last tab's end (so it never overlaps the "+" or
-// slides under the sidebar).
-const clampDx = (geom: TabGeom[] | null, index: number, mx: number): number => {
-  if (!geom) return mx;
-  const el = geom[index];
-  const minDx = geom[0].left - el.left;
-  const maxDx = geom[geom.length - 1].right - el.right;
-  return Math.max(minDx, Math.min(maxDx, mx));
-};
-
-// Where the dragged tab should land: the count of other tabs whose center sits left of the
-// pointer-projected center. Uses the RAW offset (not clamped) so a wide tab can still reach a
-// slot occupied by a narrower tab. That count is exactly the splice index.
-const dropIndex = (
-  geom: TabGeom[] | null,
-  index: number,
-  mx: number,
-): number => {
-  if (!geom) return index;
-  const draggedCenter = geom[index].center + mx;
-  let target = 0;
-  geom.forEach((g, i) => {
-    if (i !== index && g.center < draggedCenter) target += 1;
-  });
-  return target;
-};
 
 // Browser-style tab strip above the PathBar. Tabs can be dragged horizontally to reorder them
 // (@use-gesture), and the trailing "+" opens a new tab beside the last one.
@@ -62,12 +35,7 @@ const TabBar = () => {
   // pointer movement, used to pick the target slot — so intent isn't capped by the visual clamp
   // (e.g. dragging a wide tab onto a narrower last tab still reaches the final slot). `geom` is
   // the layout snapshot taken at drag start, carried in state so render never reads the ref.
-  const [drag, setDrag] = useState<{
-    index: number;
-    dx: number;
-    mx: number;
-    geom: TabGeom[] | null;
-  } | null>(null);
+  const [drag, setDrag] = useState<TabDragState | null>(null);
   // True for the single frame after a drop: the reorder just committed, so the shifted tabs are
   // already at their final layout slots and must reset their transform WITHOUT animating (else they
   // slide from the now-stale shift offset back to zero).
@@ -110,8 +78,16 @@ const TabBar = () => {
         setDrag({ index, dx, mx, geom: geomRef.current });
       }
     },
-    // filterTaps keeps a plain click firing onClick (select) instead of being read as a 0px drag.
-    { axis: "x", filterTaps: true },
+    // filterTaps keeps a plain click firing onClick (select) instead of being read as a 0px drag;
+    // threshold means a slightly jittery click (a few px of pointer travel) still counts as a click,
+    // and a reorder only begins once the pointer moves past TAB_DRAG_THRESHOLD_PX.
+    // keys: false disables @use-gesture's built-in keyboard dragging (arrow keys on a focused tab).
+    {
+      axis: "x",
+      filterTaps: true,
+      threshold: TAB_DRAG_THRESHOLD_PX,
+      pointer: { keys: false },
+    },
   );
 
   // Re-enable transitions the frame after a drop, once the no-transition commit has painted.

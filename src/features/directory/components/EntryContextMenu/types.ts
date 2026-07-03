@@ -33,6 +33,3 @@ export type TagPickerProps = {
   targets: string[];
   onClose: () => void;
 };
-
-// How a tag covers the selection: every target has it, a subset (mixed), or none.
-export type TagCoverage = "all" | "some" | "none";

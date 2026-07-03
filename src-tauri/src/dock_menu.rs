@@ -96,7 +96,7 @@ fn emit_action(id: &str) {
     let Some(state) = DOCK.get() else { return };
     // "New Window" is handled entirely in Rust — there's no window yet to emit into.
     if id == "new-window" {
-        let _ = crate::window::create_window(&state.app);
+        let _ = crate::window::create_window(&state.app, None);
         return;
     }
     if let Some(window) = focus_target_window(&state.app) {
@@ -109,7 +109,7 @@ fn emit_action(id: &str) {
 /// fresh window if the app is running with all windows closed (living in the tray).
 fn focus_target_window(app: &AppHandle) -> Option<tauri::WebviewWindow> {
     let window = crate::window::target_window(app)
-        .or_else(|| crate::window::create_window(app).ok())?;
+        .or_else(|| crate::window::create_window(app, None).ok())?;
     let _ = window.unminimize();
     let _ = window.show();
     let _ = window.set_focus();

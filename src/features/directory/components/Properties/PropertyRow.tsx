@@ -1,9 +1,4 @@
-import type { ReactNode } from "react";
-
-type PropertyRowProps = {
-  label: string;
-  value: ReactNode;
-};
+import type { PropertyRowProps } from "./types";
 
 // One metadata row: a label and its value. Used throughout PropertiesContent.
 const PropertyRow = ({ label, value }: PropertyRowProps) => (

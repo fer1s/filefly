@@ -23,12 +23,36 @@ pub fn configure_window(window: &WebviewWindow) {
     let _ = window;
 }
 
+// Percent-encode a string so it survives as a URL query value. Encodes every byte outside the
+// unreserved set (RFC 3986); paths contain spaces, `&`, `#`, and non-ASCII, all of which would
+// otherwise break the query. The frontend decodes it with decodeURIComponent (see tabs/utils.ts).
+fn encode_query(input: &str) -> String {
+    let mut out = String::with_capacity(input.len());
+    for byte in input.bytes() {
+        match byte {
+            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => {
+                out.push(byte as char)
+            }
+            _ => out.push_str(&format!("%{byte:02X}")),
+        }
+    }
+    out
+}
+
 // Create a new browser window matching the main window's chrome. Starts hidden; the frontend
 // reveals it once its first listing is painted (same flow as main — see App.tsx revealWindow).
-pub fn create_window(app: &AppHandle) -> tauri::Result<WebviewWindow> {
+// When `start_path` is given, the window opens a single tab rooted there (carried as a `startPath`
+// query param the frontend reads at mount); otherwise it follows the normal startup preference.
+pub fn create_window(app: &AppHandle, start_path: Option<&str>) -> tauri::Result<WebviewWindow> {
     let n = WINDOW_COUNTER.fetch_add(1, Ordering::Relaxed);
     let label = format!("win-{n}");
-    let window = WebviewWindowBuilder::new(app, label, WebviewUrl::default())
+    let url = match start_path {
+        Some(path) => {
+            WebviewUrl::App(format!("index.html?startPath={}", encode_query(path)).into())
+        }
+        None => WebviewUrl::default(),
+    };
+    let window = WebviewWindowBuilder::new(app, label, url)
         .title("File Browser")
         .inner_size(950.0, 600.0)
         .min_inner_size(950.0, 600.0)
@@ -56,5 +80,14 @@ pub fn target_window(app: &AppHandle) -> Option<WebviewWindow> {
 
 #[tauri::command]
 pub fn open_new_window(app: AppHandle) -> Result<(), String> {
-    create_window(&app).map(|_| ()).map_err(|e| e.to_string())
+    create_window(&app, None).map(|_| ()).map_err(|e| e.to_string())
+}
+
+// Open a new file-browser window rooted at `path` (e.g. one of the app's data directories from the
+// Storage settings). Same as open_new_window but the fresh window starts at the given folder.
+#[tauri::command]
+pub fn open_path_in_new_window(app: AppHandle, path: String) -> Result<(), String> {
+    create_window(&app, Some(&path))
+        .map(|_| ())
+        .map_err(|e| e.to_string())
 }

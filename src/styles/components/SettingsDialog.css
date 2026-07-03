@@ -6,10 +6,20 @@
 /* Search toolbar, pinned above the nav + panel. */
 .settings_modal .settings_toolbar {
   padding: var(--space-4) var(--space-4) var(--space-2-5);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2-5);
+}
+
+.settings_modal .settings_toolbar_actions {
+  flex-shrink: 0;
+  display: flex;
+  gap: var(--space-1-5);
 }
 
 .settings_modal .settings_search {
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-sm);
   border: var(--border-width-default) solid var(--color-border-default);
@@ -130,20 +140,18 @@
   gap: var(--space-2);
 }
 
-.settings_modal .settings_reset {
-  padding: var(--space-0) var(--space-1);
-  border: var(--border-width-default) solid transparent;
-  border-radius: var(--radius-sm);
-  background-color: transparent;
-  color: var(--color-text-dim);
-  font-size: var(--font-size-lg);
-  line-height: 1;
-  cursor: pointer;
+/* Reset-to-default lives on the LEFT of the row and keeps its slot even when unmodified — only
+   hidden, never removed — so toggling it never reflows the row and shifts a control (e.g. a slider
+   being dragged) out from under the pressed pointer. */
+.settings_modal .settings_reset.hidden {
+  visibility: hidden;
+  pointer-events: none;
 }
 
-.settings_modal .settings_reset:hover {
-  color: var(--color-text-primary);
-  background-color: var(--color-surface-input);
+/* Text fills the row so the control stays pinned right and the reset button stays pinned left. */
+.settings_modal .settings_row > .settings_row_text {
+  flex: 1;
+  min-width: 0;
 }
 
 /* Full-width extra rendered below a custom setting's row (home-folder chooser). */
@@ -172,6 +180,36 @@
   color: var(--color-text-primary);
   font-size: var(--font-size-base);
   cursor: pointer;
+}
+
+/* Accent picker: a row of colour-swatch radio buttons. Each swatch fills from its own --swatch RGB
+   triple (set inline, mirrors theme.css); the active one carries a ring in the current text colour
+   so it reads on any accent. Selecting one recolours the whole app live — this row is the preview. */
+.settings_modal .settings_accents {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.settings_modal .settings_accent {
+  width: var(--space-4);
+  height: var(--space-4);
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-pill);
+  background-color: rgb(var(--swatch));
+  cursor: pointer;
+  transition: transform 0.08s ease;
+}
+
+.settings_modal .settings_accent:hover {
+  transform: scale(1.15);
+}
+
+.settings_modal .settings_accent.active {
+  outline: var(--border-width-accent) solid var(--color-text-primary);
+  outline-offset: var(--space-0-5);
 }
 
 /* Action button in a settings row (e.g. the home-folder chooser). Matches the select's chrome. */
@@ -227,6 +265,47 @@
   text-align: right;
   font-size: var(--font-size-md);
   color: var(--color-text-dim);
+}
+
+/* Storage panel: the app's data footprint (total + one row per data location), full-width below
+   the Storage row. Each location shows its label, clickable absolute path, and size. */
+.settings_modal .settings_storage {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-top: var(--space-2);
+}
+
+.settings_modal .settings_storage_total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.settings_modal .settings_storage_row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+/* Absolute path rendered as a link: clicking opens a new file browser window rooted there. */
+.settings_modal .settings_storage_path {
+  padding: var(--space-0);
+  border: none;
+  background: none;
+  text-align: left;
+  font-size: var(--font-size-md);
+  font-family: var(--font-mono, monospace);
+  color: var(--color-text-dim);
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+.settings_modal .settings_storage_path:hover {
+  color: var(--color-selection-indicator);
+  text-decoration: underline;
 }
 
 /* The pill toggles are the shared <Switcher> element (see styles/components/Switcher.css). */

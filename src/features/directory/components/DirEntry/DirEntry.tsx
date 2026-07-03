@@ -39,6 +39,7 @@ const DirEntryItemComponent = ({
   focused,
   tabbable,
   onSelect,
+  onOpenFile,
 
   renaming,
   onRename,
@@ -64,9 +65,16 @@ const DirEntryItemComponent = ({
     setContextMenuVisible,
   });
 
-  // Move keyboard focus to the entry only when it's the single focused one (keyboard nav),
-  // never on bulk selection — focusing every item on Ctrl+A would scroll to the last one.
+  // Move keyboard focus to the entry only when it *becomes* the single focused one (keyboard nav),
+  // never on bulk selection — focusing every item on Ctrl+A would scroll to the last one. Skip the
+  // initial mount: a remounting list (e.g. search results appearing) must not yank focus away from
+  // wherever it is — notably the search input — just because a selected entry re-rendered.
+  const didFocusMount = useRef(false);
   useEffect(() => {
+    if (!didFocusMount.current) {
+      didFocusMount.current = true;
+      return;
+    }
     if (focused) itemRef.current?.focus();
   }, [focused]);
 
@@ -142,6 +150,7 @@ const DirEntryItemComponent = ({
           isHidden && "hidden",
         )}
         id={id}
+        data-kind={entry.metadata.isDir ? "dir" : "file"}
         role="option"
         aria-selected={selected}
         aria-label={entry.name}
@@ -150,7 +159,7 @@ const DirEntryItemComponent = ({
         onDoubleClick={() =>
           entry.metadata.isDir
             ? navigateToPath(entry, setPath)
-            : fs.open(entry.path)
+            : onOpenFile(entry)
         }
         ref={itemRef}
         {...(renaming ? {} : bindDrag(entry.path))}

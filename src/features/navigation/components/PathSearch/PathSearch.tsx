@@ -1,10 +1,4 @@
-import {
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-  type KeyboardEvent,
-} from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   faMagnifyingGlass,
@@ -14,17 +8,12 @@ import {
 import Icon from "@/shared/components/elements/Icon";
 import { useRecentSearches } from "@/shared/search/recentSearches";
 import { classNames } from "@/shared/utils";
-import { KEY } from "@/shared/constants";
 import { t } from "@/lang";
 
 import "@/styles/components/PathSearch.css";
 
-import type { PathSearchProps } from "./types";
-
-// Gap (px) between the search box and the recent-searches dropdown rendered below it.
-const RECENTS_GAP = 4;
-
-type DropdownCoords = { top: number; left: number; width: number };
+import { RECENTS_GAP } from "./constants";
+import type { DropdownCoords, PathSearchProps } from "./types";
 
 // Inline folder filter, expanded from the PathBar's search button (which it replaces while open).
 // Bound to the per-tab `search` state. Focusing the empty field shows a small recent-searches
@@ -40,32 +29,45 @@ const PathSearch = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [focused, setFocused] = useState(false);
+  const [opened, setOpened] = useState(false);
   const [coords, setCoords] = useState<DropdownCoords | null>(null);
 
   const { recents, clearRecents } = useRecentSearches();
-  const showRecents = focused && !value && recents.length > 0;
+  // Gate on `opened` so recents appear only after the open animation finishes — while the box is
+  // still growing (max-width 0→full), the tracked dropdown would fly across from the button spot.
+  const showRecents =
+    focused && opened && !value && !closing && recents.length > 0;
 
   useEffect(() => inputRef.current?.focus(), []);
 
   // Measure and position the dropdown under the box when it opens (portal renders only while
-  // showRecents, so stale coords while hidden are harmless — no need to reset them).
+  // showRecents, so stale coords while hidden are harmless — no need to reset them). Focus fires
+  // on mount while the box is still animating open (max-width 0→full), so a one-shot measure would
+  // capture the collapsed width/position; re-measure via ResizeObserver as it grows, and on
+  // scroll/resize, so the dropdown tracks the box's final rect.
   useLayoutEffect(() => {
     if (!showRecents) return;
-    const rect = containerRef.current?.getBoundingClientRect();
-    if (rect)
+    const el = containerRef.current;
+    if (!el) return;
+    const measure = () => {
+      const rect = el.getBoundingClientRect();
       setCoords({
         top: rect.bottom + RECENTS_GAP,
         left: rect.left,
         width: rect.width,
       });
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    window.addEventListener("resize", measure);
+    window.addEventListener("scroll", measure, true);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", measure);
+      window.removeEventListener("scroll", measure, true);
+    };
   }, [showRecents]);
-
-  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === KEY.ESCAPE) {
-      event.preventDefault();
-      onClose();
-    }
-  };
 
   // Fill the field from a recent search; keep focus so the search runs immediately.
   const selectRecent = (query: string) => {
@@ -78,7 +80,9 @@ const PathSearch = ({
       ref={containerRef}
       className={classNames("PathSearch", "shadow", closing && "closing")}
       onAnimationEnd={(event) => {
-        if (closing && event.target === event.currentTarget) onExited();
+        if (event.target !== event.currentTarget) return;
+        if (closing) onExited();
+        else setOpened(true);
       }}
     >
       <Icon className="path_search_icon" icon={faMagnifyingGlass} />
@@ -88,7 +92,6 @@ const PathSearch = ({
         className="path_search_input"
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        onKeyDown={handleKeyDown}
         onFocus={() => setFocused(true)}
         onBlur={() => {
           setFocused(false);

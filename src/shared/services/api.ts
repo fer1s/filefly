@@ -8,16 +8,30 @@ import { startDrag } from "@crabnebula/tauri-plugin-drag";
 import { notify, TOAST_TYPE } from "@/shared/toast";
 import { t } from "@/lang";
 import { Volume, DirEntry, ContextMenuLayout, Tag } from "@/shared/models";
-import { ACCESS_DENIED_ERROR } from "@/shared/constants";
+import {
+  ACCESS_DENIED_ERROR,
+  type DragDropAction,
+  type StorageKind,
+} from "@/shared/constants";
 import type { Keymap } from "@/shared/keymap/types";
 
 // App-wide user settings, persisted in settings.toml (Rust is the source of truth; the frontend
 // hydrates from this on launch). Mirrors the AppSettings struct in functions/settings.rs.
 export type AppSettings = {
   showHidden: boolean;
+  // Colour theme: "system" (follow OS) | "light" | "dark" (see THEME).
+  theme: string;
+  // Accent hue driving selection/focus/links: "blue" | "navy" | "red" | "teal" | "gold" (see ACCENT).
+  accentColor: string;
   defaultZoom: number;
   dateFormat: string;
   sidebarOpacity: number;
+  // Context-menu background opacity (alpha of the popover surface), 0..1.
+  contextMenuOpacity: number;
+  // Preview floating-controls pill background opacity (alpha of the popover surface), 0..1.
+  previewControlsOpacity: number;
+  // Dialog (modal) background opacity (alpha of the modal surface), 0..1.
+  dialogOpacity: number;
   // Expanded-sidebar width in px (see SIDEBAR_WIDTH_MIN/MAX).
   sidebarWidth: number;
   hideSystemRecents: boolean;
@@ -30,10 +44,23 @@ export type AppSettings = {
   dragDropAction: string;
   // Whether a confirmation dialog is shown before a drag-and-drop move/copy.
   confirmDragDrop: boolean;
+  // Whether a confirmation dialog is shown before moving entries to the Trash (permanent delete
+  // always confirms regardless).
+  confirmDelete: boolean;
   // Whether success toasts are clickable to jump to the affected file/folder.
   clickableToasts: boolean;
   // Whether dragging entries out of the window starts a native OS drag (drop into other apps).
   dragToExternalApps: boolean;
+  // Use the app's own in-window folder picker instead of the native OS (Finder) folder dialog.
+  useCustomFolderPicker: boolean;
+  // Open images in the app's built-in preview (on Enter/double-click) instead of the OS default app.
+  previewImagesInApp: boolean;
+  // Open markdown files in the app's built-in preview (on Enter/double-click) instead of the OS
+  // default app.
+  previewMarkdownInApp: boolean;
+  // On export, ask before replacing an existing settings.toml. When off (default), a unique
+  // filename is used instead so nothing is overwritten silently.
+  confirmExportOverwrite: boolean;
 };
 
 // Load the persisted app settings (falls back to defaults when settings.toml is absent).
@@ -43,6 +70,32 @@ export const getSettings = async (): Promise<AppSettings> =>
 // Persist the whole app-settings struct to settings.toml.
 export const setSettings = async (settings: AppSettings): Promise<void> =>
   await invoke("set_settings", { settings });
+
+// Read + parse a settings.toml the user chose (missing keys fall back to defaults). Returns the
+// parsed settings for the caller to apply; does not persist. Rejects on read/parse failure.
+export const importSettings = async (path: string): Promise<AppSettings> =>
+  (await invoke("import_settings", { path })) as AppSettings;
+
+// Result of an export attempt: `path` is the file written (null when it stopped to ask about an
+// overwrite); `existed` is true when a settings.toml was already present and left untouched.
+export type ExportResult = { path: string | null; existed: boolean };
+
+// Write the given settings as a settings.toml into `dir`. With `unique`, writes to the first free
+// settings[-N].toml (never overwrites). Otherwise targets settings.toml: if it exists and
+// `overwrite` is false, nothing is written and `existed` is true (so the caller can confirm and
+// retry with `overwrite: true`).
+export const exportSettings = async (
+  dir: string,
+  settings: AppSettings,
+  unique: boolean,
+  overwrite: boolean,
+): Promise<ExportResult> =>
+  (await invoke("export_settings", {
+    dir,
+    settings,
+    unique,
+    overwrite,
+  })) as ExportResult;
 
 // Per-group sidebar customization, persisted in sidebar.toml (keyed by stable group id). Mirrors
 // the SidebarGroup struct in functions/sidebar.rs. `name` is absent until the user renames a group.
@@ -99,6 +152,27 @@ export const pickFolder = async (): Promise<string | null> => {
   const result = await openDialog({ directory: true, multiple: false });
   return typeof result === "string" ? result : null;
 };
+
+// Open the native file picker; resolves to the chosen file path, or null if cancelled. When
+// `extensions` is given, the dialog restricts selection to those extensions.
+export const pickFile = async (
+  extensions?: readonly string[],
+): Promise<string | null> => {
+  const result = await openDialog({
+    directory: false,
+    multiple: false,
+    filters:
+      extensions && extensions.length > 0
+        ? [{ name: "Files", extensions: [...extensions] }]
+        : undefined,
+  });
+  return typeof result === "string" ? result : null;
+};
+
+// Reply to a headless `probe` control request (drag-drop diagnostics) with the computed result,
+// tagged with the request id received on the `control://probe` event. See functions/control.rs.
+export const setProbeResult = async (id: number, data: string): Promise<void> =>
+  await invoke("set_probe_result", { id, data });
 
 // Load the keybindings (reads keymap.toml, falling back to bundled defaults).
 export const getKeymap = async (): Promise<Keymap> =>
@@ -253,9 +327,19 @@ export const openInTerminal = async (path: string): Promise<void> => {
   }
 };
 
-// Generate markdown preview invokement method
-export const generateMarkdownPreview = async (path: string): Promise<string> =>
-  (await invokeWithPathArg("md_to_html", path)) as string;
+// Render a markdown source string to HTML (renders the in-editor draft, so unsaved edits preview).
+export const renderMarkdown = async (content: string): Promise<string> =>
+  (await invoke("md_render", { content })) as string;
+
+// Read a text file's raw contents (the markdown source for the built-in editor). Throws on failure.
+export const readTextFile = async (path: string): Promise<string> =>
+  (await invoke("read_text_file", { path })) as string;
+
+// Overwrite a text file with `content` (Cmd+S from the markdown editor). Throws on failure.
+export const writeTextFile = async (
+  path: string,
+  content: string,
+): Promise<void> => await invoke("write_text_file", { path, content });
 
 // Byte progress streamed from a copy/move while it runs.
 export type CopyProgress = { processed: number; total: number };
@@ -342,24 +426,12 @@ export const prewarmDragIcon = async (): Promise<void> => {
 export const startNativeDrag = (
   paths: string[],
   icon?: string,
-  mode?: "copy" | "move",
+  mode?: DragDropAction,
 ): void => {
   const image = icon || bundledDragIcon;
   if (!paths.length || !image) return;
   void startDrag({ item: paths, icon: image, mode });
 };
-
-// Helper function to invoke methods with a path argument
-const invokeWithPathArg = async (
-  method: "md_to_html",
-  path: string,
-): Promise<string | void> =>
-  await invoke(method, { path: path })
-    .then((value) => value as string | void)
-    .catch((err) => {
-      console.error("Path is either not valid or does not exist:\n" + err);
-      return;
-    });
 
 // Record a folder the user navigated to in the app's own recent-folders list (backs the macOS
 // Dock right-click menu). Deduped/capped/persisted in Rust; safe to call on every navigation.
@@ -374,3 +446,37 @@ export const clearRecentFolders = async (): Promise<void> =>
 // assigns a unique label and clones the main window's chrome.
 export const openNewWindow = async (): Promise<void> =>
   await invoke("open_new_window");
+
+// Open a new app window rooted at `path` (a fresh browser window that starts at the given folder,
+// e.g. one of the app's data directories from the Storage settings).
+export const openPathInNewWindow = async (path: string): Promise<void> =>
+  await invoke("open_path_in_new_window", { path });
+
+// One of the app's on-disk data locations, with its recursively-summed size in bytes. `kind` is a
+// stable id (see STORAGE_KIND) mapped to a localized label in the UI. Mirrors StorageLocation in
+// functions/storage.rs.
+export type AppStorageLocation = {
+  kind: StorageKind;
+  path: string;
+  size: number;
+};
+
+// Where the app keeps its files on disk and how much space each location uses (config dir, cache
+// dir). Only existing directories are returned; the walk runs off the UI thread in Rust.
+export const getAppStorage = async (): Promise<AppStorageLocation[]> =>
+  (await invoke("get_app_storage")) as AppStorageLocation[];
+
+// Mirror this window's live UI state (current path, view, tabs) to Rust so the headless control
+// socket (`sfb ui get-state`) can report it without a round-trip to the webview. Called on every
+// relevant change; `state` is a JSON string. Keyed by the calling window's label in Rust.
+export const setUiState = async (state: string): Promise<void> =>
+  await invoke("set_ui_state", { state });
+
+// Whether this app is macOS's default handler for opening folders (Terminal `open`, folder links,
+// aliases). Does NOT reflect double-clicking folders in Finder — that stays Finder. macOS only.
+export const isDefaultFolderHandler = async (): Promise<boolean> =>
+  (await invoke("is_default_folder_handler")) as boolean;
+
+// Make this app the default folder handler (enable) or restore Finder (disable). macOS only.
+export const setDefaultFolderHandler = async (enable: boolean): Promise<void> =>
+  await invoke("set_default_folder_handler", { enable });

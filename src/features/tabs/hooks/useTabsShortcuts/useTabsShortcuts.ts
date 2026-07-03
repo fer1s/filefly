@@ -20,7 +20,8 @@ export const useTabsShortcuts = ({
   cycleTab,
   selectTabBySlot,
 }: UseTabsShortcutsArgs) => {
-  useHotkey(KEYMAP_ACTION.NEW_TAB, newTab, { allowInInput: true });
+  // Wrap so the hotkey event isn't passed as newTab's `nextPath` (would make the tab path an Event).
+  useHotkey(KEYMAP_ACTION.NEW_TAB, () => newTab(), { allowInInput: true });
   useHotkey(KEYMAP_ACTION.NEW_WINDOW, () => void openNewWindow(), {
     allowInInput: true,
   });

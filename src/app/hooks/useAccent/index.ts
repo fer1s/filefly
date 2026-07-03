@@ -1,0 +1,1 @@
+export { useAccent } from "./useAccent";

@@ -100,7 +100,7 @@ jobs:
             desc "File browser with an AI-friendly \`sfb\` CLI"
             homepage "https://github.com/${GITHUB_REPOSITORY}"
 
-            depends_on macos: ">= :sonoma"
+            depends_on macos: :sonoma
 
             app "Sito File Browser.app"
             binary "#{appdir}/Sito File Browser.app/Contents/MacOS/sfb", target: "sfb"

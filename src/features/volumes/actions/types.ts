@@ -9,7 +9,7 @@ import type { VolumeActionId } from "./constants";
 export type VolumeActionContext = {
   path: string;
   name: string;
-  isRemovable: boolean;
+  isEjectable: boolean;
   fs: FileSystemManager;
   setPath: (path: string) => void;
   openInNewTab: (path: string) => void;

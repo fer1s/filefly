@@ -36,6 +36,7 @@ const FolderItem = ({
       )}
       role="button"
       tabIndex={0}
+      data-path={item.path}
       aria-current={active ? "true" : undefined}
       aria-label={item.name}
       onClick={open}

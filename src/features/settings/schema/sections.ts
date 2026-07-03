@@ -2,14 +2,15 @@ import { t } from "@/lang";
 
 // The setting categories shown in the dialog's left nav, in display order. Adding a section is
 // declarative: add an id here (+ its label under settings.sections in the dictionary) and tag
-// descriptors with it in schema.ts.
+// descriptors with it in schema.ts. Kept deliberately few — singleton sections were collapsed so
+// the nav doesn't overwhelm: General (behavior + startup + OS integration), Appearance (everything
+// visual), Files & Transfers (drag/drop), Notifications, and the read-only Storage panel.
 export const SETTINGS_SECTION = {
   GENERAL: "general",
-  VIEW: "view",
-  SIDEBAR: "sidebar",
-  DRAG_DROP: "dragDrop",
+  APPEARANCE: "appearance",
+  FILES: "files",
   NOTIFICATIONS: "notifications",
-  STARTUP: "startup",
+  STORAGE: "storage",
 } as const;
 
 export type SettingsSectionId =
@@ -21,12 +22,14 @@ export const SETTINGS_SECTIONS: {
   label: () => string;
 }[] = [
   { id: SETTINGS_SECTION.GENERAL, label: () => t.settings.sections.general },
-  { id: SETTINGS_SECTION.VIEW, label: () => t.settings.sections.view },
-  { id: SETTINGS_SECTION.SIDEBAR, label: () => t.settings.sections.sidebar },
-  { id: SETTINGS_SECTION.DRAG_DROP, label: () => t.settings.sections.dragDrop },
+  {
+    id: SETTINGS_SECTION.APPEARANCE,
+    label: () => t.settings.sections.appearance,
+  },
+  { id: SETTINGS_SECTION.FILES, label: () => t.settings.sections.files },
   {
     id: SETTINGS_SECTION.NOTIFICATIONS,
     label: () => t.settings.sections.notifications,
   },
-  { id: SETTINGS_SECTION.STARTUP, label: () => t.settings.sections.startup },
+  { id: SETTINGS_SECTION.STORAGE, label: () => t.settings.sections.storage },
 ];

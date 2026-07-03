@@ -14,6 +14,8 @@ export type EntriesViewProps = {
   renamingID: string;
   contextMenuRef: RefObject<HTMLDivElement | null>;
   onSelect: (path: string, e: MouseEvent) => void;
+  // Open a file (double-click); routes images to the built-in preview per the setting.
+  onOpenFile: (entry: DirEntry) => void;
   onRename: (path: string, newName: string) => void;
   onCancelRename: () => void;
   menu: {

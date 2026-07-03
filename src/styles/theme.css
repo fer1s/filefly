@@ -14,6 +14,8 @@
   --space-10: 40px;
   --space-12: 48px;
   --space-20: 80px;
+  --space-72: 288px;
+  --space-80: 320px;
   --space-negative-2-5: -10px;
 
   --border-width-default: 1px;
@@ -49,6 +51,7 @@
   --size-volume-row-height: var(--space-10);
   --size-volume-usage-max-width: 152px;
   --size-context-menu-max-width: 248px;
+  --size-context-menu-submenu-min-width: 180px;
   /* Context menus grow to their content; they only scroll if taller than the viewport (keeps a
      long menu — e.g. with the tag picker — from running off-screen). */
   --size-context-menu-max-height: calc(100vh - var(--space-8));
@@ -56,6 +59,9 @@
   --size-icon-small: var(--space-3);
   --size-icon-medium: var(--space-4);
   --size-preview-header: var(--space-12);
+  /* macOS native window title-bar height — used for dialog/preview headers on macOS so they match
+     the OS chrome (compact bar + 13px title) instead of the taller cross-platform header. */
+  --size-titlebar-mac: 28px;
   --size-audio-progress: 180px;
   --size-audio-volume: 100px;
   --size-toast-max-width: 320px;
@@ -66,8 +72,15 @@
   --size-settings-panel-height: 420px;
   --size-settings-dot: var(--space-1-5);
   --size-confirmation-width: 380px;
+  --size-folder-picker-width: 680px;
+  --size-folder-picker-source-width: 176px;
+  --size-folder-picker-list-height: 340px;
   --size-info-panel-width: 300px;
   --size-info-preview-height: 240px;
+  /* List-view column template widths (see --list-grid in Directory.css). */
+  --size-list-col-date: 110px;
+  --size-list-col-size: 90px;
+  --size-list-col-kind: 100px;
   --size-tab-height: 30px;
   --size-tab-min-width: 88px;
   --size-tab-max-width: 180px;
@@ -108,7 +121,8 @@
   --color-mac-close: #ff5f57;
   --color-mac-close-glyph: rgba(0, 0, 0, 0.55);
 
-  --color-surface-solid: rgb(0, 0, 0);
+  /* Off-black, not pure #000 — a hair of lift keeps solid surfaces from reading as dead holes. */
+  --color-surface-solid: rgb(22, 22, 24);
   --color-surface-input: rgba(0, 0, 0, 0.06);
   --color-surface-row: rgba(0, 0, 0, 0.1);
   --color-surface-interactive: rgba(0, 0, 0, 0.2);
@@ -117,13 +131,26 @@
   --color-surface-floating: rgba(0, 0, 0, 0.7);
   --color-surface-modal: rgba(20, 20, 20, 0.85);
   --color-surface-toast: rgba(40, 40, 40, 0.95);
+  /* Modal-surface background as raw RGB channels + a user-adjustable alpha, composed in Dialog.css
+     so the --dialog-opacity override (set on the document root in App) takes effect. */
+  --color-surface-modal-rgb: 20, 20, 20;
+  --dialog-opacity: 0.85;
+  /* Context-menu background as raw RGB channels + a user-adjustable alpha, composed in
+     ContextMenu.css (like the sidebar) so the inline --context-menu-opacity override on .App takes
+     effect. The default alpha matches the old --color-surface-popover value. */
+  --color-surface-popover-rgb: 0, 0, 0;
+  --context-menu-opacity: 0.5;
+  /* Alpha of the preview floating-controls pill (see Preview.css); overridden inline on .App from
+     the Preview controls transparency setting. */
+  --preview-controls-opacity: 0.5;
 
   --color-overlay-faint: rgba(255, 255, 255, 0.01);
   --color-overlay-soft: rgba(255, 255, 255, 0.03);
   --color-overlay-hover: rgba(255, 255, 255, 0.05);
   --color-overlay-active: rgba(255, 255, 255, 0.1);
 
-  --color-text-primary: #fff;
+  /* Off-white, not pure #fff — softens glare against the dark surfaces. */
+  --color-text-primary: #f2f2f4;
   --color-text-high: rgba(255, 255, 255, 0.85);
   --color-text-secondary: rgba(255, 255, 255, 0.8);
   --color-text-tertiary: rgba(255, 255, 255, 0.7);
@@ -137,18 +164,47 @@
   --color-border-toast: rgba(255, 255, 255, 0.12);
   --color-border-strong: rgba(255, 255, 255, 0.2);
 
-  --color-selection-background: rgba(94, 154, 255, 0.18);
-  --color-selection-border: rgba(94, 154, 255, 0.6);
-  --color-selection-focus: rgba(94, 154, 255, 0.7);
-  --color-selection-indicator: rgba(94, 154, 255, 0.9);
+  /* Accent — a single mid-tone RGB triple drives every accent surface: selection wells, focus
+     rings, and links. The active preset overrides only --color-accent-rgb (see [data-accent]
+     blocks below); everything here composes from it, so a preset is one line. Accent is
+     theme-independent — these mid-tones read on both light and dark. Default: a friendly blue. */
+  --color-accent-rgb: 94, 154, 255;
+  --color-accent: rgb(var(--color-accent-rgb));
+  --color-accent-hover: color-mix(in srgb, var(--color-accent), white 16%);
+  --color-accent-contrast: #fff;
+
+  /* White text/icons on saturated solid fills (danger/success buttons, coloured toasts, danger-hover
+     menu rows). Theme-independent — the solid fills read the same on both themes. */
+  --color-text-on-solid: #fff;
+  --color-text-on-solid-muted: rgba(255, 255, 255, 0.75);
+
+  --color-selection-background: rgba(var(--color-accent-rgb), 0.18);
+  --color-selection-border: rgba(var(--color-accent-rgb), 0.6);
+  --color-selection-focus: rgba(var(--color-accent-rgb), 0.7);
+  --color-selection-indicator: rgba(var(--color-accent-rgb), 0.9);
+  /* Soft accent wells: the faint hover fill + its border shared by ghost buttons, menu items and
+     sidebar rows. */
+  --color-selection-hover: rgba(var(--color-accent-rgb), 0.14);
+  --color-selection-hover-border: rgba(var(--color-accent-rgb), 0.4);
+  /* Find-in-preview match highlights: all matches tinted, the active one stronger. */
+  --color-find-highlight: rgba(var(--color-accent-rgb), 0.3);
+  --color-find-highlight-active: rgba(var(--color-accent-rgb), 0.75);
 
   --color-danger: rgb(255, 99, 99);
   --color-danger-hover: rgb(255, 38, 38);
   --color-danger-surface: rgba(120, 30, 30, 0.95);
   --color-danger-border: rgba(255, 80, 80, 0.5);
+  /* Solid danger BUTTON fill (+ white text). Shared across themes — the danger tokens above are
+     text/surface-oriented and go light-red in dark mode, which fails contrast under white text; a
+     saturated red reads correctly on any surface (white on it ≈ 5.8:1 normal, 8:1 hover). */
+  --color-danger-solid: rgb(197, 34, 31);
+  --color-danger-solid-hover: rgb(160, 24, 19);
   --color-success-surface: rgba(30, 90, 50, 0.95);
   --color-success-border: rgba(80, 220, 130, 0.5);
-  --color-link: #4ba3f5;
+  /* Solid success fill (+ white text) for coloured toasts. Shared across themes — white on it is
+     ≈6:1. Mirrors --color-danger-solid. */
+  --color-success-solid: rgb(30, 110, 62);
+  --color-link: var(--color-accent);
 
   /* Finder tag colours (indices 1..7: gray, green, purple, blue, yellow, red, orange). */
   --color-tag-gray: rgb(152, 152, 157);
@@ -159,6 +215,9 @@
   --color-tag-red: rgb(245, 93, 93);
   --color-tag-orange: rgb(245, 160, 60);
 
+  /* Opaque background for a tab mid-drag (normal tab surfaces are translucent overlays that would
+     let the tab underneath bleed through). Slightly lighter than the app background so it lifts. */
+  --color-tab-dragging: rgb(55, 55, 58);
   --color-scrollbar-thumb: #494949;
   --color-range-track: #313131;
   --color-audio-time: #929292;
@@ -175,4 +234,90 @@
     100px 100px 80px rgba(0, 0, 0, 0.07);
   --shadow-popover: 0 0 10px 0 var(--color-surface-popover);
   --shadow-toast: 0 6px 20px var(--color-surface-backdrop);
+  /* Opaque lift for an element mid-drag (dragging tab / sidebar group) so it reads as raised above
+     the surface it's dragged over. */
+  --shadow-lift: 0 4px 12px rgb(0 0 0 / 0.35);
+  /* Gentle lift for chrome that sits on the content (path bar controls) — far lighter than the
+     full elevation shadow, so the controls read as barely raised rather than floating. */
+  --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.04), 0 2px 5px rgba(0, 0, 0, 0.03);
+}
+
+/* Light theme. The :root tokens above are the dark defaults; these override only the colour
+   tokens (backgrounds, surfaces, overlays, text, borders) when data-theme="light" is set on
+   <html> (see useTheme). Sizing/spacing/tag colours are shared and stay in :root. The white-based
+   overlay/text/border families flip to black-based; the black-based wells stay but are re-tuned so
+   they read as subtle darkening on a light background. */
+:root[data-theme="light"] {
+  --color-background-app: rgb(240, 240, 242);
+  --color-background-sidebar-rgb: 228, 228, 232;
+
+  /* Off-white, not pure #fff — a touch below paper-white so surfaces feel calm, not clinical. */
+  --color-surface-solid: rgb(252, 252, 253);
+  --color-surface-input: rgba(0, 0, 0, 0.04);
+  --color-surface-row: rgba(0, 0, 0, 0.06);
+  --color-surface-interactive: rgba(0, 0, 0, 0.1);
+  --color-surface-backdrop: rgba(0, 0, 0, 0.25);
+  --color-surface-popover: rgba(0, 0, 0, 0.15);
+  /* Light base for the context menu: a near-white surface so an opaque menu reads as a light panel
+     (not black) and dark item text stays legible. The dark theme keeps a near-black base (:root).
+     Only the alpha (--context-menu-opacity) is user-driven. */
+  --color-surface-popover-rgb: 252, 252, 253;
+  --color-surface-floating: rgba(255, 255, 255, 0.85);
+  --color-surface-modal: rgba(245, 245, 247, 0.9);
+  --color-surface-modal-rgb: 245, 245, 247;
+  --color-surface-toast: rgba(250, 250, 252, 0.97);
+
+  --color-overlay-faint: rgba(0, 0, 0, 0.01);
+  --color-overlay-soft: rgba(0, 0, 0, 0.03);
+  --color-overlay-hover: rgba(0, 0, 0, 0.05);
+  --color-overlay-active: rgba(0, 0, 0, 0.1);
+
+  /* Off-black, not pure #000 — reads as ink rather than a hard hole against light surfaces. */
+  --color-text-primary: #1b1b1d;
+  --color-text-high: rgba(0, 0, 0, 0.85);
+  --color-text-secondary: rgba(0, 0, 0, 0.8);
+  --color-text-tertiary: rgba(0, 0, 0, 0.7);
+  --color-text-subtle: rgba(0, 0, 0, 0.6);
+  --color-text-dim: rgba(0, 0, 0, 0.55);
+  --color-text-muted: rgba(0, 0, 0, 0.5);
+
+  --color-border-faint: rgba(0, 0, 0, 0.03);
+  --color-border-soft: rgba(0, 0, 0, 0.06);
+  --color-border-default: rgba(0, 0, 0, 0.12);
+  --color-border-toast: rgba(0, 0, 0, 0.12);
+  --color-border-strong: rgba(0, 0, 0, 0.2);
+
+  --color-tab-dragging: rgb(255, 255, 255);
+  --color-scrollbar-thumb: #bcbcbc;
+  --color-range-track: #d4d4d4;
+  --color-audio-time: #6d6d6d;
+
+  /* Danger for a light surface. The :root defaults are tuned for the dark theme (light-red text on
+     a dark maroon fill); on white those read muddy, so override to a saturated red that stays legible
+     as text (≈5.9:1 on white) and as a soft tinted button fill. */
+  --color-danger: rgb(197, 34, 31);
+  --color-danger-hover: rgb(160, 24, 19);
+  --color-danger-surface: rgba(197, 34, 31, 0.1);
+  --color-danger-border: rgba(197, 34, 31, 0.35);
+}
+
+/* Accent presets. Each sets only the base RGB triple; selection/focus/link tokens compose from it
+   (see :root). Applied via data-accent="…" on <html> (see useAccent). The brand hues (navy, red,
+   teal, gold) are tuned to friendlier, more readable mid-tones than the raw brand values so they
+   stay legible on both themes and don't overpower the neutral surfaces. Default (no attribute) is
+   the blue in :root. Keep this list in sync with ACCENT in shared/constants.ts. */
+:root[data-accent="blue"] {
+  --color-accent-rgb: 94, 154, 255;
+}
+:root[data-accent="navy"] {
+  --color-accent-rgb: 42, 94, 168;
+}
+:root[data-accent="red"] {
+  --color-accent-rgb: 224, 74, 80;
+}
+:root[data-accent="teal"] {
+  --color-accent-rgb: 20, 160, 135;
+}
+:root[data-accent="gold"] {
+  --color-accent-rgb: 201, 144, 43;
 }

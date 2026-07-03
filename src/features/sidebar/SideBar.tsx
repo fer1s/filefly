@@ -12,7 +12,7 @@ import {
   PINNED_ACTIONS,
 } from "@/shared/keymap";
 import { classNames, basename, tagsPath } from "@/shared/utils";
-import { pickFolder } from "@/shared/services/api";
+import { useFolderPicker } from "@/shared/providers/FolderPickerProvider";
 import { RECENTS, TAG_COLOR, TAG_COLOR_CLASS } from "@/shared/constants";
 import { useTags } from "@/shared/providers/TagsProvider";
 import { useSettings } from "@/features/settings";
@@ -27,6 +27,8 @@ import ConfirmationDialog from "@/shared/components/patterns/ConfirmationDialog"
 import {
   SIDEBAR_GROUP,
   SIDEBAR_ITEM_KIND,
+  RECENTS_ITEM,
+  GROUP_META,
   type SidebarGroupId,
   type SidebarItemKind,
 } from "./constants";
@@ -41,13 +43,13 @@ import { useEntryProperties } from "@/shared/hooks/useEntryProperties";
 import SidebarSection from "./components/SidebarSection";
 import SidebarContextMenu from "./components/SidebarContextMenu";
 import VolumeItem from "./components/VolumeItem";
+import { ejectVolume } from "@/shared/services/ejectVolume";
 import FolderItem from "./components/FolderItem";
 import Button from "@/shared/components/elements/Button";
 import Icon from "@/shared/components/elements/Icon";
 
 import {
   faBars,
-  faClockRotateLeft,
   faPlus,
   faGear,
   faPenToSquare,
@@ -57,29 +59,16 @@ import {
 
 import "@/styles/components/SideBar.css";
 
-import type { SideBarProps } from "./types";
-
-// Finder-style "Recents" — a pinned entry that opens the virtual recent-files listing.
-const RECENTS_ITEM = {
-  name: t.sidebar.recents,
-  path: RECENTS,
-  icon: faClockRotateLeft,
-  kind: SIDEBAR_ITEM_KIND.RECENTS,
-};
-
-// Per-group metadata: the built-in default title and whether the group is user-editable
-// (rename + add items). Volumes is system-managed, so it's reorderable but not editable.
-const GROUP_META: Record<SidebarGroupId, { title: string; editable: boolean }> =
-  {
-    [SIDEBAR_GROUP.PINNED]: { title: t.sidebar.pinned, editable: true },
-    [SIDEBAR_GROUP.VOLUMES]: { title: t.sidebar.volumes, editable: false },
-    [SIDEBAR_GROUP.NETWORK]: { title: t.sidebar.network, editable: true },
-    // System-managed like Volumes: reorderable, but the rows are the live Finder tags.
-    [SIDEBAR_GROUP.TAGS]: { title: t.sidebar.tags, editable: false },
-  };
+import type {
+  SideBarProps,
+  PendingItemRemoval,
+  PendingGroupRemoval,
+} from "./types";
 
 const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
-  const { path, volumes, setPath, sidebarOpacity } = useStateContext();
+  const { fs, path, volumes, setPath, setVolumes, sidebarOpacity } =
+    useStateContext();
+  const { pickFolder } = useFolderPicker();
   const { allTags } = useTags();
 
   const { keymap } = useKeymap();
@@ -96,28 +85,22 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
 
   const menu = useSidebarContextMenu();
   const properties = useEntryProperties();
-  const { bind, dragStyle, registerRef, draggingId } = useGroupDragSort(
-    groups.order,
-    groups.reorder,
-  );
+  const { bind, styleFor, registerRef, draggingId, snapping } =
+    useGroupDragSort(groups.order, groups.reorder);
   // The custom item awaiting delete-confirmation (null when the dialog is closed).
-  const [pendingRemoval, setPendingRemoval] = useState<{
-    id: string;
-    path: string;
-  } | null>(null);
+  const [pendingRemoval, setPendingRemoval] =
+    useState<PendingItemRemoval | null>(null);
   // The custom group awaiting delete-confirmation (deleting it takes all its items).
-  const [pendingGroupRemoval, setPendingGroupRemoval] = useState<{
-    id: string;
-    name: string;
-  } | null>(null);
+  const [pendingGroupRemoval, setPendingGroupRemoval] =
+    useState<PendingGroupRemoval | null>(null);
 
-  // Open the context menu at the cursor for a given row (path + kind, plus removable flag for
-  // volumes so Eject can show only for external devices).
+  // Open the context menu at the cursor for a given row (path + kind, plus ejectable flag for
+  // volumes so Eject can show only for external/removable devices).
   const onRowContextMenu =
-    (itemPath: string, kind: SidebarItemKind, isRemovable?: boolean) =>
+    (itemPath: string, kind: SidebarItemKind, isEjectable?: boolean) =>
     (e: MouseEvent) => {
       e.preventDefault();
-      menu.openAt(e.clientX, e.clientY, { path: itemPath, kind, isRemovable });
+      menu.openAt(e.clientX, e.clientY, { path: itemPath, kind, isEjectable });
     };
 
   // User-added rows for a group (its persisted custom items), shown below the built-in rows.
@@ -147,7 +130,10 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
   // so subtract the built-in count to land at the right slot within the persisted custom items.
   const onAddItem =
     (id: string, builtinCount: number) => async (index: number) => {
-      const folder = await pickFolder();
+      // Open the custom picker at the folder currently in view (skip sentinels like Recents/tags).
+      const folder = await pickFolder({
+        startPath: path.startsWith("/") ? path : "",
+      });
       if (folder) groups.addItem(id, folder, Math.max(0, index - builtinCount));
     };
 
@@ -230,8 +216,16 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
         onContextMenu={onRowContextMenu(
           volume.mountPoint,
           SIDEBAR_ITEM_KIND.VOLUME,
-          volume.isRemovable,
+          volume.isEjectable,
         )}
+        onEject={
+          !collapsed && volume.isEjectable
+            ? () =>
+                ejectVolume(fs, volume.mountPoint, () =>
+                  fs.listVolumes().then(setVolumes),
+                )
+            : undefined
+        }
       />
     )),
     // Show the placeholder only until the user adds their first network location.
@@ -280,7 +274,11 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
   return (
     <div
       ref={sidebarRef}
-      className={classNames("SideBar", collapsed && "collapsed")}
+      className={classNames(
+        "SideBar",
+        collapsed && "collapsed",
+        snapping && "snapping",
+      )}
       // Drives the alpha of --color-background-sidebar (see theme.css); set by the user in Settings.
       style={{ "--sidebar-opacity": sidebarOpacity } as CSSProperties}
     >
@@ -345,7 +343,7 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
             ref={registerRef(id)}
             title={title}
             editing={editingSidebar}
-            style={dragStyle(id)}
+            style={styleFor(id)}
             dragging={draggingId === id}
             dragHandleProps={editingSidebar ? bind(id) : undefined}
             onRename={editable ? (name) => groups.rename(id, name) : undefined}

@@ -16,13 +16,9 @@
   font-size: var(--font-size-base);
 }
 
-.Button.IconButton:hover {
-  background-color: var(--color-overlay-hover);
-  color: var(--color-text-primary);
-}
-
-.Button.IconButton:disabled:hover {
-  background-color: transparent;
+.Button.IconButton:hover:not(:disabled) {
+  background-color: var(--color-selection-hover);
+  color: var(--color-accent);
 }
 
 /* Sizes */
@@ -52,7 +48,7 @@
   color: var(--color-danger);
 }
 
-.Button.IconButton.danger:hover {
+.Button.IconButton.danger:hover:not(:disabled) {
   background-color: var(--color-overlay-hover);
   color: var(--color-danger-hover);
 }
@@ -63,12 +59,7 @@
   border: var(--border-width-default) solid var(--color-border-faint);
 }
 
-.Button.IconButton.boxed:hover {
-  background-color: var(--color-surface-interactive);
-  border-color: var(--color-border-default);
-}
-
-.Button.IconButton.boxed:disabled:hover {
-  background-color: var(--color-overlay-faint);
-  border-color: var(--color-border-faint);
+.Button.IconButton.boxed:hover:not(:disabled) {
+  background-color: var(--color-selection-hover);
+  border-color: var(--color-selection-hover-border);
 }

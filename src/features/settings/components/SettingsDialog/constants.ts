@@ -7,6 +7,10 @@ export const SETTINGS_TITLE_ID = "settings_title";
 // a bare literal in JSX; the button's accessible name comes from its aria-label.
 export const RESET_GLYPH = "↺";
 
+// Delay before a slider's value is committed to settings after the last move (RangeControl). Keeps
+// a drag from spamming updates while the thumb stays instant; the commit is flushed on release.
+export const RANGE_COMMIT_DEBOUNCE_MS = 120;
+
 // Dropdown sentinel for the "Custom…" date-format option (reveals the pattern input). Distinct
 // from any real format value.
 export const DATE_FORMAT_CUSTOM = "custom";

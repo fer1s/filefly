@@ -4,6 +4,7 @@ import { useDrag } from "@use-gesture/react";
 import { getThumbnailPath } from "../../thumbnailCache";
 import { glyphPngFor } from "../../dragPreview";
 import { setOwnDragPaths } from "../../nativeDragSource";
+import { entryElementAt } from "../../dropTarget";
 import {
   DRAG_OVER_CLASS,
   DRAGGING_BODY_CLASS,
@@ -98,20 +99,15 @@ export const useEntryDragMove = ({
   // folder that isn't itself a source nor a descendant of one. Hit-tested by geometry (not
   // elementFromPoint) so entries can keep pointer-events:none during the drag — that suppresses
   // their hover tooltip, matching the rubber-band selection.
-  const resolveTarget = (x: number, y: number) => {
-    const items = document.querySelectorAll<HTMLElement>(".dir_entry_item");
-    for (const el of items) {
-      const b = el.getBoundingClientRect();
-      if (x < b.left || x > b.right || y < b.top || y > b.bottom) continue;
+  const resolveTarget = (x: number, y: number) =>
+    entryElementAt(x, y, (el) => {
       const targetPath = el.id;
-      if (!targetPath || !dirPaths.has(targetPath)) return null;
+      if (!targetPath || !dirPaths.has(targetPath)) return false;
       const sources = sourcesRef.current;
-      if (sources.includes(targetPath)) return null;
-      if (sources.some((s) => targetPath.startsWith(`${s}/`))) return null;
-      return el;
-    }
-    return null;
-  };
+      if (sources.includes(targetPath)) return false;
+      if (sources.some((s) => targetPath.startsWith(`${s}/`))) return false;
+      return true;
+    });
 
   // Ends all in-app drag feedback (highlight + ghost). Shared by the native handoff and release.
   const endDragVisuals = () => {
@@ -196,10 +192,12 @@ export const useEntryDragMove = ({
     {
       // filterTaps: a click never starts a drag, so entry select / open still work.
       filterTaps: true,
-      // In external mode the drag is handed to the OS on the first frame, so @use-gesture needs no
-      // pointer capture — and NOT capturing avoids the webview getting stuck (needing a stray
+      // keys: false disables @use-gesture's built-in keyboard dragging (arrow keys on a focused
+      // entry). Arrows are for navigation only (see useKeyboardNav) — we never drag via keyboard.
+      // capture: in external mode the drag is handed to the OS on the first frame, so @use-gesture
+      // needs no pointer capture — NOT capturing avoids the webview getting stuck (needing a stray
       // click) when the OS consumes the pointerup. In-app mode keeps capture for reliable tracking.
-      pointer: { capture: !allowExternalDrag },
+      pointer: { capture: !allowExternalDrag, keys: false },
     },
   );
 

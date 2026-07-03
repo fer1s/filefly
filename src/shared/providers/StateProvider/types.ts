@@ -1,5 +1,6 @@
 import { Volume, DirEntry, Tab } from "@/shared/models";
 import { FileSystemManager } from "@/shared/managers/FileSystemManager";
+import type { SearchFilters } from "@/shared/search/filters";
 import {
   type ViewMode,
   type StartupMode,
@@ -71,16 +72,29 @@ export type State = {
   // Whether a confirmation dialog is shown before a drag-and-drop move/copy.
   confirmDragDrop: boolean;
   toggleConfirmDragDrop: () => void;
+  // Whether a confirmation dialog is shown before moving entries to the Trash (permanent delete
+  // always confirms regardless). Read by the delete flow (useFileOperations).
+  confirmDelete: boolean;
   // Whether success toasts are clickable to jump to the affected file/folder.
   clickableToasts: boolean;
   toggleClickableToasts: () => void;
   // Whether dragging entries out of the window starts a native OS drag (drop into other apps).
   dragToExternalApps: boolean;
   toggleDragToExternalApps: () => void;
+  // Whether opening an image (Enter/double-click) shows it in the built-in preview instead of the
+  // OS default app. Read by the directory open flow.
+  previewImagesInApp: boolean;
+  // Whether opening a markdown file (Enter/double-click) shows it in the built-in preview instead
+  // of the OS default app. Read by the directory open flow.
+  previewMarkdownInApp: boolean;
   // True while a settings change is being written to settings.toml (drives the StatusBar spinner).
   savingSettings: boolean;
   search: string;
   setSearch: (search: string) => void;
+  // Filters narrowing the active tab's search results (kind/date/size/scope). Per-tab, reset on
+  // navigation like `search`.
+  filters: SearchFilters;
+  setFilters: (filters: SearchFilters) => void;
   refreshDir: () => void;
   // Whether the right info panel (preview + properties of the single selected entry) is shown.
   infoPanelOpen: boolean;

@@ -18,6 +18,7 @@ import {
   type EntryActionId,
 } from "../../actions";
 import { useContextMenuLayout } from "../../hooks/useContextMenuLayout";
+import { useDirectory } from "../../providers/DirectoryProvider";
 
 import type { EntryContextMenuProps } from "./types";
 
@@ -39,7 +40,8 @@ const EntryContextMenu = ({
   onPreview,
   onProperties,
 }: EntryContextMenuProps) => {
-  const { fs, setPath } = useStateContext();
+  const { fs, setPath, showHidden, toggleShowHidden } = useStateContext();
+  const { sort, handleSort } = useDirectory();
   const { keymap } = useKeymap();
   const layout = useContextMenuLayout();
 
@@ -60,6 +62,10 @@ const EntryContextMenu = ({
     onStartRename,
     onPreview,
     onProperties,
+    sort,
+    onSort: handleSort,
+    showHidden,
+    toggleShowHidden,
   };
 
   const actionIds = resolveActionIds(layout, {
@@ -95,6 +101,21 @@ const EntryContextMenu = ({
             ? formatBinding(keymap[action.keymapAction])
             : undefined);
 
+        // Submenu action (e.g. Sort By): its rows own their behavior; picking one closes the menu.
+        const submenu = action.submenu?.(ctx).map((sub) => ({
+          key: sub.key,
+          text: sub.label,
+          icon: sub.icon ? <Icon icon={sub.icon} /> : undefined,
+          checked: sub.checked,
+          isSeparator: sub.isSeparator,
+          onClick: sub.onClick
+            ? () => {
+                sub.onClick?.();
+                onClose();
+              }
+            : undefined,
+        }));
+
         return (
           <ContextMenuItem
             key={action.id}
@@ -102,7 +123,15 @@ const EntryContextMenu = ({
             icon={<Icon icon={action.icon} />}
             hotkey={hotkey}
             color={action.color}
-            onClick={enabled ? () => action.run(ctx) : undefined}
+            checked={action.checked?.(ctx)}
+            submenu={submenu}
+            onClick={
+              submenu
+                ? undefined
+                : enabled && action.run
+                  ? () => action.run?.(ctx)
+                  : undefined
+            }
           />
         );
       })}

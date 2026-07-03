@@ -28,6 +28,10 @@ fn main() {
             tray::create_tray(app.handle())?;
             dock_menu::setup(app.handle());
 
+            // Headless control channel (Unix socket) so `sfb` / an MCP server can drive the UI.
+            app.manage(functions::control::ControlState::default());
+            functions::control::start(app.handle().clone());
+
             // Trim the thumbnail cache to its size budget, off the UI thread.
             if let Ok(cache_dir) = app.path().app_cache_dir() {
                 let thumbnails = cache_dir.join("thumbnails");
@@ -67,12 +71,21 @@ fn main() {
             filesystem::tags::find_tagged,
             filesystem::tags::list_all_tags,
             functions::terminal::open_in_terminal,
-            functions::markdown::md_to_html,
+            functions::markdown::md_render,
+            functions::markdown::read_text_file,
+            functions::markdown::write_text_file,
             functions::system::open_full_disk_access_settings,
             functions::keymap::get_keymap,
             functions::context_menu::get_context_menu,
             functions::settings::get_settings,
             functions::settings::set_settings,
+            functions::settings::import_settings,
+            functions::settings::export_settings,
+            functions::storage::get_app_storage,
+            functions::control::set_ui_state,
+            functions::control::set_probe_result,
+            functions::handler::is_default_folder_handler,
+            functions::handler::set_default_folder_handler,
             functions::sidebar::get_sidebar_groups,
             functions::sidebar::set_sidebar_group_name,
             functions::sidebar::set_sidebar_order,
@@ -91,6 +104,7 @@ fn main() {
             dock_menu::push_recent_folder,
             dock_menu::clear_recent_folders,
             window::open_new_window,
+            window::open_path_in_new_window,
         ])
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {
@@ -102,6 +116,25 @@ fn main() {
                 }
             }
         })
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|app_handle, event| {
+            // macOS routes "open this folder" (Terminal `open`, folder links, aliases) here when we
+            // are the default folder handler — open each directory in a new window. Double-clicking
+            // a folder inside Finder never reaches this; Finder keeps that itself (see handler.rs).
+            #[cfg(target_os = "macos")]
+            if let tauri::RunEvent::Opened { urls } = &event {
+                for url in urls {
+                    if let Ok(path) = url.to_file_path() {
+                        if path.is_dir() {
+                            let _ = window::create_window(app_handle, Some(&path.to_string_lossy()));
+                        }
+                    }
+                }
+            }
+            #[cfg(not(target_os = "macos"))]
+            {
+                let _ = (app_handle, event);
+            }
+        });
 }

@@ -1,3 +1,5 @@
+import type { SearchFilters } from "@/shared/search/filters";
+
 type TimeSince = {
   nanos_since_epoch: number;
   secs_since_epoch: number;
@@ -15,6 +17,10 @@ type Volume = {
   totalSpace: string;
   diskUsage: DiskUsage;
   isRemovable: boolean;
+  // Whether the volume can be ejected/unmounted (removable media, or anything under /Volumes —
+  // external disks, disk images, extra partitions). Drives the Eject action; isRemovable drives
+  // the USB icon / "Removable" label / sort order.
+  isEjectable: boolean;
   // Lowercased filesystem type (e.g. "ntfs", "apfs", "exfat").
   fileSystem: string;
   // Raw byte counts (the *Space fields above are pre-formatted strings).
@@ -56,6 +62,9 @@ type Tab = {
   id: string;
   history: NavHistory;
   search: string;
+  // Filters narrowing this tab's search results (kind/date/size/scope). Reset when the search or
+  // location changes, like `search`.
+  filters: SearchFilters;
   // Whether the right info panel is open in this tab (each tab keeps its own state).
   infoPanelOpen: boolean;
 };

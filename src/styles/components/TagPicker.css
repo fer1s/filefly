@@ -108,3 +108,12 @@
   font-size: var(--font-size-base);
   outline: none;
 }
+
+.tag_input::placeholder {
+  color: var(--color-text-muted);
+  opacity: 1;
+}
+
+.tag_input:focus {
+  border-color: var(--color-text-muted);
+}

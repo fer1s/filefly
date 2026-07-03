@@ -61,6 +61,18 @@ export const SIDEBAR_OPACITY_MAX = 1;
 export const SIDEBAR_OPACITY_STEP = 0.05;
 export const DEFAULT_SIDEBAR_OPACITY = 0.85;
 
+// User-adjustable context-menu background opacity (alpha of the popover surface). Same 0..1 range
+// and step as the sidebar; 0 = fully transparent (only the blur shows), 1 = opaque.
+export const DEFAULT_CONTEXT_MENU_OPACITY = 0.5;
+
+// User-adjustable opacity of the preview floating-controls pill (alpha of the popover surface).
+// Same 0..1 range and step as the sidebar; 0 = fully transparent (only the blur shows).
+export const DEFAULT_PREVIEW_CONTROLS_OPACITY = 0.5;
+
+// User-adjustable dialog (modal) background opacity — Preview, Confirmation, Properties, Settings,
+// etc. Same 0..1 range and step as the sidebar; 0 = fully transparent (only the blur shows).
+export const DEFAULT_DIALOG_OPACITY = 0.85;
+
 // User-adjustable sidebar width (px), the expanded grid column. Dragging the right edge clamps
 // between MIN and MAX; the collapsed rail keeps its own fixed width. DEFAULT matches the
 // --size-sidebar-expanded token (theme.css) so first launch looks unchanged.
@@ -88,6 +100,44 @@ export type StartupMode = (typeof STARTUP_MODE)[keyof typeof STARTUP_MODE];
 // Default before the user picks: restore the previous session (preserves prior behavior).
 export const DEFAULT_STARTUP_MODE: StartupMode = STARTUP_MODE.RESTORE;
 
+// App colour theme. SYSTEM follows the OS light/dark preference; LIGHT/DARK force one.
+export const THEME = {
+  SYSTEM: "system",
+  LIGHT: "light",
+  DARK: "dark",
+} as const;
+
+export type Theme = (typeof THEME)[keyof typeof THEME];
+
+// Default: follow the system appearance.
+export const DEFAULT_THEME: Theme = THEME.SYSTEM;
+
+// Accent colour — the single hue that drives selection wells, focus rings, and links. Neutral
+// surfaces/text stay black/white; the accent is the one "alive" colour on top. Values double as
+// the data-accent attribute on <html> and select the matching palette in theme.css (keep in sync).
+export const ACCENT = {
+  BLUE: "blue",
+  NAVY: "navy",
+  RED: "red",
+  TEAL: "teal",
+  GOLD: "gold",
+} as const;
+
+export type Accent = (typeof ACCENT)[keyof typeof ACCENT];
+
+// Ordered for the settings swatch row. `rgb` mirrors --color-accent-rgb in theme.css so the
+// preview swatches match the live tokens without re-reading CSS.
+export const ACCENTS: readonly { value: Accent; rgb: string }[] = [
+  { value: ACCENT.BLUE, rgb: "94, 154, 255" },
+  { value: ACCENT.NAVY, rgb: "42, 94, 168" },
+  { value: ACCENT.RED, rgb: "224, 74, 80" },
+  { value: ACCENT.TEAL, rgb: "20, 160, 135" },
+  { value: ACCENT.GOLD, rgb: "201, 144, 43" },
+];
+
+// Default: the friendly blue (matches the prior hardcoded selection colour).
+export const DEFAULT_ACCENT: Accent = ACCENT.BLUE;
+
 // What dragging entries onto a folder does: MOVE them there, or COPY them there.
 export const DRAG_DROP_ACTION = {
   MOVE: "move",
@@ -104,9 +154,14 @@ export const DEFAULT_DRAG_DROP_ACTION: DragDropAction = DRAG_DROP_ACTION.MOVE;
 // settings dialog. Must match the Rust defaults (functions/settings.rs).
 export const DEFAULT_SETTINGS: AppSettings = {
   showHidden: false,
+  theme: DEFAULT_THEME,
+  accentColor: DEFAULT_ACCENT,
   defaultZoom: ZOOM_DEFAULT,
   dateFormat: DEFAULT_DATE_FORMAT,
   sidebarOpacity: DEFAULT_SIDEBAR_OPACITY,
+  contextMenuOpacity: DEFAULT_CONTEXT_MENU_OPACITY,
+  previewControlsOpacity: DEFAULT_PREVIEW_CONTROLS_OPACITY,
+  dialogOpacity: DEFAULT_DIALOG_OPACITY,
   sidebarWidth: DEFAULT_SIDEBAR_WIDTH,
   hideSystemRecents: true,
   showToasts: true,
@@ -114,8 +169,13 @@ export const DEFAULT_SETTINGS: AppSettings = {
   homePath: "",
   dragDropAction: DEFAULT_DRAG_DROP_ACTION,
   confirmDragDrop: true,
+  confirmDelete: true,
   clickableToasts: true,
   dragToExternalApps: true,
+  useCustomFolderPicker: false,
+  previewImagesInApp: false,
+  previewMarkdownInApp: false,
+  confirmExportOverwrite: false,
 };
 
 // DOM KeyboardEvent.key names used in non-configurable key handling (navigation, input
@@ -124,6 +184,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
 export const KEY = {
   ENTER: "Enter",
   ESCAPE: "Escape",
+  S: "s",
+  F: "f",
   BACKSPACE: "Backspace",
   SPACE: " ",
   TAB: "Tab",
@@ -138,6 +200,19 @@ export const KEY = {
 // Marker the Rust `read_directory` command returns when a folder is blocked by OS privacy
 // protection (e.g. macOS TCC on ~/.Trash). Matched in the UI to prompt for Full Disk Access.
 export const ACCESS_DENIED_ERROR = "ACCESS_DENIED";
+
+// The main application window's Tauri label. Runtime windows get "win-N" labels; the main window
+// keeps this fixed label (its tab session restores on launch, it runs the startup cleanup, etc.).
+export const MAIN_WINDOW_LABEL = "main";
+
+// The app's on-disk data locations (see AppStorageLocation / functions/storage.rs). Stable ids,
+// each mapped to a localized label in the Storage settings panel.
+export const STORAGE_KIND = {
+  CONFIG: "config",
+  CACHE: "cache",
+} as const;
+
+export type StorageKind = (typeof STORAGE_KIND)[keyof typeof STORAGE_KIND];
 
 // Semantic UI colors for elements that support a color variant (e.g. menu items, buttons).
 // Values double as CSS modifier class names.

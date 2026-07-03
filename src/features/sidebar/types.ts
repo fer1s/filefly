@@ -17,3 +17,9 @@ export type SideBarProps = {
   collapsed: boolean;
   onToggle: () => void;
 };
+
+// A custom sidebar row awaiting delete-confirmation (null when the dialog is closed).
+export type PendingItemRemoval = { id: string; path: string };
+
+// A custom sidebar group awaiting delete-confirmation (deleting it removes all its items).
+export type PendingGroupRemoval = { id: string; name: string };
