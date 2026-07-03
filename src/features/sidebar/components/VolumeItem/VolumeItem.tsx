@@ -31,6 +31,7 @@ const VolumeItem = ({
       className={classNames("drive_item", active && "active")}
       role="button"
       tabIndex={0}
+      data-path={volume.mountPoint}
       aria-current={active ? "true" : undefined}
       aria-label={`${volume.mountPoint} ${volume.name}`}
       onClick={open}

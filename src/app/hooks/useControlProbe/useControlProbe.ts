@@ -6,7 +6,7 @@ import { entryElementAt } from "@/features/directory/dropTarget";
 import { getDragDiagnostics } from "@/features/directory/dragDiagnostics";
 
 import { CONTROL_PROBE } from "./constants";
-import { isDirEl, rectOf } from "./utils";
+import { isDirEl, rectOf, sidebarSnapshot, sidebarRowAt } from "./utils";
 import type { ProbeRequest } from "./types";
 
 // Headless drag-drop diagnostics. Answers `sfb ui-probe`: dumps every entry tile's rect + kind,
@@ -34,12 +34,19 @@ export const useControlProbe = (): void => {
           isDir: isDirEl(el),
           rect: rectOf(el),
         })),
+        // Sidebar rows (pinned folders + volumes, with their inline eject buttons).
+        sidebar: sidebarSnapshot(),
       };
 
-      // Hit-test an explicit CSS point.
+      // Hit-test an explicit CSS point against both the directory entries and the sidebar rows.
       if (args && typeof args.x === "number" && typeof args.y === "number") {
         const el = entryElementAt(args.x, args.y, isDirEl);
-        result.pointProbe = { x: args.x, y: args.y, resolved: el?.id ?? null };
+        result.pointProbe = {
+          x: args.x,
+          y: args.y,
+          resolved: el?.id ?? null,
+          sidebarRow: sidebarRowAt(args.x, args.y),
+        };
       }
 
       // Hit-test a folder's own center (name or full path) — isolates the DOM hit-test from the
