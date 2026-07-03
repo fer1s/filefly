@@ -1,22 +1,11 @@
 import { useCallback, useRef, useState, type ReactNode } from "react";
 
-import PathPickerDialog, {
-  PICK_KIND,
-  type PickerConfig,
-} from "@/shared/components/patterns/PathPickerDialog";
+import PathPickerDialog from "@/shared/components/patterns/PathPickerDialog";
 import { pickFolder as nativePickFolder } from "@/shared/services/api";
-import { t } from "@/lang";
 
 import { FolderPickerContext } from "./FolderPickerContext";
+import { FOLDER_PICKER_CONFIG } from "./constants";
 import type { PickFolderOptions } from "./types";
-
-// Presentation config for the shared path picker in folder mode.
-const FOLDER_CONFIG: PickerConfig = {
-  kind: PICK_KIND.FOLDER,
-  title: t.folderPicker.title,
-  chooseLabel: t.folderPicker.choose,
-  emptyLabel: t.folderPicker.empty,
-};
 
 // Promise-based folder picker: `const dir = await pickFolder()` resolves to a folder path or null.
 // When `useCustom` is on it opens the app's own in-window PathPickerDialog (folder mode); otherwise it defers to
@@ -55,7 +44,7 @@ export const FolderPickerProvider = ({
       {children}
       <PathPickerDialog
         visible={startPath !== null}
-        config={FOLDER_CONFIG}
+        config={FOLDER_PICKER_CONFIG}
         initialPath={startPath ?? ""}
         onChoose={(path) => settle(path)}
         onClose={() => settle(null)}

@@ -81,6 +81,7 @@ fn main() {
             functions::settings::export_settings,
             functions::storage::get_app_storage,
             functions::control::set_ui_state,
+            functions::control::set_probe_result,
             functions::handler::is_default_folder_handler,
             functions::handler::set_default_folder_handler,
             functions::sidebar::get_sidebar_groups,

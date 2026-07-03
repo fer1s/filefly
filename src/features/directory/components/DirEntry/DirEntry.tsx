@@ -150,6 +150,7 @@ const DirEntryItemComponent = ({
           isHidden && "hidden",
         )}
         id={id}
+        data-kind={entry.metadata.isDir ? "dir" : "file"}
         role="option"
         aria-selected={selected}
         aria-label={entry.name}

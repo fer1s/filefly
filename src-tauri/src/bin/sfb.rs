@@ -292,6 +292,33 @@ const COMMANDS: &[Command] = &[
         args: &[val("path", true, "Directory the new window opens at.")],
         run: |a| ui_call("open-window", json!({ "path": a.require("path")? })),
     },
+    Command {
+        name: "ui-probe",
+        group: "ui",
+        summary: "Drag-drop diagnostics (DEBUG-ONLY: needs the app run with --debug/SFB_DEBUG=1).",
+        args: &[
+            val("x", false, "CSS-pixel X to hit-test (pair with --y)."),
+            val("y", false, "CSS-pixel Y to hit-test (pair with --x)."),
+            val(
+                "target",
+                false,
+                "Folder name or full path; hit-tests its own tile center to check the resolver.",
+            ),
+        ],
+        run: |a| {
+            let mut probe = json!({});
+            if let Some(x) = a.opt("x") {
+                probe["x"] = json!(x.parse::<f64>().map_err(|e| format!("--x: {e}"))?);
+            }
+            if let Some(y) = a.opt("y") {
+                probe["y"] = json!(y.parse::<f64>().map_err(|e| format!("--y: {e}"))?);
+            }
+            if let Some(target) = a.opt("target") {
+                probe["target"] = json!(target);
+            }
+            ui_call("probe", probe)
+        },
+    },
 ];
 
 // ---- Argument parsing -------------------------------------------------------------------------
@@ -309,6 +336,9 @@ impl Parsed {
             .get(key)
             .map(|s| s.as_str())
             .ok_or_else(|| format!("Missing required argument --{}", key))
+    }
+    fn opt(&self, key: &str) -> Option<&str> {
+        self.values.get(key).map(|s| s.as_str())
     }
     fn has(&self, key: &str) -> bool {
         self.flags.iter().any(|f| f == key)

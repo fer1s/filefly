@@ -1,20 +1,13 @@
 import { useCallback, useMemo, useRef, useState, type ReactNode } from "react";
 
 import PathPickerDialog, {
-  PICK_KIND,
   type PickerConfig,
 } from "@/shared/components/patterns/PathPickerDialog";
 import { pickFile as nativePickFile } from "@/shared/services/api";
-import { t } from "@/lang";
 
 import { FilePickerContext } from "./FilePickerContext";
-import type { PickFileOptions } from "./types";
-
-// A pending picker request: where to open and (optionally) which extensions to allow.
-type Pending = {
-  startPath: string;
-  extensions?: readonly string[];
-};
+import { FILE_PICKER_CONFIG } from "./constants";
+import type { PickFileOptions, PendingFilePick } from "./types";
 
 // Promise-based file picker: `const file = await pickFile()` resolves to a file path or null.
 // When `useCustom` is on it opens the app's own in-window PathPickerDialog (file mode); otherwise
@@ -27,7 +20,7 @@ export const FilePickerProvider = ({
   useCustom: boolean;
   children: ReactNode;
 }) => {
-  const [pending, setPending] = useState<Pending | null>(null);
+  const [pending, setPending] = useState<PendingFilePick | null>(null);
   // Held in a ref so settling doesn't depend on a stale render and survives the fade-out.
   const resolverRef = useRef<((result: string | null) => void) | null>(null);
 
@@ -51,15 +44,9 @@ export const FilePickerProvider = ({
     resolverRef.current = null;
   }, []);
 
-  // Rebuild the file-mode config only when the requested extensions change.
+  // Rebuild the file-mode config only when the requested extensions change (the rest is static).
   const config = useMemo<PickerConfig>(
-    () => ({
-      kind: PICK_KIND.FILE,
-      title: t.filePicker.title,
-      chooseLabel: t.filePicker.choose,
-      emptyLabel: t.filePicker.empty,
-      extensions: pending?.extensions,
-    }),
+    () => ({ ...FILE_PICKER_CONFIG, extensions: pending?.extensions }),
     [pending?.extensions],
   );
 

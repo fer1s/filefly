@@ -160,6 +160,11 @@ export const pickFile = async (
   return typeof result === "string" ? result : null;
 };
 
+// Reply to a headless `probe` control request (drag-drop diagnostics) with the computed result,
+// tagged with the request id received on the `control://probe` event. See functions/control.rs.
+export const setProbeResult = async (id: number, data: string): Promise<void> =>
+  await invoke("set_probe_result", { id, data });
+
 // Load the keybindings (reads keymap.toml, falling back to bundled defaults).
 export const getKeymap = async (): Promise<Keymap> =>
   (await invoke("get_keymap")) as Keymap;

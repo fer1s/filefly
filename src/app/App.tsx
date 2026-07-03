@@ -37,6 +37,7 @@ import { useDockMenu } from "./hooks/useDockMenu";
 import { useTheme } from "./hooks/useTheme";
 import { useAccent } from "./hooks/useAccent";
 import { useControlBridge } from "./hooks/useControlBridge";
+import { useControlProbe } from "./hooks/useControlProbe";
 
 import { notify, setToastsEnabled, TOAST_TYPE } from "@/shared/toast";
 import { prewarmDragIcon } from "@/shared/services/api";
@@ -101,6 +102,9 @@ const App = () => {
     view,
     setPath: tabs.setPath,
   });
+
+  // Headless drag-drop diagnostics for `sfb ui-probe` (lets the AI inspect the drop hit-test).
+  useControlProbe();
 
   const toggleShowHidden = useCallback(() => {
     const next = !settings.showHidden;

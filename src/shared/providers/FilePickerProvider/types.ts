@@ -11,3 +11,10 @@ export type FilePickerContextValue = {
   // when the setting is on, otherwise the native OS (Finder) dialog.
   pickFile: (options?: PickFileOptions) => Promise<string | null>;
 };
+
+// A pending picker request held while the dialog is open: where to open and (optionally) which
+// extensions to allow.
+export type PendingFilePick = {
+  startPath: string;
+  extensions?: readonly string[];
+};
