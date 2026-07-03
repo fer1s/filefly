@@ -6,7 +6,13 @@ import { entryElementAt } from "@/features/directory/dropTarget";
 import { getDragDiagnostics } from "@/features/directory/dragDiagnostics";
 
 import { CONTROL_PROBE } from "./constants";
-import { isDirEl, rectOf, sidebarSnapshot, sidebarRowAt } from "./utils";
+import {
+  isDirEl,
+  rectOf,
+  sidebarSnapshot,
+  sidebarRowAt,
+  previewSnapshot,
+} from "./utils";
 import type { ProbeRequest } from "./types";
 
 // Headless drag-drop diagnostics. Answers `sfb ui-probe`: dumps every entry tile's rect + kind,
@@ -36,6 +42,9 @@ export const useControlProbe = (): void => {
         })),
         // Sidebar rows (pinned folders + volumes, with their inline eject buttons).
         sidebar: sidebarSnapshot(),
+        // File-preview overlay state: markdown mode, scroll offsets, and find matches (with each
+        // hit's rect + whether it's scrolled into view) for debugging the in-app preview/find.
+        preview: previewSnapshot(),
       };
 
       // Hit-test an explicit CSS point against both the directory entries and the sidebar rows.

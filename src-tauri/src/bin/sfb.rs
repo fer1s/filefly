@@ -295,7 +295,7 @@ const COMMANDS: &[Command] = &[
     Command {
         name: "ui-probe",
         group: "ui",
-        summary: "Drag-drop + sidebar diagnostics (DEBUG-ONLY: run the app with --debug/SFB_DEBUG=1).",
+        summary: "Drag-drop + sidebar + preview/find diagnostics (DEBUG-ONLY: run the app with --debug/SFB_DEBUG=1).",
         args: &[
             val("x", false, "CSS-pixel X to hit-test (pair with --y)."),
             val("y", false, "CSS-pixel Y to hit-test (pair with --x)."),
