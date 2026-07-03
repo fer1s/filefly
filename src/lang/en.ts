@@ -256,6 +256,11 @@ export const en = {
     choose: "Choose",
     empty: "No files here",
   },
+  connections: {
+    // Shown when browsing a remote SSH/SFTP location fails (connect/auth/read). `error` is the
+    // backend message, e.g. "no password for 'x'", "authentication failed", "connect failed".
+    listError: (error: string) => `Couldn't open remote folder: ${error}`,
+  },
   settings: {
     title: "Settings",
     search: "Search settings",

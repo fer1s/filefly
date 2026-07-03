@@ -37,6 +37,9 @@ export const SIDEBAR_MENU_LAYOUT: Record<SidebarItemKind, readonly string[]> = {
   [SIDEBAR_ITEM_KIND.RECENTS]: [SIDEBAR_ACTION.OPEN_IN_NEW_TAB],
   // A tag view is virtual too (Spotlight results) — same single action.
   [SIDEBAR_ITEM_KIND.TAG]: [SIDEBAR_ACTION.OPEN_IN_NEW_TAB],
+  // A remote connection root. Opening in a tab browses it; local-only actions (terminal) don't
+  // apply over SFTP. Phase 1 (see SSH_PLAN.md).
+  [SIDEBAR_ITEM_KIND.CONNECTION]: [SIDEBAR_ACTION.OPEN_IN_NEW_TAB],
   [SIDEBAR_ITEM_KIND.TRASH]: [
     SIDEBAR_ACTION.OPEN_IN_NEW_TAB,
     SIDEBAR_ACTION.OPEN_IN_TERMINAL,

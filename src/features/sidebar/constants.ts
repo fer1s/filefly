@@ -12,6 +12,9 @@ export const SIDEBAR_ITEM_KIND = {
   RECENTS: "recents",
   VOLUME: "volume",
   TAG: "tag",
+  // A saved SSH/SFTP connection (Network group). Its path is an `sftp://<id>/` URL that the
+  // filesystem layer routes to the remote backend. See SSH_PLAN.md / features/connections.
+  CONNECTION: "connection",
 } as const;
 
 export type SidebarItemKind =

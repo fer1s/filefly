@@ -16,6 +16,7 @@ import { useFolderPicker } from "@/shared/providers/FolderPickerProvider";
 import { RECENTS, TAG_COLOR, TAG_COLOR_CLASS } from "@/shared/constants";
 import { useTags } from "@/shared/providers/TagsProvider";
 import { useSettings } from "@/features/settings";
+import { useConnections } from "@/features/connections";
 import { Properties } from "@/features/directory";
 import { t } from "@/lang";
 
@@ -55,6 +56,7 @@ import {
   faPenToSquare,
   faFolder,
   faCircle,
+  faServer,
 } from "@fortawesome/free-solid-svg-icons";
 
 import "@/styles/components/SideBar.css";
@@ -73,6 +75,7 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
 
   const { keymap } = useKeymap();
   const { open: openSettings } = useSettings();
+  const { connections, manager: connectionsManager } = useConnections();
   const pinned = usePinnedFolders();
   const groups = useSidebarGroups();
   const {
@@ -152,6 +155,30 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
   // edit affordances, drag handle) is the same SidebarSection for all of them.
   const networkRows = customRows(SIDEBAR_GROUP.NETWORK);
 
+  // Saved SSH/SFTP connections (phase 1: read-only, see SSH_PLAN.md). Each navigates to its remote
+  // root `sftp://<id>/`, which the filesystem layer routes to the SFTP backend.
+  const connectionRows = connections.map((connection) => {
+    const connectionPath = connectionsManager.rootPath(connection.id);
+    return (
+      <FolderItem
+        key={`connection:${connection.id}`}
+        item={{
+          name: connection.name,
+          path: connectionPath,
+          icon: faServer,
+          kind: SIDEBAR_ITEM_KIND.CONNECTION,
+        }}
+        setPath={setPath}
+        collapsed={collapsed}
+        active={connectionPath === path}
+        onContextMenu={onRowContextMenu(
+          connectionPath,
+          SIDEBAR_ITEM_KIND.CONNECTION,
+        )}
+      />
+    );
+  });
+
   // Presets are hidden, not deleted (we couldn't re-create them). In edit mode show them all so a
   // hidden one can be toggled back on; otherwise drop the hidden ones. Each keeps its original
   // index so its hotkey slot (Cmd/Ctrl+1..6) stays correct regardless of what's filtered out.
@@ -228,12 +255,14 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
         }
       />
     )),
-    // Show the placeholder only until the user adds their first network location.
-    [SIDEBAR_GROUP.NETWORK]: networkRows.length ? (
-      networkRows
-    ) : (
-      <p className="section_todo">{t.sidebar.todo}</p>
-    ),
+    // Saved connections (built-in) then user-added network locations. Placeholder only when both
+    // are empty. An array so SidebarSection can interleave add-item inserts between rows.
+    [SIDEBAR_GROUP.NETWORK]:
+      connectionRows.length || networkRows.length ? (
+        [...connectionRows, ...networkRows]
+      ) : (
+        <p className="section_todo">{t.sidebar.todo}</p>
+      ),
     // Finder tags — the tags actually in use (their real names + colours), discovered at runtime.
     // Clicking one opens its Spotlight tag view. macOS-only (the group is hidden otherwise below).
     [SIDEBAR_GROUP.TAGS]: allTags.map((tag) => {
@@ -263,7 +292,7 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
   const builtinCount: Record<SidebarGroupId, number> = {
     [SIDEBAR_GROUP.PINNED]: 1 + visiblePinned.length,
     [SIDEBAR_GROUP.VOLUMES]: volumes.length,
-    [SIDEBAR_GROUP.NETWORK]: 0,
+    [SIDEBAR_GROUP.NETWORK]: connectionRows.length,
     [SIDEBAR_GROUP.TAGS]: allTags.length,
   };
 

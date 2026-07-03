@@ -472,6 +472,21 @@ export const getAppStorage = async (): Promise<AppStorageLocation[]> =>
 export const clearAppCache = async (): Promise<void> =>
   await invoke("clear_app_cache");
 
+// A saved SSH/SFTP connection. Secrets (password/passphrase) are never sent to the frontend — the
+// backend strips them. Mirrors the Connection struct in filesystem/sftp.rs. See SSH_PLAN.md.
+export type Connection = {
+  id: string;
+  name: string;
+  host: string;
+  port: number;
+  user: string;
+};
+
+// The saved SSH connections, surfaced as rows in the sidebar's Network group. Read from
+// connections.toml in the config dir; empty when the file is absent.
+export const sftpListConnections = async (): Promise<Connection[]> =>
+  (await invoke("sftp_list_connections")) as Connection[];
+
 // Mirror this window's live UI state (current path, view, tabs) to Rust so the headless control
 // socket (`sfb ui get-state`) can report it without a round-trip to the webview. Called on every
 // relevant change; `state` is a JSON string. Keyed by the calling window's label in Rust.

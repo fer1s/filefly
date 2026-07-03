@@ -214,6 +214,11 @@ export const STORAGE_KIND = {
 
 export type StorageKind = (typeof STORAGE_KIND)[keyof typeof STORAGE_KIND];
 
+// Path scheme marking a remote (SSH/SFTP) location: `sftp://<connId>/absolute/remote/path`. The
+// backend routes these to the SFTP backend; every other path is local. Mirrors SFTP_SCHEME in
+// src-tauri/src/filesystem/sftp.rs. See SSH_PLAN.md.
+export const SFTP_SCHEME = "sftp://";
+
 // Semantic UI colors for elements that support a color variant (e.g. menu items, buttons).
 // Values double as CSS modifier class names.
 export const UI_COLOR = {
