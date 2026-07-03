@@ -29,7 +29,7 @@ export const SIDEBAR_MENU_LAYOUT: Record<SidebarItemKind, readonly string[]> = {
     SIDEBAR_ACTION.OPEN_IN_NEW_TAB,
     SIDEBAR_ACTION.OPEN_IN_TERMINAL,
     ACTION_SEPARATOR,
-    // Eject only renders for removable volumes (see its isVisible predicate).
+    // Eject only renders for ejectable volumes (see its isVisible predicate).
     SIDEBAR_ACTION.EJECT,
     SIDEBAR_ACTION.PROPERTIES,
   ],

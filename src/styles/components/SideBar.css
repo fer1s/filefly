@@ -236,6 +236,19 @@
   width: 90%;
 }
 
+/* Details take the free space so the inline eject button sits flush right and the path ellipsizes
+   instead of pushing the button off. */
+.SideBar section .section_content .drive_item .details {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Inline eject button: always visible on ejectable rows (like the pinned-folder hotkey hints),
+   just rendered as an icon button. */
+.SideBar section .section_content .drive_item .drive_eject {
+  flex: none;
+}
+
 .SideBar section .section_content .drive_item.active {
   background-color: var(--color-overlay-active);
   border: var(--border-width-default) solid var(--color-border-default);

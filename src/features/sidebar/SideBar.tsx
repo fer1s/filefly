@@ -41,6 +41,7 @@ import { useEntryProperties } from "@/shared/hooks/useEntryProperties";
 import SidebarSection from "./components/SidebarSection";
 import SidebarContextMenu from "./components/SidebarContextMenu";
 import VolumeItem from "./components/VolumeItem";
+import { ejectVolume } from "@/shared/services/ejectVolume";
 import FolderItem from "./components/FolderItem";
 import Button from "@/shared/components/elements/Button";
 import Icon from "@/shared/components/elements/Icon";
@@ -79,7 +80,8 @@ const GROUP_META: Record<SidebarGroupId, { title: string; editable: boolean }> =
   };
 
 const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
-  const { path, volumes, setPath, sidebarOpacity } = useStateContext();
+  const { fs, path, volumes, setPath, setVolumes, sidebarOpacity } =
+    useStateContext();
   const { pickFolder } = useFolderPicker();
   const { allTags } = useTags();
 
@@ -110,13 +112,13 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
     name: string;
   } | null>(null);
 
-  // Open the context menu at the cursor for a given row (path + kind, plus removable flag for
-  // volumes so Eject can show only for external devices).
+  // Open the context menu at the cursor for a given row (path + kind, plus ejectable flag for
+  // volumes so Eject can show only for external/removable devices).
   const onRowContextMenu =
-    (itemPath: string, kind: SidebarItemKind, isRemovable?: boolean) =>
+    (itemPath: string, kind: SidebarItemKind, isEjectable?: boolean) =>
     (e: MouseEvent) => {
       e.preventDefault();
-      menu.openAt(e.clientX, e.clientY, { path: itemPath, kind, isRemovable });
+      menu.openAt(e.clientX, e.clientY, { path: itemPath, kind, isEjectable });
     };
 
   // User-added rows for a group (its persisted custom items), shown below the built-in rows.
@@ -232,8 +234,16 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
         onContextMenu={onRowContextMenu(
           volume.mountPoint,
           SIDEBAR_ITEM_KIND.VOLUME,
-          volume.isRemovable,
+          volume.isEjectable,
         )}
+        onEject={
+          !collapsed && volume.isEjectable
+            ? () =>
+                ejectVolume(fs, volume.mountPoint, () =>
+                  fs.listVolumes().then(setVolumes),
+                )
+            : undefined
+        }
       />
     )),
     // Show the placeholder only until the user adds their first network location.

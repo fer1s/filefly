@@ -192,10 +192,12 @@ export const useEntryDragMove = ({
     {
       // filterTaps: a click never starts a drag, so entry select / open still work.
       filterTaps: true,
-      // In external mode the drag is handed to the OS on the first frame, so @use-gesture needs no
-      // pointer capture — and NOT capturing avoids the webview getting stuck (needing a stray
+      // keys: false disables @use-gesture's built-in keyboard dragging (arrow keys on a focused
+      // entry). Arrows are for navigation only (see useKeyboardNav) — we never drag via keyboard.
+      // capture: in external mode the drag is handed to the OS on the first frame, so @use-gesture
+      // needs no pointer capture — NOT capturing avoids the webview getting stuck (needing a stray
       // click) when the OS consumes the pointerup. In-app mode keeps capture for reliable tracking.
-      pointer: { capture: !allowExternalDrag },
+      pointer: { capture: !allowExternalDrag, keys: false },
     },
   );
 

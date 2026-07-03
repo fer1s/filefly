@@ -111,7 +111,8 @@ const TabBar = () => {
       }
     },
     // filterTaps keeps a plain click firing onClick (select) instead of being read as a 0px drag.
-    { axis: "x", filterTaps: true },
+    // keys: false disables @use-gesture's built-in keyboard dragging (arrow keys on a focused tab).
+    { axis: "x", filterTaps: true, pointer: { keys: false } },
   );
 
   // Re-enable transitions the frame after a drop, once the no-transition commit has painted.

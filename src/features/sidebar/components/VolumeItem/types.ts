@@ -9,4 +9,7 @@ export type VolumeItemProps = {
   collapsed: boolean;
   active: boolean;
   onContextMenu?: (e: MouseEvent) => void;
+  // Eject this volume. Provided only for ejectable volumes (and only when expanded), which is what
+  // renders the inline eject button.
+  onEject?: () => void;
 };

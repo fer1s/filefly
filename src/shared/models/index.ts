@@ -17,6 +17,10 @@ type Volume = {
   totalSpace: string;
   diskUsage: DiskUsage;
   isRemovable: boolean;
+  // Whether the volume can be ejected/unmounted (removable media, or anything under /Volumes —
+  // external disks, disk images, extra partitions). Drives the Eject action; isRemovable drives
+  // the USB icon / "Removable" label / sort order.
+  isEjectable: boolean;
   // Lowercased filesystem type (e.g. "ntfs", "apfs", "exfat").
   fileSystem: string;
   // Raw byte counts (the *Space fields above are pre-formatted strings).

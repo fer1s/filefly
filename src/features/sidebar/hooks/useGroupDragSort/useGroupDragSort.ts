@@ -103,7 +103,8 @@ export const useGroupDragSort = (
       setDrag({ ...state, dy, my });
       return state;
     },
-    { axis: "y", filterTaps: true },
+    // keys: false disables @use-gesture's built-in keyboard dragging (arrow keys on a focused group).
+    { axis: "y", filterTaps: true, pointer: { keys: false } },
   );
 
   // Live target slot + the gap the lifted group leaves (its own height + the inter-group margin).
