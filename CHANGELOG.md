@@ -2,6 +2,17 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.4.1]
+
+### Added
+
+- "Clear cache" action in the Storage settings panel (`0cc9e4b`)
+
+### Fixed
+
+- On first launch, clicking a tab triggered a drag instead of selecting it — a reorder now requires real pointer movement past a threshold (`1c5cd45`)
+- Storage settings panel layout / UI (`0cc9e4b`)
+
 ## [0.4.0]
 
 ### Added
