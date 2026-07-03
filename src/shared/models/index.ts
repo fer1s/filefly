@@ -1,3 +1,5 @@
+import type { SearchFilters } from "@/shared/search/filters";
+
 type TimeSince = {
   nanos_since_epoch: number;
   secs_since_epoch: number;
@@ -56,6 +58,9 @@ type Tab = {
   id: string;
   history: NavHistory;
   search: string;
+  // Filters narrowing this tab's search results (kind/date/size/scope). Reset when the search or
+  // location changes, like `search`.
+  filters: SearchFilters;
   // Whether the right info panel is open in this tab (each tab keeps its own state).
   infoPanelOpen: boolean;
 };

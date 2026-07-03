@@ -1,4 +1,4 @@
-import { faSpinner } from "@fortawesome/free-solid-svg-icons";
+import { faSpinner, faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
 
 import Icon from "@/shared/components/elements/Icon";
 import { t } from "@/lang";
@@ -15,11 +15,14 @@ import type { StatusBarProps } from "./types";
 const StatusBar = ({
   total,
   selected,
+  search,
+  searchLoading,
   computingSizes,
   savingSettings,
   progress,
 }: StatusBarProps) => {
   const loadingPreviews = useImagePreviewLoading();
+  const searching = search.length > 0;
 
   const progressPercent =
     progress && progress.total
@@ -28,10 +31,20 @@ const StatusBar = ({
 
   return (
     <div className="status_bar">
+      {searching && (
+        <span className="count searching">
+          <Icon icon={faMagnifyingGlass} /> {t.directory.searching(search)}
+        </span>
+      )}
       <span className="count">{t.directory.itemCount(total)}</span>
       {selected > 0 && (
         <span className="count selected">
           {t.directory.selectedCount(selected)}
+        </span>
+      )}
+      {searchLoading && (
+        <span className="count busy">
+          <Icon icon={faSpinner} spin /> {t.directory.searchRunning}
         </span>
       )}
       {computingSizes && (

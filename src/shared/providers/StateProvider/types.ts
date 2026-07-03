@@ -1,5 +1,6 @@
 import { Volume, DirEntry, Tab } from "@/shared/models";
 import { FileSystemManager } from "@/shared/managers/FileSystemManager";
+import type { SearchFilters } from "@/shared/search/filters";
 import {
   type ViewMode,
   type StartupMode,
@@ -87,6 +88,10 @@ export type State = {
   savingSettings: boolean;
   search: string;
   setSearch: (search: string) => void;
+  // Filters narrowing the active tab's search results (kind/date/size/scope). Per-tab, reset on
+  // navigation like `search`.
+  filters: SearchFilters;
+  setFilters: (filters: SearchFilters) => void;
   refreshDir: () => void;
   // Whether the right info panel (preview + properties of the single selected entry) is shown.
   infoPanelOpen: boolean;

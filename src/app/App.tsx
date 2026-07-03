@@ -254,6 +254,8 @@ const App = () => {
         savingSettings,
         search: tabs.search,
         setSearch: tabs.setSearch,
+        filters: tabs.filters,
+        setFilters: tabs.setFilters,
         refreshDir: directory.refreshDir,
         infoPanelOpen: tabs.infoPanelOpen,
         toggleInfoPanel: tabs.toggleInfoPanel,

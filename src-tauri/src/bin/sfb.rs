@@ -83,6 +83,19 @@ const COMMANDS: &[Command] = &[
         },
     },
     Command {
+        name: "typeahead",
+        group: "read",
+        summary: "Simulate type-to-find: the entry a folder selects when a name prefix is typed.",
+        args: &[
+            val("path", true, "Directory being browsed."),
+            val("query", true, "Characters typed (matched as a name prefix, case-insensitive)."),
+        ],
+        run: |a| {
+            let result = fs::typeahead_core(a.require("path")?, a.require("query")?)?;
+            to_value(&result)
+        },
+    },
+    Command {
         name: "dir-size",
         group: "read",
         summary: "Recursively sum the byte size of every file under a directory.",

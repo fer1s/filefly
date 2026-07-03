@@ -1,5 +1,6 @@
 import { t } from "@/lang";
 import { basename, isTagsPath, tagFromPath } from "@/shared/utils";
+import { DEFAULT_FILTERS, isSearchFilters } from "@/shared/search/filters";
 import {
   RECENTS,
   STARTUP_MODE,
@@ -38,6 +39,7 @@ export const makeTab = (path: string, infoPanelOpen = false): Tab => ({
   id: crypto.randomUUID(),
   history: { stack: [path], index: 0 },
   search: "",
+  filters: DEFAULT_FILTERS,
   infoPanelOpen,
 });
 
@@ -55,6 +57,7 @@ export const navigateTab = (tab: Tab, path: string): Tab => {
     ...tab,
     history: { stack: nextStack, index: nextStack.length - 1 },
     search: "",
+    filters: DEFAULT_FILTERS,
   };
 };
 
@@ -65,6 +68,7 @@ export const backTab = (tab: Tab): Tab =>
         ...tab,
         history: { ...tab.history, index: tab.history.index - 1 },
         search: "",
+        filters: DEFAULT_FILTERS,
       };
 
 export const forwardTab = (tab: Tab): Tab =>
@@ -74,6 +78,7 @@ export const forwardTab = (tab: Tab): Tab =>
         ...tab,
         history: { ...tab.history, index: tab.history.index + 1 },
         search: "",
+        filters: DEFAULT_FILTERS,
       };
 
 export const canGoBack = (tab: Tab): boolean => tab.history.index > 0;
@@ -168,6 +173,7 @@ export const loadTabs = (): Tab[] => {
         return parsed.map((tab) => ({
           ...tab,
           infoPanelOpen: tab.infoPanelOpen ?? false,
+          filters: isSearchFilters(tab.filters) ? tab.filters : DEFAULT_FILTERS,
         }));
     }
   } catch {

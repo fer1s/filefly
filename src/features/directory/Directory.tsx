@@ -410,6 +410,8 @@ const Directory = () => {
       <StatusBar
         total={filtered.length}
         selected={selectedIDs.length}
+        search={searchActive ? search : ""}
+        searchLoading={searching}
         computingSizes={computingSizes}
         savingSettings={savingSettings}
         progress={fileOps.progress}

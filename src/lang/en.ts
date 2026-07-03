@@ -144,6 +144,36 @@ export const en = {
     zoomOut: "Zoom out",
     zoomLevel: (percent: number) => `Zoom: ${percent}%`,
   },
+  filters: {
+    title: "Filters",
+    tooltip: "Filter search results",
+    clear: "Clear",
+    kind: "Kind",
+    date: "Modified",
+    size: "Size",
+    scope: "Scope",
+    currentFolderOnly: "Only this folder",
+    kinds: {
+      folder: "Folders",
+      image: "Images",
+      video: "Videos",
+      audio: "Audio",
+      document: "Documents",
+      other: "Other",
+    },
+    dates: {
+      any: "Any time",
+      today: "Today",
+      week: "Past week",
+      month: "Past month",
+    },
+    sizes: {
+      any: "Any size",
+      small: "Small (< 1 MB)",
+      medium: "Medium (< 100 MB)",
+      large: "Large (≥ 100 MB)",
+    },
+  },
   tabs: {
     volumes: "Volumes",
     recents: "Recents",
@@ -350,6 +380,11 @@ export const en = {
     items: (n: number) => `${n} items`,
     itemCount: (n: number) => `${n} ${n === 1 ? "item" : "items"}`,
     selectedCount: (n: number) => `${n} ${n === 1 ? "item" : "items"} selected`,
+    // Status-bar indicator that the current view is a search result (query still applied).
+    searching: (query: string) => `Searching "${query}"`,
+    // Transient busy indicator (with spinner) while the search query is running.
+    searchRunning: "Searching…",
+    filters: "Filters",
     loadingPreviews: "Loading thumbnails...",
     calculatingSizes: "Calculating sizes…",
     copying: "Copying…",

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 
 import type { Tab } from "@/shared/models";
+import { DEFAULT_FILTERS, type SearchFilters } from "@/shared/search/filters";
 
 import {
   makeTab,
@@ -55,6 +56,12 @@ export const useTabs = () => {
   const setSearch = useCallback(
     (nextSearch: string) =>
       updateActiveTab((tab) => ({ ...tab, search: nextSearch })),
+    [updateActiveTab],
+  );
+
+  const setFilters = useCallback(
+    (nextFilters: SearchFilters) =>
+      updateActiveTab((tab) => ({ ...tab, filters: nextFilters })),
     [updateActiveTab],
   );
 
@@ -127,6 +134,7 @@ export const useTabs = () => {
     activeTab,
     path,
     search: activeTab.search,
+    filters: activeTab.filters ?? DEFAULT_FILTERS,
     infoPanelOpen,
     canGoBack: canGoBack(activeTab),
     canGoForward: canGoForward(activeTab),
@@ -134,6 +142,7 @@ export const useTabs = () => {
     goBack,
     goForward,
     setSearch,
+    setFilters,
     toggleInfoPanel,
     newTab,
     closeTab,

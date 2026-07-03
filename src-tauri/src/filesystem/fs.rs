@@ -154,6 +154,40 @@ pub fn search_directory_core(path: &str, query: &str) -> Result<Vec<DirEntry>, S
     Ok(results)
 }
 
+// Result of simulating type-to-find in a folder: the entries whose name starts with the typed
+// query (in the folder's visible order) and which one the UI would select (the first).
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TypeaheadResult {
+    query: String,
+    selected_index: Option<usize>,
+    matches: Vec<DirEntry>,
+}
+
+// Simulate the directory's type-to-find: list the folder, sort by name ascending (the UI default),
+// and return the entries whose name starts with `query` (case-insensitive prefix) in that order,
+// with `selected_index` = the first (what type-to-find would highlight). Lets the type-to-find
+// matching be exercised headlessly from the CLI, since the popup itself is GUI-only. Name sorting
+// here is a lowercase compare — a close stand-in for the UI's locale-aware, case-insensitive sort.
+pub fn typeahead_core(path: &str, query: &str) -> Result<TypeaheadResult, String> {
+    let needle = query.trim().to_lowercase();
+
+    let mut entries = read_directory(path)?;
+    entries.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+
+    if needle.is_empty() {
+        return Ok(TypeaheadResult { query: needle, selected_index: None, matches: Vec::new() });
+    }
+
+    let matches: Vec<DirEntry> = entries
+        .into_iter()
+        .filter(|entry| entry.name.to_lowercase().starts_with(&needle))
+        .collect();
+    let selected_index = if matches.is_empty() { None } else { Some(0) };
+
+    Ok(TypeaheadResult { query: needle, selected_index, matches })
+}
+
 // Extensions whose thumbnail comes from QuickLook rather than the image decoder (videos and
 // PDFs). Matches the previewable video/pdf sets. (Markdown is handled by text_thumbnail instead:
 // QuickLook has no good markdown thumbnailer and stalls the queue — see TEXT_EXTS.)

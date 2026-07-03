@@ -11,7 +11,9 @@ import {
 import * as api from "@/shared/services/api";
 import { extension } from "@/shared/utils";
 import { FEATURE_FLAGS } from "@/shared/featureFlags";
+import { hasActiveFilters } from "@/shared/search/filters";
 import { sortEntries, type Sort } from "../sort";
+import { applyFilters } from "../filters";
 import { useDirSizes } from "./useDirSizes";
 import { useDirectorySearch } from "./useDirectorySearch";
 
@@ -42,12 +44,20 @@ const isValidSort = (
 // Owns the visible entry list: search filter, column sort, lazily computed folder
 // sizes, and the previewable subset (for prev/next navigation).
 export const useDirectoryEntries = (view: ViewMode) => {
-  const { dirContent, showHidden, path } = useStateContext();
+  const { dirContent, showHidden, path, filters } = useStateContext();
 
   // While a search is active, the recursive results replace the folder's own entries (the
   // directory content is hidden in favor of the results); otherwise show the folder as usual.
   const { searchActive, searching, results } = useDirectorySearch();
-  const base = searchActive ? results : dirContent;
+
+  // Apply the search filters (kind/date/size/scope) to the results. Only meaningful while
+  // searching; the raw folder listing is shown unfiltered.
+  const filteredResults = useMemo(() => {
+    if (!searchActive || !hasActiveFilters(filters)) return results;
+    return applyFilters(results, filters, path, Math.floor(Date.now() / 1000));
+  }, [searchActive, results, filters, path]);
+
+  const base = searchActive ? filteredResults : dirContent;
 
   // Entries visible after applying the hidden-files toggle. (Search matching is done by the
   // backend, so no name filter is needed here.)
