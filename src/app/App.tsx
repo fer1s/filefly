@@ -101,6 +101,9 @@ const App = () => {
     path: tabs.path,
     view,
     setPath: tabs.setPath,
+    newTab: tabs.newTab,
+    closeTab: tabs.closeTab,
+    reorderTab: tabs.reorderTab,
   });
 
   // Headless drag-drop diagnostics for `sfb ui-probe` (lets the AI inspect the drop hit-test).

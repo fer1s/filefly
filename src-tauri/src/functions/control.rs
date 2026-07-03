@@ -188,6 +188,18 @@ fn run_action(app: &AppHandle, action: &str, args: &Value) -> Result<Value, Stri
             }
             Err("probe timed out (is a browser window open and focused?)".to_string())
         }
+        // Create / close / reorder a tab in the focused window (applied in the frontend via
+        // useControlBridge). `op` is "new" | "close" | "move"; extra args ride along in the payload.
+        "tab" => {
+            let op = args
+                .get("op")
+                .and_then(Value::as_str)
+                .ok_or("tab requires args.op (new|close|move)")?;
+            let window = crate::window::target_window(app).ok_or("no open window for tab op")?;
+            app.emit_to(window.label(), "control://tab", args)
+                .map_err(|error| error.to_string())?;
+            Ok(json!({ "tab": op }))
+        }
         // Open a new window rooted at `path` (created on the main thread; returns once built).
         "open-window" => {
             let path = args

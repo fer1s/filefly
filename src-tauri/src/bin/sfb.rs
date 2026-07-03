@@ -293,6 +293,63 @@ const COMMANDS: &[Command] = &[
         run: |a| ui_call("open-window", json!({ "path": a.require("path")? })),
     },
     Command {
+        name: "ui-new-tab",
+        group: "ui",
+        summary: "Open a new tab in the focused window (clones the active tab's path by default).",
+        args: &[val(
+            "path",
+            false,
+            "Directory the new tab opens at (defaults to the active tab's).",
+        )],
+        run: |a| {
+            let mut payload = json!({ "op": "new" });
+            if let Some(path) = a.opt("path") {
+                payload["path"] = json!(path);
+            }
+            ui_call("tab", payload)
+        },
+    },
+    Command {
+        name: "ui-close-tab",
+        group: "ui",
+        summary: "Close a tab by id or 0-based index (ids come from `ui-state`).",
+        args: &[
+            val("id", false, "Id of the tab to close."),
+            val("index", false, "0-based index of the tab to close."),
+        ],
+        run: |a| {
+            let mut payload = json!({ "op": "close" });
+            if let Some(id) = a.opt("id") {
+                payload["id"] = json!(id);
+            }
+            if let Some(index) = a.opt("index") {
+                payload["index"] =
+                    json!(index.parse::<usize>().map_err(|e| format!("--index: {e}"))?);
+            }
+            ui_call("tab", payload)
+        },
+    },
+    Command {
+        name: "ui-move-tab",
+        group: "ui",
+        summary: "Reorder a tab from one 0-based index to another.",
+        args: &[
+            val("from", true, "0-based index to move from."),
+            val("to", true, "0-based index to move to."),
+        ],
+        run: |a| {
+            let from = a
+                .require("from")?
+                .parse::<usize>()
+                .map_err(|e| format!("--from: {e}"))?;
+            let to = a
+                .require("to")?
+                .parse::<usize>()
+                .map_err(|e| format!("--to: {e}"))?;
+            ui_call("tab", json!({ "op": "move", "from": from, "to": to }))
+        },
+    },
+    Command {
         name: "ui-probe",
         group: "ui",
         summary: "Drag-drop + sidebar + preview/find diagnostics (DEBUG-ONLY: run the app with --debug/SFB_DEBUG=1).",

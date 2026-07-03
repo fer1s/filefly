@@ -10,6 +10,17 @@ import type { ViewMode } from "@/shared/constants";
 // Event the Rust control socket emits (targeted at one window) to drive navigation. Payload is the
 // destination path. See functions/control.rs `navigate`.
 const CONTROL_NAVIGATE = "control://navigate";
+// Event carrying a tab operation from the control socket (`sfb ui-new-tab|ui-close-tab|ui-move-tab`).
+const CONTROL_TAB = "control://tab";
+
+type TabControl = {
+  op: "new" | "close" | "move";
+  path?: string;
+  id?: string;
+  index?: number;
+  from?: number;
+  to?: number;
+};
 
 type ControlBridge = {
   tabs: Tab[];
@@ -17,6 +28,9 @@ type ControlBridge = {
   path: string;
   view: ViewMode;
   setPath: (path: string) => void;
+  newTab: (path?: string) => void;
+  closeTab: (id: string) => void;
+  reorderTab: (from: number, to: number) => void;
 };
 
 const windowLabel = (): string => {
@@ -38,6 +52,9 @@ export const useControlBridge = ({
   path,
   view,
   setPath,
+  newTab,
+  closeTab,
+  reorderTab,
 }: ControlBridge): void => {
   // Push a fresh snapshot whenever the observed state changes.
   useEffect(() => {
@@ -64,4 +81,29 @@ export const useControlBridge = ({
       void unlisten.then((off) => off());
     };
   }, [setPath]);
+
+  // Apply inbound tab operations (new / close / move). `tabs` is a dep so close-by-index resolves
+  // against the current tab list.
+  useEffect(() => {
+    const unlisten = listen<TabControl>(CONTROL_TAB, (event) => {
+      const req = event.payload;
+      if (req.op === "new") {
+        newTab(typeof req.path === "string" ? req.path : undefined);
+      } else if (req.op === "close") {
+        const id =
+          req.id ??
+          (typeof req.index === "number" ? tabs[req.index]?.id : undefined);
+        if (id) closeTab(id);
+      } else if (
+        req.op === "move" &&
+        typeof req.from === "number" &&
+        typeof req.to === "number"
+      ) {
+        reorderTab(req.from, req.to);
+      }
+    });
+    return () => {
+      void unlisten.then((off) => off());
+    };
+  }, [tabs, newTab, closeTab, reorderTab]);
 };
