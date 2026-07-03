@@ -104,7 +104,7 @@
   cursor: grabbing;
   background-color: rgb(var(--color-background-sidebar-rgb));
   border-radius: var(--radius-sm);
-  box-shadow: 0 4px 12px rgb(0 0 0 / 0.35);
+  box-shadow: var(--shadow-lift);
   /* Follow the pointer instantly — no lag between cursor and group. */
   transition: none;
 }

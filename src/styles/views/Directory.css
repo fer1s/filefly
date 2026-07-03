@@ -8,8 +8,9 @@
 /* Scrollable entry area; the status bar stays pinned below it. */
 .directory_page .directory_content {
   /* Shared column template so the list header and its rows stay aligned. */
-  --list-grid: minmax(0, 2.2fr) minmax(110px, 1.4fr) minmax(110px, 1.4fr) 90px
-    100px;
+  --list-grid: minmax(0, 2.2fr) minmax(var(--size-list-col-date), 1.4fr)
+    minmax(var(--size-list-col-date), 1.4fr) var(--size-list-col-size)
+    var(--size-list-col-kind);
   flex: 1;
   min-height: 0;
   overflow-y: auto;

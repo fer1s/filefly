@@ -65,7 +65,7 @@
 /* Soft-primary hover: a faint accent-tinted fill with accent label/icon, matching IconButton's
    ghost hover (and the sidebar rows). Danger items override this with their solid-red hover below. */
 .context_menu .context_menu_item.ctx_button:hover:not(:disabled) {
-  background-color: rgba(var(--color-accent-rgb), 0.14);
+  background-color: var(--color-selection-hover);
   color: var(--color-accent);
 }
 
@@ -121,13 +121,13 @@
 .context_menu
   .context_menu_item.ctx_button.ctx_danger:hover:not(:disabled)
   svg {
-  color: rgba(255, 255, 255, 0.95);
+  color: var(--color-text-on-solid);
 }
 
 .context_menu
   .context_menu_item.ctx_button.ctx_danger:hover:not(:disabled)
   .ctx_hotkey {
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--color-text-on-solid-muted);
 }
 
 .context_menu .context_menu_item.ctx_button:disabled {
@@ -160,6 +160,6 @@
 /* The flyout is portaled to <body> and reuses .context_menu's surface. It's fixed-positioned
    in JS (to the right of its parent row) so the parent menu's overflow clipping can't hide it. */
 .context_menu.context_menu_submenu {
-  min-width: 180px;
+  min-width: var(--size-context-menu-submenu-min-width);
   z-index: 1101;
 }

@@ -22,7 +22,7 @@
   align-items: center;
   gap: var(--space-1);
   color: var(--color-text-secondary);
-  max-width: var(--space-64, 20rem);
+  max-width: var(--space-80);
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;

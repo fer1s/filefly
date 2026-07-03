@@ -103,7 +103,7 @@
   z-index: 2;
   cursor: grabbing;
   background-color: var(--color-tab-dragging);
-  box-shadow: 0 4px 12px rgb(0 0 0 / 0.35);
+  box-shadow: var(--shadow-lift);
   /* Follow the pointer instantly — no lag between cursor and tab. */
   transition: none;
 }

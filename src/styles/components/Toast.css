@@ -41,13 +41,13 @@
 .toast.success {
   background-color: var(--color-success-solid);
   border: var(--border-width-default) solid var(--color-success-border);
-  color: #fff;
+  color: var(--color-text-on-solid);
 }
 
 .toast.error {
   background-color: var(--color-danger-solid);
   border: var(--border-width-default) solid var(--color-danger-border);
-  color: #fff;
+  color: var(--color-text-on-solid);
 }
 
 /* Exit: fade and slide out. Duration must match TOAST_EXIT_MS in ToastStack/constants.ts. */

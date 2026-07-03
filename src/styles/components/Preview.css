@@ -243,13 +243,13 @@
 
 /* Preview-mode find highlights: all matches tinted, the active one accented. */
 .preview_container .preview_content mark.preview_find_hit {
-  background: rgba(var(--color-accent-rgb), 0.3);
+  background: var(--color-find-highlight);
   color: inherit;
-  border-radius: var(--radius-xs, 2px);
+  border-radius: var(--radius-xs);
 }
 
 .preview_container .preview_content mark.preview_find_hit.active {
-  background: rgba(var(--color-accent-rgb), 0.75);
+  background: var(--color-find-highlight-active);
 }
 
 /* Unsaved-changes indicator next to the title. */

@@ -34,7 +34,7 @@
 .search_filters_panel {
   position: fixed;
   z-index: 2500;
-  width: var(--space-72, 18rem);
+  width: var(--space-72);
   max-width: calc(100vw - var(--space-4));
   display: flex;
   flex-direction: column;

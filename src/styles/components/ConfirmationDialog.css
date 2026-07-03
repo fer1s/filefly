@@ -44,11 +44,11 @@
 .confirmation_modal .confirmation_confirm.destructive {
   background-color: var(--color-danger-solid);
   border-color: var(--color-danger-solid);
-  color: #fff;
+  color: var(--color-text-on-solid);
 }
 
 .confirmation_modal .confirmation_confirm.destructive:hover {
   background-color: var(--color-danger-solid-hover);
   border-color: var(--color-danger-solid-hover);
-  color: #fff;
+  color: var(--color-text-on-solid);
 }
