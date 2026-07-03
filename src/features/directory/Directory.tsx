@@ -68,6 +68,7 @@ const Directory = () => {
     view,
     search,
     accessDenied,
+    loadingDir,
     zoom,
     savingSettings,
     dragDropAction,
@@ -318,6 +319,12 @@ const Directory = () => {
     menu.openAt(e.clientX, e.clientY, path, ENTRY_KIND.DIRECTORY);
   };
 
+  // Show a spinner instead of the listing while a navigation loads the new folder (matters for
+  // slow SFTP), or while a search hasn't returned its first result yet. Both hide the (stale or
+  // empty) directory content underneath rather than flashing it.
+  const showLoader =
+    !accessDenied && (loadingDir || (searching && sorted.length === 0));
+
   return (
     <div
       className="directory_page"
@@ -362,6 +369,7 @@ const Directory = () => {
 
         {!accessDenied &&
           !searchActive &&
+          !showLoader &&
           view === VIEW_MODE.LIST &&
           sorted.length > 0 && (
             <ListHeader
@@ -373,14 +381,15 @@ const Directory = () => {
             />
           )}
 
-        {/* Searching with nothing to show yet: a spinner stands in for the (hidden) directory. */}
-        {!accessDenied && searching && sorted.length === 0 && (
+        {/* Loading a folder, or searching with nothing to show yet: a spinner stands in for the
+            (hidden) directory content. */}
+        {showLoader && (
           <div className="search_loading">
             <Spinner />
           </div>
         )}
 
-        {!accessDenied && !(searching && sorted.length === 0) && (
+        {!accessDenied && !showLoader && (
           <EntriesView
             key={searchActive ? "search" : path}
             entries={sorted}
@@ -403,9 +412,13 @@ const Directory = () => {
           />
         )}
 
-        {!accessDenied && searchActive && !searching && sorted.length === 0 && (
-          <p className="no_results">{t.directory.noResults(search)}</p>
-        )}
+        {!accessDenied &&
+          !showLoader &&
+          searchActive &&
+          !searching &&
+          sorted.length === 0 && (
+            <p className="no_results">{t.directory.noResults(search)}</p>
+          )}
       </div>
 
       <StatusBar

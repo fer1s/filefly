@@ -31,6 +31,9 @@ export type State = {
   // True when the current directory could not be read due to OS privacy protection
   // (e.g. macOS Full Disk Access required for the Trash).
   accessDenied: boolean;
+  // True while a navigation is still fetching the new folder's listing (after a short delay, so
+  // fast local reads don't flash). The directory view shows a spinner instead of the stale entries.
+  loadingDir: boolean;
   view: ViewMode;
   setView: (view: ViewMode) => void;
   // Whether hidden entries (dotfiles) are shown in the listing. Toggled via the keymap.

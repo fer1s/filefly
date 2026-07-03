@@ -1,11 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Volume, DirEntry } from "@/shared/models";
-import { ACCESS_DENIED_ERROR, RECENTS } from "@/shared/constants";
+import { ACCESS_DENIED_ERROR, RECENTS, SFTP_SCHEME } from "@/shared/constants";
 import { isTagsPath, tagFromPath } from "@/shared/utils";
+import { notify, TOAST_TYPE } from "@/shared/toast";
+import { t } from "@/lang";
 
 import { ROUTES } from "../../routes";
-import { DIRECTORY_WATCH_DEBOUNCE_MS, VOLUMES_MOUNT_DIR } from "./constants";
+import {
+  DIRECTORY_LOADING_SPINNER_DELAY_MS,
+  DIRECTORY_WATCH_DEBOUNCE_MS,
+  VOLUMES_MOUNT_DIR,
+} from "./constants";
 import type { UseDirectoryContentsArgs } from "./types";
 
 // Owns the listing for the active folder: volumes, entries and the access-denied flag. Loads on
@@ -21,6 +27,10 @@ export const useDirectoryContents = ({
   const [volumes, setVolumes] = useState<Volume[]>([]);
   const [dirContent, setDirContent] = useState<DirEntry[]>([]);
   const [accessDenied, setAccessDenied] = useState<boolean>(false);
+  // True while a *navigation* is fetching the new folder and the old entries are still in state.
+  // The directory view shows a spinner instead of the stale listing (matters for slow SFTP loads).
+  // Set only by the path-change effect, never by refreshDir, so background refreshes don't flash it.
+  const [loadingDir, setLoadingDir] = useState<boolean>(false);
   // Flips true once the first listing (a folder, or the Volumes view at the root) has loaded, so
   // the app can reveal the window with real content instead of an empty shell. Latched once.
   const [ready, setReady] = useState(false);
@@ -53,7 +63,12 @@ export const useDirectoryContents = ({
               : await fs.readDirectory(target);
         return { files, denied: false };
       } catch (err) {
-        return { files: [], denied: String(err).includes(ACCESS_DENIED_ERROR) };
+        const denied = String(err).includes(ACCESS_DENIED_ERROR);
+        // Remote (SFTP) failures are opaque — connect/auth errors would otherwise show as a blank
+        // folder with no clue why. Surface them so the user sees "auth failed", "no password", etc.
+        if (!denied && target.startsWith(SFTP_SCHEME))
+          notify(t.connections.listError(String(err)), TOAST_TYPE.ERROR);
+        return { files: [], denied };
       }
     },
     [fs, hideSystemRecents],
@@ -74,6 +89,16 @@ export const useDirectoryContents = ({
   useEffect(() => {
     refreshDirRef.current = refreshDir;
   }, [refreshDir]);
+
+  // Refs so the navigation-load effect can depend on `path` alone. Otherwise it also re-runs when
+  // the route transition it triggers changes `locationPathname`/`navigate`, firing a second load
+  // for the same path — cheap for local reads, but a wasted second SSH connection for slow SFTP.
+  const loadDirectoryRef = useRef(loadDirectory);
+  const navigateRef = useRef(navigate);
+  const locationRef = useRef(locationPathname);
+  loadDirectoryRef.current = loadDirectory;
+  navigateRef.current = navigate;
+  locationRef.current = locationPathname;
 
   // Watch the current directory so external changes (e.g. `mv`/`rm` from a terminal, or another
   // app) refresh the listing automatically. Debounced, and torn down when the path changes.
@@ -149,28 +174,40 @@ export const useDirectoryContents = ({
     };
   }, [fs, fetchVolumes]);
 
-  // Load the folder (or route to Volumes when at the root) whenever the path changes.
+  // Load the folder (or route to Volumes when at the root) whenever the path changes. Depends on
+  // `path` alone (everything else via refs) so it fires exactly once per navigation.
   useEffect(() => {
     if (path === "") {
-      navigate(ROUTES.volumes);
+      navigateRef.current(ROUTES.volumes);
       return;
     }
 
+    // Show the spinner only if the listing hasn't arrived within the delay: fast local reads
+    // never flash it, slow remotes (SFTP) cross the threshold and get it.
+    let cancelled = false;
+    const spinnerTimer = window.setTimeout(
+      () => setLoadingDir(true),
+      DIRECTORY_LOADING_SPINNER_DELAY_MS,
+    );
+
     // Guard against a stale load resolving after we've already navigated away: e.g. leaving the
     // Trash (slow, ends denied) for Recents would otherwise leave the access-denied notice up.
-    let cancelled = false;
-    loadDirectory(path).then(({ files, denied }) => {
+    loadDirectoryRef.current(path).then(({ files, denied }) => {
       if (cancelled) return;
+      window.clearTimeout(spinnerTimer);
+      setLoadingDir(false);
       setDirContent(files);
       setAccessDenied(denied);
       markReady();
-      if (locationPathname !== ROUTES.directory && path !== "")
-        navigate(ROUTES.directory);
+      if (locationRef.current !== ROUTES.directory && path !== "")
+        navigateRef.current(ROUTES.directory);
     });
     return () => {
       cancelled = true;
+      window.clearTimeout(spinnerTimer);
+      setLoadingDir(false);
     };
-  }, [loadDirectory, locationPathname, navigate, path, markReady]);
+  }, [path, markReady]);
 
   return {
     volumes,
@@ -178,6 +215,7 @@ export const useDirectoryContents = ({
     dirContent,
     setDirContent,
     accessDenied,
+    loadingDir,
     refreshDir,
     ready,
   };
