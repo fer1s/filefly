@@ -13,6 +13,7 @@ import { t } from "@/lang";
 
 import TabItem from "./components/TabItem";
 import { clampDx, dropIndex } from "./utils";
+import { TAB_DRAG_THRESHOLD_PX } from "./constants";
 import type { TabGeom, TabDragState } from "./types";
 
 import "@/styles/components/TabBar.css";
@@ -77,9 +78,16 @@ const TabBar = () => {
         setDrag({ index, dx, mx, geom: geomRef.current });
       }
     },
-    // filterTaps keeps a plain click firing onClick (select) instead of being read as a 0px drag.
+    // filterTaps keeps a plain click firing onClick (select) instead of being read as a 0px drag;
+    // threshold means a slightly jittery click (a few px of pointer travel) still counts as a click,
+    // and a reorder only begins once the pointer moves past TAB_DRAG_THRESHOLD_PX.
     // keys: false disables @use-gesture's built-in keyboard dragging (arrow keys on a focused tab).
-    { axis: "x", filterTaps: true, pointer: { keys: false } },
+    {
+      axis: "x",
+      filterTaps: true,
+      threshold: TAB_DRAG_THRESHOLD_PX,
+      pointer: { keys: false },
+    },
   );
 
   // Re-enable transitions the frame after a drop, once the no-transition commit has painted.
