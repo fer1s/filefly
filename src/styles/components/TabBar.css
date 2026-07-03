@@ -77,10 +77,12 @@
 }
 
 /* Draggable tabs: touch-action none lets the pointer gesture own horizontal moves (no native
-   scroll/selection fighting it), and grab cursors signal the affordance. */
+   scroll/selection fighting it). Cursor stays a pointer at rest (tabs are click-to-select, like a
+   browser's) and only becomes `grabbing` mid-drag (see .dragging) — a resting `grab` cursor made a
+   plain click feel like it was starting a drag. */
 .TabBar .TabItem {
   touch-action: none;
-  cursor: grab;
+  cursor: pointer;
   /* Non-dragged tabs ease into the gap the lifted tab opens; the dragged tab overrides this to
      follow the pointer 1:1 (see .dragging). */
   transition: transform 0.16s ease;
