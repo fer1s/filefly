@@ -16,13 +16,9 @@
   font-size: var(--font-size-base);
 }
 
-.Button.IconButton:hover {
+.Button.IconButton:hover:not(:disabled) {
   background-color: rgba(var(--color-accent-rgb), 0.14);
   color: var(--color-accent);
-}
-
-.Button.IconButton:disabled:hover {
-  background-color: transparent;
 }
 
 /* Sizes */
@@ -52,7 +48,7 @@
   color: var(--color-danger);
 }
 
-.Button.IconButton.danger:hover {
+.Button.IconButton.danger:hover:not(:disabled) {
   background-color: var(--color-overlay-hover);
   color: var(--color-danger-hover);
 }
@@ -63,12 +59,7 @@
   border: var(--border-width-default) solid var(--color-border-faint);
 }
 
-.Button.IconButton.boxed:hover {
+.Button.IconButton.boxed:hover:not(:disabled) {
   background-color: rgba(var(--color-accent-rgb), 0.14);
   border-color: rgba(var(--color-accent-rgb), 0.4);
-}
-
-.Button.IconButton.boxed:disabled:hover {
-  background-color: var(--color-overlay-faint);
-  border-color: var(--color-border-faint);
 }

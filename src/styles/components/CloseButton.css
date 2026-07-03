@@ -20,8 +20,8 @@
   transition: opacity 0.12s ease-in-out;
 }
 
-.mac_close:hover .mac_close_glyph,
-.mac_close:focus-visible .mac_close_glyph {
+.mac_close:hover:not(:disabled) .mac_close_glyph,
+.mac_close:focus-visible:not(:disabled) .mac_close_glyph {
   opacity: 1;
 }
 
@@ -32,11 +32,11 @@
   color: var(--color-danger);
 }
 
-.icon_button_danger .IconButton:hover {
+.icon_button_danger .IconButton:hover:not(:disabled) {
   background-color: var(--color-danger-surface);
 }
 
-.icon_button_danger .IconButton:hover,
-.icon_button_danger .IconButton:hover svg {
+.icon_button_danger .IconButton:hover:not(:disabled),
+.icon_button_danger .IconButton:hover:not(:disabled) svg {
   color: var(--color-danger);
 }

@@ -64,12 +64,12 @@
 
 /* Soft-primary hover: a faint accent-tinted fill with accent label/icon, matching IconButton's
    ghost hover (and the sidebar rows). Danger items override this with their solid-red hover below. */
-.context_menu .context_menu_item.ctx_button:hover {
+.context_menu .context_menu_item.ctx_button:hover:not(:disabled) {
   background-color: rgba(var(--color-accent-rgb), 0.14);
   color: var(--color-accent);
 }
 
-.context_menu .context_menu_item.ctx_button:hover svg {
+.context_menu .context_menu_item.ctx_button:hover:not(:disabled) svg {
   color: var(--color-accent);
 }
 
@@ -113,26 +113,26 @@
    text-muted, dark and unreadable in light mode) — flips to a light on-danger colour.
    Uses --color-danger-solid, not --color-danger-surface: the latter is a faint tint (for red-text-
    on-tint hovers like the close button) and washes out under white text. */
-.context_menu .context_menu_item.ctx_button.ctx_danger:hover {
+.context_menu .context_menu_item.ctx_button.ctx_danger:hover:not(:disabled) {
   background-color: var(--color-danger-solid);
 }
 
-.context_menu .context_menu_item.ctx_button.ctx_danger:hover,
-.context_menu .context_menu_item.ctx_button.ctx_danger:hover svg {
+.context_menu .context_menu_item.ctx_button.ctx_danger:hover:not(:disabled),
+.context_menu
+  .context_menu_item.ctx_button.ctx_danger:hover:not(:disabled)
+  svg {
   color: rgba(255, 255, 255, 0.95);
 }
 
-.context_menu .context_menu_item.ctx_button.ctx_danger:hover .ctx_hotkey {
+.context_menu
+  .context_menu_item.ctx_button.ctx_danger:hover:not(:disabled)
+  .ctx_hotkey {
   color: rgba(255, 255, 255, 0.75);
 }
 
 .context_menu .context_menu_item.ctx_button:disabled {
   cursor: not-allowed;
   opacity: 0.35;
-}
-
-.context_menu .context_menu_item.ctx_button:disabled:hover {
-  background-color: transparent;
 }
 
 /* Trailing checkmark for toggle/selected rows (Show Hidden Files, active sort key/direction). */
