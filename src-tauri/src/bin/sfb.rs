@@ -17,7 +17,7 @@ use std::process::exit;
 
 use serde_json::{json, Value};
 
-use sito_file_browser_lib::filesystem::{fs, tags};
+use sito_file_browser_lib::filesystem::{fs, sftp, tags};
 
 // ---- Command table (declarative registry) ----------------------------------------------------
 
@@ -55,7 +55,7 @@ const COMMANDS: &[Command] = &[
         summary: "List the entries directly inside a directory.",
         args: &[val("path", true, "Directory to list.")],
         run: |a| {
-            let entries = fs::read_directory(a.require("path")?)?;
+            let entries = fs::read_directory_local(a.require("path")?)?;
             to_value(&entries)
         },
     },
@@ -65,7 +65,7 @@ const COMMANDS: &[Command] = &[
         summary: "Metadata for a single file or directory.",
         args: &[val("path", true, "Path to inspect.")],
         run: |a| {
-            let entry = fs::get_entry(a.require("path")?.to_string())?;
+            let entry = fs::get_entry_local(a.require("path")?.to_string())?;
             to_value(&entry)
         },
     },
@@ -269,6 +269,65 @@ const COMMANDS: &[Command] = &[
         summary: "List the distinct tags currently in use under $HOME.",
         args: &[],
         run: |_a| to_value(&tags::list_all_tags_core()),
+    },
+    // -- SSH/SFTP connections (write connections.toml headlessly; see SSH_PLAN.md) ----------
+    Command {
+        name: "sftp-list",
+        group: "sftp",
+        summary: "List saved SSH/SFTP connections (passwords omitted).",
+        args: &[],
+        run: |_a| {
+            let list: Vec<sftp::ConnectionInfo> = sftp::load_connections_from(&app_config_dir()?)
+                .into_iter()
+                .map(sftp::ConnectionInfo::from)
+                .collect();
+            to_value(&list)
+        },
+    },
+    Command {
+        name: "sftp-add",
+        group: "sftp",
+        summary: "Add or replace (by id) an SSH/SFTP connection in connections.toml.",
+        args: &[
+            val("id", true, "Stable id (also the sftp://<id>/ path segment)."),
+            val("name", true, "Display name shown in the sidebar."),
+            val("host", true, "Hostname or IP."),
+            val("user", true, "SSH username."),
+            val("port", false, "SSH port (default 22)."),
+            val("key-path", false, "Private key path (default: ~/.ssh/id_ed25519|id_ecdsa|id_rsa)."),
+            val("key-passphrase", false, "Passphrase for the key (else set SFB_SSH_KEY_PASSPHRASE)."),
+            val("password", false, "Password (phase 1 only; else set SFB_SSH_PASSWORD at runtime)."),
+        ],
+        run: |a| {
+            // Default SSH port; connections may override it.
+            let port: u16 = match a.opt("port") {
+                Some(raw) => raw.parse().map_err(|_| format!("invalid --port: {raw}"))?,
+                None => 22,
+            };
+            let conn = sftp::Connection {
+                id: a.require("id")?.to_string(),
+                name: a.require("name")?.to_string(),
+                host: a.require("host")?.to_string(),
+                port,
+                user: a.require("user")?.to_string(),
+                key_path: a.opt("key-path").map(|s| s.to_string()),
+                key_passphrase: a.opt("key-passphrase").map(|s| s.to_string()),
+                password: a.opt("password").map(|s| s.to_string()),
+            };
+            let id = conn.id.clone();
+            let replaced = sftp::add_connection_to(&app_config_dir()?, conn)?;
+            Ok(json!({ "id": id, "replaced": replaced }))
+        },
+    },
+    Command {
+        name: "sftp-remove",
+        group: "sftp",
+        summary: "Remove a saved SSH/SFTP connection by id.",
+        args: &[val("id", true, "Id of the connection to remove.")],
+        run: |a| {
+            let removed = sftp::remove_connection_from(&app_config_dir()?, a.require("id")?)?;
+            Ok(json!({ "id": a.require("id")?, "removed": removed }))
+        },
     },
     // -- UI (drive the running GUI over the control socket) ---------------------------------
     Command {
