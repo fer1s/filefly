@@ -5,6 +5,22 @@ import type { EntryDragBinder } from "@/features/directory/hooks/useEntryDragMov
 import { FileSystemManager } from "@/shared/managers/FileSystemManager";
 import { type EntryKind } from "@/features/directory/constants";
 
+export type EntryIconProps = {
+  isDir: boolean;
+  // File extension (lowercased or not) used to pick a type-specific glyph; "" for folders.
+  extension: string;
+  // A thumbnail (image/video/pdf preview) is available and loaded.
+  imgSrc: string | null;
+  imgRef: RefObject<HTMLImageElement | null>;
+  // Fires on both load and error so the placeholder is cleared either way.
+  finishLoad: () => void;
+};
+
+export type EntryMetadataProps = {
+  entry: DirEntry;
+  extension: string;
+};
+
 export type DirEntryItemProps = {
   entry: DirEntry;
   fs: FileSystemManager;

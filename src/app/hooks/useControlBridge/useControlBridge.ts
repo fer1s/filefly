@@ -7,11 +7,7 @@ import { tabPath, tabLabel } from "@/features/tabs";
 import type { Tab } from "@/shared/models";
 import type { ViewMode } from "@/shared/constants";
 
-// Event the Rust control socket emits (targeted at one window) to drive navigation. Payload is the
-// destination path. See functions/control.rs `navigate`.
-const CONTROL_NAVIGATE = "control://navigate";
-// Event carrying a tab operation from the control socket (`sfb ui-new-tab|ui-close-tab|ui-move-tab`).
-const CONTROL_TAB = "control://tab";
+import { CONTROL_NAVIGATE, CONTROL_TAB } from "./constants";
 
 type TabControl = {
   op: "new" | "close" | "move";

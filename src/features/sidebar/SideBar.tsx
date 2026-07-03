@@ -27,6 +27,8 @@ import ConfirmationDialog from "@/shared/components/patterns/ConfirmationDialog"
 import {
   SIDEBAR_GROUP,
   SIDEBAR_ITEM_KIND,
+  RECENTS_ITEM,
+  GROUP_META,
   type SidebarGroupId,
   type SidebarItemKind,
 } from "./constants";
@@ -48,7 +50,6 @@ import Icon from "@/shared/components/elements/Icon";
 
 import {
   faBars,
-  faClockRotateLeft,
   faPlus,
   faGear,
   faPenToSquare,
@@ -58,26 +59,11 @@ import {
 
 import "@/styles/components/SideBar.css";
 
-import type { SideBarProps } from "./types";
-
-// Finder-style "Recents" — a pinned entry that opens the virtual recent-files listing.
-const RECENTS_ITEM = {
-  name: t.sidebar.recents,
-  path: RECENTS,
-  icon: faClockRotateLeft,
-  kind: SIDEBAR_ITEM_KIND.RECENTS,
-};
-
-// Per-group metadata: the built-in default title and whether the group is user-editable
-// (rename + add items). Volumes is system-managed, so it's reorderable but not editable.
-const GROUP_META: Record<SidebarGroupId, { title: string; editable: boolean }> =
-  {
-    [SIDEBAR_GROUP.PINNED]: { title: t.sidebar.pinned, editable: true },
-    [SIDEBAR_GROUP.VOLUMES]: { title: t.sidebar.volumes, editable: false },
-    [SIDEBAR_GROUP.NETWORK]: { title: t.sidebar.network, editable: true },
-    // System-managed like Volumes: reorderable, but the rows are the live Finder tags.
-    [SIDEBAR_GROUP.TAGS]: { title: t.sidebar.tags, editable: false },
-  };
+import type {
+  SideBarProps,
+  PendingItemRemoval,
+  PendingGroupRemoval,
+} from "./types";
 
 const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
   const { fs, path, volumes, setPath, setVolumes, sidebarOpacity } =
@@ -102,15 +88,11 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
   const { bind, styleFor, registerRef, draggingId, snapping } =
     useGroupDragSort(groups.order, groups.reorder);
   // The custom item awaiting delete-confirmation (null when the dialog is closed).
-  const [pendingRemoval, setPendingRemoval] = useState<{
-    id: string;
-    path: string;
-  } | null>(null);
+  const [pendingRemoval, setPendingRemoval] =
+    useState<PendingItemRemoval | null>(null);
   // The custom group awaiting delete-confirmation (deleting it takes all its items).
-  const [pendingGroupRemoval, setPendingGroupRemoval] = useState<{
-    id: string;
-    name: string;
-  } | null>(null);
+  const [pendingGroupRemoval, setPendingGroupRemoval] =
+    useState<PendingGroupRemoval | null>(null);
 
   // Open the context menu at the cursor for a given row (path + kind, plus ejectable flag for
   // volumes so Eject can show only for external/removable devices).

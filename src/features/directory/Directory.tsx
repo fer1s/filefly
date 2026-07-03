@@ -32,6 +32,7 @@ import { t } from "@/lang";
 import { DirEntry } from "@/shared/models";
 
 import { COLUMN_KEYS, buildListGrid } from "./columns";
+import type { PendingDrop } from "./types";
 import { useColumnVisibility } from "./hooks/useColumnVisibility";
 import { useFolderView } from "./hooks/useFolderView";
 import { useMarqueeSelection } from "./hooks/useMarqueeSelection";
@@ -117,11 +118,7 @@ const Directory = () => {
 
   // Drag entries onto a folder to move (default) or copy them there, per the drag-and-drop
   // settings. A pending drop is held until the user confirms, when confirmation is enabled.
-  const [pendingDrop, setPendingDrop] = useState<{
-    sources: string[];
-    dest: string;
-    copy: boolean;
-  } | null>(null);
+  const [pendingDrop, setPendingDrop] = useState<PendingDrop | null>(null);
   // "Don't ask again" toggle inside the confirm dialog; on accept it turns off future confirms.
   const [dontAskAgain, setDontAskAgain] = useState(false);
 

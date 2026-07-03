@@ -16,6 +16,7 @@ import {
   ACTIVE_TAB_STORAGE_KEY,
   STARTUP_STORAGE_KEY,
 } from "./constants";
+import type { StartupConfig, TabGeom } from "./types";
 
 // Tab sessions are per-window: localStorage is shared across all windows of the same origin, so
 // each window namespaces its keys by its label. "main" keeps the bare keys for backward compat
@@ -111,10 +112,6 @@ const isTab = (value: unknown): value is Tab => {
   );
 };
 
-// The launch preference cached in localStorage (see STARTUP_STORAGE_KEY). Read synchronously at
-// mount to decide how the session opens.
-export type StartupConfig = { mode: StartupMode; homePath: string };
-
 const isStartupMode = (value: unknown): value is StartupMode =>
   value === STARTUP_MODE.RESTORE ||
   value === STARTUP_MODE.VOLUMES ||
@@ -207,4 +204,36 @@ export const clearOrphanedWindowSessions = (): void => {
       localStorage.removeItem(key);
     }
   }
+};
+
+// Clamp the raw pointer offset so the dragged tab can't leave the strip — its left edge stops at
+// the strip's left and its right edge at the last tab's end (so it never overlaps the "+" or
+// slides under the sidebar).
+export const clampDx = (
+  geom: TabGeom[] | null,
+  index: number,
+  mx: number,
+): number => {
+  if (!geom) return mx;
+  const el = geom[index];
+  const minDx = geom[0].left - el.left;
+  const maxDx = geom[geom.length - 1].right - el.right;
+  return Math.max(minDx, Math.min(maxDx, mx));
+};
+
+// Where the dragged tab should land: the count of other tabs whose center sits left of the
+// pointer-projected center. Uses the RAW offset (not clamped) so a wide tab can still reach a
+// slot occupied by a narrower tab. That count is exactly the splice index.
+export const dropIndex = (
+  geom: TabGeom[] | null,
+  index: number,
+  mx: number,
+): number => {
+  if (!geom) return index;
+  const draggedCenter = geom[index].center + mx;
+  let target = 0;
+  geom.forEach((g, i) => {
+    if (i !== index && g.center < draggedCenter) target += 1;
+  });
+  return target;
 };

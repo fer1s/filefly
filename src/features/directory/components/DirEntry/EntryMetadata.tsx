@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { formatBytes } from "@/shared/utils";
 import { t } from "@/lang";
 
-import type { DirEntry } from "@/shared/models";
+import type { EntryMetadataProps } from "./types";
 
 // One key/value pair in the metadata card.
 const MetadataRow = ({ label, value }: { label: string; value: ReactNode }) => (
@@ -12,11 +12,6 @@ const MetadataRow = ({ label, value }: { label: string; value: ReactNode }) => (
     <span className="entry_metadata_value">{value}</span>
   </>
 );
-
-type EntryMetadataProps = {
-  entry: DirEntry;
-  extension: string;
-};
 
 // Hover card with the entry's metadata, shown via the shared Tooltip (Finder/Explorer-style).
 const EntryMetadata = ({ entry, extension }: EntryMetadataProps) => (

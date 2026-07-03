@@ -7,6 +7,9 @@ export const IMAGE_ZOOM_MAX = 5;
 export const IMAGE_ZOOM_STEP = 0.0015;
 export const IMAGE_ZOOM_BUTTON_STEP = 0.5;
 
+// Centered pan (no offset) — the reset value whenever zoom returns to 1x.
+export const NO_PAN = { x: 0, y: 0 };
+
 // The two modes of the built-in markdown viewer: rendered preview vs. raw source editor.
 export const MARKDOWN_MODE = {
   PREVIEW: "preview",

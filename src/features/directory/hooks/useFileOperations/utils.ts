@@ -2,6 +2,7 @@ import { basename, dirname } from "@/shared/utils";
 import { t } from "@/lang";
 import type { FileSystemManager } from "@/shared/managers/FileSystemManager";
 import type { HistoryEntry } from "../useHistory";
+import type { Transfer } from "./types";
 
 // Replace the final segment of a path with `newName`, keeping its parent folder. Handles both
 // "/" and "\" separators.
@@ -15,10 +16,6 @@ export const entryLabel = (targets: string[]) =>
   targets.length === 1
     ? `"${basename(targets[0])}"`
     : t.directory.items(targets.length);
-
-// A completed transfer: an item that was at `from` and now lives at `to` (real, conflict-resolved
-// destination). Undo/redo builders track each item's live location off these pairs.
-export type Transfer = { from: string; to: string };
 
 // Undo/redo for a move (paste-cut or drag-move): undo moves each item back to its original folder,
 // redo moves it to the destination again. `dirname(from)`/`dirname(to)` recover those folders, and

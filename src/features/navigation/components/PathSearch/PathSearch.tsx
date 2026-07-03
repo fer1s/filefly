@@ -12,12 +12,8 @@ import { t } from "@/lang";
 
 import "@/styles/components/PathSearch.css";
 
-import type { PathSearchProps } from "./types";
-
-// Gap (px) between the search box and the recent-searches dropdown rendered below it.
-const RECENTS_GAP = 4;
-
-type DropdownCoords = { top: number; left: number; width: number };
+import { RECENTS_GAP } from "./constants";
+import type { DropdownCoords, PathSearchProps } from "./types";
 
 // Inline folder filter, expanded from the PathBar's search button (which it replaces while open).
 // Bound to the per-tab `search` state. Focusing the empty field shows a small recent-searches

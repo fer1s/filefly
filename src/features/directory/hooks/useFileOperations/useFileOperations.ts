@@ -19,11 +19,11 @@ import {
   copyHistoryEntry,
   trashHistoryEntry,
   renameHistoryEntry,
-  type Transfer,
 } from "./utils";
 import type {
   Clipboard,
   OperationProgress,
+  Transfer,
   UseFileOperationsArgs,
 } from "./types";
 

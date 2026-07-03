@@ -3,8 +3,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { KEY } from "@/shared/constants";
 import { HOTKEY_SCOPE, useHotkey, useHotkeyScope } from "@/shared/keymap";
 
-// Gap (px) kept between the menu and the viewport edges when clamping.
-const VIEWPORT_PADDING = 8;
+import { VIEWPORT_PADDING } from "./constants";
 
 // Generic context-menu state: visibility, the targeted payload, and positioning. Closes on an
 // outside press or Escape, and clamps itself inside the viewport. `T` is whatever the caller needs

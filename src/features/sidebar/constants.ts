@@ -1,3 +1,8 @@
+import { faClockRotateLeft } from "@fortawesome/free-solid-svg-icons";
+
+import { RECENTS } from "@/shared/constants";
+import { t } from "@/lang";
+
 // The kinds of item a sidebar row can represent. Drives which context-menu actions apply
 // (see features/sidebar/actions). Folders/volumes are real paths; recents is the virtual
 // Recents sentinel; trash is the special ~/.Trash pin.
@@ -32,3 +37,24 @@ export const DEFAULT_GROUP_ORDER: readonly SidebarGroupId[] = [
   SIDEBAR_GROUP.NETWORK,
   SIDEBAR_GROUP.TAGS,
 ] as const;
+
+// Finder-style "Recents" — a pinned entry that opens the virtual recent-files listing.
+export const RECENTS_ITEM = {
+  name: t.sidebar.recents,
+  path: RECENTS,
+  icon: faClockRotateLeft,
+  kind: SIDEBAR_ITEM_KIND.RECENTS,
+};
+
+// Per-group metadata: the built-in default title and whether the group is user-editable
+// (rename + add items). Volumes is system-managed, so it's reorderable but not editable.
+export const GROUP_META: Record<
+  SidebarGroupId,
+  { title: string; editable: boolean }
+> = {
+  [SIDEBAR_GROUP.PINNED]: { title: t.sidebar.pinned, editable: true },
+  [SIDEBAR_GROUP.VOLUMES]: { title: t.sidebar.volumes, editable: false },
+  [SIDEBAR_GROUP.NETWORK]: { title: t.sidebar.network, editable: true },
+  // System-managed like Volumes: reorderable, but the rows are the live Finder tags.
+  [SIDEBAR_GROUP.TAGS]: { title: t.sidebar.tags, editable: false },
+};

@@ -3,12 +3,7 @@ import { listen } from "@tauri-apps/api/event";
 
 import { pushRecentFolder } from "@/shared/services/api";
 
-// Ids emitted by the native Dock quick actions (must match QUICK_ACTIONS in dock_menu.rs).
-const DOCK_ACTION = {
-  NEW_TAB: "new-tab",
-  HOME: "home",
-  VOLUMES: "volumes",
-} as const;
+import { DOCK_ACTION } from "./constants";
 
 type UseDockMenuArgs = {
   // Current folder path ("" = Volumes view).

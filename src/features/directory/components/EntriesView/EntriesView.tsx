@@ -2,15 +2,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useStateContext } from "@/shared/providers/StateProvider";
 import { t } from "@/lang";
-import type { Tag } from "@/shared/models";
 import { useTags } from "@/shared/providers/TagsProvider";
 import { DirEntryItem } from "../DirEntry";
 
-import { RENDER_BATCH_SIZE, RENDER_PREFETCH_PX } from "./constants";
+import { NO_TAGS, RENDER_BATCH_SIZE, RENDER_PREFETCH_PX } from "./constants";
 import type { EntriesViewProps } from "./types";
-
-// Stable reference for untagged rows so DirEntryItem's memo isn't broken by a fresh [] each render.
-const NO_TAGS: Tag[] = [];
 
 // Renders the entries grid/list. The container owns selection, rename and the context-menu
 // state; this component just wires each entry row to it.

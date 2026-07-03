@@ -12,6 +12,9 @@ export type KeyBinding = {
   alt?: boolean;
 };
 
+// An action's binding may be a single chord or several alternatives (e.g. Alt+Left *and* Cmd+[).
+export type BindingOrList = KeyBinding | KeyBinding[];
+
 // An action maps to a single chord, or several alternative chords (the user can bind more than one
 // shortcut to the same action — e.g. `[[nav_back]]` twice in keymap.toml).
 export type Keymap = Partial<Record<KeymapAction, KeyBinding | KeyBinding[]>>;
