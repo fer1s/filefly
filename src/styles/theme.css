@@ -10,6 +10,7 @@
   --space-3-5: 14px;
   --space-4: 16px;
   --space-5: 20px;
+  --space-6: 24px;
   --space-8: 32px;
   --space-10: 40px;
   --space-12: 48px;
@@ -37,6 +38,8 @@
   --size-control-large: var(--space-8);
   --size-path-controls: 96px;
   --size-path-search: 260px;
+  --size-connection-dialog-width: 420px;
+  --size-connection-port-width: 96px;
   --size-progress-track: var(--space-1);
   --size-slider-thumb: var(--space-2);
   --size-spinner: var(--space-12);

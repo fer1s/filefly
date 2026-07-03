@@ -1,0 +1,83 @@
+/* Create-connection form dialog (sidebar Network group → "+"). See features/connections. */
+.connection_modal {
+  width: var(--size-connection-dialog-width);
+  max-width: 100%;
+}
+
+.connection_body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+}
+
+.connection_field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: var(--font-size-md);
+  color: var(--color-text-dim);
+}
+
+.connection_field > input,
+.connection_select {
+  padding: var(--space-1-5) var(--space-2);
+  border-radius: var(--radius-sm);
+  border: var(--border-width-default) solid var(--color-border-default);
+  background-color: var(--color-surface-input);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-base);
+}
+
+.connection_select {
+  cursor: pointer;
+}
+
+.connection_field > input:focus,
+.connection_select:focus {
+  outline: none;
+  border-color: var(--color-selection-indicator);
+}
+
+/* User (grow) + port (fixed narrow) side by side. */
+.connection_row {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.connection_field_user {
+  flex: 1;
+}
+
+.connection_field_port {
+  width: var(--size-connection-port-width);
+}
+
+.connection_hint {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-dim);
+  margin: 0;
+}
+
+.connection_error {
+  font-size: var(--font-size-sm);
+  color: var(--color-danger);
+  margin: 0;
+}
+
+.connection_actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+}
+
+.connection_submit {
+  background-color: var(--color-selection-indicator);
+  color: var(--color-text-on-solid);
+}
+
+.connection_submit.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

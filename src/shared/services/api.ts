@@ -487,6 +487,29 @@ export type Connection = {
 export const sftpListConnections = async (): Promise<Connection[]> =>
   (await invoke("sftp_list_connections")) as Connection[];
 
+// A connection being created from the GUI. Non-secret fields land in connections.toml; the optional
+// secrets (password / key passphrase) are stored in the OS keychain by the backend, never the toml.
+export type NewConnection = {
+  id: string;
+  name: string;
+  host: string;
+  port: number;
+  user: string;
+  keyPath?: string;
+  keyPassphrase?: string;
+  password?: string;
+};
+
+// Create (or replace by id) a connection. Secrets go to the OS keychain (see sftp.rs).
+export const sftpAddConnection = async (
+  connection: NewConnection,
+): Promise<void> => await invoke("sftp_add_connection", { connection });
+
+// The connection's login directory as a `sftp://<id>/home` URL — where `ssh` lands. Used to open a
+// connection on its home instead of the filesystem root. Connects on first call.
+export const sftpHome = async (conn: string): Promise<string> =>
+  (await invoke("sftp_home", { conn })) as string;
+
 // Mirror this window's live UI state (current path, view, tabs) to Rust so the headless control
 // socket (`sfb ui get-state`) can report it without a round-trip to the webview. Called on every
 // relevant change; `state` is a JSON string. Keyed by the calling window's label in Rust.

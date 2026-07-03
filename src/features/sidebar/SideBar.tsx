@@ -16,7 +16,8 @@ import { useFolderPicker } from "@/shared/providers/FolderPickerProvider";
 import { RECENTS, TAG_COLOR, TAG_COLOR_CLASS } from "@/shared/constants";
 import { useTags } from "@/shared/providers/TagsProvider";
 import { useSettings } from "@/features/settings";
-import { useConnections } from "@/features/connections";
+import { useConnections, ConnectionDialog } from "@/features/connections";
+import { notify, TOAST_TYPE } from "@/shared/toast";
 import { Properties } from "@/features/directory";
 import { t } from "@/lang";
 
@@ -75,7 +76,10 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
 
   const { keymap } = useKeymap();
   const { open: openSettings } = useSettings();
-  const { connections, manager: connectionsManager } = useConnections();
+  const { connections, manager: connectionsManager, reload: reloadConnections } =
+    useConnections();
+  // Open state for the create-connection form (opened from the Network group's "+").
+  const [connectionFormOpen, setConnectionFormOpen] = useState(false);
   const pinned = usePinnedFolders();
   const groups = useSidebarGroups();
   const {
@@ -131,8 +135,13 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
 
   // Pick a folder and add it to the group. The clicked insert index spans built-in + custom rows,
   // so subtract the built-in count to land at the right slot within the persisted custom items.
+  // The Network group is special: its "+" opens the create-connection form instead of a folder.
   const onAddItem =
     (id: string, builtinCount: number) => async (index: number) => {
+      if (id === SIDEBAR_GROUP.NETWORK) {
+        setConnectionFormOpen(true);
+        return;
+      }
       // Open the custom picker at the folder currently in view (skip sentinels like Recents/tags).
       const folder = await pickFolder({
         startPath: path.startsWith("/") ? path : "",
@@ -155,26 +164,32 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
   // edit affordances, drag handle) is the same SidebarSection for all of them.
   const networkRows = customRows(SIDEBAR_GROUP.NETWORK);
 
-  // Saved SSH/SFTP connections (phase 1: read-only, see SSH_PLAN.md). Each navigates to its remote
-  // root `sftp://<id>/`, which the filesystem layer routes to the SFTP backend.
+  // Open a connection on its home directory (where `ssh` lands), resolved over SFTP. Falls back to
+  // the filesystem root if the lookup fails — that navigation then surfaces the error toast.
+  const openConnection = (id: string) => {
+    connectionsManager
+      .home(id)
+      .then(setPath)
+      .catch(() => setPath(connectionsManager.rootPath(id)));
+  };
+
+  // Saved SSH/SFTP connections (see SSH_PLAN.md). Clicking opens the connection's home dir; the row
+  // stays highlighted for any remote folder browsed under it (prefix match).
   const connectionRows = connections.map((connection) => {
-    const connectionPath = connectionsManager.rootPath(connection.id);
+    const prefix = connectionsManager.prefix(connection.id);
     return (
       <FolderItem
         key={`connection:${connection.id}`}
         item={{
           name: connection.name,
-          path: connectionPath,
+          path: prefix,
           icon: faServer,
           kind: SIDEBAR_ITEM_KIND.CONNECTION,
         }}
-        setPath={setPath}
+        setPath={() => openConnection(connection.id)}
         collapsed={collapsed}
-        active={connectionPath === path}
-        onContextMenu={onRowContextMenu(
-          connectionPath,
-          SIDEBAR_ITEM_KIND.CONNECTION,
-        )}
+        active={path === prefix || path.startsWith(`${prefix}/`)}
+        onContextMenu={onRowContextMenu(prefix, SIDEBAR_ITEM_KIND.CONNECTION)}
       />
     );
   });
@@ -443,6 +458,16 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
           setPendingGroupRemoval(null);
         }}
         onClose={() => setPendingGroupRemoval(null)}
+      />
+      <ConnectionDialog
+        visible={connectionFormOpen}
+        onClose={() => setConnectionFormOpen(false)}
+        onSubmit={async (connection) => {
+          await connectionsManager.add(connection);
+          reloadConnections();
+          setConnectionFormOpen(false);
+          notify(t.connections.added, TOAST_TYPE.SUCCESS);
+        }}
       />
     </div>
   );

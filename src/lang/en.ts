@@ -260,6 +260,27 @@ export const en = {
     // Shown when browsing a remote SSH/SFTP location fails (connect/auth/read). `error` is the
     // backend message, e.g. "no password for 'x'", "authentication failed", "connect failed".
     listError: (error: string) => `Couldn't open remote folder: ${error}`,
+    // Create-connection dialog (sidebar Network group → "+").
+    newTitle: "New connection",
+    fieldName: "Name",
+    fieldNamePlaceholder: "My server",
+    fieldHost: "Host",
+    fieldUser: "User",
+    fieldPort: "Port",
+    fieldAuth: "Authentication",
+    authAgent: "SSH agent",
+    authKey: "Private key",
+    authPassword: "Password",
+    fieldKeyPath: "Key file",
+    fieldKeyPassphrase: "Key passphrase",
+    fieldPassword: "Password",
+    optional: "optional",
+    authHint:
+      "SSH agent is tried first, then a key file, then a password — whichever the server accepts. Secrets are stored in your macOS Keychain, never on disk.",
+    create: "Create",
+    invalidPort: "Port must be a number between 1 and 65535.",
+    addError: (error: string) => `Couldn't save the connection: ${error}`,
+    added: "Connection created",
   },
   settings: {
     title: "Settings",
