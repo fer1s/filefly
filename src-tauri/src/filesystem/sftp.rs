@@ -38,6 +38,45 @@ const KEY_PASSPHRASE_ENV: &str = "SFB_SSH_KEY_PASSPHRASE";
 // Private keys tried (in order) when a connection doesn't name one — mirrors what `ssh` looks for.
 const DEFAULT_KEY_NAMES: &[&str] = &["id_ed25519", "id_ecdsa", "id_rsa"];
 
+// OS keychain for connection secrets (macOS Keychain). Keyed by "<connId>:<field>" under one
+// service. On non-macOS the keyring backend isn't compiled in, so these no-op and secrets fall back
+// to plaintext toml / env (phase-1 behaviour). See SSH_PLAN.md.
+const KEYCHAIN_SERVICE: &str = "sito-file-browser-sftp";
+const FIELD_PASSWORD: &str = "password";
+const FIELD_KEY_PASSPHRASE: &str = "key-passphrase";
+
+#[cfg(target_os = "macos")]
+mod keychain {
+    use keyring::Entry;
+
+    fn entry(id: &str, field: &str) -> Result<Entry, String> {
+        Entry::new(super::KEYCHAIN_SERVICE, &format!("{id}:{field}")).map_err(|e| e.to_string())
+    }
+    pub fn get(id: &str, field: &str) -> Option<String> {
+        entry(id, field).ok()?.get_password().ok()
+    }
+    pub fn set(id: &str, field: &str, secret: &str) -> Result<(), String> {
+        entry(id, field)?.set_password(secret).map_err(|e| e.to_string())
+    }
+    // Best-effort clear (used when a field is left empty); a missing entry is fine.
+    pub fn delete(id: &str, field: &str) {
+        if let Ok(entry) = entry(id, field) {
+            let _ = entry.delete_credential();
+        }
+    }
+}
+
+#[cfg(not(target_os = "macos"))]
+mod keychain {
+    pub fn get(_id: &str, _field: &str) -> Option<String> {
+        None
+    }
+    pub fn set(_id: &str, _field: &str, _secret: &str) -> Result<(), String> {
+        Ok(())
+    }
+    pub fn delete(_id: &str, _field: &str) {}
+}
+
 // A saved SSH connection. Phase 1 keeps an optional inline `password` purely for local testing;
 // phase 2 moves secrets to the OS keychain and drops it from this struct. `password` round-trips
 // through connections.toml but is stripped before reaching the frontend (see ConnectionInfo).
@@ -322,9 +361,9 @@ async fn open_session(conn: &Connection) -> Result<RemoteSession, String> {
     // 1) Public-key auth from disk — the connection's named key, or the common ~/.ssh/id_* keys.
     //    Only if the agent didn't already authenticate. Needs a passphrase for encrypted keys.
     if !authed {
-        let passphrase = conn
-            .key_passphrase
-            .clone()
+        // Secret resolution order everywhere: OS keychain → inline toml → env var.
+        let passphrase = keychain::get(&conn.id, FIELD_KEY_PASSPHRASE)
+            .or_else(|| conn.key_passphrase.clone())
             .or_else(|| std::env::var(KEY_PASSPHRASE_ENV).ok());
         for key_path in candidate_keys(conn) {
             if !key_path.exists() {
@@ -346,9 +385,8 @@ async fn open_session(conn: &Connection) -> Result<RemoteSession, String> {
 
     // 2) Password / keyboard-interactive — only if a password is configured and keys didn't work.
     if !authed {
-        if let Some(password) = conn
-            .password
-            .clone()
+        if let Some(password) = keychain::get(&conn.id, FIELD_PASSWORD)
+            .or_else(|| conn.password.clone())
             .or_else(|| std::env::var(PASSWORD_ENV).ok())
         {
             eprintln!("[sftp] trying password / keyboard-interactive…");
@@ -512,9 +550,58 @@ pub async fn stat(app: &AppHandle, conn: &str, path: &str) -> Result<DirEntry, S
     ))
 }
 
+// The connection's login directory as a `sftp://<conn>/home` URL — where `ssh` drops you. SFTP's
+// "." canonicalizes to the login dir, so opening a connection lands on the user's home (e.g.
+// /root) instead of the filesystem root, matching the shell.
+pub async fn home_url(app: &AppHandle, conn: &str) -> Result<String, String> {
+    let session = session_for(app, conn).await?;
+    let home = session
+        .sftp
+        .canonicalize(".")
+        .await
+        .map_err(|e| {
+            eprintln!("[sftp] home lookup failed for '{conn}': {e}");
+            format!("home lookup failed: {e}")
+        })?;
+    eprintln!("[sftp] home for '{conn}' = {home}");
+    Ok(remote_url(conn, &home))
+}
+
+// Resolve a connection's home directory (see home_url). Called when a connection is opened so the
+// first view is the login dir, like `ssh`.
+#[tauri::command]
+pub async fn sftp_home(app: AppHandle, conn: String) -> Result<String, String> {
+    home_url(&app, &conn).await
+}
+
 // The saved connections, for the sidebar's Network group. Mapped to ConnectionInfo so passwords
 // never cross to the frontend.
 #[tauri::command]
 pub fn sftp_list_connections(app: AppHandle) -> Vec<ConnectionInfo> {
     load_connections(&app).into_iter().map(ConnectionInfo::from).collect()
+}
+
+// Add (or replace by id) a connection from the GUI. Secrets go to the OS keychain — never the toml;
+// connections.toml keeps only non-sensitive fields. Passing an empty/absent secret clears any
+// stored one. Backs the "+" form in the sidebar's Network group (SSH_PLAN.md phase 2).
+#[tauri::command]
+pub fn sftp_add_connection(app: AppHandle, connection: Connection) -> Result<(), String> {
+    let dir = app.path().app_config_dir().map_err(|e| e.to_string())?;
+
+    match connection.password.as_deref().filter(|s| !s.is_empty()) {
+        Some(secret) => keychain::set(&connection.id, FIELD_PASSWORD, secret)?,
+        None => keychain::delete(&connection.id, FIELD_PASSWORD),
+    }
+    match connection.key_passphrase.as_deref().filter(|s| !s.is_empty()) {
+        Some(secret) => keychain::set(&connection.id, FIELD_KEY_PASSPHRASE, secret)?,
+        None => keychain::delete(&connection.id, FIELD_KEY_PASSPHRASE),
+    }
+
+    // Strip secrets before persisting — they live only in the keychain now.
+    let stored = Connection {
+        password: None,
+        key_passphrase: None,
+        ..connection
+    };
+    add_connection_to(&dir, stored).map(|_replaced| ())
 }

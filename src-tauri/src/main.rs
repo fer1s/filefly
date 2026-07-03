@@ -84,6 +84,8 @@ fn main() {
             functions::storage::get_app_storage,
             functions::storage::clear_app_cache,
             filesystem::sftp::sftp_list_connections,
+            filesystem::sftp::sftp_add_connection,
+            filesystem::sftp::sftp_home,
             functions::control::set_ui_state,
             functions::control::set_probe_result,
             functions::handler::is_default_folder_handler,

@@ -60,6 +60,10 @@ tokio = { version = "1", features = ["rt", "sync", "macros"] }
 # Finder tags live in a macOS extended attribute (a binary plist) — only needed there.
 # objc2 crates drive the custom Dock right-click menu (recent folders + quick actions).
 [target.'cfg(target_os = "macos")'.dependencies]
+# OS keychain for SSH connection secrets (passwords / key passphrases) — see SSH_PLAN.md phase 2.
+# apple-native = the macOS Keychain backend. Keychain code in filesystem/sftp.rs is cfg-gated so
+# non-macOS builds fall back to plaintext toml / env (no keyring dependency there).
+keyring = { version = "3", features = ["apple-native"] }
 xattr = "1"
 plist = "1"
 objc2 = "0.6"
