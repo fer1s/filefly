@@ -134,3 +134,32 @@
 .context_menu .context_menu_item.ctx_button:disabled:hover {
   background-color: transparent;
 }
+
+/* Trailing checkmark for toggle/selected rows (Show Hidden Files, active sort key/direction). */
+.context_menu .context_menu_item.ctx_button .ctx_check {
+  flex-shrink: 0;
+  margin-left: var(--space-3);
+  display: inline-flex;
+  align-items: center;
+}
+
+/* ── Submenu (hover flyout) ── */
+.context_menu_item_wrapper {
+  width: 100%;
+}
+
+/* Chevron pinned to the right edge of a submenu parent row. */
+.context_menu .context_menu_item.ctx_button.has_submenu .ctx_submenu_arrow {
+  flex-shrink: 0;
+  margin-left: auto;
+  padding-left: var(--space-2);
+  display: inline-flex;
+  align-items: center;
+}
+
+/* The flyout is portaled to <body> and reuses .context_menu's surface. It's fixed-positioned
+   in JS (to the right of its parent row) so the parent menu's overflow clipping can't hide it. */
+.context_menu.context_menu_submenu {
+  min-width: 180px;
+  z-index: 1101;
+}

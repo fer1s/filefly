@@ -51,6 +51,10 @@ export const en = {
     copyImage: "Copy image",
     paste: "Paste",
     properties: "Properties",
+    sortBy: "Sort By",
+    showHidden: "Show Hidden Files",
+    sortAscending: "Ascending",
+    sortDescending: "Descending",
   },
   properties: {
     title: "Properties",

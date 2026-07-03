@@ -1,45 +1,21 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { useStateContext } from "@/shared/providers/StateProvider";
-import { RECENTS, VIEW_MODE, type ViewMode } from "@/shared/constants";
+import { VIEW_MODE, type ViewMode } from "@/shared/constants";
 import {
   ACCEPTED_PREVIEW_FORMATS,
   SORT_DIRECTION,
-  SORT_KEY,
   type SortKey,
 } from "@/features/directory/constants";
 import * as api from "@/shared/services/api";
 import { extension } from "@/shared/utils";
 import { FEATURE_FLAGS } from "@/shared/featureFlags";
 import { hasActiveFilters } from "@/shared/search/filters";
-import { sortEntries, type Sort } from "../sort";
-import { applyFilters } from "../filters";
-import { useDirSizes } from "./useDirSizes";
-import { useDirectorySearch } from "./useDirectorySearch";
-
-const DEFAULT_SORT: Sort = {
-  key: SORT_KEY.NAME,
-  direction: SORT_DIRECTION.ASC,
-};
-
-// Recents is ordered by most-recently-modified first by default — that's the whole point of the
-// view. Still overridable: a sort the user picks there is persisted and wins on the next visit.
-const RECENTS_DEFAULT_SORT: Sort = {
-  key: SORT_KEY.MODIFIED,
-  direction: SORT_DIRECTION.DESC,
-};
-
-// The fallback sort when a folder has no persisted preference yet.
-const defaultSortFor = (path: string): Sort =>
-  path === RECENTS ? RECENTS_DEFAULT_SORT : DEFAULT_SORT;
-
-// Whether a persisted sort (loaded from the folder config) is a recognised key/direction.
-const isValidSort = (
-  saved: { key: string; direction: string } | null,
-): saved is Sort =>
-  !!saved &&
-  (Object.values(SORT_KEY) as string[]).includes(saved.key) &&
-  (Object.values(SORT_DIRECTION) as string[]).includes(saved.direction);
+import { sortEntries, type Sort } from "../../sort";
+import { applyFilters } from "../../filters";
+import { useDirSizes } from "../useDirSizes";
+import { useDirectorySearch } from "../useDirectorySearch";
+import { defaultSortFor, isValidSort } from "./utils";
 
 // Owns the visible entry list: search filter, column sort, lazily computed folder
 // sizes, and the previewable subset (for prev/next navigation).

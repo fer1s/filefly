@@ -22,11 +22,19 @@ import "@/styles/components/QuickActions.css";
 // the current selection — the folder's own actions when nothing is selected, the selected
 // entry's actions otherwise (applied to every selected entry).
 const QuickActions = () => {
-  const { fs, path, setPath } = useStateContext();
+  const { fs, path, setPath, showHidden, toggleShowHidden } = useStateContext();
   const { keymap } = useKeymap();
   const layout = useContextMenuLayout();
-  const { sorted, selectedIDs, setRenamingID, fileOps, preview, properties } =
-    useDirectory();
+  const {
+    sorted,
+    selectedIDs,
+    setRenamingID,
+    fileOps,
+    preview,
+    properties,
+    sort,
+    handleSort,
+  } = useDirectory();
 
   const hasSelection = selectedIDs.length > 0;
   const elementId = hasSelection ? selectedIDs[0] : path;
@@ -54,6 +62,10 @@ const QuickActions = () => {
     onStartRename: setRenamingID,
     onPreview: preview.open,
     onProperties: properties.open,
+    sort,
+    onSort: handleSort,
+    showHidden,
+    toggleShowHidden,
   };
 
   const actionIds = resolveActionIds(layout, {
@@ -70,6 +82,9 @@ const QuickActions = () => {
       {actionIds.map((id) => {
         const action = ENTRY_ACTIONS[id as EntryActionId];
         if (!action || !isActionVisible(action, ctx)) return null;
+        // Submenu actions (e.g. Sort By) can't render as a flat toolbar button — skip them here;
+        // they remain available in the right-click menu.
+        if (action.submenu || !action.run) return null;
 
         const enabled = action.isEnabled ? action.isEnabled(ctx) : true;
         const hotkey =
@@ -85,7 +100,7 @@ const QuickActions = () => {
             tooltip={action.label()}
             hotkey={hotkey}
             disabled={!enabled}
-            onClick={() => action.run(ctx)}
+            onClick={() => action.run?.(ctx)}
             className={action.color ? `qa_${action.color}` : undefined}
           />
         );

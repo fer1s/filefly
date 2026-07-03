@@ -13,6 +13,8 @@ export const ENTRY_ACTION = {
   RESTORE: "restore",
   DESTROY: "destroy",
   PROPERTIES: "properties",
+  SORT_BY: "sort_by",
+  TOGGLE_HIDDEN: "toggle_hidden",
 } as const;
 
 export type EntryActionId = (typeof ENTRY_ACTION)[keyof typeof ENTRY_ACTION];

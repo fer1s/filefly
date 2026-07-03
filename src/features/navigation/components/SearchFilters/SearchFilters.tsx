@@ -10,42 +10,15 @@ import { useStateContext } from "@/shared/providers/StateProvider";
 import { useCloseOnEscape } from "@/shared/hooks/useCloseOnEscape";
 import { classNames } from "@/shared/utils";
 import {
-  FILE_KIND,
-  DATE_RANGE,
-  SIZE_BUCKET,
   DEFAULT_FILTERS,
   activeFilterCount,
   type FileKind,
-  type DateRange,
-  type SizeBucket,
 } from "@/shared/search/filters";
 import { t } from "@/lang";
 
+import { KIND_ORDER, DATE_ORDER, SIZE_ORDER, PANEL_GAP } from "./constants";
+
 import "@/styles/components/SearchFilters.css";
-
-// Order the kinds/dates/sizes appear in the panel (keys into the i18n maps).
-const KIND_ORDER: FileKind[] = [
-  FILE_KIND.FOLDER,
-  FILE_KIND.IMAGE,
-  FILE_KIND.VIDEO,
-  FILE_KIND.AUDIO,
-  FILE_KIND.DOCUMENT,
-  FILE_KIND.OTHER,
-];
-const DATE_ORDER: DateRange[] = [
-  DATE_RANGE.ANY,
-  DATE_RANGE.TODAY,
-  DATE_RANGE.WEEK,
-  DATE_RANGE.MONTH,
-];
-const SIZE_ORDER: SizeBucket[] = [
-  SIZE_BUCKET.ANY,
-  SIZE_BUCKET.SMALL,
-  SIZE_BUCKET.MEDIUM,
-  SIZE_BUCKET.LARGE,
-];
-
-const GAP = 6;
 
 // Filter control for the current search: a boxed button (badged with the active-filter count) that
 // opens a panel to narrow results by kind, modified date, size, and scope. Reads/writes the per-tab
@@ -69,7 +42,7 @@ const SearchFilters = () => {
     const rect = anchorRef.current?.getBoundingClientRect();
     if (rect)
       setCoords({
-        top: rect.bottom + GAP,
+        top: rect.bottom + PANEL_GAP,
         right: window.innerWidth - rect.right,
       });
   }, [open]);

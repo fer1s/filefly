@@ -14,6 +14,8 @@
 #   restore            restore a trashed item to where it came from (or pick a folder)
 #   destroy            permanently delete (irreversible)
 #   properties         open the properties panel
+#   sort_by            submenu: pick the sort key/direction (per folder)
+#   toggle_hidden      toggle showing hidden entries / dotfiles (global)
 #
 # Use the literal "separator" to draw a divider between groups. Order here is display order.
 
@@ -22,6 +24,9 @@
 actions = [
   "new_folder",
   "paste",
+  "separator",
+  "sort_by",
+  "toggle_hidden",
   "separator",
   "open_in_terminal",
   "separator",
