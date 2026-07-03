@@ -14,6 +14,11 @@ config.autoAddCss = false;
 import "@/styles/theme.css";
 import "@/styles/index.css";
 
+import { installDevErrorOverlay } from "./devErrorOverlay";
+
+// Dev-only full-screen error overlay (see devErrorOverlay); no-op in production builds.
+installDevErrorOverlay();
+
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
     <BrowserRouter>
