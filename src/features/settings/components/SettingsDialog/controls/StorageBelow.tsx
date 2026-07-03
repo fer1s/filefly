@@ -6,13 +6,14 @@ import {
   type AppStorageLocation,
 } from "@/shared/services/api";
 import { formatBytes } from "@/shared/utils";
+import { STORAGE_KIND } from "@/shared/constants";
 import { t } from "@/lang";
 
 // Map a backend storage `kind` to its localized label. Falls back to the raw id for any future
 // kind the dictionary doesn't know yet.
 const kindLabel = (kind: string): string => {
-  if (kind === "config") return t.settings.storageConfig;
-  if (kind === "cache") return t.settings.storageCache;
+  if (kind === STORAGE_KIND.CONFIG) return t.settings.storageConfig;
+  if (kind === STORAGE_KIND.CACHE) return t.settings.storageCache;
   return kind;
 };
 

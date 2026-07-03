@@ -8,7 +8,11 @@ import { startDrag } from "@crabnebula/tauri-plugin-drag";
 import { notify, TOAST_TYPE } from "@/shared/toast";
 import { t } from "@/lang";
 import { Volume, DirEntry, ContextMenuLayout, Tag } from "@/shared/models";
-import { ACCESS_DENIED_ERROR } from "@/shared/constants";
+import {
+  ACCESS_DENIED_ERROR,
+  type DragDropAction,
+  type StorageKind,
+} from "@/shared/constants";
 import type { Keymap } from "@/shared/keymap/types";
 
 // App-wide user settings, persisted in settings.toml (Rust is the source of truth; the frontend
@@ -422,7 +426,7 @@ export const prewarmDragIcon = async (): Promise<void> => {
 export const startNativeDrag = (
   paths: string[],
   icon?: string,
-  mode?: "copy" | "move",
+  mode?: DragDropAction,
 ): void => {
   const image = icon || bundledDragIcon;
   if (!paths.length || !image) return;
@@ -449,10 +453,10 @@ export const openPathInNewWindow = async (path: string): Promise<void> =>
   await invoke("open_path_in_new_window", { path });
 
 // One of the app's on-disk data locations, with its recursively-summed size in bytes. `kind` is a
-// stable id ("config" | "cache") mapped to a localized label in the UI. Mirrors StorageLocation in
+// stable id (see STORAGE_KIND) mapped to a localized label in the UI. Mirrors StorageLocation in
 // functions/storage.rs.
 export type AppStorageLocation = {
-  kind: string;
+  kind: StorageKind;
   path: string;
   size: number;
 };

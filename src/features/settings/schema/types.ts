@@ -38,12 +38,14 @@ type BaseDescriptor = {
   hint: () => string;
 };
 
-export type ToggleDescriptor = BaseDescriptor & { kind: "toggle" };
+export type ToggleDescriptor = BaseDescriptor & {
+  kind: typeof SETTING_KIND.TOGGLE;
+};
 
 export type SelectOption = { value: string; label: string };
 
 export type SelectDescriptor = BaseDescriptor & {
-  kind: "select";
+  kind: typeof SETTING_KIND.SELECT;
   // Resolved lazily so option labels can be i18n'd or show live samples.
   options: () => SelectOption[];
   // The <select> value is always a string; map it back to the stored type (e.g. number zoom).
@@ -51,7 +53,7 @@ export type SelectDescriptor = BaseDescriptor & {
 };
 
 export type RangeDescriptor = BaseDescriptor & {
-  kind: "range";
+  kind: typeof SETTING_KIND.RANGE;
   min: number;
   max: number;
   step: number;
@@ -64,7 +66,7 @@ export type RangeDescriptor = BaseDescriptor & {
 };
 
 export type CustomDescriptor = Omit<BaseDescriptor, "key"> & {
-  kind: "custom";
+  kind: typeof SETTING_KIND.CUSTOM;
   // Custom entries own their modified/reset (below), so `key` only needs to be unique — it can be
   // an AppSettings field or a synthetic id for an entry that binds to no single setting (e.g. the
   // informational Storage panel).

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 
 import type { Tab } from "@/shared/models";
+import { MAIN_WINDOW_LABEL } from "@/shared/constants";
 import { DEFAULT_FILTERS, type SearchFilters } from "@/shared/search/filters";
 
 import {
@@ -128,7 +129,8 @@ export const useTabs = () => {
   // Purge tab sessions orphaned by closed runtime windows. Runs once at startup from the main
   // window (when no win-N exist), so it never touches a live window's session.
   useEffect(() => {
-    if (getCurrentWindow().label === "main") clearOrphanedWindowSessions();
+    if (getCurrentWindow().label === MAIN_WINDOW_LABEL)
+      clearOrphanedWindowSessions();
   }, []);
 
   return {

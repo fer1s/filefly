@@ -5,12 +5,17 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { setUiState } from "@/shared/services/api";
 import { tabPath, tabLabel } from "@/features/tabs";
 import type { Tab } from "@/shared/models";
-import type { ViewMode } from "@/shared/constants";
+import { MAIN_WINDOW_LABEL, type ViewMode } from "@/shared/constants";
 
-import { CONTROL_NAVIGATE, CONTROL_TAB } from "./constants";
+import {
+  CONTROL_NAVIGATE,
+  CONTROL_TAB,
+  TAB_CONTROL_OP,
+  type TabControlOp,
+} from "./constants";
 
 type TabControl = {
-  op: "new" | "close" | "move";
+  op: TabControlOp;
   path?: string;
   id?: string;
   index?: number;
@@ -34,7 +39,7 @@ const windowLabel = (): string => {
     return getCurrentWindow().label;
   } catch {
     // Non-Tauri context (e.g. tests).
-    return "main";
+    return MAIN_WINDOW_LABEL;
   }
 };
 
@@ -83,15 +88,15 @@ export const useControlBridge = ({
   useEffect(() => {
     const unlisten = listen<TabControl>(CONTROL_TAB, (event) => {
       const req = event.payload;
-      if (req.op === "new") {
+      if (req.op === TAB_CONTROL_OP.NEW) {
         newTab(typeof req.path === "string" ? req.path : undefined);
-      } else if (req.op === "close") {
+      } else if (req.op === TAB_CONTROL_OP.CLOSE) {
         const id =
           req.id ??
           (typeof req.index === "number" ? tabs[req.index]?.id : undefined);
         if (id) closeTab(id);
       } else if (
-        req.op === "move" &&
+        req.op === TAB_CONTROL_OP.MOVE &&
         typeof req.from === "number" &&
         typeof req.to === "number"
       ) {

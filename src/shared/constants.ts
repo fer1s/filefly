@@ -201,6 +201,19 @@ export const KEY = {
 // protection (e.g. macOS TCC on ~/.Trash). Matched in the UI to prompt for Full Disk Access.
 export const ACCESS_DENIED_ERROR = "ACCESS_DENIED";
 
+// The main application window's Tauri label. Runtime windows get "win-N" labels; the main window
+// keeps this fixed label (its tab session restores on launch, it runs the startup cleanup, etc.).
+export const MAIN_WINDOW_LABEL = "main";
+
+// The app's on-disk data locations (see AppStorageLocation / functions/storage.rs). Stable ids,
+// each mapped to a localized label in the Storage settings panel.
+export const STORAGE_KIND = {
+  CONFIG: "config",
+  CACHE: "cache",
+} as const;
+
+export type StorageKind = (typeof STORAGE_KIND)[keyof typeof STORAGE_KIND];
+
 // Semantic UI colors for elements that support a color variant (e.g. menu items, buttons).
 // Values double as CSS modifier class names.
 export const UI_COLOR = {

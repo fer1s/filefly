@@ -5,6 +5,7 @@ import {
   RECENTS,
   STARTUP_MODE,
   DEFAULT_STARTUP_MODE,
+  MAIN_WINDOW_LABEL,
   type StartupMode,
 } from "@/shared/constants";
 import type { Tab } from "@/shared/models";
@@ -24,7 +25,7 @@ import type { StartupConfig, TabGeom } from "./types";
 const windowSuffix = (): string => {
   try {
     const label = getCurrentWindow().label;
-    return label === "main" ? "" : `:${label}`;
+    return label === MAIN_WINDOW_LABEL ? "" : `:${label}`;
   } catch {
     // Non-Tauri context (e.g. tests) — behave like the single-window default.
     return "";

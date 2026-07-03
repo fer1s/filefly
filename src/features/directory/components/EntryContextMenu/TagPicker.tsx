@@ -10,7 +10,8 @@ import { useTags } from "@/shared/providers/TagsProvider";
 import type { Tag } from "@/shared/models";
 import { t } from "@/lang";
 
-import type { TagCoverage, TagPickerProps } from "./types";
+import { TAG_COVERAGE, type TagCoverage } from "./constants";
+import type { TagPickerProps } from "./types";
 
 import "@/styles/components/TagPicker.css";
 
@@ -29,8 +30,8 @@ export const TagPicker = ({ targets, onClose }: TagPickerProps) => {
 
   const coverage = (has: (current: Tag[]) => boolean): TagCoverage => {
     const n = targets.filter((path) => has(tags[path] ?? [])).length;
-    if (n === 0) return "none";
-    return n === targets.length ? "all" : "some";
+    if (n === 0) return TAG_COVERAGE.NONE;
+    return n === targets.length ? TAG_COVERAGE.ALL : TAG_COVERAGE.SOME;
   };
 
   // Apply a per-file transform to every target.
@@ -46,7 +47,7 @@ export const TagPicker = ({ targets, onClose }: TagPickerProps) => {
     make: () => Tag,
   ) => {
     await apply((current) =>
-      cover === "all"
+      cover === TAG_COVERAGE.ALL
         ? current.filter((tag) => !has(tag))
         : current.some(has)
           ? current
@@ -99,12 +100,12 @@ export const TagPicker = ({ targets, onClose }: TagPickerProps) => {
               className={classNames(
                 "tag_swatch",
                 colorClass,
-                cover === "all" && "active",
-                cover === "some" && "partial",
+                cover === TAG_COVERAGE.ALL && "active",
+                cover === TAG_COVERAGE.SOME && "partial",
               )}
               title={name}
               aria-label={name}
-              aria-pressed={cover === "all"}
+              aria-pressed={cover === TAG_COVERAGE.ALL}
               onClick={() => toggleColor(index, name)}
             />
           );
@@ -123,14 +124,14 @@ export const TagPicker = ({ targets, onClose }: TagPickerProps) => {
                   type="button"
                   className={classNames(
                     "tag_list_item",
-                    cover !== "none" && "checked",
+                    cover !== TAG_COVERAGE.NONE && "checked",
                   )}
                   onClick={() => toggleName(tag.name, tag.color)}
                 >
                   <span className="tag_check" aria-hidden>
-                    {cover === "all" ? (
+                    {cover === TAG_COVERAGE.ALL ? (
                       <Icon icon={faCheck} />
-                    ) : cover === "some" ? (
+                    ) : cover === TAG_COVERAGE.SOME ? (
                       <Icon icon={faMinus} />
                     ) : null}
                   </span>
