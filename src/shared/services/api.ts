@@ -466,6 +466,12 @@ export type AppStorageLocation = {
 export const getAppStorage = async (): Promise<AppStorageLocation[]> =>
   (await invoke("get_app_storage")) as AppStorageLocation[];
 
+// Delete the app's cache directory (thumbnails and other regenerable files) to reclaim disk. Only
+// the cache is cleared, never config/data; the dir is recreated lazily as things are cached again.
+// Backs the "clear" button in the Storage settings panel.
+export const clearAppCache = async (): Promise<void> =>
+  await invoke("clear_app_cache");
+
 // Mirror this window's live UI state (current path, view, tabs) to Rust so the headless control
 // socket (`sfb ui get-state`) can report it without a round-trip to the webview. Called on every
 // relevant change; `state` is a JSON string. Keyed by the calling window's label in Rust.

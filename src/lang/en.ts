@@ -364,6 +364,11 @@ export const en = {
     storageCache: "Cache",
     storageLoading: "Measuring…",
     storageOpen: "Open in a new file browser window",
+    storageClear: "Clear cache",
+    storageClearConfirm:
+      "Delete cached thumbnails and other regenerable files? Your settings and data are kept. The cache rebuilds as you browse.",
+    storageCleared: "Cache cleared",
+    storageClearError: (error: string) => `Couldn't clear the cache: ${error}`,
     folderHandler: "Default file manager",
     folderHandlerHint:
       "Open folders from Terminal, other apps and links in this app instead of Finder. Does not change double-clicking folders inside Finder.",

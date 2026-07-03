@@ -290,6 +290,14 @@
   gap: var(--space-4);
 }
 
+/* Size + (for the cache row) its clear button, kept together at the row's trailing edge. */
+.settings_modal .settings_storage_meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
 /* Absolute path rendered as a link: clicking opens a new file browser window rooted there. */
 .settings_modal .settings_storage_path {
   padding: var(--space-0);

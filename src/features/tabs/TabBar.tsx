@@ -68,26 +68,28 @@ const TabBar = () => {
               })
             : null;
       }
-      const dx = clampDx(geomRef.current, index, mx);
+      // Enter the drag only once the pointer has actually travelled past the threshold. Below it
+      // nothing moves, so a plain click never lifts the tab into a drag — onClick still selects it.
+      // We gate on the real movement here rather than on use-gesture's own `threshold`/`filterTaps`,
+      // because on the very first gesture after launch those aren't enforced yet and the handler
+      // would otherwise fire on the initial press and lift the tab on a single click.
+      const moved = Math.abs(mx) > TAB_DRAG_THRESHOLD_PX;
       if (last) {
-        reorderTab(index, dropIndex(geomRef.current, index, mx));
+        if (moved) {
+          reorderTab(index, dropIndex(geomRef.current, index, mx));
+          setSnapping(true);
+        }
         geomRef.current = null;
         setDrag(null);
-        setSnapping(true);
-      } else {
+      } else if (moved) {
+        const dx = clampDx(geomRef.current, index, mx);
         setDrag({ index, dx, mx, geom: geomRef.current });
       }
     },
-    // filterTaps keeps a plain click firing onClick (select) instead of being read as a 0px drag;
-    // threshold means a slightly jittery click (a few px of pointer travel) still counts as a click,
-    // and a reorder only begins once the pointer moves past TAB_DRAG_THRESHOLD_PX.
-    // keys: false disables @use-gesture's built-in keyboard dragging (arrow keys on a focused tab).
-    {
-      axis: "x",
-      filterTaps: true,
-      threshold: TAB_DRAG_THRESHOLD_PX,
-      pointer: { keys: false },
-    },
+    // filterTaps keeps a plain click firing onClick (select) instead of a 0px drag; keys:false
+    // disables @use-gesture's arrow-key dragging on the focused tab. The click/drag split itself is
+    // enforced by the movement gate above (TAB_DRAG_THRESHOLD_PX).
+    { axis: "x", filterTaps: true, pointer: { keys: false } },
   );
 
   // Re-enable transitions the frame after a drop, once the no-transition commit has painted.
