@@ -7,11 +7,8 @@ import { useModal } from "@/shared/providers/ModalProvider";
 
 import "@/styles/components/Dialog.css";
 
+import { FOCUSABLE_SELECTOR } from "./constants";
 import type { DialogProps } from "./types";
-
-// Tabbable elements inside the dialog (skips those explicitly removed from the tab order).
-const FOCUSABLE_SELECTOR =
-  'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 const Dialog = ({
   visible,
