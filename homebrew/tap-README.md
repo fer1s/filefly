@@ -57,8 +57,8 @@ brew uninstall --zap --cask sito-file-browser  # also remove app settings & cach
 
 ## What's in this tap
 
-| Cask | Description |
-|------|-------------|
+| Cask                | Description                                |
+| ------------------- | ------------------------------------------ |
 | `sito-file-browser` | The Sito File Browser app + the `sfb` CLI. |
 
 ---

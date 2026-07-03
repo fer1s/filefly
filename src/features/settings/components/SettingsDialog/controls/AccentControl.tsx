@@ -11,7 +11,11 @@ import type { CustomControlProps } from "../../../schema";
 // preview. The active swatch carries a ring; the CSS derives each swatch fill from its --swatch
 // RGB triple (mirrors theme.css) so the dots match the live tokens.
 const AccentControl = ({ settings, update }: CustomControlProps) => (
-  <div className="settings_accents" role="radiogroup" aria-label={t.settings.accent}>
+  <div
+    className="settings_accents"
+    role="radiogroup"
+    aria-label={t.settings.accent}
+  >
     {ACCENTS.map(({ value, rgb }) => {
       const active = settings.accentColor === value;
       const name = t.settings.accents[value];

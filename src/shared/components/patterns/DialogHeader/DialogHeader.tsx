@@ -17,7 +17,11 @@ const DialogHeader = ({ title, titleId, onClose }: DialogHeaderProps) => {
 
   return (
     <div
-      className={classNames("panel_header", mac && "mac", dragBind && "draggable")}
+      className={classNames(
+        "panel_header",
+        mac && "mac",
+        dragBind && "draggable",
+      )}
       {...(dragBind ? dragBind() : {})}
     >
       {mac && <CloseButton onClose={onClose} />}

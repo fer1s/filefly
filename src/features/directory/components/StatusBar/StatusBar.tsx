@@ -1,4 +1,7 @@
-import { faSpinner, faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
+import {
+  faSpinner,
+  faMagnifyingGlass,
+} from "@fortawesome/free-solid-svg-icons";
 
 import Icon from "@/shared/components/elements/Icon";
 import { t } from "@/lang";

@@ -115,7 +115,8 @@ export const usePanelGeometry = ({
       const vh = window.innerHeight;
       let { left, top, width, height } = base;
       if (dir.r) width = clampNum(base.width + mx, PANEL_MIN_W, vw - base.left);
-      if (dir.b) height = clampNum(base.height + my, PANEL_MIN_H, vh - base.top);
+      if (dir.b)
+        height = clampNum(base.height + my, PANEL_MIN_H, vh - base.top);
       if (dir.l) {
         const right = base.left + base.width;
         left = clampNum(base.left + mx, 0, right - PANEL_MIN_W);

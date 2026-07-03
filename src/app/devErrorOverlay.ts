@@ -47,7 +47,9 @@ const render = (): void => {
   title.style.fontSize = "14px";
   title.textContent =
     `⚠ Dev error${errors.length > 1 ? ` (${errors.length})` : ""}` +
-    (recoverable ? "  ·  Esc / ⇧⌘E to close" : "  ·  app crashed — reload to recover");
+    (recoverable
+      ? "  ·  Esc / ⇧⌘E to close"
+      : "  ·  app crashed — reload to recover");
   header.appendChild(title);
 
   if (recoverable) {

@@ -56,7 +56,9 @@ const StorageBelow = () => {
       {locations.map((location) => (
         <div key={location.kind} className="settings_storage_row">
           <span className="settings_row_text">
-            <span className="settings_row_label">{kindLabel(location.kind)}</span>
+            <span className="settings_row_label">
+              {kindLabel(location.kind)}
+            </span>
             <button
               type="button"
               className="settings_storage_path"

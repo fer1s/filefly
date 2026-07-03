@@ -96,10 +96,10 @@ it is never exposed on the network.
 To keep `sfb` useful for automation **without** exposing the app's internals in production, the
 channel is split into two tiers:
 
-| Tier | Actions | Available |
-| --- | --- | --- |
-| **Automation** (AI-friendly) | all `sfb` filesystem commands (`list`, `copy`, `move`, `trash`, `tags`, …), plus `ui-state`, `ui-navigate`, `ui-open-window` | **Always** |
-| **Introspection** (debug-only) | `ui-probe` — dumps live DOM/drag internals for debugging | **Debug mode only** |
+| Tier                           | Actions                                                                                                                      | Available           |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| **Automation** (AI-friendly)   | all `sfb` filesystem commands (`list`, `copy`, `move`, `trash`, `tags`, …), plus `ui-state`, `ui-navigate`, `ui-open-window` | **Always**          |
+| **Introspection** (debug-only) | `ui-probe` — dumps live DOM/drag internals for debugging                                                                     | **Debug mode only** |
 
 **Debug mode** is on automatically in dev builds (`tauri dev`). In a release build it is **off by
 default** and must be opted into at launch:

@@ -53,9 +53,8 @@ export const previewSnapshot = () => {
     return { open: false };
 
   const content = document.querySelector<HTMLElement>(".preview_content");
-  const editor = document.querySelector<HTMLTextAreaElement>(
-    ".preview_md_editor",
-  );
+  const editor =
+    document.querySelector<HTMLTextAreaElement>(".preview_md_editor");
   const findBar = document.querySelector<HTMLElement>(".preview_find");
   const findInput = findBar?.querySelector<HTMLInputElement>(
     ".preview_find_input",
@@ -74,7 +73,9 @@ export const previewSnapshot = () => {
       rect: rectOf(m),
       // Fully within the content's scroll viewport (top & bottom both visible).
       inView:
-        !!contentRect && r.top >= contentRect.top && r.bottom <= contentRect.bottom,
+        !!contentRect &&
+        r.top >= contentRect.top &&
+        r.bottom <= contentRect.bottom,
     };
   });
   const activeIndex = marks.findIndex((m) => m.active);

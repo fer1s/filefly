@@ -90,7 +90,7 @@ const Preview = ({
   const isMarkdown = fileType === MARKDOWN_FORMAT;
   // Basename (name.ext) for the header title, e.g. "Preview - notes.md".
   const fileName = filePath.split("/").pop() ?? "";
-  // Big media (image/video/pdf) opens near-fullscreen; everything else takes the ~45% side 
+  // Big media (image/video/pdf) opens near-fullscreen; everything else takes the ~45% side
   const isBig =
     isImage || VIDEO_FORMATS.includes(fileType) || fileType === PDF_FORMAT;
 
@@ -358,7 +358,10 @@ const Preview = ({
                   autoPlay
                 />
               ) : fileType === PDF_FORMAT ? (
-                <iframe src={convertFileSrc(filePath)} title={t.common.preview} />
+                <iframe
+                  src={convertFileSrc(filePath)}
+                  title={t.common.preview}
+                />
               ) : (
                 <div className="preview_file_not_supported">
                   <h3>{t.directory.fileTypeNotSupported}</h3>
