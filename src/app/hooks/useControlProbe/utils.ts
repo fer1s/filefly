@@ -82,6 +82,10 @@ export const previewSnapshot = () => {
   return {
     open: true,
     mode: editor ? "edit" : "preview",
+    // Floating-panel geometry: viewport rect + whether it's in the maximized (viewport-filling)
+    // layout — for debugging drag/resize/maximize.
+    maximized: container.classList.contains("maximized"),
+    panelRect: rectOf(container),
     scroll: content
       ? {
           top: content.scrollTop,

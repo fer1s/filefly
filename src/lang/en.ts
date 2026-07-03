@@ -12,6 +12,8 @@ export const en = {
     save: "Save",
     edit: "Edit",
     preview: "Preview",
+    previewTitle: (name: string) => `Preview - ${name}`,
+    editTitle: (name: string) => `Edit - ${name}`,
     previous: "Previous",
     next: "Next",
     directory: "Directory",

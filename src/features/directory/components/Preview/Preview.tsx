@@ -106,6 +106,19 @@ const highlightMatches = (root: HTMLElement, query: string): number => {
   return count;
 };
 
+// Floating-panel geometry (px, viewport coords). The panel is position:fixed and driven entirely
+// by this — drag moves left/top, the resize handles change size, maximize fills the viewport.
+type Geom = { left: number; top: number; width: number; height: number };
+
+// Inset kept between the panel and the viewport edges (matches the old --space-10 margin). Also the
+// gap left around a maximized panel so it stays "inside our screen", not edge-to-edge.
+const PANEL_MARGIN = 40;
+const PANEL_MIN_W = 320;
+const PANEL_MIN_H = 220;
+
+const clampNum = (v: number, lo: number, hi: number) =>
+  Math.max(lo, Math.min(hi, v));
+
 const Preview = ({
   fileType,
   filePath,
@@ -129,20 +142,78 @@ const Preview = ({
 
   const mac = isMacPlatform();
   const isImage = IMAGE_FORMATS.includes(fileType);
+  // Basename (name.ext) for the header title, e.g. "Preview - notes.md".
+  const fileName = filePath.split("/").pop() ?? "";
+  // Big media (image/video/pdf) opens near-fullscreen; everything else takes the ~45% side panel.
+  const isBig =
+    isImage ||
+    VIDEO_FORMATS.includes(fileType) ||
+    fileType === PDF_FORMAT;
 
-  // Drag-by-header: move the floating preview around the viewport by grabbing its title bar. The
-  // offset composes with the container's show transform via CSS vars (see Preview.css).
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-  const [dragging, setDragging] = useState(false);
-  // Recentre each time the preview (re)opens — derived from the prop by comparing to state during
-  // render (no ref/effect, to satisfy the strict hooks lint).
+  // Default resting geometry for the current file type (anchored top-right like the old layout).
+  const defaultGeom = useCallback((): Geom => {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const width = isBig
+      ? vw - 2 * PANEL_MARGIN
+      : Math.round(vw * 0.45);
+    const height = vh - 2 * PANEL_MARGIN;
+    return {
+      left: isBig ? PANEL_MARGIN : vw - PANEL_MARGIN - width,
+      top: PANEL_MARGIN,
+      width,
+      height,
+    };
+  }, [isBig]);
+
+  // The panel is fully driven by geometry state: drag moves it, the resize handles size it, and
+  // double-clicking the header toggles a maximized (viewport-filling, inset) layout.
+  const [geom, setGeom] = useState<Geom>(defaultGeom);
+  const [maximized, setMaximized] = useState(false);
+  const [interacting, setInteracting] = useState(false);
+  const restoreGeom = useRef<Geom | null>(null);
+
+  // Recentre/reset each time the preview (re)opens — derived from the prop by comparing to state
+  // during render (no ref/effect, to satisfy the strict hooks lint).
   const [wasVisible, setWasVisible] = useState(previewVisible);
   if (previewVisible !== wasVisible) {
     setWasVisible(previewVisible);
-    if (previewVisible) setDragOffset({ x: 0, y: 0 });
+    if (previewVisible) {
+      setGeom(defaultGeom());
+      setMaximized(false);
+    }
   }
+
+  // Keep the panel inside the viewport when the window resizes (refit if maximized, else clamp).
+  useEffect(() => {
+    const onResize = () => {
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      setGeom((g) =>
+        maximized
+          ? {
+              left: PANEL_MARGIN,
+              top: PANEL_MARGIN,
+              width: vw - 2 * PANEL_MARGIN,
+              height: vh - 2 * PANEL_MARGIN,
+            }
+          : {
+              width: Math.min(g.width, vw - 2 * PANEL_MARGIN),
+              height: Math.min(g.height, vh - 2 * PANEL_MARGIN),
+              left: clampNum(g.left, 0, Math.max(0, vw - g.width)),
+              top: clampNum(g.top, 0, Math.max(0, vh - g.height)),
+            },
+      );
+    };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [maximized]);
+
+  // Drag-by-header: move the panel (clamped to the viewport) by grabbing its title bar.
   const dragBind = useDrag(
-    ({ event, movement: [mx, my], first, last, memo, cancel }) => {
+    ({ event, movement: [mx, my], first, last, memo, cancel, tap }) => {
+      // A click/tap (incl. the two that make a double-click) isn't a move — do nothing.
+      if (tap) return memo;
       if (
         first &&
         (event.target as HTMLElement).closest(
@@ -152,12 +223,81 @@ const Preview = ({
         cancel();
         return;
       }
-      const base = (first ? dragOffset : memo) as { x: number; y: number };
-      setDragOffset({ x: base.x + mx, y: base.y + my });
-      setDragging(!last);
+      // memo is unset on the first move (and after a cancel/tap); fall back to the live geometry so
+      // a stray non-first event never dereferences undefined and crashes the view.
+      const base = (first || !memo ? { left: geom.left, top: geom.top } : memo) as {
+        left: number;
+        top: number;
+      };
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      setGeom((g) => ({
+        ...g,
+        left: clampNum(base.left + mx, 0, Math.max(0, vw - g.width)),
+        top: clampNum(base.top + my, 0, Math.max(0, vh - g.height)),
+      }));
+      setInteracting(!last);
+      // Drop any stray text selection the drag started before the no-select class took effect.
+      window.getSelection?.()?.removeAllRanges();
       return base;
     },
     { filterTaps: true, pointer: { keys: false } },
+  );
+
+  // Resize handles: one binder, each handle passes which edges it drives via args.
+  const resizeBind = useDrag(
+    ({ args, movement: [mx, my], first, last, memo, tap }) => {
+      if (tap) return memo;
+      const dir = args[0] as { l?: boolean; r?: boolean; t?: boolean; b?: boolean };
+      const base = (first || !memo ? geom : memo) as Geom;
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      let { left, top, width, height } = base;
+      if (dir.r) width = clampNum(base.width + mx, PANEL_MIN_W, vw - base.left);
+      if (dir.b) height = clampNum(base.height + my, PANEL_MIN_H, vh - base.top);
+      if (dir.l) {
+        const right = base.left + base.width;
+        left = clampNum(base.left + mx, 0, right - PANEL_MIN_W);
+        width = right - left;
+      }
+      if (dir.t) {
+        const bottom = base.top + base.height;
+        top = clampNum(base.top + my, 0, bottom - PANEL_MIN_H);
+        height = bottom - top;
+      }
+      setGeom({ left, top, width, height });
+      setInteracting(!last);
+      setMaximized(false);
+      // Drop any stray text selection the resize started before the no-select class took effect.
+      window.getSelection?.()?.removeAllRanges();
+      return base;
+    },
+    { filterTaps: true, pointer: { keys: false } },
+  );
+
+  // Double-click the header → toggle a maximized layout that fills the viewport (minus the inset),
+  // storing the prior geometry to restore on the next toggle.
+  const toggleMaximize = useCallback(
+    (e: React.MouseEvent) => {
+      if ((e.target as HTMLElement).closest("button, a, input, .mac_close"))
+        return;
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      if (maximized) {
+        setGeom(restoreGeom.current ?? defaultGeom());
+        setMaximized(false);
+      } else {
+        restoreGeom.current = geom;
+        setGeom({
+          left: PANEL_MARGIN,
+          top: PANEL_MARGIN,
+          width: vw - 2 * PANEL_MARGIN,
+          height: vh - 2 * PANEL_MARGIN,
+        });
+        setMaximized(true);
+      }
+    },
+    [maximized, geom, defaultGeom],
   );
   // Image zoom lives here (not in ZoomableImage) so its control sits in the shared bottom bar.
   const {
@@ -511,30 +651,33 @@ const Preview = ({
           className={classNames(
             "preview_container",
             "shadow",
-            (IMAGE_FORMATS.includes(fileType) ||
-              VIDEO_FORMATS.includes(fileType) ||
-              fileType === PDF_FORMAT) &&
-              "image",
+            isBig && "image",
             previewVisible && "visible",
-            dragging && "dragging",
+            interacting && "interacting",
+            maximized && "maximized",
           )}
           style={
             {
-              "--preview-drag-x": `${dragOffset.x}px`,
-              "--preview-drag-y": `${dragOffset.y}px`,
+              left: `${geom.left}px`,
+              top: `${geom.top}px`,
+              width: `${geom.width}px`,
+              height: `${geom.height}px`,
+              right: "auto",
+              margin: 0,
             } as CSSProperties
           }
         >
           <div
             className={classNames("preview_header", "draggable", mac && "mac")}
+            onDoubleClick={toggleMaximize}
             {...dragBind()}
           >
             {mac && <CloseButton onClose={requestClose} />}
             <h4>
               {dirty && <span className="preview_dirty_dot" aria-hidden />}
               {isMarkdown && markdownMode === MARKDOWN_MODE.EDIT
-                ? t.common.edit
-                : t.common.preview}
+                ? t.common.editTitle(fileName)
+                : t.common.previewTitle(fileName)}
             </h4>
             {!mac && <CloseButton onClose={requestClose} />}
           </div>
@@ -710,6 +853,28 @@ const Preview = ({
               aria-label={t.contextMenu.delete}
             />
           </div>
+
+          {/* Resize handles: edges + corners. Each passes the edges it drives to resizeBind. */}
+          <div className="preview_resize n" {...resizeBind({ t: true })} />
+          <div className="preview_resize s" {...resizeBind({ b: true })} />
+          <div className="preview_resize e" {...resizeBind({ r: true })} />
+          <div className="preview_resize w" {...resizeBind({ l: true })} />
+          <div
+            className="preview_resize ne"
+            {...resizeBind({ t: true, r: true })}
+          />
+          <div
+            className="preview_resize nw"
+            {...resizeBind({ t: true, l: true })}
+          />
+          <div
+            className="preview_resize se"
+            {...resizeBind({ b: true, r: true })}
+          />
+          <div
+            className="preview_resize sw"
+            {...resizeBind({ b: true, l: true })}
+          />
         </div>
       )}
 

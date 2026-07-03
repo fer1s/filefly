@@ -38,9 +38,6 @@
   align-items: flex-start;
   overflow: hidden;
   opacity: 0;
-  /* Drag offset (set inline by Preview.tsx); zero until the user moves the panel. */
-  --preview-drag-x: 0px;
-  --preview-drag-y: 0px;
   transform: translateY(100%) scale(0.6);
   visibility: hidden;
   pointer-events: none;
@@ -52,15 +49,91 @@
 
 .preview_container.visible {
   opacity: 1;
-  transform: translate(var(--preview-drag-x), var(--preview-drag-y)) scale(1);
+  transform: translateY(0) scale(1);
   visibility: visible;
   pointer-events: auto;
   transition-delay: 0s;
 }
 
-/* While dragging, drop the transform transition so the panel tracks the cursor 1:1. */
-.preview_container.dragging {
-  transition: opacity 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+/* Suppress text selection while dragging/resizing the panel. Needs !important + descendants to beat
+   the per-element `user-select: text` on the rendered markdown. Position (left/top/width/height) is
+   driven by inline style and isn't transitioned, so drag/resize/maximize track the pointer 1:1. */
+.preview_container.interacting,
+.preview_container.interacting * {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+}
+
+/* Resize handles: thin edge strips + slightly larger corner squares, laid over the panel edges. */
+.preview_container .preview_resize {
+  position: absolute;
+  z-index: 5;
+  touch-action: none;
+}
+
+.preview_container .preview_resize.n {
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--space-1-5);
+  cursor: ns-resize;
+}
+
+.preview_container .preview_resize.s {
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: var(--space-1-5);
+  cursor: ns-resize;
+}
+
+.preview_container .preview_resize.e {
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: var(--space-1-5);
+  cursor: ew-resize;
+}
+
+.preview_container .preview_resize.w {
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: var(--space-1-5);
+  cursor: ew-resize;
+}
+
+.preview_container .preview_resize.ne,
+.preview_container .preview_resize.nw,
+.preview_container .preview_resize.se,
+.preview_container .preview_resize.sw {
+  z-index: 6;
+  width: var(--space-3);
+  height: var(--space-3);
+}
+
+.preview_container .preview_resize.ne {
+  top: 0;
+  right: 0;
+  cursor: nesw-resize;
+}
+
+.preview_container .preview_resize.nw {
+  top: 0;
+  left: 0;
+  cursor: nwse-resize;
+}
+
+.preview_container .preview_resize.se {
+  bottom: 0;
+  right: 0;
+  cursor: nwse-resize;
+}
+
+.preview_container .preview_resize.sw {
+  bottom: 0;
+  left: 0;
+  cursor: nesw-resize;
 }
 
 .preview_container .preview_header,
@@ -83,7 +156,7 @@
   touch-action: none;
 }
 
-.preview_container.dragging .preview_header.draggable {
+.preview_container.interacting .preview_header.draggable {
   cursor: grabbing;
 }
 
