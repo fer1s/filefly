@@ -8,12 +8,11 @@ import {
 import { notify, TOAST_TYPE } from "@/shared/toast";
 import { t } from "@/lang";
 
-import type { CustomControlProps } from "../../../schema";
-
 // Toggle for making this app macOS's default folder handler. This is OS state (Launch Services),
 // not a settings.toml field, so the control reads it live on mount and writes it directly — like
 // the Storage panel, it binds to no AppSettings key. Disabled until the initial read resolves.
-const FolderHandlerControl = (_props: CustomControlProps) => {
+// Takes no props (the schema renders it with CustomControlProps, which it ignores).
+const FolderHandlerControl = () => {
   const [enabled, setEnabled] = useState<boolean | null>(null);
 
   useEffect(() => {

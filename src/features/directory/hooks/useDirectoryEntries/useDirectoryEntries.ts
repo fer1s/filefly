@@ -30,6 +30,9 @@ export const useDirectoryEntries = (view: ViewMode) => {
   // searching; the raw folder listing is shown unfiltered.
   const filteredResults = useMemo(() => {
     if (!searchActive || !hasActiveFilters(filters)) return results;
+    // Reading the clock here is intentional: the date-range filter buckets relative to "now" at the
+    // moment filtering runs. applyFilters stays pure (takes the timestamp) for testability.
+    // eslint-disable-next-line react-hooks/purity
     return applyFilters(results, filters, path, Math.floor(Date.now() / 1000));
   }, [searchActive, results, filters, path]);
 

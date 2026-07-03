@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 
 // A debounced wrapper around `callback`:
 //   schedule(...args) — run it after `delay` ms of quiet (each call resets the timer);
@@ -10,8 +10,12 @@ export const useDebouncedCallback = <A extends unknown[]>(
   callback: (...args: A) => void,
   delay: number,
 ) => {
+  // Keep the latest callback without re-creating schedule/flush. Synced in a layout effect (before
+  // paint) so a fire between render and commit never uses a stale callback.
   const callbackRef = useRef(callback);
-  callbackRef.current = callback;
+  useLayoutEffect(() => {
+    callbackRef.current = callback;
+  });
   const timer = useRef<number | null>(null);
 
   const clear = useCallback(() => {

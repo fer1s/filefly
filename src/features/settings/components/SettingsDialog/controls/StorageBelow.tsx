@@ -8,8 +8,6 @@ import {
 import { formatBytes } from "@/shared/utils";
 import { t } from "@/lang";
 
-import type { CustomControlProps } from "../../../schema";
-
 // Map a backend storage `kind` to its localized label. Falls back to the raw id for any future
 // kind the dictionary doesn't know yet.
 const kindLabel = (kind: string): string => {
@@ -22,7 +20,8 @@ const kindLabel = (kind: string): string => {
 // location (config, cache) showing its size and absolute path. Clicking a path opens a new file
 // browser window rooted there (openPathInNewWindow). Sizes are summed in Rust off the UI thread, so
 // the panel shows a loading hint until the walk resolves. Fetched when the section first renders.
-const StorageBelow = (_props: CustomControlProps) => {
+// Takes no props (the schema renders it with CustomControlProps, which it ignores).
+const StorageBelow = () => {
   const [locations, setLocations] = useState<AppStorageLocation[] | null>(null);
 
   useEffect(() => {

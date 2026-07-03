@@ -1,4 +1,37 @@
-import type { MouseEvent } from "react";
+import type { MouseEvent, KeyboardEvent, RefObject } from "react";
+import type { useDrag } from "@use-gesture/react";
+
+// Floating-panel geometry (px, viewport coords). The panel is position:fixed and driven entirely by
+// this — drag moves left/top, the resize handles change size, maximize fills the viewport.
+export type Geom = { left: number; top: number; width: number; height: number };
+
+// Which edges a resize handle drives.
+export type ResizeDir = { l?: boolean; r?: boolean; t?: boolean; b?: boolean };
+
+// A loaded markdown document: raw `source` (last saved on disk), the editable `draft`, and the
+// rendered `html` of the draft shown in preview mode.
+export type MarkdownDoc = {
+  path: string;
+  source: string;
+  draft: string;
+  html: string;
+};
+
+export interface PreviewFindBarProps {
+  inputRef: RefObject<HTMLInputElement | null>;
+  query: string;
+  matchCount: number;
+  matchIndex: number;
+  onQueryChange: (value: string) => void;
+  onKeyDown: (e: KeyboardEvent) => void;
+  onPrev: () => void;
+  onNext: () => void;
+  onClose: () => void;
+}
+
+export interface PreviewResizeHandlesProps {
+  bind: ReturnType<typeof useDrag>;
+}
 
 export interface PreviewProps {
   fileType: string;
