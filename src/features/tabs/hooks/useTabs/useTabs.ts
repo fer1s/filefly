@@ -75,7 +75,10 @@ export const useTabs = () => {
   // the new tab there instead (e.g. the sidebar's "Open in new tab"). Panel state is inherited.
   const newTab = useCallback(
     (nextPath?: string) => {
-      const tab = makeTab(nextPath ?? path, infoPanelOpen);
+      // Guard against being wired straight to an event handler (onClick / useHotkey), which would
+      // otherwise pass the DOM event as `nextPath` and make the tab's path a non-string → crash.
+      const start = typeof nextPath === "string" ? nextPath : path;
+      const tab = makeTab(start, infoPanelOpen);
       setTabs((prev) => [...prev, tab]);
       setActiveTabId(tab.id);
     },
