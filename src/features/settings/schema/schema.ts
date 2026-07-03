@@ -86,6 +86,13 @@ export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
     label: () => t.settings.previewImagesInApp,
     hint: () => t.settings.previewImagesInAppHint,
   },
+  {
+    kind: SETTING_KIND.TOGGLE,
+    key: "confirmExportOverwrite",
+    section: SETTINGS_SECTION.FILES,
+    label: () => t.settings.confirmExportOverwrite,
+    hint: () => t.settings.confirmExportOverwriteHint,
+  },
 
   // ── Appearance ── everything visual (theme, accent, zoom, dates, sidebar).
   {
@@ -109,8 +116,7 @@ export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
     Control: AccentControl,
     isModified: (settings, defaults) =>
       settings.accentColor !== defaults.accentColor,
-    reset: (update, defaults) =>
-      update({ accentColor: defaults.accentColor }),
+    reset: (update, defaults) => update({ accentColor: defaults.accentColor }),
   },
   {
     kind: SETTING_KIND.SELECT,

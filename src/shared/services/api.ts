@@ -49,6 +49,9 @@ export type AppSettings = {
   useCustomFolderPicker: boolean;
   // Open images in the app's built-in preview (on Enter/double-click) instead of the OS default app.
   previewImagesInApp: boolean;
+  // On export, ask before replacing an existing settings.toml. When off (default), a unique
+  // filename is used instead so nothing is overwritten silently.
+  confirmExportOverwrite: boolean;
 };
 
 // Load the persisted app settings (falls back to defaults when settings.toml is absent).
@@ -58,6 +61,32 @@ export const getSettings = async (): Promise<AppSettings> =>
 // Persist the whole app-settings struct to settings.toml.
 export const setSettings = async (settings: AppSettings): Promise<void> =>
   await invoke("set_settings", { settings });
+
+// Read + parse a settings.toml the user chose (missing keys fall back to defaults). Returns the
+// parsed settings for the caller to apply; does not persist. Rejects on read/parse failure.
+export const importSettings = async (path: string): Promise<AppSettings> =>
+  (await invoke("import_settings", { path })) as AppSettings;
+
+// Result of an export attempt: `path` is the file written (null when it stopped to ask about an
+// overwrite); `existed` is true when a settings.toml was already present and left untouched.
+export type ExportResult = { path: string | null; existed: boolean };
+
+// Write the given settings as a settings.toml into `dir`. With `unique`, writes to the first free
+// settings[-N].toml (never overwrites). Otherwise targets settings.toml: if it exists and
+// `overwrite` is false, nothing is written and `existed` is true (so the caller can confirm and
+// retry with `overwrite: true`).
+export const exportSettings = async (
+  dir: string,
+  settings: AppSettings,
+  unique: boolean,
+  overwrite: boolean,
+): Promise<ExportResult> =>
+  (await invoke("export_settings", {
+    dir,
+    settings,
+    unique,
+    overwrite,
+  })) as ExportResult;
 
 // Per-group sidebar customization, persisted in sidebar.toml (keyed by stable group id). Mirrors
 // the SidebarGroup struct in functions/sidebar.rs. `name` is absent until the user renames a group.
@@ -112,6 +141,22 @@ export const deleteSidebarGroup = async (id: string): Promise<void> =>
 // Open the native folder picker; resolves to the chosen directory path, or null if cancelled.
 export const pickFolder = async (): Promise<string | null> => {
   const result = await openDialog({ directory: true, multiple: false });
+  return typeof result === "string" ? result : null;
+};
+
+// Open the native file picker; resolves to the chosen file path, or null if cancelled. When
+// `extensions` is given, the dialog restricts selection to those extensions.
+export const pickFile = async (
+  extensions?: readonly string[],
+): Promise<string | null> => {
+  const result = await openDialog({
+    directory: false,
+    multiple: false,
+    filters:
+      extensions && extensions.length > 0
+        ? [{ name: "Files", extensions: [...extensions] }]
+        : undefined,
+  });
   return typeof result === "string" ? result : null;
 };
 
@@ -421,6 +466,5 @@ export const isDefaultFolderHandler = async (): Promise<boolean> =>
   (await invoke("is_default_folder_handler")) as boolean;
 
 // Make this app the default folder handler (enable) or restore Finder (disable). macOS only.
-export const setDefaultFolderHandler = async (
-  enable: boolean,
-): Promise<void> => await invoke("set_default_folder_handler", { enable });
+export const setDefaultFolderHandler = async (enable: boolean): Promise<void> =>
+  await invoke("set_default_folder_handler", { enable });

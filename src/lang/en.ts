@@ -246,12 +246,29 @@ export const en = {
     documents: "Documents",
     downloads: "Downloads",
   },
+  filePicker: {
+    title: "Choose file",
+    choose: "Choose",
+    empty: "No files here",
+  },
   settings: {
     title: "Settings",
     search: "Search settings",
     searchEmpty: (query: string) => `No settings match "${query}"`,
     reset: "Reset to default",
     modified: "Modified",
+    importSettings: "Import settings",
+    exportSettings: "Export settings",
+    imported: "Settings imported",
+    exported: (path: string) => `Settings exported to ${path}`,
+    importError: (reason: string) => `Could not import settings: ${reason}`,
+    exportError: (reason: string) => `Could not export settings: ${reason}`,
+    confirmExportOverwrite: "Confirm before overwriting on export",
+    confirmExportOverwriteHint:
+      "When exporting settings, ask before replacing an existing settings.toml. When off, a unique filename is used instead.",
+    exportExists:
+      "A settings.toml already exists in this folder. Overwrite it?",
+    overwrite: "Overwrite",
     sections: {
       general: "General",
       appearance: "Appearance",

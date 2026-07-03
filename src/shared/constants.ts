@@ -169,6 +169,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   dragToExternalApps: true,
   useCustomFolderPicker: false,
   previewImagesInApp: false,
+  confirmExportOverwrite: false,
 };
 
 // DOM KeyboardEvent.key names used in non-configurable key handling (navigation, input

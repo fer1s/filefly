@@ -77,6 +77,8 @@ fn main() {
             functions::context_menu::get_context_menu,
             functions::settings::get_settings,
             functions::settings::set_settings,
+            functions::settings::import_settings,
+            functions::settings::export_settings,
             functions::storage::get_app_storage,
             functions::control::set_ui_state,
             functions::handler::is_default_folder_handler,

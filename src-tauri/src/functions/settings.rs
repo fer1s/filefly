@@ -53,6 +53,9 @@ pub struct AppSettings {
     // Open images in the app's built-in preview (on Enter/double-click) instead of the OS default
     // app (macOS Preview).
     preview_images_in_app: bool,
+    // On export, ask before replacing an existing settings.toml. When off (default), a unique
+    // filename is used instead so nothing is overwritten silently.
+    confirm_export_overwrite: bool,
 }
 
 // Must mirror the frontend defaults (shared/constants.ts).
@@ -79,6 +82,7 @@ impl Default for AppSettings {
             drag_to_external_apps: true,
             use_custom_folder_picker: false,
             preview_images_in_app: false,
+            confirm_export_overwrite: false,
         }
     }
 }
@@ -109,4 +113,69 @@ pub fn set_settings(app: AppHandle, settings: AppSettings) -> Result<(), String>
         std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
     }
     std::fs::write(target, serialized).map_err(|e| e.to_string())
+}
+
+// Read and parse a settings.toml the user chose (via the file picker), filling any missing keys
+// from Default so an older/partial file still loads. Does NOT persist: the frontend applies the
+// returned settings through its normal update flow, which writes settings.toml. Errors if the
+// file can't be read or isn't valid TOML.
+#[tauri::command]
+pub fn import_settings(path: String) -> Result<AppSettings, String> {
+    let content = std::fs::read_to_string(&path).map_err(|e| e.to_string())?;
+    toml::from_str(&content).map_err(|e| e.to_string())
+}
+
+// Outcome of an export attempt. `path` is the file written (None when we stopped to ask about an
+// overwrite); `existed` is true when a settings.toml was already there and we didn't touch it.
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ExportResult {
+    path: Option<String>,
+    existed: bool,
+}
+
+// First non-colliding `settings.toml` / `settings-N.toml` in `dir`, so auto-export never
+// overwrites an existing file.
+fn unique_export_path(dir: &str) -> PathBuf {
+    let base = PathBuf::from(dir);
+    let mut candidate = base.join("settings.toml");
+    let mut n = 1;
+    while candidate.exists() {
+        candidate = base.join(format!("settings-{n}.toml"));
+        n += 1;
+    }
+    candidate
+}
+
+// Write the given settings as a settings.toml into `dir`. Behaviour:
+//   unique = true      → write to the first free settings[-N].toml (never overwrites).
+//   unique = false     → target is settings.toml; if it exists and overwrite = false, write
+//                        nothing and report `existed` so the caller can confirm, then call again
+//                        with overwrite = true.
+// Returns the path written (or None when it stopped to ask). Used by the settings dialog's Export.
+#[tauri::command]
+pub fn export_settings(
+    dir: String,
+    settings: AppSettings,
+    unique: bool,
+    overwrite: bool,
+) -> Result<ExportResult, String> {
+    let serialized = toml::to_string_pretty(&settings).map_err(|e| e.to_string())?;
+    let target = if unique {
+        unique_export_path(&dir)
+    } else {
+        let base = PathBuf::from(&dir).join("settings.toml");
+        if base.exists() && !overwrite {
+            return Ok(ExportResult {
+                path: None,
+                existed: true,
+            });
+        }
+        base
+    };
+    std::fs::write(&target, serialized).map_err(|e| e.to_string())?;
+    Ok(ExportResult {
+        path: Some(target.to_string_lossy().to_string()),
+        existed: false,
+    })
 }

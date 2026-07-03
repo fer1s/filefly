@@ -13,7 +13,7 @@ import {
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 
 // Wired to the dialog's aria-labelledby (points at the header title).
-export const FOLDER_PICKER_TITLE_ID = "folder-picker-title";
+export const PATH_PICKER_TITLE_ID = "path-picker-title";
 
 // macOS firmlink/internal volumes (the APFS data volume, Preboot, VM…) mount under here. They share
 // the boot volume's name ("Macintosh HD") and aren't user-browsable, so hide them from Locations.

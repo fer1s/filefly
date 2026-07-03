@@ -12,6 +12,7 @@ import { t } from "@/lang";
 import {
   faChevronRight,
   faFolder,
+  faFile,
   faHardDrive,
   faArrowLeft,
   faFolderPlus,
@@ -20,34 +21,40 @@ import {
 import "@/styles/components/FolderPicker.css";
 
 import {
-  FOLDER_PICKER_TITLE_ID,
+  PATH_PICKER_TITLE_ID,
   FAVORITE_ORDER,
   FAVORITE_ICON,
 } from "./constants";
 import {
   crumbsFor,
+  loadEntries,
   loadFavorites,
-  loadFolders,
   loadLocations,
   resolveHome,
 } from "./utils";
+import { PICK_KIND } from "./types";
 import type {
-  FolderPickerDialogProps,
+  PathPickerDialogProps,
   PickerEntry,
   Favorite,
   Location,
 } from "./types";
 
-// The app's own folder picker, styled after the macOS Finder open panel: a Favorites/Locations
-// source list on the left and the current folder's sub-folders on the right. Backed by the same
-// readDirectory/getVolumes IPC as the main browser.
-const FolderPickerDialog = ({
+// The app's own path picker, styled after the macOS Finder open panel: a Favorites/Locations
+// source list on the left and the current folder's contents on the right. Config-driven so it
+// serves both the folder picker (choose a folder) and the file picker (navigate folders, choose a
+// file — optionally filtered by extension). Backed by the same readDirectory/getVolumes IPC as the
+// main browser.
+const PathPickerDialog = ({
   visible,
+  config,
   initialPath,
   onChoose,
   onClose,
-}: FolderPickerDialogProps) => {
+}: PathPickerDialogProps) => {
   useCloseOnEscape(visible, onClose);
+
+  const isFileMode = config.kind === PICK_KIND.FILE;
 
   // Empty rawPath falls back to the home folder (resolved async) as the default open location.
   const [rawPath, setRawPath] = useState("");
@@ -86,19 +93,18 @@ const FolderPickerDialog = ({
     }
   }
 
-  // Load the current folder's sub-folders (or the volumes list until the home folder resolves).
+  // Load the current folder's contents (or the volumes list until the home folder resolves).
   // setState only fires from the async callback, guarded against landing after navigation.
   useEffect(() => {
     if (!visible) return;
     let cancelled = false;
-    const load = path === "" ? loadLocations() : loadFolders(path);
-    load.then((rows) => {
+    loadEntries(path, config.kind, config.extensions).then((rows) => {
       if (!cancelled) setEntries(rows);
     });
     return () => {
       cancelled = true;
     };
-  }, [visible, path, reloadKey]);
+  }, [visible, path, reloadKey, config.kind, config.extensions]);
 
   // Navigate into a folder: clear the pending listing (shows loading) and the selection.
   const enter = (nextPath: string) => {
@@ -114,14 +120,29 @@ const FolderPickerDialog = ({
     setSelected(created);
   };
 
-  // Choose the selected folder, or the folder currently open when nothing is selected.
-  const target = selected ?? (path || null);
+  // The row a click on a leaf should choose. In file mode only files are valid targets; in folder
+  // mode the selected folder (or the folder currently open when nothing is selected) is the target.
+  const selectedEntry = entries?.find((entry) => entry.path === selected);
+  const target = isFileMode
+    ? selectedEntry && !selectedEntry.isDir
+      ? selectedEntry.path
+      : null
+    : (selected ?? (path || null));
   const confirm = () => {
     if (target) onChoose(target);
   };
 
+  // Single-click highlights any row; double-click enters folders, or picks a file outright.
+  const onRowActivate = (entry: PickerEntry) => {
+    if (entry.isDir) enter(entry.path);
+    else onChoose(entry.path);
+  };
+
   const atRoot = path === "";
   const crumbs = crumbsFor(path);
+
+  const rowIcon = (entry: PickerEntry) =>
+    entry.isDir ? (atRoot ? faHardDrive : faFolder) : faFile;
 
   const sidebarItem = (
     key: string,
@@ -148,11 +169,11 @@ const FolderPickerDialog = ({
       visible={visible}
       onClose={onClose}
       className="folder_picker"
-      labelledBy={FOLDER_PICKER_TITLE_ID}
+      labelledBy={PATH_PICKER_TITLE_ID}
     >
       <DialogHeader
-        title={t.folderPicker.title}
-        titleId={FOLDER_PICKER_TITLE_ID}
+        title={config.title}
+        titleId={PATH_PICKER_TITLE_ID}
         onClose={onClose}
       />
 
@@ -223,7 +244,7 @@ const FolderPickerDialog = ({
             {entries === null ? (
               <p className="folder_picker_empty">{t.folderPicker.loading}</p>
             ) : entries.length === 0 ? (
-              <p className="folder_picker_empty">{t.folderPicker.empty}</p>
+              <p className="folder_picker_empty">{config.emptyLabel}</p>
             ) : (
               entries.map((entry) => (
                 <button
@@ -236,9 +257,9 @@ const FolderPickerDialog = ({
                     selected === entry.path && "selected",
                   )}
                   onClick={() => setSelected(entry.path)}
-                  onDoubleClick={() => enter(entry.path)}
+                  onDoubleClick={() => onRowActivate(entry)}
                 >
-                  <Icon icon={atRoot ? faHardDrive : faFolder} />
+                  <Icon icon={rowIcon(entry)} />
                   <span className="folder_picker_row_name">{entry.name}</span>
                 </button>
               ))
@@ -248,14 +269,16 @@ const FolderPickerDialog = ({
       </div>
 
       <div className="folder_picker_actions">
-        <Button
-          className="folder_picker_newfolder"
-          onClick={onNewFolder}
-          disabled={atRoot}
-        >
-          <Icon icon={faFolderPlus} />
-          <span>{t.folderPicker.newFolder}</span>
-        </Button>
+        {!isFileMode && (
+          <Button
+            className="folder_picker_newfolder"
+            onClick={onNewFolder}
+            disabled={atRoot}
+          >
+            <Icon icon={faFolderPlus} />
+            <span>{t.folderPicker.newFolder}</span>
+          </Button>
+        )}
         <div className="folder_picker_actions_right">
           <Button onClick={onClose}>{t.common.cancel}</Button>
           <Button
@@ -263,7 +286,7 @@ const FolderPickerDialog = ({
             onClick={confirm}
             disabled={!target}
           >
-            {t.folderPicker.choose}
+            {config.chooseLabel}
           </Button>
         </div>
       </div>
@@ -271,4 +294,4 @@ const FolderPickerDialog = ({
   );
 };
 
-export default FolderPickerDialog;
+export default PathPickerDialog;
