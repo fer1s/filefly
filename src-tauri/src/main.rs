@@ -83,6 +83,7 @@ fn main() {
             functions::settings::export_settings,
             functions::storage::get_app_storage,
             functions::storage::clear_app_cache,
+            filesystem::sftp::sftp_list_connections,
             functions::control::set_ui_state,
             functions::control::set_probe_result,
             functions::handler::is_default_folder_handler,

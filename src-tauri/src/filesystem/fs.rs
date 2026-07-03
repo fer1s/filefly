@@ -10,7 +10,7 @@ use std::io::Read;
 use std::os::unix::fs::MetadataExt;
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
-use std::time::SystemTime;
+use std::time::{Duration, SystemTime};
 use tauri::ipc::Channel;
 use tauri::{AppHandle, Manager};
 
@@ -69,9 +69,49 @@ pub(crate) fn build_dir_entry(path: PathBuf) -> Result<DirEntry, String> {
     })
 }
 
-#[tauri::command]
-pub fn get_entry(path: String) -> Result<DirEntry, String> {
+// Build a DirEntry for a remote (SFTP) file. Times come from the SFTP attributes (unix seconds);
+// `size_on_disk` mirrors `size` since remote block allocation isn't exposed. `url` is the full
+// `sftp://<conn>/path` so the frontend navigates and refetches it exactly like a local path.
+pub fn remote_dir_entry(
+    name: String,
+    url: String,
+    size: u64,
+    is_dir: bool,
+    mtime: u64,
+    atime: u64,
+) -> DirEntry {
+    let to_time = |secs: u64| SystemTime::UNIX_EPOCH + Duration::from_secs(secs);
+    let modified = to_time(mtime);
+    DirEntry {
+        name,
+        path: PathBuf::from(url),
+        size,
+        size_on_disk: size,
+        metadata: DirMetadata {
+            is_dir,
+            is_file: !is_dir,
+            modified,
+            accessed: to_time(atime),
+            created: modified,
+        },
+    }
+}
+
+// Local core: read a single entry's metadata. Shared by the CLI and the routing command below.
+pub fn get_entry_local(path: String) -> Result<DirEntry, String> {
     build_dir_entry(PathBuf::from(path))
+}
+
+// Read one entry, local or remote. `sftp://<conn>/path` routes to the SFTP backend; anything else
+// is a local path handled by `get_entry_local`. Async so the remote branch can await the network.
+#[tauri::command]
+pub async fn get_entry(app: AppHandle, path: String) -> Result<DirEntry, String> {
+    match super::sftp::resolve(&path) {
+        super::sftp::Target::Local(p) => get_entry_local(p),
+        super::sftp::Target::Remote { conn, path } => {
+            super::sftp::stat(&app, &conn, &path).await
+        }
+    }
 }
 
 // Recursively sum the apparent size (bytes) of every file under `path`. Used to fill the
@@ -172,7 +212,7 @@ pub struct TypeaheadResult {
 pub fn typeahead_core(path: &str, query: &str) -> Result<TypeaheadResult, String> {
     let needle = query.trim().to_lowercase();
 
-    let mut entries = read_directory(path)?;
+    let mut entries = read_directory_local(path)?;
     entries.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
 
     if needle.is_empty() {
@@ -434,8 +474,9 @@ pub fn prune_thumbnail_cache(cache_dir: &Path) {
 // (e.g. macOS TCC guards ~/.Trash). The frontend matches this to prompt for Full Disk Access.
 const ACCESS_DENIED: &str = "ACCESS_DENIED";
 
-#[tauri::command]
-pub fn read_directory(path: &str) -> Result<Vec<DirEntry>, String> {
+// Local core: list a directory on the local filesystem. Shared by the CLI, `typeahead_core`, and
+// the routing command below — this one only ever sees local paths.
+pub fn read_directory_local(path: &str) -> Result<Vec<DirEntry>, String> {
     let entries = fs::read_dir(path).map_err(|e| match e.kind() {
         std::io::ErrorKind::PermissionDenied => ACCESS_DENIED.to_string(),
         _ => e.to_string(),
@@ -449,6 +490,19 @@ pub fn read_directory(path: &str) -> Result<Vec<DirEntry>, String> {
     }
 
     Ok(result)
+}
+
+// List a directory, local or remote. A `sftp://<conn>/path` argument routes to the SFTP backend;
+// anything else is a local path handled by `read_directory_local`. Async so the remote branch can
+// await the network without blocking the UI thread.
+#[tauri::command]
+pub async fn read_directory(app: AppHandle, path: String) -> Result<Vec<DirEntry>, String> {
+    match super::sftp::resolve(&path) {
+        super::sftp::Target::Local(p) => read_directory_local(&p),
+        super::sftp::Target::Remote { conn, path } => {
+            super::sftp::read_dir(&app, &conn, &path).await
+        }
+    }
 }
 
 // Open a file with the OS default application. Logs the path to the Tauri terminal (stdout)
