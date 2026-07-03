@@ -23,7 +23,14 @@
   z-index: 1501;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%) scale(0.9);
+  /* Drag offset (set inline by Dialog.tsx) composed with the centring translate. */
+  --dialog-drag-x: 0px;
+  --dialog-drag-y: 0px;
+  transform: translate(
+      calc(-50% + var(--dialog-drag-x)),
+      calc(-50% + var(--dialog-drag-y))
+    )
+    scale(0.9);
   /* User-adjustable modal opacity (Settings › Appearance › Dialog transparency); --dialog-opacity
      is set on the document root in App. Raw RGB channels + alpha, like the sidebar/context menu. */
   background-color: rgba(var(--color-surface-modal-rgb), var(--dialog-opacity));
@@ -40,9 +47,28 @@
 }
 
 .dialog.visible {
-  transform: translate(-50%, -50%) scale(1);
+  transform: translate(
+      calc(-50% + var(--dialog-drag-x)),
+      calc(-50% + var(--dialog-drag-y))
+    )
+    scale(1);
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
   transition-delay: 0s;
+}
+
+/* While dragging, drop the transform transition so the dialog tracks the cursor 1:1. */
+.dialog.dragging {
+  transition: opacity 0.2s ease-in-out;
+}
+
+/* The header bar is the drag handle. touch-action:none lets @use-gesture own the pointer. */
+.panel_header.draggable {
+  cursor: grab;
+  touch-action: none;
+}
+
+.dialog.dragging .panel_header.draggable {
+  cursor: grabbing;
 }

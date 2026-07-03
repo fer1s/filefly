@@ -1,4 +1,6 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { CSSProperties } from "react";
+import { useDrag } from "@use-gesture/react";
 
 import { classNames } from "@/shared/utils";
 import { KEY } from "@/shared/constants";
@@ -8,6 +10,7 @@ import { useModal } from "@/shared/providers/ModalProvider";
 import "@/styles/components/Dialog.css";
 
 import { FOCUSABLE_SELECTOR } from "./constants";
+import { DialogDragContext } from "./dragContext";
 import type { DialogProps } from "./types";
 
 const Dialog = ({
@@ -19,6 +22,42 @@ const Dialog = ({
 }: DialogProps) => {
   const dialogRef = useRef<HTMLDivElement>(null);
   const { open: registerModal, close: unregisterModal } = useModal();
+
+  // Drag-by-header: the dialog can be moved around the viewport by grabbing its title bar. The
+  // offset composes with the centring translate via CSS vars (see Dialog.css). The binder is handed
+  // to DialogHeader through context so only the header captures the drag, never the body.
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const [dragging, setDragging] = useState(false);
+
+  // Recentre each time the dialog (re)opens — derive from the visible prop by comparing to state
+  // during render (React's sanctioned "adjust state on prop change" pattern; no ref/effect).
+  const [wasVisible, setWasVisible] = useState(visible);
+  if (visible !== wasVisible) {
+    setWasVisible(visible);
+    if (visible) setOffset({ x: 0, y: 0 });
+  }
+
+  const dragBind = useDrag(
+    ({ event, movement: [mx, my], first, last, memo, cancel }) => {
+      // Don't move when the grab starts on the close control (or any interactive header element).
+      if (
+        first &&
+        (event.target as HTMLElement).closest(
+          "button, a, input, textarea, select, .mac_close",
+        )
+      ) {
+        cancel();
+        return;
+      }
+      const base = (first ? offset : memo) as { x: number; y: number };
+      setOffset({ x: base.x + mx, y: base.y + my });
+      setDragging(!last);
+      return base;
+    },
+    // filterTaps keeps a plain click on the header from registering as a 0px drag; keys:false
+    // disables @use-gesture's arrow-key dragging on the focused header.
+    { filterTaps: true, pointer: { keys: false } },
+  );
 
   // Activate the MODAL hotkey scope while open: the dispatcher then suppresses every lower-scope
   // hotkey (clipboard, tabs, zoom, history nav, …), so keymap actions can't leak to the directory
@@ -84,6 +123,7 @@ const Dialog = ({
           "shadow",
           className,
           visible && "visible",
+          dragging && "dragging",
         )}
         role="dialog"
         aria-modal="true"
@@ -91,8 +131,16 @@ const Dialog = ({
         aria-labelledby={labelledBy}
         tabIndex={-1}
         ref={dialogRef}
+        style={
+          {
+            "--dialog-drag-x": `${offset.x}px`,
+            "--dialog-drag-y": `${offset.y}px`,
+          } as CSSProperties
+        }
       >
-        {children}
+        <DialogDragContext.Provider value={dragBind}>
+          {children}
+        </DialogDragContext.Provider>
       </div>
     </>
   );
