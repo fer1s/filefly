@@ -55,7 +55,7 @@ arboard = "3"
 # the cross-platform build clean. russh is fully async; it runs on Tauri's tokio runtime.
 russh = "0.62"
 russh-sftp = "2"
-tokio = { version = "1", features = ["rt", "sync", "macros"] }
+tokio = { version = "1", features = ["rt", "sync", "macros", "fs", "io-util"] }
 
 # Finder tags live in a macOS extended attribute (a binary plist) — only needed there.
 # objc2 crates drive the custom Dock right-click menu (recent folders + quick actions).

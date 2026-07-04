@@ -648,15 +648,10 @@ pub async fn download(app: &AppHandle, conn: &str, path: &str) -> Result<String,
     }
 
     eprintln!("[sftp] downloading '{conn}':{path} ({remote_size} bytes)");
-    let bytes = session
-        .sftp
-        .read(path)
-        .await
-        .map_err(|e| format!("download failed: {e}"))?;
     if let Some(parent) = local.parent() {
         std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
     }
-    std::fs::write(&local, bytes).map_err(|e| e.to_string())?;
+    stream_from_remote(&session, path, &local).await?;
     Ok(local.to_string_lossy().into_owned())
 }
 
@@ -830,18 +825,54 @@ fn unique_local(dir: &str, name: &str) -> PathBuf {
     candidate
 }
 
-// Write bytes to a remote path, creating/truncating the file. russh-sftp's `write` opens with only
-// WRITE (no CREATE), so it fails with "no such file" on a new upload — `create` opens CREATE|TRUNC.
-async fn write_remote(session: &RemoteSession, path: String, bytes: &[u8]) -> Result<(), String> {
+// Stream a local file up to a remote path (chunked via tokio::io::copy — never loads the whole file
+// into memory). `create` opens the remote file CREATE|TRUNCATE|WRITE (russh-sftp's `write` uses only
+// WRITE and fails with "no such file" on a new upload).
+async fn stream_to_remote(
+    session: &RemoteSession,
+    local: &Path,
+    remote: String,
+) -> Result<(), String> {
     use tokio::io::AsyncWriteExt;
-    let mut file = session
+    let mut src = tokio::fs::File::open(local).await.map_err(|e| e.to_string())?;
+    let mut dst = session
         .sftp
-        .create(path)
+        .create(remote)
         .await
         .map_err(|e| format!("create failed: {e}"))?;
-    file.write_all(bytes).await.map_err(|e| format!("write failed: {e}"))?;
-    file.flush().await.map_err(|e| format!("flush failed: {e}"))?;
-    file.shutdown().await.ok();
+    tokio::io::copy(&mut src, &mut dst).await.map_err(|e| format!("upload failed: {e}"))?;
+    dst.shutdown().await.map_err(|e| format!("upload flush failed: {e}"))?;
+    Ok(())
+}
+
+// Stream a remote file down to a local path (chunked).
+async fn stream_from_remote(
+    session: &RemoteSession,
+    remote: &str,
+    local: &Path,
+) -> Result<(), String> {
+    let mut src = session
+        .sftp
+        .open(remote)
+        .await
+        .map_err(|e| format!("open failed: {e}"))?;
+    let mut dst = tokio::fs::File::create(local).await.map_err(|e| e.to_string())?;
+    tokio::io::copy(&mut src, &mut dst).await.map_err(|e| format!("download failed: {e}"))?;
+    Ok(())
+}
+
+// Stream a remote file to another remote path (reads via `src`, writes via `dst`; chunked).
+async fn stream_remote_to_remote(
+    src: &RemoteSession,
+    dst: &RemoteSession,
+    from: &str,
+    to: String,
+) -> Result<(), String> {
+    use tokio::io::AsyncWriteExt;
+    let mut reader = src.sftp.open(from).await.map_err(|e| format!("open failed: {e}"))?;
+    let mut writer = dst.sftp.create(to).await.map_err(|e| format!("create failed: {e}"))?;
+    tokio::io::copy(&mut reader, &mut writer).await.map_err(|e| format!("copy failed: {e}"))?;
+    writer.shutdown().await.map_err(|e| format!("copy flush failed: {e}"))?;
     Ok(())
 }
 
@@ -862,8 +893,7 @@ fn upload<'a>(session: &'a RemoteSession, local: PathBuf, remote: String) -> Tra
             }
             Ok(())
         } else {
-            let bytes = std::fs::read(&local).map_err(|e| e.to_string())?;
-            write_remote(session, remote, &bytes).await
+            stream_to_remote(session, &local, remote).await
         }
     })
 }
@@ -889,12 +919,7 @@ fn download_tree<'a>(session: &'a RemoteSession, remote: String, local: PathBuf)
             }
             Ok(())
         } else {
-            let bytes = session
-                .sftp
-                .read(&remote)
-                .await
-                .map_err(|e| format!("download failed: {e}"))?;
-            std::fs::write(&local, bytes).map_err(|e| e.to_string())
+            stream_from_remote(session, &remote, &local).await
         }
     })
 }
@@ -930,12 +955,7 @@ fn remote_copy<'a>(
             }
             Ok(())
         } else {
-            let bytes = src
-                .sftp
-                .read(&from)
-                .await
-                .map_err(|e| format!("copy read failed: {e}"))?;
-            write_remote(dst, to, &bytes).await
+            stream_remote_to_remote(src, dst, &from, to).await
         }
     })
 }
