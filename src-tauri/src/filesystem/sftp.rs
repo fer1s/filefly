@@ -476,14 +476,32 @@ async fn open_session(conn: &Connection) -> Result<RemoteSession, String> {
     Ok(RemoteSession { _handle: handle, sftp })
 }
 
+// The pooled session for `conn_id` if it's still alive; a dropped session (SSH disconnect, timeout,
+// server restart) is evicted so the caller reconnects. is_closed() is a cheap local check — no round
+// trip — so this runs on every operation without cost. This is the reconnect mechanism: the next use
+// after a drop transparently opens a fresh session.
+async fn live_pooled(conn_id: &str) -> Option<Arc<RemoteSession>> {
+    let mut pool = pool().lock().await;
+    match pool.get(conn_id) {
+        Some(session) if session._handle.is_closed() => {
+            eprintln!("[sftp] pooled session for '{conn_id}' is dead — reconnecting");
+            pool.remove(conn_id);
+            None
+        }
+        Some(session) => Some(session.clone()),
+        None => None,
+    }
+}
+
 // Get the pooled session for `conn_id`, connecting (and caching) on first use. Concurrent callers
 // for the same connection share one connect via a per-connection lock (double-checked against the
-// pool), so a burst of simultaneous reads opens exactly one SSH session.
+// pool), so a burst of simultaneous reads opens exactly one SSH session. A dropped session is
+// detected (live_pooled) and reconnected.
 async fn session_for(app: &AppHandle, conn_id: &str) -> Result<Arc<RemoteSession>, String> {
-    // Fast path: already connected.
-    if let Some(session) = pool().lock().await.get(conn_id) {
+    // Fast path: already connected and alive.
+    if let Some(session) = live_pooled(conn_id).await {
         eprintln!("[sftp] reusing pooled session for '{conn_id}'");
-        return Ok(session.clone());
+        return Ok(session);
     }
 
     // Serialize connects for this connection id (short global lock just to fetch/create its guard).
@@ -494,9 +512,9 @@ async fn session_for(app: &AppHandle, conn_id: &str) -> Result<Arc<RemoteSession
     let _connecting = guard.lock().await;
 
     // Re-check: another task may have connected while we waited on the guard.
-    if let Some(session) = pool().lock().await.get(conn_id) {
+    if let Some(session) = live_pooled(conn_id).await {
         eprintln!("[sftp] reusing session opened by a concurrent read for '{conn_id}'");
-        return Ok(session.clone());
+        return Ok(session);
     }
 
     let conn = load_connections(app)
