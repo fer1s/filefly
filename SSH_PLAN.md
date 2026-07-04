@@ -217,3 +217,18 @@ is the primary failure mode.
 Weeks, not a day. The mechanical part (wrapping 17 commands) is small; the real cost is the SFTP
 backend, credential/keychain handling, the connection UI, and making every local-path assumption in
 the frontend remote-safe.
+
+## 9. Known gaps / TODO (phases 1–4 shipped)
+
+All four phases are implemented (browse, auth, open/preview/download, create/rename/delete,
+local↔remote transfers with progress + streaming, known-hosts, keychain, reconnect, ssh-terminal,
+opt-in remote thumbnails, auto-clean cache, full connection CRUD in the UI). Remaining:
+
+- **Edit-and-save-back — external apps only (TODO).** The in-app markdown editor now saves a remote
+  file back to the server (write_text_file routes `sftp://` over SFTP). Opening in an *external* OS
+  app still edits only the local cache copy — no write-back. Would need a temp watcher + re-upload.
+- **SSH certificate identities in the agent.** `try_agent_auth` only tries plain public keys, not
+  `AgentIdentity::Certificate` (SSH-CA setups like Teleport/Vault). Niche — plain-key hosts work.
+
+Verified working (were unsure): dragging files from Finder onto a remote folder uploads them (OS
+drop → copy_entry → SFTP upload); CLI `sfb sftp-add` stores secrets in the keychain like the GUI.

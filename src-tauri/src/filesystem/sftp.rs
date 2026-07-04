@@ -12,7 +12,7 @@ use std::collections::HashMap;
 use std::future::Future;
 use std::path::{Path, PathBuf};
 use std::pin::Pin;
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, OnceLock};
 
 use russh::client;
@@ -43,6 +43,9 @@ const DEFAULT_KEY_NAMES: &[&str] = &["id_ed25519", "id_ecdsa", "id_rsa"];
 // Error prefix marking an authentication failure (vs network/other), so the frontend can prompt for
 // credentials. Mirrored as SSH_AUTH_FAILED in the frontend (constants.ts).
 const AUTH_FAILED_MARKER: &str = "SSH_AUTH_FAILED";
+// Error prefix marking a changed host key (possible MITM), so the frontend shows a clear warning
+// instead of a generic "connect failed". Mirrored as SSH_HOST_KEY_CHANGED in the frontend.
+const HOST_KEY_CHANGED_MARKER: &str = "SSH_HOST_KEY_CHANGED";
 
 // OS keychain for connection secrets (macOS Keychain). Keyed by "<connId>:<field>" under one
 // service. On non-macOS the keyring backend isn't compiled in, so these no-op and secrets fall back
@@ -213,6 +216,9 @@ fn connect_locks() -> &'static Mutex<HashMap<String, Arc<Mutex<()>>>> {
 struct ClientHandler {
     host: String,
     port: u16,
+    // Set when the recorded host key no longer matches — connect then fails, and open_session turns
+    // this into a clear HOST_KEY_CHANGED error rather than a generic "connect failed".
+    key_changed: Arc<AtomicBool>,
 }
 
 impl client::Handler for ClientHandler {
@@ -242,6 +248,7 @@ impl client::Handler for ClientHandler {
                      old line from ~/.ssh/known_hosts.",
                     self.host, self.port
                 );
+                self.key_changed.store(true, Ordering::Relaxed);
                 Ok(false)
             }
             // No known_hosts file yet / parse error → treat as first use and record.
@@ -298,8 +305,12 @@ async fn try_agent_auth(
     eprintln!("[sftp] ssh-agent holds {} identit(ies)", identities.len());
 
     for identity in identities {
+        // TODO: support certificate identities (AgentIdentity::Certificate) — used by SSH-CA setups
+        // like Teleport/Vault. We only try plain public keys, so a host that requires cert auth via
+        // the agent won't authenticate here (it works with plain `ssh`). Niche; see SSH_PLAN.md.
         let AgentIdentity::PublicKey { key, comment } = identity else {
-            continue; // certificates not handled in phase 1
+            eprintln!("[sftp] skipping agent certificate identity (unsupported)");
+            continue;
         };
         eprintln!("[sftp] trying agent key ({comment})");
         for hash in [None, Some(HashAlg::Sha512), Some(HashAlg::Sha256)] {
@@ -381,12 +392,22 @@ async fn try_password_auth(
 async fn open_session(conn: &Connection) -> Result<RemoteSession, String> {
     eprintln!("[sftp] connecting to {}@{}:{}", conn.user, conn.host, conn.port);
     let config = Arc::new(client::Config::default());
-    let handler = ClientHandler { host: conn.host.clone(), port: conn.port };
+    let key_changed = Arc::new(AtomicBool::new(false));
+    let handler =
+        ClientHandler { host: conn.host.clone(), port: conn.port, key_changed: key_changed.clone() };
     let mut handle = client::connect(config, (conn.host.as_str(), conn.port), handler)
         .await
         .map_err(|e| {
-            eprintln!("[sftp] connect failed: {e}");
-            format!("connect failed: {e}")
+            // A changed host key makes the handshake fail — report it clearly (see the marker).
+            if key_changed.load(Ordering::Relaxed) {
+                format!(
+                    "{HOST_KEY_CHANGED_MARKER}: the host key for {} changed",
+                    conn.host
+                )
+            } else {
+                eprintln!("[sftp] connect failed: {e}");
+                format!("connect failed: {e}")
+            }
         })?;
     eprintln!("[sftp] tcp/ssh handshake ok, authenticating…");
 
@@ -611,6 +632,22 @@ pub async fn dir_size(app: &AppHandle, conn: &str, path: &str) -> Result<u64, St
         }
     }
     Ok(total)
+}
+
+// Overwrite a remote text file with `content` (create/truncate). Backs saving an edited remote
+// markdown file back to the server (SSH_PLAN.md phase 4 — in-app editor save-back).
+pub async fn write_text(app: &AppHandle, conn: &str, path: &str, content: &str) -> Result<(), String> {
+    use tokio::io::AsyncWriteExt;
+    let session = session_for(app, conn).await?;
+    let mut file = session
+        .sftp
+        .create(path.to_string())
+        .await
+        .map_err(|e| format!("create failed: {e}"))?;
+    file.write_all(content.as_bytes()).await.map_err(|e| format!("write failed: {e}"))?;
+    file.flush().await.map_err(|e| format!("flush failed: {e}"))?;
+    file.shutdown().await.ok();
+    Ok(())
 }
 
 // Metadata for a single remote entry.
@@ -1175,24 +1212,44 @@ pub fn sftp_list_connections(app: AppHandle) -> Vec<ConnectionInfo> {
 // Add (or replace by id) a connection from the GUI. Secrets go to the OS keychain — never the toml;
 // connections.toml keeps only non-sensitive fields. Passing an empty/absent secret clears any
 // stored one. Backs the "+" form in the sidebar's Network group (SSH_PLAN.md phase 2).
+// Add (or replace by id) a connection, routing secrets to the OS keychain and persisting only the
+// non-sensitive fields to connections.toml. Shared by the GUI command and the `sfb` CLI so both
+// keep secrets out of the plaintext toml. On macOS an entered secret goes to the keychain (an empty
+// field leaves any existing entry intact, so editing without re-typing keeps it). On platforms
+// without a keychain backend, secrets stay inline in the toml (phase-1 fallback).
+pub fn add_connection_with_secrets(config_dir: &Path, connection: Connection) -> Result<(), String> {
+    #[cfg(target_os = "macos")]
+    {
+        if let Some(secret) = connection.password.as_deref().filter(|s| !s.is_empty()) {
+            keychain::set(&connection.id, FIELD_PASSWORD, secret)?;
+        }
+        if let Some(secret) = connection.key_passphrase.as_deref().filter(|s| !s.is_empty()) {
+            keychain::set(&connection.id, FIELD_KEY_PASSPHRASE, secret)?;
+        }
+        let stored = Connection {
+            password: None,
+            key_passphrase: None,
+            ..connection
+        };
+        add_connection_to(config_dir, stored).map(|_replaced| ())
+    }
+    #[cfg(not(target_os = "macos"))]
+    {
+        add_connection_to(config_dir, connection).map(|_replaced| ())
+    }
+}
+
 #[tauri::command]
 pub fn sftp_add_connection(app: AppHandle, connection: Connection) -> Result<(), String> {
     let dir = app.path().app_config_dir().map_err(|e| e.to_string())?;
+    add_connection_with_secrets(&dir, connection)
+}
 
-    match connection.password.as_deref().filter(|s| !s.is_empty()) {
-        Some(secret) => keychain::set(&connection.id, FIELD_PASSWORD, secret)?,
-        None => keychain::delete(&connection.id, FIELD_PASSWORD),
-    }
-    match connection.key_passphrase.as_deref().filter(|s| !s.is_empty()) {
-        Some(secret) => keychain::set(&connection.id, FIELD_KEY_PASSPHRASE, secret)?,
-        None => keychain::delete(&connection.id, FIELD_KEY_PASSPHRASE),
-    }
-
-    // Strip secrets before persisting — they live only in the keychain now.
-    let stored = Connection {
-        password: None,
-        key_passphrase: None,
-        ..connection
-    };
-    add_connection_to(&dir, stored).map(|_replaced| ())
+// Remove a saved connection and its keychain secrets. Backs the sidebar's "Delete connection".
+#[tauri::command]
+pub fn sftp_remove_connection(app: AppHandle, id: String) -> Result<(), String> {
+    let dir = app.path().app_config_dir().map_err(|e| e.to_string())?;
+    keychain::delete(&id, FIELD_PASSWORD);
+    keychain::delete(&id, FIELD_KEY_PASSPHRASE);
+    remove_connection_from(&dir, &id).map(|_removed| ())
 }

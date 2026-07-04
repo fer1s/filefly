@@ -296,7 +296,7 @@ const COMMANDS: &[Command] = &[
             val("port", false, "SSH port (default 22)."),
             val("key-path", false, "Private key path (default: ~/.ssh/id_ed25519|id_ecdsa|id_rsa)."),
             val("key-passphrase", false, "Passphrase for the key (else set SFB_SSH_KEY_PASSPHRASE)."),
-            val("password", false, "Password (phase 1 only; else set SFB_SSH_PASSWORD at runtime)."),
+            val("password", false, "Password — stored in the OS keychain, not the toml."),
         ],
         run: |a| {
             // Default SSH port; connections may override it.
@@ -315,7 +315,10 @@ const COMMANDS: &[Command] = &[
                 password: a.opt("password").map(|s| s.to_string()),
             };
             let id = conn.id.clone();
-            let replaced = sftp::add_connection_to(&app_config_dir()?, conn)?;
+            let dir = app_config_dir()?;
+            let replaced = sftp::load_connections_from(&dir).iter().any(|c| c.id == id);
+            // Same core as the GUI: secrets go to the OS keychain, not the plaintext toml.
+            sftp::add_connection_with_secrets(&dir, conn)?;
             Ok(json!({ "id": id, "replaced": replaced }))
         },
     },

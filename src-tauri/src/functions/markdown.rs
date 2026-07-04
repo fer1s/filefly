@@ -1,4 +1,7 @@
 use markdown::to_html;
+use tauri::AppHandle;
+
+use crate::filesystem::sftp::{resolve, write_text, Target};
 
 // Render a markdown *string* to HTML. Takes the content (not a path) so the in-app preview can
 // render unsaved edits held in the editor, not just what's on disk.
@@ -14,8 +17,17 @@ pub fn read_text_file(path: String) -> Result<String, String> {
     std::fs::read_to_string(&path).map_err(|e| e.to_string())
 }
 
-// Overwrite a text file with `content` (Cmd+S from the markdown editor). Errors bubble up to the UI.
+// Overwrite a text file with `content` (Cmd+S from the markdown editor). A remote (sftp://) path is
+// written back over SFTP so editing a remote markdown saves to the server; local paths write to
+// disk. Async for the remote branch.
 #[tauri::command]
-pub fn write_text_file(path: String, content: String) -> Result<(), String> {
-    std::fs::write(&path, content).map_err(|e| e.to_string())
+pub async fn write_text_file(
+    app: AppHandle,
+    path: String,
+    content: String,
+) -> Result<(), String> {
+    match resolve(&path) {
+        Target::Local(p) => std::fs::write(&p, content).map_err(|e| e.to_string()),
+        Target::Remote { conn, path } => write_text(&app, &conn, &path, &content).await,
+    }
 }
