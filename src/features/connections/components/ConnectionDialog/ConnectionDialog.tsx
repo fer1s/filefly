@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 import Dialog from "@/shared/components/patterns/Dialog";
 import DialogHeader from "@/shared/components/patterns/DialogHeader";
+import DialogActions from "@/shared/components/patterns/DialogActions";
 import Button from "@/shared/components/elements/Button";
 import { useCloseOnEscape } from "@/shared/hooks/useCloseOnEscape";
 import type { NewConnection } from "@/shared/services/api";
@@ -193,7 +194,7 @@ const ConnectionDialog = ({ visible, onSubmit, onClose }: ConnectionDialogProps)
         <p className="connection_hint">{t.connections.authHint}</p>
         {error && <p className="connection_error">{error}</p>}
 
-        <div className="connection_actions">
+        <DialogActions>
           <Button type="button" onClick={onClose}>
             {t.common.cancel}
           </Button>
@@ -204,7 +205,7 @@ const ConnectionDialog = ({ visible, onSubmit, onClose }: ConnectionDialogProps)
           >
             {t.connections.create}
           </Button>
-        </div>
+        </DialogActions>
       </form>
     </Dialog>
   );

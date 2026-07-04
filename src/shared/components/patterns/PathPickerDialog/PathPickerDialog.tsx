@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 import Dialog from "@/shared/components/patterns/Dialog";
 import DialogHeader from "@/shared/components/patterns/DialogHeader";
+import DialogActions from "@/shared/components/patterns/DialogActions";
 import Button from "@/shared/components/elements/Button";
 import Icon from "@/shared/components/elements/Icon";
 import { useCloseOnEscape } from "@/shared/hooks/useCloseOnEscape";
@@ -280,7 +281,7 @@ const PathPickerDialog = ({
             <span>{t.folderPicker.newFolder}</span>
           </Button>
         )}
-        <div className="folder_picker_actions_right">
+        <DialogActions className="folder_picker_actions_right">
           <Button onClick={onClose}>{t.common.cancel}</Button>
           <Button
             className="folder_picker_choose"
@@ -289,7 +290,7 @@ const PathPickerDialog = ({
           >
             {config.chooseLabel}
           </Button>
-        </div>
+        </DialogActions>
       </div>
     </Dialog>
   );
