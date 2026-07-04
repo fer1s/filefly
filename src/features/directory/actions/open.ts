@@ -15,9 +15,11 @@ export const openAction: EntryAction = {
   label: () => t.contextMenu.open,
   icon: faArrowUpRightFromSquare,
   hotkey: formatBinding({ keys: [KEY.ENTER] }),
-  run: ({ fs, elementId, elementType, setPath, onClose }) => {
-    if (elementType === ENTRY_KIND.FILE) fs.open(elementId);
-    else if (elementType === ENTRY_KIND.DIRECTORY) setPath(elementId);
+  run: async ({ fs, elementId, elementType, setPath, onClose }) => {
     onClose();
+    // Remote (sftp://) files download to the cache first so the OS app opens a local copy
+    // (read-only — see SSH_PLAN.md); local paths pass through unchanged.
+    if (elementType === ENTRY_KIND.FILE) fs.open(await fs.materialize(elementId));
+    else if (elementType === ENTRY_KIND.DIRECTORY) setPath(elementId);
   },
 };

@@ -281,6 +281,8 @@ export const en = {
     invalidPort: "Port must be a number between 1 and 65535.",
     addError: (error: string) => `Couldn't save the connection: ${error}`,
     added: "Connection created",
+    // Downloading a remote file to open/preview it failed (read-only cache copy — phase 3a).
+    openError: (error: string) => `Couldn't open remote file: ${error}`,
   },
   settings: {
     title: "Settings",

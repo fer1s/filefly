@@ -119,6 +119,13 @@ export class FileSystemManager {
     return api.openFile(path);
   }
 
+  // Resolve a path to something locally openable: a remote (sftp://) file is downloaded to the
+  // cache and its local path returned; a local path is returned unchanged. Used before open/preview
+  // so remote files reuse the local flow (read-only — see SSH_PLAN.md phase 3a).
+  materialize(path: string): Promise<string> {
+    return api.materializePath(path);
+  }
+
   openInTerminal(path: string): Promise<void> {
     return api.openInTerminal(path);
   }

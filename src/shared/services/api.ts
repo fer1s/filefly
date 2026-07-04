@@ -10,6 +10,7 @@ import { t } from "@/lang";
 import { Volume, DirEntry, ContextMenuLayout, Tag } from "@/shared/models";
 import {
   ACCESS_DENIED_ERROR,
+  SFTP_SCHEME,
   type DragDropAction,
   type StorageKind,
 } from "@/shared/constants";
@@ -509,6 +510,25 @@ export const sftpAddConnection = async (
 // connection on its home instead of the filesystem root. Connects on first call.
 export const sftpHome = async (conn: string): Promise<string> =>
   (await invoke("sftp_home", { conn })) as string;
+
+// Download a remote file to the local cache and return its local path. Read-only: local edits are
+// not pushed back (phase 3a). Reuses a cached copy when the size matches.
+export const sftpDownload = async (
+  conn: string,
+  path: string,
+): Promise<string> => (await invoke("sftp_download", { conn, path })) as string;
+
+// Make a path locally openable: a remote `sftp://<conn>/path` is downloaded to the cache and its
+// local path returned; a local path passes through unchanged. Lets open/preview reuse the local
+// flow for remote files.
+export const materializePath = async (path: string): Promise<string> => {
+  if (!path.startsWith(SFTP_SCHEME)) return path;
+  const rest = path.slice(SFTP_SCHEME.length);
+  const slash = rest.indexOf("/");
+  const conn = slash === -1 ? rest : rest.slice(0, slash);
+  const remote = slash === -1 ? "/" : rest.slice(slash);
+  return sftpDownload(conn, remote);
+};
 
 // Mirror this window's live UI state (current path, view, tabs) to Rust so the headless control
 // socket (`sfb ui get-state`) can report it without a round-trip to the webview. Called on every

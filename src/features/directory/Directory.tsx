@@ -65,6 +65,7 @@ const Directory = () => {
     fs,
     path,
     setPath,
+    refreshDir,
     view,
     search,
     accessDenied,
@@ -207,13 +208,23 @@ const Directory = () => {
   // else (and those when it's off) opens in the OS default app. Shared by Enter (below) and
   // double-click (DirEntry via onOpenFile) so both honour the setting.
   const openFile = useCallback(
-    (entry: DirEntry) => {
+    async (entry: DirEntry) => {
       const ext = extension(entry.name);
       const inApp =
         (previewImagesInApp && IMAGE_FORMATS.includes(ext)) ||
         (previewMarkdownInApp && ext === MARKDOWN_FORMAT);
-      if (inApp) preview.open(entry.path);
-      else fs.open(entry.path);
+      // In-app preview keeps the real (possibly remote) path so prev/next works over the folder's
+      // entries; the Preview panel downloads a remote file to the cache itself. Opening in the OS
+      // app needs a local path now, so materialize first (read-only — see SSH_PLAN.md phase 3a).
+      if (inApp) {
+        preview.open(entry.path);
+        return;
+      }
+      try {
+        fs.open(await fs.materialize(entry.path));
+      } catch (err) {
+        notify(t.connections.openError(String(err)), TOAST_TYPE.ERROR);
+      }
     },
     [previewImagesInApp, previewMarkdownInApp, preview, fs],
   );
@@ -233,11 +244,14 @@ const Directory = () => {
   const handleNewFolder = useCallback(async () => {
     try {
       const created = await fs.createFolder(path);
+      // Refresh so the new folder shows immediately. Local dirs also get this via the fs watcher,
+      // but remote (SFTP) paths aren't watchable, so without it the folder only appears on reload.
+      refreshDir();
       setRenamingID(created);
     } catch (err) {
       notify(t.errors.createFolder(String(err)), TOAST_TYPE.ERROR);
     }
-  }, [fs, path, setRenamingID]);
+  }, [fs, path, refreshDir, setRenamingID]);
 
   // Open a terminal at the selection's folder (a folder → itself, a file → its parent), or the
   // current directory when the selection isn't a single entry. Skipped in the virtual views.
