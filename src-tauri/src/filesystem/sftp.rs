@@ -205,18 +205,51 @@ fn connect_locks() -> &'static Mutex<HashMap<String, Arc<Mutex<()>>>> {
     LOCKS.get_or_init(|| Mutex::new(HashMap::new()))
 }
 
-// russh client handler. Phase 1 trusts any host key (no known-hosts verification yet — phase 4
-// hardening). Everything else uses russh defaults.
-struct ClientHandler;
+// russh client handler. Verifies the server's host key against ~/.ssh/known_hosts (the same file
+// `ssh` uses) with trust-on-first-use: a known host must match, a new host is recorded and accepted,
+// and a CHANGED key is rejected (possible MITM). Carries host/port since check_server_key only gets
+// the key.
+struct ClientHandler {
+    host: String,
+    port: u16,
+}
 
 impl client::Handler for ClientHandler {
     type Error = russh::Error;
 
     async fn check_server_key(
         &mut self,
-        _server_public_key: &ssh_key::PublicKey,
+        server_public_key: &ssh_key::PublicKey,
     ) -> Result<bool, Self::Error> {
-        Ok(true)
+        match russh::keys::known_hosts::check_known_hosts(&self.host, self.port, server_public_key) {
+            // Known host, key matches.
+            Ok(true) => Ok(true),
+            // Unknown host — trust on first use and record it (like ssh's accept-new).
+            Ok(false) => {
+                eprintln!(
+                    "[sftp] new host {}:{} — recording its key in known_hosts",
+                    self.host, self.port
+                );
+                russh::keys::known_hosts::learn_known_hosts(&self.host, self.port, server_public_key).ok();
+                Ok(true)
+            }
+            // Recorded key changed → refuse (possible man-in-the-middle).
+            Err(russh::keys::Error::KeyChanged { line }) => {
+                eprintln!(
+                    "[sftp] HOST KEY CHANGED for {}:{} (known_hosts line {line}) — refusing to \
+                     connect (possible MITM). If the server was legitimately rebuilt, remove the \
+                     old line from ~/.ssh/known_hosts.",
+                    self.host, self.port
+                );
+                Ok(false)
+            }
+            // No known_hosts file yet / parse error → treat as first use and record.
+            Err(other) => {
+                eprintln!("[sftp] known_hosts check for {}:{}: {other} — recording key", self.host, self.port);
+                russh::keys::known_hosts::learn_known_hosts(&self.host, self.port, server_public_key).ok();
+                Ok(true)
+            }
+        }
     }
 }
 
@@ -347,7 +380,8 @@ async fn try_password_auth(
 async fn open_session(conn: &Connection) -> Result<RemoteSession, String> {
     eprintln!("[sftp] connecting to {}@{}:{}", conn.user, conn.host, conn.port);
     let config = Arc::new(client::Config::default());
-    let mut handle = client::connect(config, (conn.host.as_str(), conn.port), ClientHandler)
+    let handler = ClientHandler { host: conn.host.clone(), port: conn.port };
+    let mut handle = client::connect(config, (conn.host.as_str(), conn.port), handler)
         .await
         .map_err(|e| {
             eprintln!("[sftp] connect failed: {e}");
