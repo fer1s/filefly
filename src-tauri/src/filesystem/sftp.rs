@@ -39,6 +39,9 @@ const PASSWORD_ENV: &str = "SFB_SSH_PASSWORD";
 const KEY_PASSPHRASE_ENV: &str = "SFB_SSH_KEY_PASSPHRASE";
 // Private keys tried (in order) when a connection doesn't name one — mirrors what `ssh` looks for.
 const DEFAULT_KEY_NAMES: &[&str] = &["id_ed25519", "id_ecdsa", "id_rsa"];
+// Error prefix marking an authentication failure (vs network/other), so the frontend can prompt for
+// credentials. Mirrored as SSH_AUTH_FAILED in the frontend (constants.ts).
+const AUTH_FAILED_MARKER: &str = "SSH_AUTH_FAILED";
 
 // OS keychain for connection secrets (macOS Keychain). Keyed by "<connId>:<field>" under one
 // service. On non-macOS the keyring backend isn't compiled in, so these no-op and secrets fall back
@@ -404,7 +407,12 @@ async fn open_session(conn: &Connection) -> Result<RemoteSession, String> {
             conn.host,
             if conn.password.is_some() { " and password rejected" } else { " (no password set)" }
         );
-        return Err(format!("authentication failed for {}@{}", conn.user, conn.host));
+        // Prefixed with a stable marker so the frontend can recognise an auth failure (vs a network
+        // error) and prompt for a password/passphrase instead of showing a generic toast.
+        return Err(format!(
+            "{AUTH_FAILED_MARKER}: authentication failed for {}@{}",
+            conn.user, conn.host
+        ));
     }
     eprintln!("[sftp] authenticated, opening sftp subsystem…");
 

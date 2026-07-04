@@ -13,11 +13,21 @@ import {
 } from "@/shared/keymap";
 import { classNames, basename, tagsPath } from "@/shared/utils";
 import { useFolderPicker } from "@/shared/providers/FolderPickerProvider";
-import { RECENTS, TAG_COLOR, TAG_COLOR_CLASS } from "@/shared/constants";
+import {
+  RECENTS,
+  TAG_COLOR,
+  TAG_COLOR_CLASS,
+  SSH_AUTH_FAILED,
+} from "@/shared/constants";
 import { useTags } from "@/shared/providers/TagsProvider";
 import { useSettings } from "@/features/settings";
-import { useConnections, ConnectionDialog } from "@/features/connections";
+import {
+  useConnections,
+  ConnectionDialog,
+  ConnectionAuthDialog,
+} from "@/features/connections";
 import { notify, TOAST_TYPE } from "@/shared/toast";
+import type { Connection } from "@/shared/services/api";
 import { Properties } from "@/features/directory";
 import { t } from "@/lang";
 
@@ -80,6 +90,8 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
     useConnections();
   // Open state for the create-connection form (opened from the Network group's "+").
   const [connectionFormOpen, setConnectionFormOpen] = useState(false);
+  // The connection whose auth failed, showing the interactive re-auth dialog (null = hidden).
+  const [authConnection, setAuthConnection] = useState<Connection | null>(null);
   const pinned = usePinnedFolders();
   const groups = useSidebarGroups();
   const {
@@ -164,13 +176,17 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
   // edit affordances, drag handle) is the same SidebarSection for all of them.
   const networkRows = customRows(SIDEBAR_GROUP.NETWORK);
 
-  // Open a connection on its home directory (where `ssh` lands), resolved over SFTP. Falls back to
-  // the filesystem root if the lookup fails — that navigation then surfaces the error toast.
-  const openConnection = (id: string) => {
+  // Open a connection on its home directory (where `ssh` lands), resolved over SFTP. An auth failure
+  // opens the interactive re-auth dialog; any other error falls back to the root path (whose load
+  // then surfaces the error toast).
+  const openConnection = (connection: Connection) => {
     connectionsManager
-      .home(id)
+      .home(connection.id)
       .then(setPath)
-      .catch(() => setPath(connectionsManager.rootPath(id)));
+      .catch((err) => {
+        if (String(err).includes(SSH_AUTH_FAILED)) setAuthConnection(connection);
+        else setPath(connectionsManager.rootPath(connection.id));
+      });
   };
 
   // Saved SSH/SFTP connections (see SSH_PLAN.md). Clicking opens the connection's home dir; the row
@@ -186,7 +202,7 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
           icon: faServer,
           kind: SIDEBAR_ITEM_KIND.CONNECTION,
         }}
-        setPath={() => openConnection(connection.id)}
+        setPath={() => openConnection(connection)}
         collapsed={collapsed}
         active={path === prefix || path.startsWith(`${prefix}/`)}
         onContextMenu={onRowContextMenu(prefix, SIDEBAR_ITEM_KIND.CONNECTION)}
@@ -467,6 +483,26 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
           reloadConnections();
           setConnectionFormOpen(false);
           notify(t.connections.added, TOAST_TYPE.SUCCESS);
+        }}
+      />
+      <ConnectionAuthDialog
+        connection={authConnection}
+        onClose={() => setAuthConnection(null)}
+        onRetry={async (secret) => {
+          const conn = authConnection;
+          if (!conn) return;
+          // Store the entered secret (if any) as both password and key passphrase so it covers
+          // password auth and an encrypted key; empty just re-attempts (ssh-agent case).
+          if (secret) {
+            await connectionsManager.add({
+              ...conn,
+              password: secret,
+              keyPassphrase: secret,
+            });
+          }
+          const home = await connectionsManager.home(conn.id);
+          setPath(home);
+          setAuthConnection(null);
         }}
       />
     </div>

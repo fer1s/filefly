@@ -283,6 +283,14 @@ export const en = {
     added: "Connection created",
     // Downloading a remote file to open/preview it failed (read-only cache copy — phase 3a).
     openError: (error: string) => `Couldn't open remote file: ${error}`,
+    // Interactive auth dialog, shown when opening a connection fails authentication (phase 4).
+    authTitle: (name: string) => `Authenticate ${name}`,
+    authFailed: (target: string) => `Couldn't authenticate to ${target}.`,
+    authSecret: "Password or key passphrase",
+    authKeyHint:
+      "Using an SSH key? Make sure it's loaded in your agent — run `ssh-add ~/.ssh/id_ed25519` in a terminal — then retry. Leave the field empty for agent auth.",
+    retry: "Retry",
+    authFailedRetry: (error: string) => `Still couldn't connect: ${error}`,
   },
   settings: {
     title: "Settings",
@@ -436,6 +444,9 @@ export const en = {
     confirmDelete: (label: string) => `Move ${label} to the Trash?`,
     confirmDeletePermanently: (label: string) =>
       `Permanently delete ${label}? This can't be undone.`,
+    // Remote (SFTP) has no Trash — deletion is immediate and irreversible, so always warn.
+    confirmDeleteRemote: (label: string) =>
+      `Delete ${label} from the server? There's no Trash on a remote host — this can't be undone.`,
     confirmDragMove: (label: string, dest: string) =>
       `Move ${label} to "${dest}"?`,
     confirmDragCopy: (label: string, dest: string) =>

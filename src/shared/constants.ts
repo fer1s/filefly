@@ -219,6 +219,11 @@ export type StorageKind = (typeof STORAGE_KIND)[keyof typeof STORAGE_KIND];
 // src-tauri/src/filesystem/sftp.rs. See SSH_PLAN.md.
 export const SFTP_SCHEME = "sftp://";
 
+// Prefix the SFTP backend puts on an authentication-failure error (vs network/other), so the UI can
+// prompt for a password/passphrase instead of a generic error. Mirrors AUTH_FAILED_MARKER in
+// src-tauri/src/filesystem/sftp.rs.
+export const SSH_AUTH_FAILED = "SSH_AUTH_FAILED";
+
 // Semantic UI colors for elements that support a color variant (e.g. menu items, buttons).
 // Values double as CSS modifier class names.
 export const UI_COLOR = {
