@@ -122,10 +122,18 @@ pub async fn get_entry(app: AppHandle, path: String) -> Result<DirEntry, String>
 // commands on the main thread, so a plain sync version froze the UI for the whole walk.
 // This keeps the webview responsive while the (CPU/IO-bound) walk runs on a worker thread.
 #[tauri::command]
-pub async fn get_dir_size(path: String) -> u64 {
-    tauri::async_runtime::spawn_blocking(move || dir_size_core(&path))
+pub async fn get_dir_size(app: AppHandle, path: String) -> u64 {
+    match super::sftp::resolve(&path) {
+        super::sftp::Target::Local(p) => tauri::async_runtime::spawn_blocking(move || {
+            dir_size_core(&p)
+        })
         .await
-        .unwrap_or(0)
+        .unwrap_or(0),
+        // Remote sizes are computed on demand (Properties) — the frontend never bulk-walks them.
+        super::sftp::Target::Remote { conn, path } => {
+            super::sftp::dir_size(&app, &conn, &path).await.unwrap_or(0)
+        }
+    }
 }
 
 // Recursively sum the apparent size of every file under `path`. Shared by the Tauri command and

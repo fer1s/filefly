@@ -570,6 +570,30 @@ pub async fn read_dir(app: &AppHandle, conn: &str, path: &str) -> Result<Vec<Dir
     Ok(result)
 }
 
+// Recursively sum the byte size of every file under a remote directory (the SFTP equivalent of
+// dir_size_core). Walked iteratively over SFTP — one round trip per subdirectory, so it's only used
+// on demand (the Properties panel), never for the whole listing.
+pub async fn dir_size(app: &AppHandle, conn: &str, path: &str) -> Result<u64, String> {
+    let session = session_for(app, conn).await?;
+    let mut total: u64 = 0;
+    let mut stack = vec![path.to_string()];
+    while let Some(dir) = stack.pop() {
+        let entries = session
+            .sftp
+            .read_dir(&dir)
+            .await
+            .map_err(|e| format!("read_dir failed: {e}"))?;
+        for entry in entries {
+            if entry.file_type().is_dir() {
+                stack.push(format!("{}/{}", dir.trim_end_matches('/'), entry.file_name()));
+            } else {
+                total += entry.metadata().size.unwrap_or(0);
+            }
+        }
+    }
+    Ok(total)
+}
+
 // Metadata for a single remote entry.
 pub async fn stat(app: &AppHandle, conn: &str, path: &str) -> Result<DirEntry, String> {
     let session = session_for(app, conn).await?;

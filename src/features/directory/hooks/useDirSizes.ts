@@ -2,8 +2,15 @@ import { useEffect, useState } from "react";
 
 import { useStateContext } from "@/shared/providers/StateProvider";
 import { DirEntry } from "@/shared/models";
+import { SFTP_SCHEME } from "@/shared/constants";
 
 import { dirSizeCache } from "./dirSizeCache";
+
+// Bulk size-walking a remote folder would fire a recursive SFTP walk per subfolder (many network
+// round trips) just from listing it — too heavy. Remote folder sizes are computed only on demand
+// (the Properties panel via useEntrySize), so the bulk walk skips them entirely.
+const isWalkable = (entry: DirEntry) =>
+  entry.metadata.isDir && !entry.path.startsWith(SFTP_SCHEME);
 
 // How many folder walks run at once. Each walk is already parallel (jwalk/rayon) and runs
 // off the main thread, so a small pool overlaps IO latency without oversubscribing CPU/disk.
@@ -26,7 +33,7 @@ export const useDirSizes = (entries: DirEntry[], enabled: boolean) => {
   useEffect(() => {
     if (!enabled) return;
 
-    const queue = entries.filter((entry) => entry.metadata.isDir);
+    const queue = entries.filter(isWalkable);
     if (!queue.length) return;
 
     let cancelled = false;
@@ -84,8 +91,7 @@ export const useDirSizes = (entries: DirEntry[], enabled: boolean) => {
   // Still computing while any visible folder has no size yet. Derived (no extra state) so it
   // flips off on its own as the batches land.
   const computing =
-    enabled &&
-    entries.some((entry) => entry.metadata.isDir && sizes[entry.path] == null);
+    enabled && entries.some((entry) => isWalkable(entry) && sizes[entry.path] == null);
 
   return { sizes, computing };
 };
