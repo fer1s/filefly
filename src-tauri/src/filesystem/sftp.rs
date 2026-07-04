@@ -12,6 +12,7 @@ use std::collections::HashMap;
 use std::future::Future;
 use std::path::{Path, PathBuf};
 use std::pin::Pin;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, OnceLock};
 
 use russh::client;
@@ -651,7 +652,10 @@ pub async fn download(app: &AppHandle, conn: &str, path: &str) -> Result<String,
     if let Some(parent) = local.parent() {
         std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
     }
-    stream_from_remote(&session, path, &local).await?;
+    // Opening/preview download reports no progress (the caller shows its own spinner).
+    let noop = |_done: u64, _total: u64| {};
+    let prog = ProgressState { done: AtomicU64::new(0), total: remote_size, report: &noop };
+    stream_from_remote(&session, path, &local, &prog).await?;
     Ok(local.to_string_lossy().into_owned())
 }
 
@@ -825,13 +829,55 @@ fn unique_local(dir: &str, name: &str) -> PathBuf {
     candidate
 }
 
-// Stream a local file up to a remote path (chunked via tokio::io::copy — never loads the whole file
-// into memory). `create` opens the remote file CREATE|TRUNCATE|WRITE (russh-sftp's `write` uses only
-// WRITE and fails with "no such file" on a new upload).
+// Shared transfer progress: running byte count, the precomputed grand total, and a throttled sink
+// that pushes (done, total) to the frontend. Threaded (by ref) through the recursive tree walkers.
+struct ProgressState<'a> {
+    done: AtomicU64,
+    total: u64,
+    report: &'a (dyn Fn(u64, u64) + Send + Sync),
+}
+
+// Emit at most one update per ~1 MB (plus the caller's final flush) so a big file animates the bar
+// without flooding the IPC channel with thousands of tiny messages.
+const PROGRESS_STEP: u64 = 1 << 20;
+
+// Copy reader → writer in fixed chunks, tallying bytes into `prog` and reporting on the step. The
+// heart of every transfer: bounded memory (one buffer) regardless of file size.
+async fn copy_stream<R, W>(
+    reader: &mut R,
+    writer: &mut W,
+    prog: &ProgressState<'_>,
+) -> Result<(), String>
+where
+    R: tokio::io::AsyncRead + Unpin,
+    W: tokio::io::AsyncWrite + Unpin,
+{
+    use tokio::io::{AsyncReadExt, AsyncWriteExt};
+    let mut buf = vec![0u8; 64 * 1024];
+    let mut since_report: u64 = 0;
+    loop {
+        let n = reader.read(&mut buf).await.map_err(|e| format!("read failed: {e}"))?;
+        if n == 0 {
+            break;
+        }
+        writer.write_all(&buf[..n]).await.map_err(|e| format!("write failed: {e}"))?;
+        let done = prog.done.fetch_add(n as u64, Ordering::Relaxed) + n as u64;
+        since_report += n as u64;
+        if since_report >= PROGRESS_STEP {
+            since_report = 0;
+            (prog.report)(done, prog.total);
+        }
+    }
+    Ok(())
+}
+
+// Stream a local file up to a remote path (chunked; `create` opens CREATE|TRUNCATE|WRITE — russh-
+// sftp's `write` uses only WRITE and fails with "no such file" on a new upload).
 async fn stream_to_remote(
     session: &RemoteSession,
     local: &Path,
     remote: String,
+    prog: &ProgressState<'_>,
 ) -> Result<(), String> {
     use tokio::io::AsyncWriteExt;
     let mut src = tokio::fs::File::open(local).await.map_err(|e| e.to_string())?;
@@ -840,7 +886,7 @@ async fn stream_to_remote(
         .create(remote)
         .await
         .map_err(|e| format!("create failed: {e}"))?;
-    tokio::io::copy(&mut src, &mut dst).await.map_err(|e| format!("upload failed: {e}"))?;
+    copy_stream(&mut src, &mut dst, prog).await?;
     dst.shutdown().await.map_err(|e| format!("upload flush failed: {e}"))?;
     Ok(())
 }
@@ -850,6 +896,7 @@ async fn stream_from_remote(
     session: &RemoteSession,
     remote: &str,
     local: &Path,
+    prog: &ProgressState<'_>,
 ) -> Result<(), String> {
     let mut src = session
         .sftp
@@ -857,8 +904,7 @@ async fn stream_from_remote(
         .await
         .map_err(|e| format!("open failed: {e}"))?;
     let mut dst = tokio::fs::File::create(local).await.map_err(|e| e.to_string())?;
-    tokio::io::copy(&mut src, &mut dst).await.map_err(|e| format!("download failed: {e}"))?;
-    Ok(())
+    copy_stream(&mut src, &mut dst, prog).await
 }
 
 // Stream a remote file to another remote path (reads via `src`, writes via `dst`; chunked).
@@ -867,17 +913,23 @@ async fn stream_remote_to_remote(
     dst: &RemoteSession,
     from: &str,
     to: String,
+    prog: &ProgressState<'_>,
 ) -> Result<(), String> {
     use tokio::io::AsyncWriteExt;
     let mut reader = src.sftp.open(from).await.map_err(|e| format!("open failed: {e}"))?;
     let mut writer = dst.sftp.create(to).await.map_err(|e| format!("create failed: {e}"))?;
-    tokio::io::copy(&mut reader, &mut writer).await.map_err(|e| format!("copy failed: {e}"))?;
+    copy_stream(&mut reader, &mut writer, prog).await?;
     writer.shutdown().await.map_err(|e| format!("copy flush failed: {e}"))?;
     Ok(())
 }
 
 // Upload a local file/dir tree to a remote destination path.
-fn upload<'a>(session: &'a RemoteSession, local: PathBuf, remote: String) -> Transfer<'a> {
+fn upload<'a>(
+    session: &'a RemoteSession,
+    local: PathBuf,
+    remote: String,
+    prog: &'a ProgressState<'a>,
+) -> Transfer<'a> {
     Box::pin(async move {
         let meta = std::fs::metadata(&local).map_err(|e| e.to_string())?;
         if meta.is_dir() {
@@ -889,17 +941,22 @@ fn upload<'a>(session: &'a RemoteSession, local: PathBuf, remote: String) -> Tra
             for entry in std::fs::read_dir(&local).map_err(|e| e.to_string())? {
                 let entry = entry.map_err(|e| e.to_string())?;
                 let child = format!("{}/{}", remote.trim_end_matches('/'), entry.file_name().to_string_lossy());
-                upload(session, entry.path(), child).await?;
+                upload(session, entry.path(), child, prog).await?;
             }
             Ok(())
         } else {
-            stream_to_remote(session, &local, remote).await
+            stream_to_remote(session, &local, remote, prog).await
         }
     })
 }
 
 // Download a remote file/dir tree to a local destination path.
-fn download_tree<'a>(session: &'a RemoteSession, remote: String, local: PathBuf) -> Transfer<'a> {
+fn download_tree<'a>(
+    session: &'a RemoteSession,
+    remote: String,
+    local: PathBuf,
+    prog: &'a ProgressState<'a>,
+) -> Transfer<'a> {
     Box::pin(async move {
         let meta = session
             .sftp
@@ -915,11 +972,11 @@ fn download_tree<'a>(session: &'a RemoteSession, remote: String, local: PathBuf)
                 .map_err(|e| format!("read_dir failed: {e}"))?
             {
                 let child = format!("{}/{}", remote.trim_end_matches('/'), entry.file_name());
-                download_tree(session, child, local.join(entry.file_name())).await?;
+                download_tree(session, child, local.join(entry.file_name()), prog).await?;
             }
             Ok(())
         } else {
-            stream_from_remote(session, &remote, &local).await
+            stream_from_remote(session, &remote, &local, prog).await
         }
     })
 }
@@ -931,6 +988,7 @@ fn remote_copy<'a>(
     dst: &'a RemoteSession,
     from: String,
     to: String,
+    prog: &'a ProgressState<'a>,
 ) -> Transfer<'a> {
     Box::pin(async move {
         let meta = src
@@ -951,13 +1009,54 @@ fn remote_copy<'a>(
             {
                 let child_from = format!("{}/{}", from.trim_end_matches('/'), entry.file_name());
                 let child_to = format!("{}/{}", to.trim_end_matches('/'), entry.file_name());
-                remote_copy(src, dst, child_from, child_to).await?;
+                remote_copy(src, dst, child_from, child_to, prog).await?;
             }
             Ok(())
         } else {
-            stream_remote_to_remote(src, dst, &from, to).await
+            stream_remote_to_remote(src, dst, &from, to, prog).await
         }
     })
+}
+
+// Total byte size of a local file or directory tree (for transfer progress).
+fn local_tree_size(path: &Path) -> u64 {
+    match std::fs::symlink_metadata(path) {
+        Ok(meta) if meta.is_dir() => std::fs::read_dir(path)
+            .map(|entries| {
+                entries
+                    .flatten()
+                    .map(|entry| local_tree_size(&entry.path()))
+                    .sum()
+            })
+            .unwrap_or(0),
+        Ok(meta) => meta.len(),
+        Err(_) => 0,
+    }
+}
+
+// Total byte size of a remote file or directory tree (a file's own size, else a recursive walk over
+// the given session). Errors count as 0 — this only feeds the progress-bar estimate.
+async fn remote_tree_size(session: &RemoteSession, path: &str) -> u64 {
+    match session.sftp.metadata(path).await {
+        Ok(meta) if !meta.is_dir() => return meta.size.unwrap_or(0),
+        Ok(_) => {}
+        Err(_) => return 0,
+    }
+    let mut total = 0u64;
+    let mut stack = vec![path.to_string()];
+    while let Some(dir) = stack.pop() {
+        let Ok(entries) = session.sftp.read_dir(&dir).await else {
+            continue;
+        };
+        for entry in entries {
+            if entry.file_type().is_dir() {
+                stack.push(format!("{}/{}", dir.trim_end_matches('/'), entry.file_name()));
+            } else {
+                total += entry.metadata().size.unwrap_or(0);
+            }
+        }
+    }
+    total
 }
 
 fn remove_local(path: &str) -> Result<(), String> {
@@ -977,6 +1076,7 @@ pub async fn transfer(
     source: &str,
     dest_dir: &str,
     is_move: bool,
+    report: &(dyn Fn(u64, u64) + Send + Sync),
 ) -> Result<String, String> {
     let name = base_name(source);
     match (resolve(source), resolve(dest_dir)) {
@@ -985,7 +1085,10 @@ pub async fn transfer(
             let session = session_for(app, &conn).await?;
             let dest = unique_remote(&session, &path, &name).await?;
             eprintln!("[sftp] upload {local} → '{conn}':{dest}");
-            upload(&session, PathBuf::from(&local), dest.clone()).await?;
+            let total = local_tree_size(Path::new(&local));
+            let prog = ProgressState { done: AtomicU64::new(0), total, report };
+            upload(&session, PathBuf::from(&local), dest.clone(), &prog).await?;
+            report(total, total);
             if is_move {
                 remove_local(&local)?;
             }
@@ -996,7 +1099,10 @@ pub async fn transfer(
             let session = session_for(app, &conn).await?;
             let dest = unique_local(&local_dir, &name);
             eprintln!("[sftp] download '{conn}':{path} → {}", dest.display());
-            download_tree(&session, path.clone(), dest.clone()).await?;
+            let total = remote_tree_size(&session, &path).await;
+            let prog = ProgressState { done: AtomicU64::new(0), total, report };
+            download_tree(&session, path.clone(), dest.clone(), &prog).await?;
+            report(total, total);
             if is_move {
                 remove(app, &conn, &path).await?;
             }
@@ -1013,10 +1119,14 @@ pub async fn transfer(
                     .rename(sp.clone(), dest.clone())
                     .await
                     .map_err(|e| format!("move failed: {e}"))?;
+                report(1, 1); // instant server-side rename — no bytes moved
                 return Ok(remote_url(&dc, &dest));
             }
             eprintln!("[sftp] copy '{sc}':{sp} → '{dc}':{dest}");
-            remote_copy(&src, &dst, sp.clone(), dest.clone()).await?;
+            let total = remote_tree_size(&src, &sp).await;
+            let prog = ProgressState { done: AtomicU64::new(0), total, report };
+            remote_copy(&src, &dst, sp.clone(), dest.clone(), &prog).await?;
+            report(total, total);
             if is_move {
                 remove(app, &sc, &sp).await?;
             }

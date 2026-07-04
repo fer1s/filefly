@@ -657,11 +657,12 @@ pub async fn copy_entry(
     dest_dir: String,
     on_progress: Channel<ProgressPayload>,
 ) -> Result<String, String> {
-    // Any remote endpoint → SFTP transfer (coarse progress: a single done tick, byte-level is TODO).
+    // Any remote endpoint → SFTP transfer, reporting byte progress through the same channel.
     if super::sftp::involves_remote(&source, &dest_dir) {
-        let dest = super::sftp::transfer(&app, &source, &dest_dir, false).await?;
-        on_progress.send(ProgressPayload { processed: 1, total: 1 }).ok();
-        return Ok(dest);
+        let report = move |processed: u64, total: u64| {
+            on_progress.send(ProgressPayload { processed, total }).ok();
+        };
+        return super::sftp::transfer(&app, &source, &dest_dir, false, &report).await;
     }
     tauri::async_runtime::spawn_blocking(move || {
         let mut sink = |processed, total| {
@@ -703,9 +704,10 @@ pub async fn move_entry(
 ) -> Result<String, String> {
     // Any remote endpoint → SFTP transfer (same-host move is a server-side rename; see sftp.rs).
     if super::sftp::involves_remote(&source, &dest_dir) {
-        let dest = super::sftp::transfer(&app, &source, &dest_dir, true).await?;
-        on_progress.send(ProgressPayload { processed: 1, total: 1 }).ok();
-        return Ok(dest);
+        let report = move |processed: u64, total: u64| {
+            on_progress.send(ProgressPayload { processed, total }).ok();
+        };
+        return super::sftp::transfer(&app, &source, &dest_dir, true, &report).await;
     }
     tauri::async_runtime::spawn_blocking(move || {
         let mut sink = |processed, total| {
