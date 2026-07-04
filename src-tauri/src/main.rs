@@ -124,6 +124,12 @@ fn main() {
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
         .run(|app_handle, event| {
+            // On exit, drop the SFTP download cache (materialized remote files + ssh scripts) so it
+            // doesn't linger across sessions. Other caches (thumbnails) are kept.
+            if let tauri::RunEvent::Exit = &event {
+                filesystem::sftp::clear_cache(app_handle);
+            }
+
             // macOS routes "open this folder" (Terminal `open`, folder links, aliases) here when we
             // are the default folder handler — open each directory in a new window. Double-clicking
             // a folder inside Finder never reaches this; Finder keeps that itself (see handler.rs).

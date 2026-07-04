@@ -644,6 +644,15 @@ fn cache_path_for(app: &AppHandle, conn: &str, path: &str) -> Result<std::path::
     Ok(cache.join("sftp").join(conn).join(path.trim_start_matches('/')))
 }
 
+// Delete the SFTP cache subdir (materialized remote files + ssh .command scripts). Best-effort,
+// called on app exit so downloaded remote files don't linger across sessions. Thumbnails and other
+// caches are left alone. See SSH_PLAN.md phase 4.
+pub fn clear_cache(app: &AppHandle) {
+    if let Ok(cache) = app.path().app_cache_dir() {
+        let _ = std::fs::remove_dir_all(cache.join("sftp"));
+    }
+}
+
 // Download a remote file to the local cache and return its local path, so the existing local open /
 // preview paths can use it. Read-only: edits to the local copy are NOT pushed back (phase 3a). If a
 // cached copy already matches the remote size it's reused (no re-download); a size mismatch (the
