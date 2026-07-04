@@ -156,6 +156,8 @@ const Preview = ({
     onQueryChange,
   } = useMarkdownPreview({
     filePath: localPath,
+    // Save back to the original path (remote → server); reading still uses the local cache copy.
+    savePath: filePath,
     isMarkdown,
     previewVisible: previewVisible && !!localPath,
   });

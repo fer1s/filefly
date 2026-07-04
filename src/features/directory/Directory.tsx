@@ -221,6 +221,9 @@ const Directory = () => {
         return;
       }
       try {
+        // TODO(SSH_PLAN.md §9): opening a remote file in an external OS app edits only the local
+        // cache copy — changes are NOT pushed back to the server. Would need to watch the temp and
+        // re-upload on change. The in-app markdown editor does save back (see useMarkdownPreview).
         fs.open(await fs.materialize(entry.path));
       } catch (err) {
         notify(t.connections.openError(String(err)), TOAST_TYPE.ERROR);
