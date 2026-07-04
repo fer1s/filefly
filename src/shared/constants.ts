@@ -225,6 +225,10 @@ export const SFTP_SCHEME = "sftp://";
 // src-tauri/src/filesystem/sftp.rs.
 export const SSH_AUTH_FAILED = "SSH_AUTH_FAILED";
 
+// Prefix the SFTP backend puts on a changed-host-key error (possible MITM), so the UI can show a
+// clear security warning instead of a generic failure. Mirrors HOST_KEY_CHANGED_MARKER in sftp.rs.
+export const SSH_HOST_KEY_CHANGED = "SSH_HOST_KEY_CHANGED";
+
 // Semantic UI colors for elements that support a color variant (e.g. menu items, buttons).
 // Values double as CSS modifier class names.
 export const UI_COLOR = {

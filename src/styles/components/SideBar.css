@@ -96,6 +96,13 @@
   pointer-events: auto;
 }
 
+/* Open-in-new-tab quick action on connection rows: always visible and right-aligned, like the
+   inline eject button on ejectable volumes. */
+.SideBar section .section_content .folder_item .item_open_tab {
+  margin-left: auto;
+  pointer-events: auto;
+}
+
 /* A hidden preset only shows in edit mode; dim it so it reads as "off" while still toggleable. */
 .SideBar section .section_content .folder_item.hidden {
   opacity: 0.5;

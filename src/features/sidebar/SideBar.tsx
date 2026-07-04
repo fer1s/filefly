@@ -18,7 +18,10 @@ import {
   TAG_COLOR,
   TAG_COLOR_CLASS,
   SSH_AUTH_FAILED,
+  SSH_HOST_KEY_CHANGED,
+  SFTP_SCHEME,
 } from "@/shared/constants";
+import { useConfirm } from "@/shared/providers/ConfirmProvider";
 import { useTags } from "@/shared/providers/TagsProvider";
 import { useSettings } from "@/features/settings";
 import {
@@ -79,7 +82,7 @@ import type {
 } from "./types";
 
 const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
-  const { fs, path, volumes, setPath, setVolumes, sidebarOpacity } =
+  const { fs, path, volumes, setPath, setVolumes, sidebarOpacity, newTab } =
     useStateContext();
   const { pickFolder } = useFolderPicker();
   const { allTags } = useTags();
@@ -90,8 +93,41 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
     useConnections();
   // Open state for the create-connection form (opened from the Network group's "+").
   const [connectionFormOpen, setConnectionFormOpen] = useState(false);
+  // The connection being edited (null = not editing); drives the same form dialog prefilled.
+  const [editConnectionTarget, setEditConnectionTarget] =
+    useState<Connection | null>(null);
   // The connection whose auth failed, showing the interactive re-auth dialog (null = hidden).
   const [authConnection, setAuthConnection] = useState<Connection | null>(null);
+  const { confirm } = useConfirm();
+
+  // The connection id embedded in a row's `sftp://<id>` path.
+  const connectionId = (path: string) =>
+    path.slice(SFTP_SCHEME.length).split("/")[0];
+
+  // Open the connection form prefilled to edit the clicked connection.
+  const editConnection = (path: string) => {
+    const conn = connections.find((c) => c.id === connectionId(path));
+    if (conn) setEditConnectionTarget(conn);
+  };
+
+  // Confirm, then delete the clicked connection (app-side only; the server is untouched).
+  const removeConnection = async (path: string) => {
+    const conn = connections.find((c) => c.id === connectionId(path));
+    if (!conn) return;
+    const ok = await confirm({
+      title: t.connections.remove,
+      message: t.connections.confirmRemove(conn.name),
+      destructive: true,
+    });
+    if (!ok) return;
+    try {
+      await connectionsManager.remove(conn.id);
+      reloadConnections();
+      notify(t.connections.removed, TOAST_TYPE.SUCCESS);
+    } catch (err) {
+      notify(t.connections.removeError(String(err)), TOAST_TYPE.ERROR);
+    }
+  };
   const pinned = usePinnedFolders();
   const groups = useSidebarGroups();
   const {
@@ -184,9 +220,20 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
       .home(connection.id)
       .then(setPath)
       .catch((err) => {
-        if (String(err).includes(SSH_AUTH_FAILED)) setAuthConnection(connection);
+        const message = String(err);
+        if (message.includes(SSH_AUTH_FAILED)) setAuthConnection(connection);
+        else if (message.includes(SSH_HOST_KEY_CHANGED))
+          notify(t.connections.hostKeyChanged, TOAST_TYPE.ERROR);
         else setPath(connectionsManager.rootPath(connection.id));
       });
+  };
+
+  // Open a connection in a new tab, landing on its home dir (falls back to the root on lookup fail).
+  const openConnectionInNewTab = (connection: Connection) => {
+    connectionsManager
+      .home(connection.id)
+      .then(newTab)
+      .catch(() => newTab(connectionsManager.rootPath(connection.id)));
   };
 
   // Saved SSH/SFTP connections (see SSH_PLAN.md). Clicking opens the connection's home dir; the row
@@ -206,6 +253,7 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
         collapsed={collapsed}
         active={path === prefix || path.startsWith(`${prefix}/`)}
         onContextMenu={onRowContextMenu(prefix, SIDEBAR_ITEM_KIND.CONNECTION)}
+        onOpenInNewTab={() => openConnectionInNewTab(connection)}
       />
     );
   });
@@ -436,6 +484,8 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
         target={menu.target}
         onClose={menu.close}
         openProperties={properties.open}
+        editConnection={editConnection}
+        removeConnection={removeConnection}
       />
       <Properties
         entry={properties.entry}
@@ -476,13 +526,22 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
         onClose={() => setPendingGroupRemoval(null)}
       />
       <ConnectionDialog
-        visible={connectionFormOpen}
-        onClose={() => setConnectionFormOpen(false)}
+        visible={connectionFormOpen || editConnectionTarget !== null}
+        initial={editConnectionTarget}
+        onClose={() => {
+          setConnectionFormOpen(false);
+          setEditConnectionTarget(null);
+        }}
         onSubmit={async (connection) => {
+          const isEdit = editConnectionTarget !== null;
           await connectionsManager.add(connection);
           reloadConnections();
           setConnectionFormOpen(false);
-          notify(t.connections.added, TOAST_TYPE.SUCCESS);
+          setEditConnectionTarget(null);
+          notify(
+            isEdit ? t.common.saved : t.connections.added,
+            TOAST_TYPE.SUCCESS,
+          );
         }}
       />
       <ConnectionAuthDialog

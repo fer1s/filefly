@@ -509,6 +509,10 @@ export const sftpAddConnection = async (
   connection: NewConnection,
 ): Promise<void> => await invoke("sftp_add_connection", { connection });
 
+// Remove a saved connection and its keychain secrets.
+export const sftpRemoveConnection = async (id: string): Promise<void> =>
+  await invoke("sftp_remove_connection", { id });
+
 // The connection's login directory as a `sftp://<id>/home` URL — where `ssh` lands. Used to open a
 // connection on its home instead of the filesystem root. Connects on first call.
 export const sftpHome = async (conn: string): Promise<string> =>

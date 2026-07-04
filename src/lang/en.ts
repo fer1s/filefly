@@ -260,6 +260,9 @@ export const en = {
     // Shown when browsing a remote SSH/SFTP location fails (connect/auth/read). `error` is the
     // backend message, e.g. "no password for 'x'", "authentication failed", "connect failed".
     listError: (error: string) => `Couldn't open remote folder: ${error}`,
+    // Shown when the server's host key no longer matches the one recorded in known_hosts.
+    hostKeyChanged:
+      "The server's host key has changed. This could be a man-in-the-middle attack — or the server was rebuilt. If you trust it, remove its line from ~/.ssh/known_hosts and reconnect.",
     // Create-connection dialog (sidebar Network group → "+").
     newTitle: "New connection",
     fieldName: "Name",
@@ -278,6 +281,14 @@ export const en = {
     authHint:
       "SSH agent is tried first, then a key file, then a password — whichever the server accepts. Secrets are stored in your macOS Keychain, never on disk.",
     create: "Create",
+    save: "Save",
+    editTitle: "Edit connection",
+    edit: "Edit connection",
+    remove: "Delete connection",
+    confirmRemove: (name: string) =>
+      `Delete the connection "${name}"? This only removes it here — nothing on the server is touched.`,
+    removed: "Connection deleted",
+    removeError: (error: string) => `Couldn't delete the connection: ${error}`,
     invalidPort: "Port must be a number between 1 and 65535.",
     addError: (error: string) => `Couldn't save the connection: ${error}`,
     added: "Connection created",

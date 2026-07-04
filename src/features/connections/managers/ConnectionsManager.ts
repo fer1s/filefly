@@ -15,6 +15,11 @@ export class ConnectionsManager {
     return api.sftpAddConnection(connection);
   }
 
+  // Remove a connection (and its keychain secrets) by id.
+  remove(id: string): Promise<void> {
+    return api.sftpRemoveConnection(id);
+  }
+
   // The virtual path that navigates to a connection's root: `sftp://<id>/`. The filesystem layer
   // routes this to the remote backend.
   rootPath(id: string): string {

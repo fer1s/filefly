@@ -21,8 +21,15 @@ const manager = new ConnectionsManager();
 // Create-connection form (SSH_PLAN.md phase 2). Non-secret fields go to connections.toml; the
 // password / key passphrase go to the OS keychain (handled by the backend). The auth selector only
 // shapes which secret fields show — the backend always tries agent → key → password in order.
-const ConnectionDialog = ({ visible, onSubmit, onClose }: ConnectionDialogProps) => {
+const ConnectionDialog = ({
+  visible,
+  initial,
+  onSubmit,
+  onClose,
+}: ConnectionDialogProps) => {
   useCloseOnEscape(visible, onClose);
+
+  const editing = !!initial;
 
   const [name, setName] = useState("");
   const [host, setHost] = useState("");
@@ -35,20 +42,22 @@ const ConnectionDialog = ({ visible, onSubmit, onClose }: ConnectionDialogProps)
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Reset the form each time it (re)opens so a previous draft never lingers.
+  // (Re)seed the form each time it opens: from the edited connection, or blank for a new one.
+  // Secrets are never prefilled (they're in the keychain); the auth selector defaults to key when
+  // a key path is set, else agent — a best guess, since we don't persist the auth kind.
   useEffect(() => {
     if (!visible) return;
-    setName("");
-    setHost("");
-    setPort(String(SSH_DEFAULT_PORT));
-    setUser("");
+    setName(initial?.name ?? "");
+    setHost(initial?.host ?? "");
+    setPort(String(initial?.port ?? SSH_DEFAULT_PORT));
+    setUser(initial?.user ?? "");
     setAuthKind(AUTH_KIND.AGENT);
     setKeyPath("");
     setKeyPassphrase("");
     setPassword("");
     setBusy(false);
     setError(null);
-  }, [visible]);
+  }, [visible, initial]);
 
   const canSubmit =
     name.trim() !== "" && host.trim() !== "" && user.trim() !== "" && !busy;
@@ -61,7 +70,9 @@ const ConnectionDialog = ({ visible, onSubmit, onClose }: ConnectionDialogProps)
       return;
     }
     const connection: NewConnection = {
-      id: manager.idFor(name),
+      // Editing keeps the original id (so its sftp://<id>/ path stays stable even if renamed); a
+      // new connection derives its id from the name.
+      id: initial ? initial.id : manager.idFor(name),
       name: name.trim(),
       host: host.trim(),
       port: parsedPort,
@@ -91,7 +102,7 @@ const ConnectionDialog = ({ visible, onSubmit, onClose }: ConnectionDialogProps)
       labelledBy={CONNECTION_TITLE_ID}
     >
       <DialogHeader
-        title={t.connections.newTitle}
+        title={editing ? t.connections.editTitle : t.connections.newTitle}
         titleId={CONNECTION_TITLE_ID}
         onClose={onClose}
       />
@@ -203,7 +214,7 @@ const ConnectionDialog = ({ visible, onSubmit, onClose }: ConnectionDialogProps)
             className={classNames("connection_submit", !canSubmit && "disabled")}
             disabled={!canSubmit}
           >
-            {t.connections.create}
+            {editing ? t.connections.save : t.connections.create}
           </Button>
         </DialogActions>
       </form>

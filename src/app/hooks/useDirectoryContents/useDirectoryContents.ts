@@ -1,7 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Volume, DirEntry } from "@/shared/models";
-import { ACCESS_DENIED_ERROR, RECENTS, SFTP_SCHEME } from "@/shared/constants";
+import {
+  ACCESS_DENIED_ERROR,
+  RECENTS,
+  SFTP_SCHEME,
+  SSH_HOST_KEY_CHANGED,
+} from "@/shared/constants";
 import { isTagsPath, tagFromPath } from "@/shared/utils";
 import { notify, TOAST_TYPE } from "@/shared/toast";
 import { t } from "@/lang";
@@ -65,9 +70,14 @@ export const useDirectoryContents = ({
       } catch (err) {
         const denied = String(err).includes(ACCESS_DENIED_ERROR);
         // Remote (SFTP) failures are opaque — connect/auth errors would otherwise show as a blank
-        // folder with no clue why. Surface them so the user sees "auth failed", "no password", etc.
+        // folder with no clue why. Surface them; a changed host key gets its own clear warning.
         if (!denied && target.startsWith(SFTP_SCHEME))
-          notify(t.connections.listError(String(err)), TOAST_TYPE.ERROR);
+          notify(
+            String(err).includes(SSH_HOST_KEY_CHANGED)
+              ? t.connections.hostKeyChanged
+              : t.connections.listError(String(err)),
+            TOAST_TYPE.ERROR,
+          );
         return { files: [], denied };
       }
     },

@@ -8,7 +8,12 @@ import Tooltip, {
 import { classNames, activateOnKey } from "@/shared/utils";
 import { t } from "@/lang";
 
-import { faTrash, faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
+import {
+  faTrash,
+  faEye,
+  faEyeSlash,
+  faUpRightFromSquare,
+} from "@fortawesome/free-solid-svg-icons";
 
 import type { FolderItemProps } from "./types";
 
@@ -21,6 +26,7 @@ const FolderItem = ({
   onContextMenu,
   onRemove,
   onToggleHidden,
+  onOpenInNewTab,
   hidden,
   className,
 }: FolderItemProps) => {
@@ -49,6 +55,20 @@ const FolderItem = ({
           badge then so they don't crowd each other. */}
       {hotkey && !onRemove && !onToggleHidden && (
         <span className="folder_hotkey">{hotkey}</span>
+      )}
+      {onOpenInNewTab && (
+        <IconButton
+          icon={faUpRightFromSquare}
+          size={ICON_BUTTON_SIZE.SM}
+          className="item_open_tab"
+          tooltip={t.contextMenu.openInNewTab}
+          tooltipPlacement={TOOLTIP_PLACEMENT.RIGHT}
+          onClick={(e) => {
+            e.stopPropagation();
+            onOpenInNewTab();
+          }}
+          aria-label={t.contextMenu.openInNewTab}
+        />
       )}
       {onRemove && (
         <IconButton
