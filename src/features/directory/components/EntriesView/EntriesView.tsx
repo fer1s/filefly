@@ -30,7 +30,7 @@ const EntriesView = ({
   bindDrag,
   metadataTooltipDisabled,
 }: EntriesViewProps) => {
-  const { fs, setPath, dateFormat } = useStateContext();
+  const { fs, setPath, dateFormat, remoteThumbnails } = useStateContext();
   const { tags: tagsByPath, loadTags } = useTags();
   const [renderCount, setRenderCount] = useState(RENDER_BATCH_SIZE);
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -103,6 +103,7 @@ const EntriesView = ({
             setContextMenuElementType={menu.setType}
             bindDrag={bindDrag}
             metadataTooltipDisabled={metadataTooltipDisabled}
+            remoteThumbnails={remoteThumbnails}
           />
         );
       })}

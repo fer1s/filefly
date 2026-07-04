@@ -62,6 +62,9 @@ export type AppSettings = {
   // On export, ask before replacing an existing settings.toml. When off (default), a unique
   // filename is used instead so nothing is overwritten silently.
   confirmExportOverwrite: boolean;
+  // Generate thumbnails for images on remote (SFTP) hosts. Off by default — each downloads the whole
+  // file over the network. See SSH_PLAN.md phase 4.
+  remoteThumbnails: boolean;
 };
 
 // Load the persisted app settings (falls back to defaults when settings.toml is absent).

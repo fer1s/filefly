@@ -261,6 +261,7 @@ const App = () => {
         toggleDragToExternalApps,
         previewImagesInApp: settings.previewImagesInApp,
         previewMarkdownInApp: settings.previewMarkdownInApp,
+        remoteThumbnails: settings.remoteThumbnails,
         savingSettings,
         search: tabs.search,
         setSearch: tabs.setSearch,

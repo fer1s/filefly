@@ -315,6 +315,7 @@ export const en = {
       appearance: "Appearance",
       files: "Files & Transfers",
       notifications: "Notifications",
+      remote: "Remote",
       storage: "Storage",
     },
     showHidden: "Show hidden files",
@@ -322,6 +323,9 @@ export const en = {
     hideSystemRecents: "Hide app files in Recents",
     hideSystemRecentsHint:
       "Keep files this app writes in the background (cache, settings, temp) out of Recents.",
+    remoteThumbnails: "Thumbnails for remote files",
+    remoteThumbnailsHint:
+      "Generate image thumbnails on SSH/SFTP hosts. Off by default — each one downloads the whole file over the network.",
     showToasts: "Show notifications",
     showToastsHint: "Show transient pop-up messages (e.g. “Copied”, errors).",
     theme: "Appearance",

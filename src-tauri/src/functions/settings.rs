@@ -61,6 +61,10 @@ pub struct AppSettings {
     // On export, ask before replacing an existing settings.toml. When off (default), a unique
     // filename is used instead so nothing is overwritten silently.
     confirm_export_overwrite: bool,
+    // Generate thumbnails for images on remote (SFTP) hosts. Off by default: each thumbnail must
+    // download the whole file over the network, so browsing an image-heavy remote folder would be
+    // slow/costly. When on, remote images thumbnail like local ones (via the cache).
+    remote_thumbnails: bool,
 }
 
 // Must mirror the frontend defaults (shared/constants.ts).
@@ -90,6 +94,7 @@ impl Default for AppSettings {
             preview_images_in_app: false,
             preview_markdown_in_app: false,
             confirm_export_overwrite: false,
+            remote_thumbnails: false,
         }
     }
 }

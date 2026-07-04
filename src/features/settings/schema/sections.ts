@@ -10,6 +10,7 @@ export const SETTINGS_SECTION = {
   APPEARANCE: "appearance",
   FILES: "files",
   NOTIFICATIONS: "notifications",
+  REMOTE: "remote",
   STORAGE: "storage",
 } as const;
 
@@ -31,5 +32,6 @@ export const SETTINGS_SECTIONS: {
     id: SETTINGS_SECTION.NOTIFICATIONS,
     label: () => t.settings.sections.notifications,
   },
+  { id: SETTINGS_SECTION.REMOTE, label: () => t.settings.sections.remote },
   { id: SETTINGS_SECTION.STORAGE, label: () => t.settings.sections.storage },
 ];

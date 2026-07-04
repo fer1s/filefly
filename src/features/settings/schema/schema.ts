@@ -241,6 +241,15 @@ export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
     hint: () => t.settings.dragToExternalAppsHint,
   },
 
+  // ── Remote ── SSH/SFTP connection behaviour.
+  {
+    kind: SETTING_KIND.TOGGLE,
+    key: "remoteThumbnails",
+    section: SETTINGS_SECTION.REMOTE,
+    label: () => t.settings.remoteThumbnails,
+    hint: () => t.settings.remoteThumbnailsHint,
+  },
+
   // ── Notifications ──
   {
     kind: SETTING_KIND.TOGGLE,

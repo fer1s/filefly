@@ -61,4 +61,7 @@ export type DirEntryItemProps = {
   // Suppress this row's metadata hover card (a dialog / preview panel is open). Same value for
   // every row, so it only re-renders them on the rare open/close.
   metadataTooltipDisabled: boolean;
+  // Whether remote (SFTP) entries may load thumbnails (setting, off by default). A remote image
+  // skips its thumbnail unless this is on — each would download the whole file.
+  remoteThumbnails: boolean;
 };

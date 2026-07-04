@@ -389,6 +389,16 @@ fn quicklook_thumbnail(
 // folder full of screenshots from saturating the compositor with huge bitmaps.
 #[tauri::command]
 pub async fn get_thumbnail(app: AppHandle, path: String, size: u32) -> Result<String, String> {
+    // Remote (sftp://) images: download to the cache first, then thumbnail the local copy. The
+    // frontend only requests these when the "remote thumbnails" setting is on (it's off by default,
+    // since each one downloads the whole file). See SSH_PLAN.md phase 4.
+    let path = match super::sftp::resolve(&path) {
+        super::sftp::Target::Local(p) => p,
+        super::sftp::Target::Remote { conn, path: remote } => {
+            super::sftp::download(&app, &conn, &remote).await?
+        }
+    };
+
     let cache_dir = app
         .path()
         .app_cache_dir()
