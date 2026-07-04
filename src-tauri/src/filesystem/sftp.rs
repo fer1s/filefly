@@ -9,7 +9,9 @@
 //! in every path, so paths stay stable across edits.
 
 use std::collections::HashMap;
+use std::future::Future;
 use std::path::{Path, PathBuf};
+use std::pin::Pin;
 use std::sync::{Arc, OnceLock};
 
 use russh::client;
@@ -550,6 +552,54 @@ pub async fn stat(app: &AppHandle, conn: &str, path: &str) -> Result<DirEntry, S
     ))
 }
 
+// Local cache path a remote file downloads to: `<cache>/sftp/<conn>/<remote path>`. Cleared by the
+// Storage settings "Clear cache" button (it wipes the whole cache dir).
+fn cache_path_for(app: &AppHandle, conn: &str, path: &str) -> Result<std::path::PathBuf, String> {
+    let cache = app.path().app_cache_dir().map_err(|e| e.to_string())?;
+    Ok(cache.join("sftp").join(conn).join(path.trim_start_matches('/')))
+}
+
+// Download a remote file to the local cache and return its local path, so the existing local open /
+// preview paths can use it. Read-only: edits to the local copy are NOT pushed back (phase 3a). If a
+// cached copy already matches the remote size it's reused (no re-download); a size mismatch (the
+// remote changed) re-downloads. See SSH_PLAN.md.
+pub async fn download(app: &AppHandle, conn: &str, path: &str) -> Result<String, String> {
+    let session = session_for(app, conn).await?;
+    let local = cache_path_for(app, conn, path)?;
+
+    let remote_size = session
+        .sftp
+        .metadata(path)
+        .await
+        .map_err(|e| format!("stat failed: {e}"))?
+        .size
+        .unwrap_or(0);
+    if let Ok(meta) = std::fs::metadata(&local) {
+        if meta.len() == remote_size {
+            eprintln!("[sftp] cache hit for '{conn}':{path}");
+            return Ok(local.to_string_lossy().into_owned());
+        }
+    }
+
+    eprintln!("[sftp] downloading '{conn}':{path} ({remote_size} bytes)");
+    let bytes = session
+        .sftp
+        .read(path)
+        .await
+        .map_err(|e| format!("download failed: {e}"))?;
+    if let Some(parent) = local.parent() {
+        std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+    }
+    std::fs::write(&local, bytes).map_err(|e| e.to_string())?;
+    Ok(local.to_string_lossy().into_owned())
+}
+
+// Download a remote file to the cache; returns the local path to open/preview. See `download`.
+#[tauri::command]
+pub async fn sftp_download(app: AppHandle, conn: String, path: String) -> Result<String, String> {
+    download(&app, &conn, &path).await
+}
+
 // The connection's login directory as a `sftp://<conn>/home` URL — where `ssh` drops you. SFTP's
 // "." canonicalizes to the login dir, so opening a connection lands on the user's home (e.g.
 // /root) instead of the filesystem root, matching the shell.
@@ -572,6 +622,324 @@ pub async fn home_url(app: &AppHandle, conn: &str) -> Result<String, String> {
 #[tauri::command]
 pub async fn sftp_home(app: AppHandle, conn: String) -> Result<String, String> {
     home_url(&app, &conn).await
+}
+
+// Create a uniquely-named "untitled folder" under a remote parent; returns its sftp:// URL (so the
+// frontend can start an inline rename), mirroring the local create_folder behaviour.
+pub async fn create_dir(app: &AppHandle, conn: &str, parent: &str) -> Result<String, String> {
+    let session = session_for(app, conn).await?;
+    let base = parent.trim_end_matches('/');
+    let mut name = "untitled folder".to_string();
+    let mut i = 2;
+    loop {
+        let candidate = format!("{base}/{name}");
+        // metadata error ⇒ nothing there ⇒ free name.
+        if session.sftp.metadata(&candidate).await.is_err() {
+            session
+                .sftp
+                .create_dir(candidate.clone())
+                .await
+                .map_err(|e| format!("mkdir failed: {e}"))?;
+            return Ok(remote_url(conn, &candidate));
+        }
+        name = format!("untitled folder {i}");
+        i += 1;
+    }
+}
+
+// Rename a remote entry in place within its parent.
+pub async fn rename(app: &AppHandle, conn: &str, path: &str, new_name: &str) -> Result<(), String> {
+    let session = session_for(app, conn).await?;
+    let parent = path.trim_end_matches('/').rsplit_once('/').map_or("", |(p, _)| p);
+    let dest = format!("{parent}/{new_name}");
+    if session.sftp.metadata(&dest).await.is_ok() {
+        return Err("An item with that name already exists".to_string());
+    }
+    session
+        .sftp
+        .rename(path.to_string(), dest)
+        .await
+        .map_err(|e| format!("rename failed: {e}"))
+}
+
+// Permanently remove a remote entry (SFTP has no trash). Directories are cleared recursively:
+// gather the tree, delete files, then remove directories deepest-first.
+pub async fn remove(app: &AppHandle, conn: &str, path: &str) -> Result<(), String> {
+    let session = session_for(app, conn).await?;
+    let meta = session
+        .sftp
+        .metadata(path)
+        .await
+        .map_err(|e| format!("stat failed: {e}"))?;
+
+    if !meta.is_dir() {
+        return session
+            .sftp
+            .remove_file(path.to_string())
+            .await
+            .map_err(|e| format!("delete failed: {e}"));
+    }
+
+    // DFS: discover dirs (parents before children), removing files as we go.
+    let mut discovered: Vec<String> = Vec::new();
+    let mut stack = vec![path.to_string()];
+    while let Some(dir) = stack.pop() {
+        for entry in session
+            .sftp
+            .read_dir(&dir)
+            .await
+            .map_err(|e| format!("read_dir failed: {e}"))?
+        {
+            let child = format!("{}/{}", dir.trim_end_matches('/'), entry.file_name());
+            if entry.file_type().is_dir() {
+                stack.push(child);
+            } else {
+                session
+                    .sftp
+                    .remove_file(child)
+                    .await
+                    .map_err(|e| format!("delete failed: {e}"))?;
+            }
+        }
+        discovered.push(dir);
+    }
+    // Deepest-first: children were discovered after their parents, so reverse.
+    for dir in discovered.into_iter().rev() {
+        session
+            .sftp
+            .remove_dir(dir)
+            .await
+            .map_err(|e| format!("delete failed: {e}"))?;
+    }
+    Ok(())
+}
+
+// ── Transfers across the local/remote boundary (SSH_PLAN.md phase 3c) ──────────────────────────
+// A boxed future alias so the recursive tree walkers below can call themselves (async fns can't
+// recurse directly).
+type Transfer<'a> = Pin<Box<dyn Future<Output = Result<(), String>> + Send + 'a>>;
+
+// Last path segment of a local or sftp path.
+fn base_name(path: &str) -> String {
+    path.trim_end_matches('/').rsplit('/').next().unwrap_or(path).to_string()
+}
+
+// Split "name.ext" into ("name", ".ext"); no extension → (name, ""). Used for collision renames.
+fn split_name(name: &str) -> (&str, &str) {
+    match name.rfind('.') {
+        Some(i) if i > 0 => (&name[..i], &name[i..]),
+        _ => (name, ""),
+    }
+}
+
+// True if either endpoint is remote — i.e. the transfer must go through SFTP, not the local core.
+pub fn involves_remote(source: &str, dest_dir: &str) -> bool {
+    matches!(resolve(source), Target::Remote { .. })
+        || matches!(resolve(dest_dir), Target::Remote { .. })
+}
+
+// A non-colliding destination path under a remote dir, appending " (n)" before the extension.
+async fn unique_remote(session: &RemoteSession, dir: &str, name: &str) -> Result<String, String> {
+    let base = dir.trim_end_matches('/');
+    let (stem, ext) = split_name(name);
+    let mut candidate = format!("{base}/{name}");
+    let mut i = 1;
+    while session.sftp.metadata(&candidate).await.is_ok() {
+        i += 1;
+        candidate = format!("{base}/{stem} ({i}){ext}");
+    }
+    Ok(candidate)
+}
+
+// A non-colliding destination path under a local dir (same scheme as unique_remote).
+fn unique_local(dir: &str, name: &str) -> PathBuf {
+    let base = Path::new(dir);
+    let (stem, ext) = split_name(name);
+    let mut candidate = base.join(name);
+    let mut i = 1;
+    while candidate.exists() {
+        i += 1;
+        candidate = base.join(format!("{stem} ({i}){ext}"));
+    }
+    candidate
+}
+
+// Write bytes to a remote path, creating/truncating the file. russh-sftp's `write` opens with only
+// WRITE (no CREATE), so it fails with "no such file" on a new upload — `create` opens CREATE|TRUNC.
+async fn write_remote(session: &RemoteSession, path: String, bytes: &[u8]) -> Result<(), String> {
+    use tokio::io::AsyncWriteExt;
+    let mut file = session
+        .sftp
+        .create(path)
+        .await
+        .map_err(|e| format!("create failed: {e}"))?;
+    file.write_all(bytes).await.map_err(|e| format!("write failed: {e}"))?;
+    file.flush().await.map_err(|e| format!("flush failed: {e}"))?;
+    file.shutdown().await.ok();
+    Ok(())
+}
+
+// Upload a local file/dir tree to a remote destination path.
+fn upload<'a>(session: &'a RemoteSession, local: PathBuf, remote: String) -> Transfer<'a> {
+    Box::pin(async move {
+        let meta = std::fs::metadata(&local).map_err(|e| e.to_string())?;
+        if meta.is_dir() {
+            session
+                .sftp
+                .create_dir(remote.clone())
+                .await
+                .map_err(|e| format!("mkdir failed: {e}"))?;
+            for entry in std::fs::read_dir(&local).map_err(|e| e.to_string())? {
+                let entry = entry.map_err(|e| e.to_string())?;
+                let child = format!("{}/{}", remote.trim_end_matches('/'), entry.file_name().to_string_lossy());
+                upload(session, entry.path(), child).await?;
+            }
+            Ok(())
+        } else {
+            let bytes = std::fs::read(&local).map_err(|e| e.to_string())?;
+            write_remote(session, remote, &bytes).await
+        }
+    })
+}
+
+// Download a remote file/dir tree to a local destination path.
+fn download_tree<'a>(session: &'a RemoteSession, remote: String, local: PathBuf) -> Transfer<'a> {
+    Box::pin(async move {
+        let meta = session
+            .sftp
+            .metadata(&remote)
+            .await
+            .map_err(|e| format!("stat failed: {e}"))?;
+        if meta.is_dir() {
+            std::fs::create_dir_all(&local).map_err(|e| e.to_string())?;
+            for entry in session
+                .sftp
+                .read_dir(&remote)
+                .await
+                .map_err(|e| format!("read_dir failed: {e}"))?
+            {
+                let child = format!("{}/{}", remote.trim_end_matches('/'), entry.file_name());
+                download_tree(session, child, local.join(entry.file_name())).await?;
+            }
+            Ok(())
+        } else {
+            let bytes = session
+                .sftp
+                .read(&remote)
+                .await
+                .map_err(|e| format!("download failed: {e}"))?;
+            std::fs::write(&local, bytes).map_err(|e| e.to_string())
+        }
+    })
+}
+
+// Copy a remote file/dir tree to another remote path (reads via `src`, writes via `dst`; they may
+// be the same host). SFTP has no server-side copy, so bytes round-trip through the app.
+fn remote_copy<'a>(
+    src: &'a RemoteSession,
+    dst: &'a RemoteSession,
+    from: String,
+    to: String,
+) -> Transfer<'a> {
+    Box::pin(async move {
+        let meta = src
+            .sftp
+            .metadata(&from)
+            .await
+            .map_err(|e| format!("stat failed: {e}"))?;
+        if meta.is_dir() {
+            dst.sftp
+                .create_dir(to.clone())
+                .await
+                .map_err(|e| format!("mkdir failed: {e}"))?;
+            for entry in src
+                .sftp
+                .read_dir(&from)
+                .await
+                .map_err(|e| format!("read_dir failed: {e}"))?
+            {
+                let child_from = format!("{}/{}", from.trim_end_matches('/'), entry.file_name());
+                let child_to = format!("{}/{}", to.trim_end_matches('/'), entry.file_name());
+                remote_copy(src, dst, child_from, child_to).await?;
+            }
+            Ok(())
+        } else {
+            let bytes = src
+                .sftp
+                .read(&from)
+                .await
+                .map_err(|e| format!("copy read failed: {e}"))?;
+            write_remote(dst, to, &bytes).await
+        }
+    })
+}
+
+fn remove_local(path: &str) -> Result<(), String> {
+    let p = Path::new(path);
+    if p.is_dir() {
+        std::fs::remove_dir_all(p).map_err(|e| e.to_string())
+    } else {
+        std::fs::remove_file(p).map_err(|e| e.to_string())
+    }
+}
+
+// Copy (or move, when `is_move`) `source` into `dest_dir` across the local/remote boundary. Returns
+// the final destination path (a local path or a `sftp://` URL). At least one endpoint is remote —
+// pure local↔local is handled by the local core in fs.rs.
+pub async fn transfer(
+    app: &AppHandle,
+    source: &str,
+    dest_dir: &str,
+    is_move: bool,
+) -> Result<String, String> {
+    let name = base_name(source);
+    match (resolve(source), resolve(dest_dir)) {
+        // Local → remote: upload.
+        (Target::Local(local), Target::Remote { conn, path }) => {
+            let session = session_for(app, &conn).await?;
+            let dest = unique_remote(&session, &path, &name).await?;
+            eprintln!("[sftp] upload {local} → '{conn}':{dest}");
+            upload(&session, PathBuf::from(&local), dest.clone()).await?;
+            if is_move {
+                remove_local(&local)?;
+            }
+            Ok(remote_url(&conn, &dest))
+        }
+        // Remote → local: download.
+        (Target::Remote { conn, path }, Target::Local(local_dir)) => {
+            let session = session_for(app, &conn).await?;
+            let dest = unique_local(&local_dir, &name);
+            eprintln!("[sftp] download '{conn}':{path} → {}", dest.display());
+            download_tree(&session, path.clone(), dest.clone()).await?;
+            if is_move {
+                remove(app, &conn, &path).await?;
+            }
+            Ok(dest.to_string_lossy().into_owned())
+        }
+        // Remote → remote: server-side rename when moving within one host, else byte round-trip.
+        (Target::Remote { conn: sc, path: sp }, Target::Remote { conn: dc, path: dp }) => {
+            let src = session_for(app, &sc).await?;
+            let dst = session_for(app, &dc).await?;
+            let dest = unique_remote(&dst, &dp, &name).await?;
+            if is_move && sc == dc {
+                eprintln!("[sftp] move '{sc}':{sp} → {dest}");
+                src.sftp
+                    .rename(sp.clone(), dest.clone())
+                    .await
+                    .map_err(|e| format!("move failed: {e}"))?;
+                return Ok(remote_url(&dc, &dest));
+            }
+            eprintln!("[sftp] copy '{sc}':{sp} → '{dc}':{dest}");
+            remote_copy(&src, &dst, sp.clone(), dest.clone()).await?;
+            if is_move {
+                remove(app, &sc, &sp).await?;
+            }
+            Ok(remote_url(&dc, &dest))
+        }
+        (Target::Local(_), Target::Local(_)) => {
+            Err("local transfer must not route through sftp".to_string())
+        }
+    }
 }
 
 // The saved connections, for the sidebar's Network group. Mapped to ConnectionInfo so passwords

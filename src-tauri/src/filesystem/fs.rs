@@ -644,10 +644,17 @@ fn copy_with_progress(
 // triggered a rename (e.g. "file (1).txt") — so the frontend can reveal or undo the exact result.
 #[tauri::command]
 pub async fn copy_entry(
+    app: AppHandle,
     source: String,
     dest_dir: String,
     on_progress: Channel<ProgressPayload>,
 ) -> Result<String, String> {
+    // Any remote endpoint → SFTP transfer (coarse progress: a single done tick, byte-level is TODO).
+    if super::sftp::involves_remote(&source, &dest_dir) {
+        let dest = super::sftp::transfer(&app, &source, &dest_dir, false).await?;
+        on_progress.send(ProgressPayload { processed: 1, total: 1 }).ok();
+        return Ok(dest);
+    }
     tauri::async_runtime::spawn_blocking(move || {
         let mut sink = |processed, total| {
             on_progress.send(ProgressPayload { processed, total }).ok();
@@ -681,10 +688,17 @@ pub fn copy_entry_core(
 // Returns the final destination path (see copy_entry) so the frontend can reveal or undo it.
 #[tauri::command]
 pub async fn move_entry(
+    app: AppHandle,
     source: String,
     dest_dir: String,
     on_progress: Channel<ProgressPayload>,
 ) -> Result<String, String> {
+    // Any remote endpoint → SFTP transfer (same-host move is a server-side rename; see sftp.rs).
+    if super::sftp::involves_remote(&source, &dest_dir) {
+        let dest = super::sftp::transfer(&app, &source, &dest_dir, true).await?;
+        on_progress.send(ProgressPayload { processed: 1, total: 1 }).ok();
+        return Ok(dest);
+    }
     tauri::async_runtime::spawn_blocking(move || {
         let mut sink = |processed, total| {
             on_progress.send(ProgressPayload { processed, total }).ok();
@@ -727,8 +741,7 @@ pub fn move_entry_core(
 
 // Create a new folder inside `parent`, picking a unique "untitled folder" name. Returns the
 // created folder's path so the frontend can start an inline rename on it.
-#[tauri::command]
-pub fn create_folder(parent: String) -> Result<String, String> {
+pub fn create_folder_local(parent: String) -> Result<String, String> {
     let dir = Path::new(&parent);
     let base = "untitled folder";
 
@@ -741,6 +754,18 @@ pub fn create_folder(parent: String) -> Result<String, String> {
 
     fs::create_dir(&candidate).map_err(|e| e.to_string())?;
     Ok(candidate.to_string_lossy().into_owned())
+}
+
+// Create a folder locally or on a remote host, routing on the parent path. Async so the remote
+// branch can await SFTP; the local core stays sync (also used by the CLI).
+#[tauri::command]
+pub async fn create_folder(app: AppHandle, parent: String) -> Result<String, String> {
+    match super::sftp::resolve(&parent) {
+        super::sftp::Target::Local(p) => create_folder_local(p),
+        super::sftp::Target::Remote { conn, path } => {
+            super::sftp::create_dir(&app, &conn, &path).await
+        }
+    }
 }
 
 // Copy an image file to the system clipboard (as a bitmap), so it can be pasted into other
@@ -761,8 +786,7 @@ pub fn copy_image(path: String) -> Result<(), String> {
 }
 
 // Rename an entry in place within its parent directory.
-#[tauri::command]
-pub fn rename_entry(path: String, new_name: String) -> Result<(), String> {
+pub fn rename_entry_local(path: String, new_name: String) -> Result<(), String> {
     let p = Path::new(&path);
     let parent = p.parent().ok_or_else(|| "No parent directory".to_string())?;
     let dest = parent.join(&new_name);
@@ -771,6 +795,18 @@ pub fn rename_entry(path: String, new_name: String) -> Result<(), String> {
         return Err("An item with that name already exists".to_string());
     }
     fs::rename(p, dest).map_err(|e| e.to_string())
+}
+
+// Rename an entry, local or remote (routes on the path). Async for the remote SFTP branch; the
+// local core stays sync (also used by the CLI).
+#[tauri::command]
+pub async fn rename_entry(app: AppHandle, path: String, new_name: String) -> Result<(), String> {
+    match super::sftp::resolve(&path) {
+        super::sftp::Target::Local(p) => rename_entry_local(p, new_name),
+        super::sftp::Target::Remote { conn, path } => {
+            super::sftp::rename(&app, &conn, &path, &new_name).await
+        }
+    }
 }
 
 // Filename prefix for the temp files our write-probe creates. Also used to keep these out of the
@@ -782,6 +818,11 @@ const WRITE_PROBE_PREFIX: &str = ".sfb_write_probe_";
 // write-capable driver), where the filesystem may report space but reject writes.
 #[tauri::command]
 pub fn can_write(path: String) -> bool {
+    // Remote (sftp://) dirs: assume writable (the write itself surfaces any permission error). The
+    // local probe below can't run against them anyway.
+    if matches!(super::sftp::resolve(&path), super::sftp::Target::Remote { .. }) {
+        return true;
+    }
     let dir = Path::new(&path);
     if !dir.is_dir() {
         return false;
@@ -854,10 +895,19 @@ fn record_trash_origin(config_dir: &Path, original: &str) {
 // which requires Automation/Apple Events permission. In an unsigned/dev bundle that prompt can be
 // denied or fail, so files never reach ~/.Trash. Force the NsFileManager backend (trashItemAtURL):
 // no permission needed, faster, and reliably moves the item to the volume's Trash.
+// Local paths go to the system Trash (reversible). Remote (sftp://) paths have no trash, so they're
+// removed permanently (recursively for directories) — the frontend's delete confirmation covers it.
 #[tauri::command]
-pub fn delete_entry(app: AppHandle, path: String) -> Result<(), String> {
-    let config_dir = app.path().app_config_dir().map_err(|e| e.to_string())?;
-    trash_entry_core(&config_dir, &path)
+pub async fn delete_entry(app: AppHandle, path: String) -> Result<(), String> {
+    match super::sftp::resolve(&path) {
+        super::sftp::Target::Local(p) => {
+            let config_dir = app.path().app_config_dir().map_err(|e| e.to_string())?;
+            trash_entry_core(&config_dir, &p)
+        }
+        super::sftp::Target::Remote { conn, path } => {
+            super::sftp::remove(&app, &conn, &path).await
+        }
+    }
 }
 
 // Move an entry to the system Trash and record its origin (under `config_dir`) for later restore.

@@ -86,6 +86,7 @@ fn main() {
             filesystem::sftp::sftp_list_connections,
             filesystem::sftp::sftp_add_connection,
             filesystem::sftp::sftp_home,
+            filesystem::sftp::sftp_download,
             functions::control::set_ui_state,
             functions::control::set_probe_result,
             functions::handler::is_default_folder_handler,

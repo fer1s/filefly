@@ -160,7 +160,7 @@ const COMMANDS: &[Command] = &[
         run: |a| {
             let path = a.require("path")?;
             let name = a.require("name")?;
-            fs::rename_entry(path.to_string(), name.to_string())?;
+            fs::rename_entry_local(path.to_string(), name.to_string())?;
             let dest = PathBuf::from(path)
                 .parent()
                 .map(|p| p.join(name))
@@ -174,7 +174,7 @@ const COMMANDS: &[Command] = &[
         summary: "Create a new 'untitled folder' (uniquely named) inside a parent directory.",
         args: &[val("parent", true, "Directory to create the folder in.")],
         run: |a| {
-            let created = fs::create_folder(a.require("parent")?.to_string())?;
+            let created = fs::create_folder_local(a.require("parent")?.to_string())?;
             Ok(json!({ "path": created }))
         },
     },
