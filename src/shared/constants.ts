@@ -178,6 +178,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   confirmExportOverwrite: false,
   remoteThumbnails: false,
   showSystemStats: false,
+  showFolderSizes: false,
+  showVolumeSize: false,
 };
 
 // DOM KeyboardEvent.key names used in non-configurable key handling (navigation, input

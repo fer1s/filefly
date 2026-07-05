@@ -340,6 +340,15 @@ export const en = {
     showSystemStats: "Show system stats",
     showSystemStatsHint:
       "Display live CPU, memory and disk usage in the status bar. Off by default — it polls the system on an interval.",
+    showFolderSizes: "Show folder sizes",
+    showFolderSizesHint:
+      "Compute recursive folder sizes for the list-view Size column. Off by default — walking large folders is costly (results are cached).",
+    showFolderSizesConfirmTitle: "Enable folder sizes?",
+    showFolderSizesConfirmMessage:
+      "Computing folder sizes walks every folder in view, which can increase CPU usage on large directories. Results are cached after the first pass. Enable anyway?",
+    showVolumeSize: "Show volume size in sidebar",
+    showVolumeSizeHint:
+      "Display used / total space under each volume's usage bar in the sidebar.",
     showToasts: "Show notifications",
     showToastsHint: "Show transient pop-up messages (e.g. “Copied”, errors).",
     theme: "Appearance",
@@ -445,6 +454,8 @@ export const en = {
     removable: "Removable",
     localDrive: "Local drive",
     freeOf: (free: string, total: string) => `${free} free of ${total}`,
+    // Sidebar "used / total" readout under a volume's usage bar (toggled by showVolumeSize).
+    usedOf: (used: string, total: string) => `${used} / ${total}`,
     ejected: (name: string) => `Ejected ${name}`,
   },
   directory: {

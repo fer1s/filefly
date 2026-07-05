@@ -243,6 +243,12 @@
   width: 90%;
 }
 
+/* "used / total" line under the usage bar (toggled by showVolumeSize). Fainter than the path so it
+   reads as secondary detail. */
+.SideBar section .section_content .drive_item .details .drive_size {
+  color: var(--color-text-muted);
+}
+
 /* Details take the free space so the inline eject button sits flush right and the path ellipsizes
    instead of pushing the button off. */
 .SideBar section .section_content .drive_item .details {

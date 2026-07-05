@@ -44,6 +44,13 @@ type BaseDescriptor = {
 
 export type ToggleDescriptor = BaseDescriptor & {
   kind: typeof SETTING_KIND.TOGGLE;
+  // Optional confirmation shown before switching the toggle ON (off → on only). Use for toggles
+  // whose enabled state carries a cost the user should acknowledge (e.g. extra CPU). Turning the
+  // toggle back OFF never prompts. Copy is resolved lazily so it honours the active i18n dictionary.
+  confirmOn?: {
+    title: () => string;
+    message: () => string;
+  };
 };
 
 export type SelectOption = { value: string; label: string };

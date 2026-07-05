@@ -68,6 +68,11 @@ pub struct AppSettings {
     // Show a live CPU / RAM / disk readout in the status bar. Off by default — it polls the OS on
     // an interval, so it's opt-in.
     show_system_stats: bool,
+    // Compute and show recursive folder sizes in the list-view "Size" column. Off by default —
+    // walking every folder is costly on large directories (sizes are cached in size_index.db).
+    show_folder_sizes: bool,
+    // Show "used / total" text under each volume's usage bar in the sidebar. Off by default.
+    show_volume_size: bool,
 }
 
 // Must mirror the frontend defaults (shared/constants.ts).
@@ -99,6 +104,8 @@ impl Default for AppSettings {
             confirm_export_overwrite: false,
             remote_thumbnails: false,
             show_system_stats: false,
+            show_folder_sizes: false,
+            show_volume_size: false,
         }
     }
 }

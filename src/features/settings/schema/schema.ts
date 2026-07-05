@@ -44,6 +44,18 @@ export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
     hint: () => t.settings.hideSystemRecentsHint,
   },
   {
+    kind: SETTING_KIND.TOGGLE,
+    key: "showFolderSizes",
+    section: SETTINGS_SECTION.GENERAL,
+    label: () => t.settings.showFolderSizes,
+    hint: () => t.settings.showFolderSizesHint,
+    // Walking every folder can spike CPU on large directories — confirm before enabling.
+    confirmOn: {
+      title: () => t.settings.showFolderSizesConfirmTitle,
+      message: () => t.settings.showFolderSizesConfirmMessage,
+    },
+  },
+  {
     kind: SETTING_KIND.CUSTOM,
     key: "startupMode",
     section: SETTINGS_SECTION.GENERAL,
@@ -109,6 +121,13 @@ export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
   },
 
   // ── Appearance ── everything visual (theme, accent, zoom, dates, sidebar).
+  {
+    kind: SETTING_KIND.TOGGLE,
+    key: "showVolumeSize",
+    section: SETTINGS_SECTION.APPEARANCE,
+    label: () => t.settings.showVolumeSize,
+    hint: () => t.settings.showVolumeSizeHint,
+  },
   {
     kind: SETTING_KIND.SELECT,
     key: "theme",

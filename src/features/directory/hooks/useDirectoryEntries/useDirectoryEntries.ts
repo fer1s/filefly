@@ -9,7 +9,7 @@ import {
 } from "@/features/directory/constants";
 import * as api from "@/shared/services/api";
 import { extension } from "@/shared/utils";
-import { FEATURE_FLAGS } from "@/shared/featureFlags";
+import { useSettings } from "@/features/settings";
 import { hasActiveFilters } from "@/shared/search/filters";
 import { sortEntries, type Sort } from "../../sort";
 import { applyFilters } from "../../filters";
@@ -21,6 +21,7 @@ import { defaultSortFor, isValidSort } from "./utils";
 // sizes, and the previewable subset (for prev/next navigation).
 export const useDirectoryEntries = (view: ViewMode) => {
   const { dirContent, showHidden, path, filters } = useStateContext();
+  const { settings } = useSettings();
 
   // While a search is active, the recursive results replace the folder's own entries (the
   // directory content is hidden in favor of the results); otherwise show the folder as usual.
@@ -59,11 +60,11 @@ export const useDirectoryEntries = (view: ViewMode) => {
     };
   }, [path]);
 
-  // Lazily computed directory sizes (the OS reports 0 for folders). Gated behind a
-  // feature flag (off by default) since walking every folder is costly on large dirs.
+  // Lazily computed directory sizes (the OS reports 0 for folders). Gated behind the
+  // showFolderSizes setting (off by default) since walking every folder is costly on large dirs.
   const { sizes: dirSizes, computing: computingSizes } = useDirSizes(
     filtered,
-    FEATURE_FLAGS.directorySizes && view === VIEW_MODE.LIST,
+    settings.showFolderSizes && view === VIEW_MODE.LIST,
   );
 
   // Fill in the computed size for folders so it shows and sorts like file sizes.
