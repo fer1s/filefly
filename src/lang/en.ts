@@ -337,6 +337,9 @@ export const en = {
     remoteThumbnails: "Thumbnails for remote files",
     remoteThumbnailsHint:
       "Generate image thumbnails on SSH/SFTP hosts. Off by default — each one downloads the whole file over the network.",
+    showSystemStats: "Show system stats",
+    showSystemStatsHint:
+      "Display live CPU, memory and disk usage in the status bar. Off by default — it polls the system on an interval.",
     showToasts: "Show notifications",
     showToastsHint: "Show transient pop-up messages (e.g. “Copied”, errors).",
     theme: "Appearance",
@@ -478,6 +481,12 @@ export const en = {
     filters: "Filters",
     loadingPreviews: "Loading thumbnails...",
     calculatingSizes: "Calculating sizes…",
+    // Status-bar OS stats readout (opt-in via the showSystemStats setting).
+    statCpu: (percent: number) => `CPU ${percent}%`,
+    statRam: (used: string, total: string) => `RAM ${used} / ${total}`,
+    statDisk: (used: string, total: string) => `Disk ${used} / ${total}`,
+    // Tooltip on the clickable CPU / RAM readouts.
+    openSystemMonitor: "Open the system resource monitor",
     copying: "Copying…",
     moving: "Moving…",
     deleting: "Moving to Trash…",
@@ -531,6 +540,8 @@ export const en = {
     eject: (reason: string) => `Could not eject: ${reason}`,
     save: (reason: string) => `Could not save: ${reason}`,
     read: (reason: string) => `Could not read file: ${reason}`,
+    openSystemMonitor: (reason: string) =>
+      `Could not open the system monitor: ${reason}`,
   },
   markdownEditor: {
     unsavedTitle: "Unsaved changes",

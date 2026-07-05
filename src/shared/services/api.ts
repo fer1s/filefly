@@ -65,6 +65,8 @@ export type AppSettings = {
   // Generate thumbnails for images on remote (SFTP) hosts. Off by default — each downloads the whole
   // file over the network. See SSH_PLAN.md phase 4.
   remoteThumbnails: boolean;
+  // Show a live CPU / RAM / disk readout in the status bar. Off by default (it polls the OS).
+  showSystemStats: boolean;
 };
 
 // Load the persisted app settings (falls back to defaults when settings.toml is absent).
@@ -256,6 +258,22 @@ export const setFolderZoom = async (
 export const getVolumes = async (): Promise<Volume[]> =>
   await invoke("get_volumes");
 
+// A live snapshot of host resource usage for the optional status-bar readout. cpuUsage is a 0..100
+// percentage across all cores; the rest are raw byte counts. Mirrors SystemStats in
+// functions/os_stats.rs.
+export type SystemStats = {
+  cpuUsage: number;
+  memUsed: number;
+  memTotal: number;
+  diskUsed: number;
+  diskTotal: number;
+};
+
+// Current CPU / memory / boot-disk usage. Cheap enough to poll on a short interval; backed by a
+// persistent System handle in Rust so CPU deltas are accurate between calls.
+export const getSystemStats = async (): Promise<SystemStats> =>
+  (await invoke("get_system_stats")) as SystemStats;
+
 // Eject/unmount a removable volume by its mount point (macOS: diskutil eject). Throws on failure.
 export const ejectVolume = async (mountPoint: string): Promise<void> =>
   await invoke("eject_volume", { mountPoint });
@@ -405,6 +423,11 @@ export const emptyTrash = async (): Promise<number> =>
 // protected folders like the Trash.
 export const openFullDiskAccessSettings = async (): Promise<void> =>
   await invoke("open_full_disk_access_settings");
+
+// Open the OS resource monitor (macOS Activity Monitor, Windows Task Manager, Linux system monitor).
+// Backs clicking the CPU/RAM readout in the status bar.
+export const openSystemMonitor = async (): Promise<void> =>
+  await invoke("open_system_monitor");
 
 // Open a URL in the user's default browser (used by the NTFS driver guidance links).
 export const openExternalUrl = async (url: string): Promise<void> =>

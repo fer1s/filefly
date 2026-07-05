@@ -65,6 +65,9 @@ pub struct AppSettings {
     // download the whole file over the network, so browsing an image-heavy remote folder would be
     // slow/costly. When on, remote images thumbnail like local ones (via the cache).
     remote_thumbnails: bool,
+    // Show a live CPU / RAM / disk readout in the status bar. Off by default — it polls the OS on
+    // an interval, so it's opt-in.
+    show_system_stats: bool,
 }
 
 // Must mirror the frontend defaults (shared/constants.ts).
@@ -95,6 +98,7 @@ impl Default for AppSettings {
             preview_markdown_in_app: false,
             confirm_export_overwrite: false,
             remote_thumbnails: false,
+            show_system_stats: false,
         }
     }
 }

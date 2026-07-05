@@ -32,6 +32,9 @@ fn main() {
             app.manage(functions::control::ControlState::default());
             functions::control::start(app.handle().clone());
 
+            // Persistent System handle for the status-bar OS stats (CPU deltas across polls).
+            app.manage(functions::os_stats::StatsState::default());
+
             // Trim the thumbnail cache to its size budget, off the UI thread.
             if let Ok(cache_dir) = app.path().app_cache_dir() {
                 let thumbnails = cache_dir.join("thumbnails");
@@ -75,6 +78,8 @@ fn main() {
             functions::markdown::read_text_file,
             functions::markdown::write_text_file,
             functions::system::open_full_disk_access_settings,
+            functions::system::open_system_monitor,
+            functions::os_stats::get_system_stats,
             functions::keymap::get_keymap,
             functions::context_menu::get_context_menu,
             functions::settings::get_settings,

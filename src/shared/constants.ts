@@ -177,6 +177,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   previewMarkdownInApp: false,
   confirmExportOverwrite: false,
   remoteThumbnails: false,
+  showSystemStats: false,
 };
 
 // DOM KeyboardEvent.key names used in non-configurable key handling (navigation, input

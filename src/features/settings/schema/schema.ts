@@ -95,6 +95,13 @@ export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
   },
   {
     kind: SETTING_KIND.TOGGLE,
+    key: "showSystemStats",
+    section: SETTINGS_SECTION.GENERAL,
+    label: () => t.settings.showSystemStats,
+    hint: () => t.settings.showSystemStatsHint,
+  },
+  {
+    kind: SETTING_KIND.TOGGLE,
     key: "confirmExportOverwrite",
     section: SETTINGS_SECTION.FILES,
     label: () => t.settings.confirmExportOverwrite,
