@@ -5,7 +5,9 @@
 // (`sito_file_browser_lib`), which the `sfb` CLI also links. `generate_context!` — which validates
 // the `externalBin` sidecar at compile time — lives here, not in the lib, so building the CLI never
 // requires the sidecar to already exist.
-use sito_file_browser_lib::{dock_menu, filesystem, functions, tray, window};
+use sito_file_browser_lib::{
+    dock_menu, filesystem, functions, ignore, index, tray, watcher, window,
+};
 use tauri::Manager;
 
 fn main() {
@@ -34,6 +36,23 @@ fn main() {
 
             // Persistent System handle for the status-bar OS stats (CPU deltas across polls).
             app.manage(functions::os_stats::StatsState::default());
+
+            // Persistent SQLite index of recursive directory sizes (see index.rs). The app's own
+            // data dir (where size_index.db lives) is ignored so our writes never feed a future
+            // watcher back into itself. The cache is lazy: each folder is (re)walked on demand when
+            // its own mtime no longer matches the cached row — no startup reconcile (which would
+            // re-stat every path ever cached). Deep offline changes stay stale until the folder is
+            // revisited; the Phase B watcher will close that gap in real time.
+            let ignore_list = ignore::IgnoreList::new(
+                app.path().app_data_dir().map(|d| vec![d]).unwrap_or_default(),
+            );
+            let size_index = index::init(app.handle())?;
+            app.manage(size_index);
+            app.manage(ignore_list);
+            // Recursive watcher that keeps the size index fresh in real time for the viewed folder
+            // (Phase B): the frontend calls watch_directory on navigation; changes bubble deltas
+            // into cached ancestor sizes and emit dir-size-changed so the open view updates live.
+            app.manage(watcher::DirWatcher::new());
 
             // Trim the thumbnail cache to its size budget, off the UI thread.
             if let Ok(cache_dir) = app.path().app_cache_dir() {
@@ -80,6 +99,7 @@ fn main() {
             functions::system::open_full_disk_access_settings,
             functions::system::open_system_monitor,
             functions::os_stats::get_system_stats,
+            watcher::watch_directory,
             functions::keymap::get_keymap,
             functions::context_menu::get_context_menu,
             functions::settings::get_settings,

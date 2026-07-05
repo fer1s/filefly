@@ -1,4 +1,5 @@
 import { invoke, Channel } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import { watchImmediate } from "@tauri-apps/plugin-fs";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
@@ -67,6 +68,11 @@ export type AppSettings = {
   remoteThumbnails: boolean;
   // Show a live CPU / RAM / disk readout in the status bar. Off by default (it polls the OS).
   showSystemStats: boolean;
+  // Compute and show recursive folder sizes in the list-view "Size" column. Off by default (each
+  // folder is walked; results are cached in size_index.db).
+  showFolderSizes: boolean;
+  // Show "used / total" text under each volume's usage bar in the sidebar. Off by default.
+  showVolumeSize: boolean;
 };
 
 // Load the persisted app settings (falls back to defaults when settings.toml is absent).
@@ -316,6 +322,24 @@ export const watchDirectory = async (
 // Recursively computed total size (bytes) of a directory.
 export const getDirSize = async (path: string): Promise<number> =>
   await invoke("get_dir_size", { path });
+
+// A live folder-size update pushed by the size-index watcher (see watcher.rs): `path` is a folder
+// whose recursive size just changed, `size` its new total in bytes.
+export type DirSizeChanged = { path: string; size: number };
+
+// Start the recursive size-index watcher on `path`, replacing any previous watch (there's one
+// active watcher for the viewed folder). Pass an empty/non-directory path to stop watching. Fired
+// on navigation so live filesystem changes bubble into the size cache and keep it fresh.
+export const watchDirSizes = async (path: string): Promise<void> =>
+  await invoke("watch_directory", { path });
+
+// Subscribe to live folder-size updates emitted by the watcher. Returns an unlisten function.
+export const onDirSizeChanged = async (
+  onChange: (change: DirSizeChanged) => void,
+): Promise<() => void> =>
+  await listen<DirSizeChanged>("dir-size-changed", (event) =>
+    onChange(event.payload),
+  );
 
 // Recently modified files (Finder-style Recents), newest first. macOS only (Spotlight). When
 // `hideAppFiles` is set, this app's own background files (config/cache/temp) are filtered out.

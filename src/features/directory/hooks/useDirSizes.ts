@@ -88,6 +88,26 @@ export const useDirSizes = (entries: DirEntry[], enabled: boolean) => {
     };
   }, [entries, enabled, fs]);
 
+  // Live updates: the size-index watcher (Phase B) emits dir-size-changed when a folder's recursive
+  // size changes on disk, so the Size column updates without a re-walk. Only while the column is
+  // shown (enabled); the backend watcher itself is driven by navigation in useDirectoryContents.
+  useEffect(() => {
+    if (!enabled) return;
+    let cancelled = false;
+    let unlisten: (() => void) | undefined;
+    fs.onDirSizeChanged((change) => {
+      dirSizeCache.set(change.path, change.size);
+      setSizes((prev) => ({ ...prev, [change.path]: change.size }));
+    }).then((fn) => {
+      if (cancelled) fn();
+      else unlisten = fn;
+    });
+    return () => {
+      cancelled = true;
+      unlisten?.();
+    };
+  }, [enabled, fs]);
+
   // Still computing while any visible folder has no size yet. Derived (no extra state) so it
   // flips off on its own as the batches land.
   const computing =

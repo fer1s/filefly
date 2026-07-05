@@ -12,7 +12,10 @@ use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 use std::time::{Duration, SystemTime};
 use tauri::ipc::Channel;
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Manager, State};
+
+use crate::ignore::IgnoreList;
+use crate::index::SizeIndex;
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -121,17 +124,30 @@ pub async fn get_entry(app: AppHandle, path: String) -> Result<DirEntry, String>
 // The command is `async` and the walk runs on `spawn_blocking`: Tauri executes synchronous
 // commands on the main thread, so a plain sync version froze the UI for the whole walk.
 // This keeps the webview responsive while the (CPU/IO-bound) walk runs on a worker thread.
+//
+// Local paths go through the persistent SQLite size index (index::cached_size): a cache hit (the
+// folder's mtime is unchanged) returns instantly, a miss walks once and caches. Remote (SFTP)
+// paths are computed on demand and never cached here.
 #[tauri::command]
-pub async fn get_dir_size(app: AppHandle, path: String) -> u64 {
+pub async fn get_dir_size(
+    app: AppHandle,
+    path: String,
+    index: State<'_, SizeIndex>,
+    ignore: State<'_, IgnoreList>,
+) -> Result<u64, String> {
     match super::sftp::resolve(&path) {
-        super::sftp::Target::Local(p) => tauri::async_runtime::spawn_blocking(move || {
-            dir_size_core(&p)
-        })
-        .await
-        .unwrap_or(0),
+        super::sftp::Target::Local(p) => {
+            let conn = index.0.clone();
+            let ignores = ignore.snapshot();
+            tauri::async_runtime::spawn_blocking(move || {
+                crate::index::cached_size(&conn, &p, &ignores)
+            })
+            .await
+            .map_err(|e| e.to_string())?
+        }
         // Remote sizes are computed on demand (Properties) — the frontend never bulk-walks them.
         super::sftp::Target::Remote { conn, path } => {
-            super::sftp::dir_size(&app, &conn, &path).await.unwrap_or(0)
+            Ok(super::sftp::dir_size(&app, &conn, &path).await.unwrap_or(0))
         }
     }
 }

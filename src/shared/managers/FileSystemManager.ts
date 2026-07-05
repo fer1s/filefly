@@ -111,6 +111,19 @@ export class FileSystemManager {
     return api.getDirSize(path);
   }
 
+  // Start the recursive size-index watcher on `path` (empty path stops it). Keeps cached folder
+  // sizes fresh in real time; live updates arrive via onDirSizeChanged.
+  watchDirSizes(path: string): Promise<void> {
+    return api.watchDirSizes(path);
+  }
+
+  // Subscribe to live folder-size updates; returns an unlisten function.
+  onDirSizeChanged(
+    onChange: (change: api.DirSizeChanged) => void,
+  ): Promise<() => void> {
+    return api.onDirSizeChanged(onChange);
+  }
+
   getThumbnail(path: string, size: number): Promise<string> {
     return api.getThumbnail(path, size);
   }

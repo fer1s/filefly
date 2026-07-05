@@ -44,6 +44,12 @@ toml = "0.8"
 window-vibrancy = "0.5"
 sysinfo = "0.30.5"
 jwalk = "0.8.1"
+# Persistent on-disk cache of recursive directory sizes (size_index.db in the app data dir). Bundled
+# feature statically links SQLite so there's no system-libsqlite dependency. See index.rs.
+rusqlite = { version = "0.32", features = ["bundled"] }
+# Recursive filesystem watcher (FSEvents on macOS) that keeps the size index fresh in real time:
+# changes bubble a delta into the cached ancestor sizes and emit dir-size-changed. See watcher.rs.
+notify = "6"
 markdown = "0.3.0"
 trash = "5"
 image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp", "gif", "bmp"] }

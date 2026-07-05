@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 
 import { Volume, DirEntry } from "@/shared/models";
 import {
@@ -141,6 +142,50 @@ export const useDirectoryContents = ({
       cancelled = true;
       window.clearTimeout(timer);
       stopWatching?.();
+    };
+  }, [fs, path]);
+
+  // Refresh when the window regains focus: after files were changed by another app or the terminal
+  // while this app was in the background, re-read the open folder and re-fetch the volumes so the
+  // listing and the sidebar / volumes-view disk usage reflect reality. Covers external changes the
+  // directory watcher can miss (it only watches the open folder, non-recursively) and keeps the
+  // volume free/used bars fresh (get_volumes is otherwise only re-read on launch or /Volumes mount
+  // changes, so freeing space on the boot volume never updated them).
+  useEffect(() => {
+    let cancelled = false;
+    let unlisten: (() => void) | undefined;
+    getCurrentWindow()
+      .onFocusChanged(({ payload: focused }) => {
+        if (!focused) return;
+        refreshDirRef.current();
+        fetchVolumes();
+      })
+      .then((fn) => {
+        if (cancelled) fn();
+        else unlisten = fn;
+      })
+      .catch((err) => console.error("Failed to watch window focus:\n" + err));
+    return () => {
+      cancelled = true;
+      unlisten?.();
+    };
+  }, [fetchVolumes]);
+
+  // Keep the recursive size-index watcher (Phase B) pointed at the viewed folder so live
+  // filesystem changes bubble into the cached ancestor sizes in real time — this is what keeps
+  // folder sizes (Properties, the Size column) from going stale after deep changes. Local folders
+  // only; remote/virtual listings aren't size-indexed. Stops when leaving the folder.
+  useEffect(() => {
+    if (
+      path === "" ||
+      path === RECENTS ||
+      isTagsPath(path) ||
+      path.startsWith(SFTP_SCHEME)
+    )
+      return;
+    void fs.watchDirSizes(path);
+    return () => {
+      void fs.watchDirSizes("");
     };
   }, [fs, path]);
 
