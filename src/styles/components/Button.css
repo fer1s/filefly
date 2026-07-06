@@ -23,3 +23,19 @@
   cursor: not-allowed;
   opacity: 0.5;
 }
+
+/* Primary / submit CTA: a solid accent fill with on-solid (white) text. Shared by every dialog's
+   confirm button so the look — and any future change — stays in one place. Hover DARKENS the accent
+   (not the base light overlay), otherwise the fill goes pale grey and the white label loses contrast
+   in light mode. */
+.Button.primary {
+  background-color: var(--color-selection-indicator);
+  border-color: var(--color-selection-indicator);
+  color: var(--color-text-on-solid);
+}
+
+.Button.primary:hover:not(:disabled) {
+  background-color: color-mix(in srgb, var(--color-accent), black 12%);
+  border-color: color-mix(in srgb, var(--color-accent), black 12%);
+  color: var(--color-text-on-solid);
+}

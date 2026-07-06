@@ -23,6 +23,8 @@ export const en = {
     pause: "Pause",
     cancel: "Cancel",
     confirm: "Confirm",
+    showPassword: "Show password",
+    hidePassword: "Hide password",
     move: "Move",
     copy: "Copy",
     dontAskAgain: "Don't ask again",

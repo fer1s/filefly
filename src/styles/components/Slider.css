@@ -1,0 +1,44 @@
+/* Range slider. Custom track + thumb (not native accent-color, whose empty groove is near-invisible
+   on dark backgrounds — the track wasn't showing). Full width by default; callers can override. */
+.Slider {
+  width: 100%;
+  height: var(--space-4);
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+/* Track — a visible pill in both themes. */
+.Slider::-webkit-slider-runnable-track {
+  height: var(--size-progress-track);
+  border-radius: var(--radius-pill);
+  background-color: var(--color-range-track);
+}
+.Slider::-moz-range-track {
+  height: var(--size-progress-track);
+  border-radius: var(--radius-pill);
+  background-color: var(--color-range-track);
+}
+
+/* Thumb — accent-filled circle, vertically centred on the track. */
+.Slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: var(--space-4);
+  height: var(--space-4);
+  margin-top: calc((var(--size-progress-track) - var(--space-4)) / 2);
+  border-radius: var(--radius-pill);
+  background-color: var(--color-accent);
+}
+.Slider::-moz-range-thumb {
+  width: var(--space-4);
+  height: var(--space-4);
+  border: none;
+  border-radius: var(--radius-pill);
+  background-color: var(--color-accent);
+}
+
+.Slider:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}

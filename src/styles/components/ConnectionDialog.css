@@ -65,12 +65,5 @@
   margin: 0;
 }
 
-.connection_submit {
-  background-color: var(--color-selection-indicator);
-  color: var(--color-text-on-solid);
-}
-
-.connection_submit.disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
+/* Submit uses the shared .Button.primary variant (accent fill + darkening hover); the disabled
+   look comes from the base .Button:disabled. */

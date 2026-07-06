@@ -1,5 +1,6 @@
 import type { ChangeEvent } from "react";
 
+import TextInput from "@/shared/components/elements/TextInput";
 import { formatDate } from "@/shared/utils";
 import { t } from "@/lang";
 
@@ -18,8 +19,7 @@ const DateFormatBelow = ({ settings, update }: CustomControlProps) => {
 
   return (
     <div className="settings_date_custom">
-      <input
-        type="text"
+      <TextInput
         className="settings_input"
         value={settings.dateFormat}
         onChange={onChange}

@@ -23,15 +23,11 @@
   gap: var(--space-1-5);
 }
 
+/* Deltas over the shared TextInput base: fill the toolbar row + roomier padding. */
 .settings_modal .settings_search {
   flex: 1;
   min-width: 0;
   padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-sm);
-  border: var(--border-width-default) solid var(--color-border-default);
-  background-color: var(--color-surface-input);
-  color: var(--color-text-primary);
-  font-size: var(--font-size-base);
 }
 
 /* Two-pane body: category rail on the left, scrolling settings panel on the right. Flexes to fill
@@ -261,13 +257,9 @@
   padding-left: var(--space-4);
 }
 
+/* Deltas over the shared TextInput base: tighter padding + monospace (these fields hold formats). */
 .settings_modal .settings_input {
   padding: var(--space-1) var(--space-2);
-  border-radius: var(--radius-sm);
-  border: var(--border-width-default) solid var(--color-border-default);
-  background-color: var(--color-surface-input);
-  color: var(--color-text-primary);
-  font-size: var(--font-size-base);
   font-family: var(--font-mono, monospace);
 }
 
@@ -284,9 +276,10 @@
   gap: var(--space-2-5);
 }
 
+/* Track + thumb come from the shared Slider base; pin an explicit width so this fixed-size control
+   doesn't stretch to the base's default 100%. */
 .settings_modal .settings_range {
-  accent-color: var(--color-selection-indicator);
-  cursor: pointer;
+  width: var(--space-20);
 }
 
 .settings_modal .settings_range_value {
