@@ -20,12 +20,14 @@ All notable changes to this project are documented in this file.
 - Folder-size ignore list — glob patterns excluded from size totals, pre-seeded on macOS with system junk (`.DS_Store`, `._*`, `.Spotlight-V100`, …) (`44ad8c1`)
 - Shared Chip UI components — toggleable and deletable variants (`f65c0c0`)
 - Reusable `SettingsButton` and shared dialog-action components (`7b6b5a3`, `fdd1331`)
+- Open a folder or reveal a file from outside the app — `sfb <path>` (`sfb .`, `sfb file.pdf`), a `sito-file-browser://open|reveal` URL, or a file handed over by macOS (dock drop, Open With, `open -a`); revealed files are selected and scrolled into view (`2f7a330`, `84ebda6`)
 
 ### Changed
 
 - Settings dialog — settings grouped into subsections and the dialog resized to 80% of the window (`44ad8c1`)
 - Status-bar disk usage now opens macOS System Settings › Storage instead of a custom in-app breakdown (`1d2a01d`)
 - Remote download cache is cleared automatically (`d65b9de`)
+- Raised the maximum directory zoom to 500% (was 300%) (`22f633e`)
 
 ## [0.4.1]
 
