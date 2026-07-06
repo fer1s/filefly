@@ -65,6 +65,7 @@ export const useDirectoryEntries = (view: ViewMode) => {
   const { sizes: dirSizes, computing: computingSizes } = useDirSizes(
     filtered,
     settings.showFolderSizes && view === VIEW_MODE.LIST,
+    settings.sizeIgnores.join("\n"),
   );
 
   // Fill in the computed size for folders so it shows and sorts like file sizes.

@@ -73,6 +73,9 @@ export type AppSettings = {
   showFolderSizes: boolean;
   // Show "used / total" text under each volume's usage bar in the sidebar. Off by default.
   showVolumeSize: boolean;
+  // Glob patterns (matched against an entry's file name) excluded from recursive folder-size
+  // calculation, e.g. ".DS_Store", "*.tmp", "node_modules". Applied live on save.
+  sizeIgnores: string[];
 };
 
 // Load the persisted app settings (falls back to defaults when settings.toml is absent).

@@ -33,6 +33,10 @@ type BaseDescriptor = {
   // reset, so their `key` only needs to be unique.
   key: SettingKey;
   section: SettingsSectionId;
+  // Optional sub-heading grouping related settings within a section. Items sharing a resolved
+  // subsection label cluster under it (in schema order); items without one render first, un-grouped.
+  // Lazily resolved so it honors the active i18n dictionary.
+  subsection?: () => string;
   // Lazily resolved so labels/hints honor the active i18n dictionary; also matched by the search.
   label: () => string;
   hint: () => string;

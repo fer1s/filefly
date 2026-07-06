@@ -7,7 +7,7 @@ use rusqlite::Connection;
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, State};
 
-use crate::ignore::{is_ignored, IgnoreList};
+use crate::ignore::{IgnoreList, IgnoreRules};
 use crate::index::{self, SizeIndex};
 
 #[derive(Clone, Serialize)]
@@ -66,16 +66,16 @@ fn child_of_root(root: &Path, path: &Path) -> Option<PathBuf> {
 fn handle_event(
     app: &AppHandle,
     index: &Arc<Mutex<Connection>>,
-    ignores: &Arc<RwLock<Vec<PathBuf>>>,
+    ignores: &Arc<RwLock<IgnoreRules>>,
     root: &Path,
     paths: &[PathBuf],
 ) {
-    let ignore_list = ignores.read().map(|v| v.clone()).unwrap_or_default();
+    let ignore_list = ignores.read().map(|r| r.clone()).unwrap_or_default();
 
     // Drop events for ignored paths (e.g. our own DB writes) before doing anything.
     let relevant: Vec<&PathBuf> = paths
         .iter()
-        .filter(|p| !is_ignored(p, &ignore_list))
+        .filter(|p| !ignore_list.is_ignored(p))
         .collect();
     if relevant.is_empty() {
         return;

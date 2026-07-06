@@ -70,9 +70,11 @@
   --size-toast-max-width: 320px;
   --size-properties-width: 400px;
   --size-shortcuts-width: 560px;
-  --size-settings-width: 640px;
-  --size-settings-nav-width: 148px;
-  --size-settings-panel-height: 420px;
+  /* Settings dialog fills 80% of the window (width + height), centred, capped so it never exceeds
+     the viewport on small windows. The body flexes to fill this height; the panel scrolls. */
+  --size-settings-width: 80vw;
+  --size-settings-height: 80vh;
+  --size-settings-nav-width: 172px;
   --size-settings-dot: var(--space-1-5);
   --size-confirmation-width: 380px;
   --size-folder-picker-width: 680px;

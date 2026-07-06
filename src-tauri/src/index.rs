@@ -1,13 +1,13 @@
 use std::error::Error;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::sync::{Arc, Mutex};
 use std::time::{Instant, UNIX_EPOCH};
 
 use rusqlite::{params, Connection};
 use tauri::{AppHandle, Manager};
 
-use crate::ignore::is_ignored;
+use crate::ignore::IgnoreRules;
 
 // Persistent (on-disk) cache of recursive directory sizes. A row per directory holds its
 // own_size (direct files) and subtree_size (own + all descendants), enabling incremental
@@ -103,7 +103,7 @@ fn delete_subtree(conn: &Connection, path: &str) {
 
 // Recursively index `path` and every descendant directory (bottom-up), writing a row for
 // each. Returns the subtree size. Symlinks and ignored paths are skipped.
-fn index_subtree(conn: &Connection, path: &Path, ignores: &[PathBuf]) -> u64 {
+fn index_subtree(conn: &Connection, path: &Path, ignores: &IgnoreRules) -> u64 {
     let mut own: u64 = 0;
     let mut subtree: u64 = 0;
 
@@ -117,7 +117,7 @@ fn index_subtree(conn: &Connection, path: &Path, ignores: &[PathBuf]) -> u64 {
                 continue;
             }
             let child = entry.path();
-            if is_ignored(&child, ignores) {
+            if ignores.is_ignored(&child) {
                 continue;
             }
             if file_type.is_dir() {
@@ -141,7 +141,7 @@ fn index_subtree(conn: &Connection, path: &Path, ignores: &[PathBuf]) -> u64 {
 pub fn cached_size(
     index: &Arc<Mutex<Connection>>,
     path: &str,
-    ignores: &[PathBuf],
+    ignores: &IgnoreRules,
 ) -> Result<u64, String> {
     let mtime = mtime_of(Path::new(path));
     let mut conn = index.lock().map_err(|e| e.to_string())?;
@@ -175,7 +175,7 @@ pub fn cached_size(
 // from its (cached) child directories — indexing any newly-created child and pruning deleted
 // ones. Returns the subtree-size delta to bubble to ancestors, or None if it didn't change /
 // the directory is gone.
-pub fn resync_dir(conn: &Connection, path: &Path, ignores: &[PathBuf]) -> Option<i64> {
+pub fn resync_dir(conn: &Connection, path: &Path, ignores: &IgnoreRules) -> Option<i64> {
     let path_str = path.to_string_lossy().into_owned();
 
     if !path.is_dir() {
@@ -208,7 +208,7 @@ pub fn resync_dir(conn: &Connection, path: &Path, ignores: &[PathBuf]) -> Option
                 continue;
             }
             let child = entry.path();
-            if is_ignored(&child, ignores) {
+            if ignores.is_ignored(&child) {
                 continue;
             }
             if file_type.is_dir() {
@@ -271,6 +271,17 @@ pub fn subtree_of(conn: &Connection, path: &str) -> Option<u64> {
     cached_subtree(conn, path).map(|(s, _)| s)
 }
 
+// Wipe every cached size row. Called when the ignore rules change: cached subtree sizes were
+// computed under the old rules, and since they're keyed on mtime (which doesn't change when only
+// the rules do) they'd otherwise be served stale. The cache is lazy, so it refills as folders are
+// revisited/walked.
+pub fn clear(index: &Arc<Mutex<Connection>>) {
+    if let Ok(conn) = index.lock() {
+        let _ = conn.execute("DELETE FROM dir_size", []);
+        crate::dlog!("cache cleared (ignore rules changed)");
+    }
+}
+
 // Process this many cached dirs per locked transaction, releasing the mutex between chunks
 // so live get_dir_size calls can interleave during the startup reconcile.
 const RECONCILE_CHUNK: usize = 500;
@@ -279,7 +290,7 @@ const RECONCILE_CHUNK: usize = 500;
 // open). Cached directories are processed deepest-first: vanished ones are pruned, and subtree
 // sizes are recomputed — so even deep offline changes (which don't touch an ancestor's mtime)
 // propagate correctly. Meant to run in the background at startup.
-pub fn reconcile(index: Arc<Mutex<Connection>>, ignores: Vec<PathBuf>) {
+pub fn reconcile(index: Arc<Mutex<Connection>>, ignores: IgnoreRules) {
     let paths: Vec<String> = {
         let conn = match index.lock() {
             Ok(c) => c,
@@ -315,7 +326,7 @@ pub fn reconcile(index: Arc<Mutex<Connection>>, ignores: Vec<PathBuf>) {
 
         for path in chunk {
             let p = Path::new(path);
-            if is_ignored(p, &ignores) {
+            if ignores.is_ignored(p) {
                 continue;
             }
             if !p.is_dir() {

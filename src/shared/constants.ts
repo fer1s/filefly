@@ -1,4 +1,20 @@
+import { isMacPlatform } from "@/shared/keymap/utils";
+
 import type { AppSettings } from "@/shared/services/api";
+
+// Recommended folder-size exclusions on macOS: OS-generated junk (Finder metadata, AppleDouble
+// forks, Spotlight/Trash/Versions/FSEvents stores) that never holds user content and only inflates
+// size totals. Seeded as the default so new users get sensible exclusions out of the box. Mirrors
+// default_size_ignores() in functions/settings.rs (must stay in sync). Empty on other platforms.
+export const MACOS_SIZE_IGNORES = [
+  ".DS_Store",
+  "._*",
+  ".Spotlight-V100",
+  ".Trashes",
+  ".DocumentRevisions-V100",
+  ".apdisk",
+  ".fseventsd",
+];
 
 export const VIEW_MODE = {
   GRID: "grid",
@@ -180,6 +196,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   showSystemStats: false,
   showFolderSizes: false,
   showVolumeSize: false,
+  sizeIgnores: isMacPlatform() ? [...MACOS_SIZE_IGNORES] : [],
 };
 
 // DOM KeyboardEvent.key names used in non-configurable key handling (navigation, input

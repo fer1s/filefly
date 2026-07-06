@@ -7,12 +7,14 @@
 //! time — keeping it out of the library means building `sfb` doesn't require `sfb` to already exist.
 
 // Debug-only tracing for the size index (compiled out of release builds). Defined at the crate root
-// so modules can call it as `crate::dlog!`.
+// so modules can call it as `crate::dlog!`. Uses `cfg!` instead of `#[cfg]` so arguments still
+// type-check (and count as used) in release; the constant-false branch is optimized away.
 #[macro_export]
 macro_rules! dlog {
     ($($arg:tt)*) => {
-        #[cfg(debug_assertions)]
-        println!("[size-index] {}", format!($($arg)*));
+        if cfg!(debug_assertions) {
+            println!("[size-index] {}", format!($($arg)*));
+        }
     };
 }
 

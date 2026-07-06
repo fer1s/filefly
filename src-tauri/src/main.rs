@@ -43,8 +43,11 @@ fn main() {
             // its own mtime no longer matches the cached row — no startup reconcile (which would
             // re-stat every path ever cached). Deep offline changes stay stale until the folder is
             // revisited; the Phase B watcher will close that gap in real time.
+            // Internal prefix: the app's own data dir. User name-globs: hydrated from settings.toml
+            // so ".DS_Store" & friends are excluded from folder sizes from the first walk.
             let ignore_list = ignore::IgnoreList::new(
                 app.path().app_data_dir().map(|d| vec![d]).unwrap_or_default(),
+                functions::settings::get_settings(app.handle().clone()).size_ignores(),
             );
             let size_index = index::init(app.handle())?;
             app.manage(size_index);

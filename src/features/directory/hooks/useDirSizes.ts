@@ -26,9 +26,30 @@ const FLUSH_INTERVAL_MS = 120;
 // map that fills in progressively without blocking the listing. Folders are processed by a
 // small bounded pool of workers; the work is cancelled when the directory (or `enabled`)
 // changes.
-export const useDirSizes = (entries: DirEntry[], enabled: boolean) => {
+// `ignoresKey` is a stable string derived from the size-ignore patterns. When it changes the
+// backend has recomputed under new rules and cleared its cache, so we drop our in-memory results
+// and re-walk the current view rather than showing stale totals.
+export const useDirSizes = (
+  entries: DirEntry[],
+  enabled: boolean,
+  ignoresKey: string,
+) => {
   const { fs } = useStateContext();
   const [sizes, setSizes] = useState<Record<string, number>>({});
+
+  // Patterns changed: the cached sizes were measured under the old rules. Drop local state right
+  // here (the React-sanctioned "reset state when a prop changes" render-phase pattern, tracking the
+  // previous key in state) so nothing stale is shown; the shared module cache is cleared in an
+  // effect below, and the walk then refills both.
+  const [prevKey, setPrevKey] = useState(ignoresKey);
+  if (prevKey !== ignoresKey) {
+    setPrevKey(ignoresKey);
+    setSizes({});
+  }
+
+  useEffect(() => {
+    dirSizeCache.clear();
+  }, [ignoresKey]);
 
   useEffect(() => {
     if (!enabled) return;
@@ -86,7 +107,7 @@ export const useDirSizes = (entries: DirEntry[], enabled: boolean) => {
       cancelled = true;
       if (flushTimer !== null) window.clearTimeout(flushTimer);
     };
-  }, [entries, enabled, fs]);
+  }, [entries, enabled, fs, ignoresKey]);
 
   // Live updates: the size-index watcher (Phase B) emits dir-size-changed when a folder's recursive
   // size changes on disk, so the Size column updates without a re-walk. Only while the column is
