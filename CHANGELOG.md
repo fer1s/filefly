@@ -2,6 +2,31 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.5.0]
+
+### Added
+
+- SSH/SFTP remote hosts — connect to and browse remote servers from a connections sidebar, with an add-connection flow, Keychain-stored credentials, and an auth dialog (`9f317dc`, `f0544c6`, `bbb6cee`, `33bafc7`, `1c46a85`)
+- Remote file operations over SFTP — copy, move, delete, and rename on remote hosts (`d22aaa8`, `fcf28b5`)
+- Streaming remote downloads with byte-by-byte transfer progress (`675fc97`, `5ed372e`, `f911a3b`)
+- Recursive size calculation for remote folders (`0c39b1c`)
+- Remote image thumbnails (`865ec7d`)
+- Edit markdown files directly on remote hosts (`c62b709`)
+- Open a remote folder in the terminal (`cbb81b1`)
+- Automatic reconnection and SSH host-key verification (`365f71f`, `768ccda`)
+- `sfb` headless CLI to drive the app, with a bundled sidecar script (`65c870e`, `3884bb3`, `6a976ce`)
+- Live system stats (CPU / RAM / disk) in the status bar (`9d38c0e`)
+- Recursive folder sizes in list view — a persistent on-disk size index kept fresh by a live filesystem watcher, shown in the Size column with severity-coloured bars and a Settings toggle (`febe51f`, `bdfbb5c`, `f8f0d05`)
+- Folder-size ignore list — glob patterns excluded from size totals, pre-seeded on macOS with system junk (`.DS_Store`, `._*`, `.Spotlight-V100`, …) (`44ad8c1`)
+- Shared Chip UI components — toggleable and deletable variants (`f65c0c0`)
+- Reusable `SettingsButton` and shared dialog-action components (`7b6b5a3`, `fdd1331`)
+
+### Changed
+
+- Settings dialog — settings grouped into subsections and the dialog resized to 80% of the window (`44ad8c1`)
+- Status-bar disk usage now opens macOS System Settings › Storage instead of a custom in-app breakdown (`1d2a01d`)
+- Remote download cache is cleared automatically (`d65b9de`)
+
 ## [0.4.1]
 
 ### Added
