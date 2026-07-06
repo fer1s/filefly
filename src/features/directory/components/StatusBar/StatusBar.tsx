@@ -35,9 +35,7 @@ const StatusBar = ({
   const searching = search.length > 0;
 
   const showStorage = () => {
-    openStorageSettings().catch((err) =>
-      notify(String(err), TOAST_TYPE.ERROR),
-    );
+    openStorageSettings().catch((err) => notify(String(err), TOAST_TYPE.ERROR));
   };
 
   const showMonitor = () => {

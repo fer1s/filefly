@@ -84,7 +84,9 @@ const ConnectionDialog = ({
       port: parsedPort,
       user: user.trim(),
       keyPath:
-        authKind === AUTH_KIND.KEY && keyPath.trim() ? keyPath.trim() : undefined,
+        authKind === AUTH_KIND.KEY && keyPath.trim()
+          ? keyPath.trim()
+          : undefined,
       keyPassphrase:
         authKind === AUTH_KIND.KEY && keyPassphrase ? keyPassphrase : undefined,
       password:
@@ -217,7 +219,10 @@ const ConnectionDialog = ({
           </Button>
           <Button
             type="submit"
-            className={classNames("connection_submit", !canSubmit && "disabled")}
+            className={classNames(
+              "connection_submit",
+              !canSubmit && "disabled",
+            )}
             disabled={!canSubmit}
           >
             {editing ? t.connections.save : t.connections.create}

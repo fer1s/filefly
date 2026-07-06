@@ -132,7 +132,8 @@ export const useDirSizes = (
   // Still computing while any visible folder has no size yet. Derived (no extra state) so it
   // flips off on its own as the batches land.
   const computing =
-    enabled && entries.some((entry) => isWalkable(entry) && sizes[entry.path] == null);
+    enabled &&
+    entries.some((entry) => isWalkable(entry) && sizes[entry.path] == null);
 
   return { sizes, computing };
 };

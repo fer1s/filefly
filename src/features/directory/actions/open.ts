@@ -19,7 +19,8 @@ export const openAction: EntryAction = {
     onClose();
     // Remote (sftp://) files download to the cache first so the OS app opens a local copy
     // (read-only — see SSH_PLAN.md); local paths pass through unchanged.
-    if (elementType === ENTRY_KIND.FILE) fs.open(await fs.materialize(elementId));
+    if (elementType === ENTRY_KIND.FILE)
+      fs.open(await fs.materialize(elementId));
     else if (elementType === ENTRY_KIND.DIRECTORY) setPath(elementId);
   },
 };

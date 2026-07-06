@@ -89,8 +89,11 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
 
   const { keymap } = useKeymap();
   const { open: openSettings } = useSettings();
-  const { connections, manager: connectionsManager, reload: reloadConnections } =
-    useConnections();
+  const {
+    connections,
+    manager: connectionsManager,
+    reload: reloadConnections,
+  } = useConnections();
   // Open state for the create-connection form (opened from the Network group's "+").
   const [connectionFormOpen, setConnectionFormOpen] = useState(false);
   // The connection being edited (null = not editing); drives the same form dialog prefilled.
