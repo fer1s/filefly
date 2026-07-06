@@ -15,7 +15,7 @@
   transition: all 0.2s ease-in-out;
 }
 
-.Button:hover {
+.Button:hover:not(:disabled) {
   background-color: var(--color-overlay-hover);
 }
 

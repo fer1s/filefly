@@ -1,5 +1,9 @@
 import { TAG_COLOR } from "@/shared/constants";
 
+// How often the status-bar OS-stats readout re-polls the system (ms). Slow enough to be cheap,
+// fast enough to feel live.
+export const SYSTEM_STATS_POLL_MS = 2000;
+
 export const ENTRY_KIND = {
   FILE: "file",
   DIRECTORY: "dir",

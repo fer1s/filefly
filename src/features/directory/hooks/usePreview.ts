@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { ACCEPTED_PREVIEW_FORMATS } from "@/features/directory/constants";
 import { extension } from "@/shared/utils";
@@ -57,15 +57,32 @@ export const usePreview = (previewables: DirEntry[]) => {
     [previewables],
   );
 
-  return {
-    visible,
-    setVisible,
-    filePath,
-    fileType,
-    prev,
-    next,
-    hasPrev: safeIndex > 0,
-    hasNext: safeIndex >= 0 && safeIndex < previewables.length - 1,
-    open,
-  };
+  // Memoized so the returned object has a stable identity across renders. Consumers put it in
+  // effect/callback deps (e.g. useKeyboardNav's onOpen chain); a fresh object every render made
+  // that effect re-subscribe on every keystroke, and its cleanup wiped the type-to-find buffer —
+  // the popup dropped letters. It only changes when its actual contents do.
+  return useMemo(
+    () => ({
+      visible,
+      setVisible,
+      filePath,
+      fileType,
+      prev,
+      next,
+      hasPrev: safeIndex > 0,
+      hasNext: safeIndex >= 0 && safeIndex < previewables.length - 1,
+      open,
+    }),
+    [
+      visible,
+      setVisible,
+      filePath,
+      fileType,
+      prev,
+      next,
+      safeIndex,
+      previewables.length,
+      open,
+    ],
+  );
 };

@@ -3,6 +3,8 @@ import { getCurrentWebview } from "@tauri-apps/api/webview";
 
 import { DRAG_OVER_CLASS } from "../useEntryDragMove/constants";
 import { isOwnDrag, clearOwnDragPaths } from "../../nativeDragSource";
+import { entryElementAt } from "../../dropTarget";
+import { recordDragOver, recordDragEvent } from "../../dragDiagnostics";
 import type { UseNativeDropTargetArgs } from "./types";
 
 // Handles a native OS drag while it's over our window: highlights the folder under the cursor and,
@@ -42,23 +44,28 @@ export const useNativeDropTarget = ({
   const setActive = (active: boolean) =>
     document.body.classList.toggle(NATIVE_DRAG_CLASS, active);
 
-  // The folder row whose rect contains the CSS-pixel point (x, y), or null.
-  const folderAtCss = (x: number, y: number) => {
-    const items = document.querySelectorAll<HTMLElement>(".dir_entry_item");
-    for (const el of items) {
-      const b = el.getBoundingClientRect();
-      if (x < b.left || x > b.right || y < b.top || y > b.bottom) continue;
-      return el.id && dirPathsRef.current.has(el.id) ? el : null;
-    }
-    return null;
-  };
+  // The folder row under the CSS-pixel point (x, y), or null. Forgiving hit-test (tile + label,
+  // nearest when crowded) so folders highlight reliably even at high zoom — see entryElementAt.
+  const folderAtCss = (x: number, y: number) =>
+    entryElementAt(x, y, (el) => !!el.id && dirPathsRef.current.has(el.id));
 
-  // The folder under a Tauri drag position. Tauri documents this as physical pixels (→ divide by
-  // the device pixel ratio for CSS px), but to be robust to how the position arrives we also try
-  // it as-is; whichever lands on a row wins.
+  // The folder under a Tauri drag position. Tauri's onDragDropEvent reports the position in LOGICAL
+  // (CSS) pixels — the same space as getBoundingClientRect — so it's used directly. (It historically
+  // reported physical pixels, which needed dividing by devicePixelRatio; a Tauri update changed that,
+  // and the stale /dpr halved the point on Retina, dropping the hit-test above the real cursor —
+  // verified via `sfb ui-probe`.)
   const folderAt = (posX: number, posY: number) => {
-    const dpr = window.devicePixelRatio || 1;
-    return folderAtCss(posX / dpr, posY / dpr) ?? folderAtCss(posX, posY);
+    const el = folderAtCss(posX, posY);
+    // Capture for the headless probe so a real drag can be inspected after the fact.
+    recordDragOver({
+      rawX: posX,
+      rawY: posY,
+      dpr: window.devicePixelRatio || 1,
+      cssX: posX,
+      cssY: posY,
+      resolved: el?.id ?? null,
+    });
+    return el;
   };
 
   useEffect(() => {
@@ -67,6 +74,7 @@ export const useNativeDropTarget = ({
 
     void getCurrentWebview()
       .onDragDropEvent(({ payload }) => {
+        recordDragEvent(payload.type);
         if (payload.type === "enter" || payload.type === "over") {
           setActive(true);
           const el = folderAt(payload.position.x, payload.position.y);
@@ -78,13 +86,19 @@ export const useNativeDropTarget = ({
             }
           }
         } else if (payload.type === "drop") {
-          const el = folderAt(payload.position.x, payload.position.y);
+          // Trust the folder highlighted by the last `over` (targetElRef), NOT a fresh hit-test on
+          // the drop position: the drop position can resolve a folder even when the user released on
+          // empty space (popping a bogus move confirm for a drag that lands in the current dir). The
+          // in-app drag path already commits to the highlighted target — mirror it here.
+          const el = targetElRef.current;
           clearTarget();
           setActive(false);
-          // Drop target: the hovered folder, else the current directory (import on empty space).
-          const dest = el?.id ?? currentDirRef.current;
           const external = !isOwnDrag(payload.paths);
           clearOwnDragPaths();
+          // Drop target: the hovered folder. On empty space, an external drag imports into the
+          // current directory, but an own drag dropped on empty space has no target (its items
+          // already live here) — ignore it rather than prompting a pointless move.
+          const dest = el?.id ?? (external ? currentDirRef.current : undefined);
           if (dest && payload.paths.length)
             onDropFilesRef.current(payload.paths, dest, external);
         } else if (payload.type === "leave") {

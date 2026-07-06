@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 
 import type { Tab } from "@/shared/models";
+import { MAIN_WINDOW_LABEL } from "@/shared/constants";
+import { DEFAULT_FILTERS, type SearchFilters } from "@/shared/search/filters";
 
 import {
   makeTab,
@@ -13,6 +16,7 @@ import {
   loadTabs,
   loadActiveTabId,
   saveTabs,
+  clearOrphanedWindowSessions,
 } from "../../utils";
 
 // Owns the browser-tab session: open tabs, the active one, and all navigation that acts on it
@@ -56,6 +60,12 @@ export const useTabs = () => {
     [updateActiveTab],
   );
 
+  const setFilters = useCallback(
+    (nextFilters: SearchFilters) =>
+      updateActiveTab((tab) => ({ ...tab, filters: nextFilters })),
+    [updateActiveTab],
+  );
+
   const toggleInfoPanel = useCallback(
     () =>
       updateActiveTab((tab) => ({ ...tab, infoPanelOpen: !tab.infoPanelOpen })),
@@ -66,7 +76,10 @@ export const useTabs = () => {
   // the new tab there instead (e.g. the sidebar's "Open in new tab"). Panel state is inherited.
   const newTab = useCallback(
     (nextPath?: string) => {
-      const tab = makeTab(nextPath ?? path, infoPanelOpen);
+      // Guard against being wired straight to an event handler (onClick / useHotkey), which would
+      // otherwise pass the DOM event as `nextPath` and make the tab's path a non-string → crash.
+      const start = typeof nextPath === "string" ? nextPath : path;
+      const tab = makeTab(start, infoPanelOpen);
       setTabs((prev) => [...prev, tab]);
       setActiveTabId(tab.id);
     },
@@ -89,10 +102,36 @@ export const useTabs = () => {
 
   const selectTab = useCallback((id: string) => setActiveTabId(id), []);
 
+  // Move the tab at `from` to position `to` (drag-to-reorder). Bounds-checked; a no-op move
+  // leaves the array reference unchanged so React skips the re-render.
+  const reorderTab = useCallback((from: number, to: number) => {
+    setTabs((prev) => {
+      if (
+        from === to ||
+        from < 0 ||
+        to < 0 ||
+        from >= prev.length ||
+        to >= prev.length
+      )
+        return prev;
+      const next = [...prev];
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved);
+      return next;
+    });
+  }, []);
+
   // Persist the tab session whenever it changes.
   useEffect(() => {
     saveTabs(tabs, activeTabId);
   }, [tabs, activeTabId]);
+
+  // Purge tab sessions orphaned by closed runtime windows. Runs once at startup from the main
+  // window (when no win-N exist), so it never touches a live window's session.
+  useEffect(() => {
+    if (getCurrentWindow().label === MAIN_WINDOW_LABEL)
+      clearOrphanedWindowSessions();
+  }, []);
 
   return {
     tabs,
@@ -100,6 +139,7 @@ export const useTabs = () => {
     activeTab,
     path,
     search: activeTab.search,
+    filters: activeTab.filters ?? DEFAULT_FILTERS,
     infoPanelOpen,
     canGoBack: canGoBack(activeTab),
     canGoForward: canGoForward(activeTab),
@@ -107,9 +147,11 @@ export const useTabs = () => {
     goBack,
     goForward,
     setSearch,
+    setFilters,
     toggleInfoPanel,
     newTab,
     closeTab,
     selectTab,
+    reorderTab,
   };
 };

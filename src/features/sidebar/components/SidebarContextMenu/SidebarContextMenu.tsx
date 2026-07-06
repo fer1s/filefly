@@ -24,6 +24,8 @@ const SidebarContextMenu = ({
   target,
   onClose,
   openProperties,
+  editConnection,
+  removeConnection,
 }: SidebarContextMenuProps) => {
   const { fs, path, newTab, refreshDir, setVolumes } = useStateContext();
 
@@ -32,11 +34,13 @@ const SidebarContextMenu = ({
   const ctx: SidebarActionContext | null = target && {
     path: target.path,
     kind: target.kind,
-    isRemovable: target.isRemovable ?? false,
+    isEjectable: target.isEjectable ?? false,
     currentPath: path,
     fs,
     openInNewTab: newTab,
     openProperties,
+    editConnection,
+    removeConnection,
     refreshDir,
     refreshVolumes: () => {
       fs.listVolumes().then(setVolumes);

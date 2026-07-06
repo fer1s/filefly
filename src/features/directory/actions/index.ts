@@ -3,7 +3,12 @@
 // the layout from context_menu.toml.
 export { ENTRY_ACTION, ACTION_SEPARATOR } from "./constants";
 export type { EntryActionId } from "./constants";
-export type { EntryAction, EntryActionContext, FileActions } from "./types";
+export type {
+  EntryAction,
+  EntryActionContext,
+  EntryActionSubItem,
+  FileActions,
+} from "./types";
 
 export { ENTRY_ACTIONS } from "./registry";
 export { resolveActionIds, isActionVisible } from "./utils";
@@ -20,3 +25,5 @@ export { trashAction } from "./trash";
 export { restoreAction } from "./restore";
 export { destroyAction } from "./destroy";
 export { propertiesAction } from "./properties";
+export { sortByAction } from "./sortBy";
+export { toggleHiddenAction } from "./toggleHidden";

@@ -52,7 +52,88 @@ npm run tauri dev
 
 This installs the Rust packages if they are not on disk yet; this happens only once.
 
-## 4. macOS: Full Disk Access (for the Trash)
+## 4. The `sfb` command-line tool
+
+The app ships an AI-friendly CLI, **`sfb`**, that drives the same file operations the GUI does
+(list, search, copy, move, trash, tags, …). It prints a JSON envelope on stdout and uses exit codes,
+so agents and scripts can call it directly. Run `sfb schema` for a machine-readable list of every
+command and its arguments, or `sfb help` for human-readable help.
+
+```bash
+sfb list --path ~/Documents
+sfb search --path ~ --query invoice
+sfb tags-set --path report.pdf --tags '[{"name":"Work","color":4}]'
+sfb delete --path old.log --force   # destructive ops require --force
+```
+
+`sfb` is embedded inside the app bundle at `Sito File Browser.app/Contents/MacOS/sfb`. How it lands
+on your `PATH` depends on how you installed the app:
+
+- **Homebrew (Cask).** `brew install --cask <tap>/sito-file-browser` installs the app to
+  `/Applications` and symlinks `sfb` onto your `PATH` automatically (see
+  [`homebrew/sito-file-browser.rb`](./homebrew/sito-file-browser.rb)). Nothing else to do.
+- **Dragged the `.dmg` into Applications.** Add the symlink once yourself:
+
+  ```bash
+  sudo ln -sf "/Applications/Sito File Browser.app/Contents/MacOS/sfb" /usr/local/bin/sfb
+  ```
+
+  (`/usr/local/bin` is on the default `PATH`. Use `~/.local/bin` or another PATH dir if you prefer
+  not to use `sudo`.)
+
+> **Building it yourself:** `sfb` is bundled as a Tauri sidecar. Run
+> `./scripts/build-sfb-sidecar.sh` (stages `src-tauri/binaries/sfb-<triple>`) **before**
+> `npm run tauri build`. CI does this automatically. For a cross-compile, pass the triple, e.g.
+> `./scripts/build-sfb-sidecar.sh x86_64-apple-darwin`.
+
+## 5. Control channel & debug mode (security)
+
+The app opens a headless **control channel** — a Unix-domain socket at
+`<app config dir>/sfb-control.sock` — so `sfb ui-*` (and, through it, an MCP server) can drive the
+running GUI. The socket is created with `0600` permissions, so only the current user can reach it;
+it is never exposed on the network.
+
+To keep `sfb` useful for automation **without** exposing the app's internals in production, the
+channel is split into two tiers:
+
+| Tier                           | Actions                                                                                                                      | Available           |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| **Automation** (AI-friendly)   | all `sfb` filesystem commands (`list`, `copy`, `move`, `trash`, `tags`, …), plus `ui-state`, `ui-navigate`, `ui-open-window` | **Always**          |
+| **Introspection** (debug-only) | `ui-probe` — dumps live DOM/drag internals for debugging                                                                     | **Debug mode only** |
+
+**Debug mode** is on automatically in dev builds (`tauri dev`). In a release build it is **off by
+default** and must be opted into at launch:
+
+```bash
+SFB_DEBUG=1 open -a "Sito File Browser"          # env var
+open -a "Sito File Browser" --args --debug       # or launch flag
+```
+
+`sfb ui-state` reports `"debug": true|false` so a caller can discover whether introspection is
+available. When it isn't, `ui-probe` returns
+`probe is disabled: launch the app with --debug or SFB_DEBUG=1`.
+
+Implementation: `is_debug_mode()` and the per-action gate live in
+[`src-tauri/src/functions/control.rs`](./src-tauri/src/functions/control.rs).
+
+### Future hardening (TODO)
+
+If the app ever needs stronger protection of the control channel, escalate in this order (each is
+stricter and costs more automation convenience):
+
+1. **Gate UI driving behind debug too.** Move `ui-navigate` / `ui-open-window` into the debug tier
+   so production only allows read-only `ui-state` (and the disk-only `sfb` fs commands). Loses
+   some GUI automation in production.
+2. **Require a shared token.** On startup the app writes a random token to a `0600` file in the app
+   config dir; `sfb` reads it and includes it in every control request, and the app rejects requests
+   without a matching token. Blocks other local processes that don't own the file from driving the
+   app, while `sfb` (run by the same user) still works transparently.
+3. **Disable the socket entirely outside debug mode.** Only bind `sfb-control.sock` when
+   `is_debug_mode()` is true. Maximum protection — no local process can drive or inspect the GUI in
+   production — but `sfb`'s `ui-*` commands stop working in release builds (the disk-only fs
+   commands still work, since they never touch the socket).
+
+## 6. macOS: Full Disk Access (for the Trash)
 
 macOS protects some folders (like the **Trash**, `~/.Trash`) behind a privacy permission. Without it the app shows a "Can't read this folder" notice when you open the Trash, with a button to open the right settings pane.
 

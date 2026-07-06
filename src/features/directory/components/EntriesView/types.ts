@@ -14,6 +14,8 @@ export type EntriesViewProps = {
   renamingID: string;
   contextMenuRef: RefObject<HTMLDivElement | null>;
   onSelect: (path: string, e: MouseEvent) => void;
+  // Open a file (double-click); routes images to the built-in preview per the setting.
+  onOpenFile: (entry: DirEntry) => void;
   onRename: (path: string, newName: string) => void;
   onCancelRename: () => void;
   menu: {
@@ -23,4 +25,10 @@ export type EntriesViewProps = {
   };
   // Drag-to-move binder, forwarded to each row's root (see useEntryDragMove).
   bindDrag: EntryDragBinder;
+  // Suppress each entry's metadata hover card (dialog / preview panel open). Forwarded to rows.
+  metadataTooltipDisabled: boolean;
+  // A revealed entry (sfb <file> / URL scheme / dock) to scroll into view once; the view grows the
+  // render slice to include it if needed, scrolls to it, then calls clearRevealID. Null when none.
+  revealID: string | null;
+  clearRevealID: () => void;
 };

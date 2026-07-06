@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 
-// localStorage key for the sidebar's collapsed state.
-const SIDEBAR_COLLAPSED_STORAGE_KEY = "sidebarCollapsed";
+import { SIDEBAR_COLLAPSED_STORAGE_KEY } from "./constants";
 
 // Sidebar collapsed/expanded preference, persisted across sessions.
 export const useSidebarCollapsed = () => {

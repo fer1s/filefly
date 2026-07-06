@@ -4,6 +4,9 @@
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
+  /* Match the macOS native title-bar height + compact padding instead of the taller default. */
+  height: var(--size-titlebar-mac);
+  padding: var(--space-0) var(--space-2);
 }
 
 .panel_header.mac .mac_close {
@@ -12,4 +15,7 @@
 
 .panel_header.mac h4 {
   text-align: center;
+  /* macOS window titles are 13px semibold. */
+  font-size: var(--font-size-base);
+  font-weight: 600;
 }

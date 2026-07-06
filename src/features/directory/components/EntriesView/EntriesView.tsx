@@ -2,15 +2,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useStateContext } from "@/shared/providers/StateProvider";
 import { t } from "@/lang";
-import type { Tag } from "@/shared/models";
 import { useTags } from "@/shared/providers/TagsProvider";
 import { DirEntryItem } from "../DirEntry";
 
-import { RENDER_BATCH_SIZE, RENDER_PREFETCH_PX } from "./constants";
+import { NO_TAGS, RENDER_BATCH_SIZE, RENDER_PREFETCH_PX } from "./constants";
 import type { EntriesViewProps } from "./types";
-
-// Stable reference for untagged rows so DirEntryItem's memo isn't broken by a fresh [] each render.
-const NO_TAGS: Tag[] = [];
 
 // Renders the entries grid/list. The container owns selection, rename and the context-menu
 // state; this component just wires each entry row to it.
@@ -27,17 +23,44 @@ const EntriesView = ({
   renamingID,
   contextMenuRef,
   onSelect,
+  onOpenFile,
   onRename,
   onCancelRename,
   menu,
   bindDrag,
+  metadataTooltipDisabled,
+  revealID,
+  clearRevealID,
 }: EntriesViewProps) => {
-  const { fs, setPath, dateFormat } = useStateContext();
+  const { fs, setPath, dateFormat, remoteThumbnails } = useStateContext();
   const { tags: tagsByPath, loadTags } = useTags();
   const [renderCount, setRenderCount] = useState(RENDER_BATCH_SIZE);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   const hasMore = renderCount < entries.length;
+
+  // Scroll a revealed entry into view. If it sits past the current render batch, grow the slice to
+  // include it first (this effect re-runs once it's mounted), then scroll and clear the request.
+  useEffect(() => {
+    if (!revealID) return;
+    const index = entries.findIndex((entry) => entry.path === revealID);
+    if (index === -1) {
+      clearRevealID(); // not in this folder (e.g. wrong window) — drop the request
+      return;
+    }
+    if (index >= renderCount) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setRenderCount((count) => Math.max(count, index + 1));
+      return;
+    }
+    const raf = requestAnimationFrame(() => {
+      document
+        .getElementById(revealID)
+        ?.scrollIntoView({ block: "center", inline: "nearest" });
+      clearRevealID();
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [revealID, entries, renderCount, clearRevealID]);
 
   // Finder tags for the rows currently rendered (lazy — grows with the slice, never reads twice).
   const renderedPaths = useMemo(
@@ -96,6 +119,7 @@ const EntriesView = ({
             focused={focused}
             tabbable={focused || (!hasFocused && index === 0)}
             onSelect={onSelect}
+            onOpenFile={onOpenFile}
             renaming={renamingID === entry.path}
             onRename={onRename}
             onCancelRename={onCancelRename}
@@ -103,6 +127,8 @@ const EntriesView = ({
             setContextMenuElementID={menu.setId}
             setContextMenuElementType={menu.setType}
             bindDrag={bindDrag}
+            metadataTooltipDisabled={metadataTooltipDisabled}
+            remoteThumbnails={remoteThumbnails}
           />
         );
       })}

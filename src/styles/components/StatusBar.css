@@ -1,7 +1,9 @@
+/* Footer column: the counts/busy row on top, the optional OS-stats readout on its own row below. */
 .directory_page .status_bar {
   flex-shrink: 0;
   display: flex;
-  gap: var(--space-4);
+  flex-direction: column;
+  gap: var(--space-1);
   padding: var(--space-1-5) var(--space-2);
   font-size: var(--font-size-sm);
   color: var(--color-text-muted);
@@ -11,18 +13,71 @@
   user-select: none;
 }
 
+/* Top row: item/selection counts on the left, busy indicators pushed to the right. */
+.directory_page .status_bar .status_row {
+  display: flex;
+  gap: var(--space-4);
+}
+
+/* Bottom row: live CPU / RAM / disk readout, right-aligned under the counts. */
+.directory_page .status_bar .stats_row {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+}
+
+.directory_page .status_bar .stats_row .stat {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* CPU / RAM readouts double as buttons that open the OS resource monitor. Reset the native button
+   look so they sit inline with the plain-text disk stat, and hint interactivity on hover. */
+.directory_page .status_bar .stats_row .stat_button {
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.directory_page .status_bar .stats_row .stat_button:hover {
+  color: var(--color-text-secondary);
+  text-decoration: underline;
+}
+
 .directory_page .status_bar .selected {
   color: var(--color-text-secondary);
 }
 
-/* Right-aligned progress indicators (computing sizes, loading previews). With two present, the
-   first absorbs the free space and both sit together on the right. */
+/* Active-search indicator: the query still filtering the view. Sits at the far left, ahead of the
+   item count, so a restored session makes it obvious you're looking at search results. */
+.directory_page .status_bar .searching {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--color-text-secondary);
+  max-width: var(--space-80);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* Right-aligned progress indicators (computing sizes, loading previews, saving, batch progress). */
 .directory_page .status_bar .busy {
   margin-left: auto;
   display: flex;
   align-items: center;
   gap: var(--space-1);
   color: var(--color-text-secondary);
+}
+
+/* Only the FIRST busy item absorbs the free space (margin-left:auto above). Every subsequent one
+   resets it to 0 so the whole group stays together on the right (separated by the flex gap) instead
+   of each grabbing free space and spreading to opposite ends. */
+.directory_page .status_bar .busy ~ .busy {
+  margin-left: 0;
 }
 
 /* Item-level progress bar for copy / move / delete batches. */

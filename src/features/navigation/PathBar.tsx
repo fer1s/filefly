@@ -13,6 +13,7 @@ import { t } from "@/lang";
 import { usePathBarShortcuts } from "./hooks/usePathBarShortcuts";
 import PathField from "./components/PathField";
 import PathSearch from "./components/PathSearch";
+import SearchFilters from "./components/SearchFilters";
 
 import {
   faArrowLeft,
@@ -100,6 +101,8 @@ const PathBar = () => {
     toggleHidden: toggleShowHidden,
     toggleInfo: toggleInfoPanel,
     toggleSearch,
+    closeSearch,
+    searchActive: searchOpen && !searchClosing,
   });
 
   return (
@@ -178,6 +181,9 @@ const PathBar = () => {
           className="shadow search_toggle"
         />
       )}
+
+      {/* Search-result filters live just left of the view toggle, only while a search is active. */}
+      {search.trim().length > 0 && <SearchFilters />}
 
       <IconButton
         icon={view === VIEW_MODE.GRID ? faList : faTableCellsLarge}

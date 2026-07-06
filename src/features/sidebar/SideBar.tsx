@@ -12,10 +12,25 @@ import {
   PINNED_ACTIONS,
 } from "@/shared/keymap";
 import { classNames, basename, tagsPath } from "@/shared/utils";
-import { pickFolder } from "@/shared/services/api";
-import { RECENTS, TAG_COLOR, TAG_COLOR_CLASS } from "@/shared/constants";
+import { useFolderPicker } from "@/shared/providers/FolderPickerProvider";
+import {
+  RECENTS,
+  TAG_COLOR,
+  TAG_COLOR_CLASS,
+  SSH_AUTH_FAILED,
+  SSH_HOST_KEY_CHANGED,
+  SFTP_SCHEME,
+} from "@/shared/constants";
+import { useConfirm } from "@/shared/providers/ConfirmProvider";
 import { useTags } from "@/shared/providers/TagsProvider";
 import { useSettings } from "@/features/settings";
+import {
+  useConnections,
+  ConnectionDialog,
+  ConnectionAuthDialog,
+} from "@/features/connections";
+import { notify, TOAST_TYPE } from "@/shared/toast";
+import type { Connection } from "@/shared/services/api";
 import { Properties } from "@/features/directory";
 import { t } from "@/lang";
 
@@ -27,6 +42,8 @@ import ConfirmationDialog from "@/shared/components/patterns/ConfirmationDialog"
 import {
   SIDEBAR_GROUP,
   SIDEBAR_ITEM_KIND,
+  RECENTS_ITEM,
+  GROUP_META,
   type SidebarGroupId,
   type SidebarItemKind,
 } from "./constants";
@@ -41,49 +58,76 @@ import { useEntryProperties } from "@/shared/hooks/useEntryProperties";
 import SidebarSection from "./components/SidebarSection";
 import SidebarContextMenu from "./components/SidebarContextMenu";
 import VolumeItem from "./components/VolumeItem";
+import { ejectVolume } from "@/shared/services/ejectVolume";
 import FolderItem from "./components/FolderItem";
 import Button from "@/shared/components/elements/Button";
 import Icon from "@/shared/components/elements/Icon";
 
 import {
   faBars,
-  faClockRotateLeft,
   faPlus,
   faGear,
   faPenToSquare,
   faFolder,
   faCircle,
+  faServer,
 } from "@fortawesome/free-solid-svg-icons";
 
 import "@/styles/components/SideBar.css";
 
-import type { SideBarProps } from "./types";
-
-// Finder-style "Recents" — a pinned entry that opens the virtual recent-files listing.
-const RECENTS_ITEM = {
-  name: t.sidebar.recents,
-  path: RECENTS,
-  icon: faClockRotateLeft,
-  kind: SIDEBAR_ITEM_KIND.RECENTS,
-};
-
-// Per-group metadata: the built-in default title and whether the group is user-editable
-// (rename + add items). Volumes is system-managed, so it's reorderable but not editable.
-const GROUP_META: Record<SidebarGroupId, { title: string; editable: boolean }> =
-  {
-    [SIDEBAR_GROUP.PINNED]: { title: t.sidebar.pinned, editable: true },
-    [SIDEBAR_GROUP.VOLUMES]: { title: t.sidebar.volumes, editable: false },
-    [SIDEBAR_GROUP.NETWORK]: { title: t.sidebar.network, editable: true },
-    // System-managed like Volumes: reorderable, but the rows are the live Finder tags.
-    [SIDEBAR_GROUP.TAGS]: { title: t.sidebar.tags, editable: false },
-  };
+import type {
+  SideBarProps,
+  PendingItemRemoval,
+  PendingGroupRemoval,
+} from "./types";
 
 const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
-  const { path, volumes, setPath, newTab, sidebarOpacity } = useStateContext();
+  const { fs, path, volumes, setPath, setVolumes, sidebarOpacity, newTab } =
+    useStateContext();
+  const { pickFolder } = useFolderPicker();
   const { allTags } = useTags();
 
   const { keymap } = useKeymap();
   const { open: openSettings } = useSettings();
+  const { connections, manager: connectionsManager, reload: reloadConnections } =
+    useConnections();
+  // Open state for the create-connection form (opened from the Network group's "+").
+  const [connectionFormOpen, setConnectionFormOpen] = useState(false);
+  // The connection being edited (null = not editing); drives the same form dialog prefilled.
+  const [editConnectionTarget, setEditConnectionTarget] =
+    useState<Connection | null>(null);
+  // The connection whose auth failed, showing the interactive re-auth dialog (null = hidden).
+  const [authConnection, setAuthConnection] = useState<Connection | null>(null);
+  const { confirm } = useConfirm();
+
+  // The connection id embedded in a row's `sftp://<id>` path.
+  const connectionId = (path: string) =>
+    path.slice(SFTP_SCHEME.length).split("/")[0];
+
+  // Open the connection form prefilled to edit the clicked connection.
+  const editConnection = (path: string) => {
+    const conn = connections.find((c) => c.id === connectionId(path));
+    if (conn) setEditConnectionTarget(conn);
+  };
+
+  // Confirm, then delete the clicked connection (app-side only; the server is untouched).
+  const removeConnection = async (path: string) => {
+    const conn = connections.find((c) => c.id === connectionId(path));
+    if (!conn) return;
+    const ok = await confirm({
+      title: t.connections.remove,
+      message: t.connections.confirmRemove(conn.name),
+      destructive: true,
+    });
+    if (!ok) return;
+    try {
+      await connectionsManager.remove(conn.id);
+      reloadConnections();
+      notify(t.connections.removed, TOAST_TYPE.SUCCESS);
+    } catch (err) {
+      notify(t.connections.removeError(String(err)), TOAST_TYPE.ERROR);
+    }
+  };
   const pinned = usePinnedFolders();
   const groups = useSidebarGroups();
   const {
@@ -96,28 +140,22 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
 
   const menu = useSidebarContextMenu();
   const properties = useEntryProperties();
-  const { bind, dragStyle, registerRef, draggingId } = useGroupDragSort(
-    groups.order,
-    groups.reorder,
-  );
+  const { bind, styleFor, registerRef, draggingId, snapping } =
+    useGroupDragSort(groups.order, groups.reorder);
   // The custom item awaiting delete-confirmation (null when the dialog is closed).
-  const [pendingRemoval, setPendingRemoval] = useState<{
-    id: string;
-    path: string;
-  } | null>(null);
+  const [pendingRemoval, setPendingRemoval] =
+    useState<PendingItemRemoval | null>(null);
   // The custom group awaiting delete-confirmation (deleting it takes all its items).
-  const [pendingGroupRemoval, setPendingGroupRemoval] = useState<{
-    id: string;
-    name: string;
-  } | null>(null);
+  const [pendingGroupRemoval, setPendingGroupRemoval] =
+    useState<PendingGroupRemoval | null>(null);
 
-  // Open the context menu at the cursor for a given row (path + kind, plus removable flag for
-  // volumes so Eject can show only for external devices).
+  // Open the context menu at the cursor for a given row (path + kind, plus ejectable flag for
+  // volumes so Eject can show only for external/removable devices).
   const onRowContextMenu =
-    (itemPath: string, kind: SidebarItemKind, isRemovable?: boolean) =>
+    (itemPath: string, kind: SidebarItemKind, isEjectable?: boolean) =>
     (e: MouseEvent) => {
       e.preventDefault();
-      menu.openAt(e.clientX, e.clientY, { path: itemPath, kind, isRemovable });
+      menu.openAt(e.clientX, e.clientY, { path: itemPath, kind, isEjectable });
     };
 
   // User-added rows for a group (its persisted custom items), shown below the built-in rows.
@@ -145,9 +183,17 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
 
   // Pick a folder and add it to the group. The clicked insert index spans built-in + custom rows,
   // so subtract the built-in count to land at the right slot within the persisted custom items.
+  // The Network group is special: its "+" opens the create-connection form instead of a folder.
   const onAddItem =
     (id: string, builtinCount: number) => async (index: number) => {
-      const folder = await pickFolder();
+      if (id === SIDEBAR_GROUP.NETWORK) {
+        setConnectionFormOpen(true);
+        return;
+      }
+      // Open the custom picker at the folder currently in view (skip sentinels like Recents/tags).
+      const folder = await pickFolder({
+        startPath: path.startsWith("/") ? path : "",
+      });
       if (folder) groups.addItem(id, folder, Math.max(0, index - builtinCount));
     };
 
@@ -165,6 +211,52 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
   // The rows for each group. Rendered in the user's saved order below; the group shell (header,
   // edit affordances, drag handle) is the same SidebarSection for all of them.
   const networkRows = customRows(SIDEBAR_GROUP.NETWORK);
+
+  // Open a connection on its home directory (where `ssh` lands), resolved over SFTP. An auth failure
+  // opens the interactive re-auth dialog; any other error falls back to the root path (whose load
+  // then surfaces the error toast).
+  const openConnection = (connection: Connection) => {
+    connectionsManager
+      .home(connection.id)
+      .then(setPath)
+      .catch((err) => {
+        const message = String(err);
+        if (message.includes(SSH_AUTH_FAILED)) setAuthConnection(connection);
+        else if (message.includes(SSH_HOST_KEY_CHANGED))
+          notify(t.connections.hostKeyChanged, TOAST_TYPE.ERROR);
+        else setPath(connectionsManager.rootPath(connection.id));
+      });
+  };
+
+  // Open a connection in a new tab, landing on its home dir (falls back to the root on lookup fail).
+  const openConnectionInNewTab = (connection: Connection) => {
+    connectionsManager
+      .home(connection.id)
+      .then(newTab)
+      .catch(() => newTab(connectionsManager.rootPath(connection.id)));
+  };
+
+  // Saved SSH/SFTP connections (see SSH_PLAN.md). Clicking opens the connection's home dir; the row
+  // stays highlighted for any remote folder browsed under it (prefix match).
+  const connectionRows = connections.map((connection) => {
+    const prefix = connectionsManager.prefix(connection.id);
+    return (
+      <FolderItem
+        key={`connection:${connection.id}`}
+        item={{
+          name: connection.name,
+          path: prefix,
+          icon: faServer,
+          kind: SIDEBAR_ITEM_KIND.CONNECTION,
+        }}
+        setPath={() => openConnection(connection)}
+        collapsed={collapsed}
+        active={path === prefix || path.startsWith(`${prefix}/`)}
+        onContextMenu={onRowContextMenu(prefix, SIDEBAR_ITEM_KIND.CONNECTION)}
+        onOpenInNewTab={() => openConnectionInNewTab(connection)}
+      />
+    );
+  });
 
   // Presets are hidden, not deleted (we couldn't re-create them). In edit mode show them all so a
   // hidden one can be toggled back on; otherwise drop the hidden ones. Each keeps its original
@@ -230,16 +322,26 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
         onContextMenu={onRowContextMenu(
           volume.mountPoint,
           SIDEBAR_ITEM_KIND.VOLUME,
-          volume.isRemovable,
+          volume.isEjectable,
         )}
+        onEject={
+          !collapsed && volume.isEjectable
+            ? () =>
+                ejectVolume(fs, volume.mountPoint, () =>
+                  fs.listVolumes().then(setVolumes),
+                )
+            : undefined
+        }
       />
     )),
-    // Show the placeholder only until the user adds their first network location.
-    [SIDEBAR_GROUP.NETWORK]: networkRows.length ? (
-      networkRows
-    ) : (
-      <p className="section_todo">{t.sidebar.todo}</p>
-    ),
+    // Saved connections (built-in) then user-added network locations. Placeholder only when both
+    // are empty. An array so SidebarSection can interleave add-item inserts between rows.
+    [SIDEBAR_GROUP.NETWORK]:
+      connectionRows.length || networkRows.length ? (
+        [...connectionRows, ...networkRows]
+      ) : (
+        <p className="section_todo">{t.sidebar.todo}</p>
+      ),
     // Finder tags — the tags actually in use (their real names + colours), discovered at runtime.
     // Clicking one opens its Spotlight tag view. macOS-only (the group is hidden otherwise below).
     [SIDEBAR_GROUP.TAGS]: allTags.map((tag) => {
@@ -269,7 +371,7 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
   const builtinCount: Record<SidebarGroupId, number> = {
     [SIDEBAR_GROUP.PINNED]: 1 + visiblePinned.length,
     [SIDEBAR_GROUP.VOLUMES]: volumes.length,
-    [SIDEBAR_GROUP.NETWORK]: 0,
+    [SIDEBAR_GROUP.NETWORK]: connectionRows.length,
     [SIDEBAR_GROUP.TAGS]: allTags.length,
   };
 
@@ -280,7 +382,11 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
   return (
     <div
       ref={sidebarRef}
-      className={classNames("SideBar", collapsed && "collapsed")}
+      className={classNames(
+        "SideBar",
+        collapsed && "collapsed",
+        snapping && "snapping",
+      )}
       // Drives the alpha of --color-background-sidebar (see theme.css); set by the user in Settings.
       style={{ "--sidebar-opacity": sidebarOpacity } as CSSProperties}
     >
@@ -306,17 +412,6 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
           hotkey={formatBinding(keymap[KEYMAP_ACTION.OPEN_SETTINGS])}
           onClick={openSettings}
           aria-label={t.sidebar.settings}
-        />
-        <IconButton
-          icon={faPlus}
-          variant={ICON_BUTTON_VARIANT.BOXED}
-          size={ICON_BUTTON_SIZE.MD}
-          className="new_tab_toggle"
-          tooltip={t.tabs.newTab}
-          tooltipPlacement={TOOLTIP_PLACEMENT.RIGHT}
-          hotkey={formatBinding(keymap[KEYMAP_ACTION.NEW_TAB])}
-          onClick={() => newTab()}
-          aria-label={t.tabs.newTab}
         />
         <IconButton
           icon={faPenToSquare}
@@ -356,7 +451,7 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
             ref={registerRef(id)}
             title={title}
             editing={editingSidebar}
-            style={dragStyle(id)}
+            style={styleFor(id)}
             dragging={draggingId === id}
             dragHandleProps={editingSidebar ? bind(id) : undefined}
             onRename={editable ? (name) => groups.rename(id, name) : undefined}
@@ -389,6 +484,8 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
         target={menu.target}
         onClose={menu.close}
         openProperties={properties.open}
+        editConnection={editConnection}
+        removeConnection={removeConnection}
       />
       <Properties
         entry={properties.entry}
@@ -427,6 +524,45 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
           setPendingGroupRemoval(null);
         }}
         onClose={() => setPendingGroupRemoval(null)}
+      />
+      <ConnectionDialog
+        visible={connectionFormOpen || editConnectionTarget !== null}
+        initial={editConnectionTarget}
+        onClose={() => {
+          setConnectionFormOpen(false);
+          setEditConnectionTarget(null);
+        }}
+        onSubmit={async (connection) => {
+          const isEdit = editConnectionTarget !== null;
+          await connectionsManager.add(connection);
+          reloadConnections();
+          setConnectionFormOpen(false);
+          setEditConnectionTarget(null);
+          notify(
+            isEdit ? t.common.saved : t.connections.added,
+            TOAST_TYPE.SUCCESS,
+          );
+        }}
+      />
+      <ConnectionAuthDialog
+        connection={authConnection}
+        onClose={() => setAuthConnection(null)}
+        onRetry={async (secret) => {
+          const conn = authConnection;
+          if (!conn) return;
+          // Store the entered secret (if any) as both password and key passphrase so it covers
+          // password auth and an encrypted key; empty just re-attempts (ssh-agent case).
+          if (secret) {
+            await connectionsManager.add({
+              ...conn,
+              password: secret,
+              keyPassphrase: secret,
+            });
+          }
+          const home = await connectionsManager.home(conn.id);
+          setPath(home);
+          setAuthConnection(null);
+        }}
       />
     </div>
   );

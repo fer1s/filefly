@@ -23,10 +23,12 @@ export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
 
     // Arrow keys roam between items (wrapping); Home/End jump to the ends.
     const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+      // Only roam visible rows: collapsed submenu flyouts also carry role=menuitem, but
+      // focusing a display:none element is a dead step. offsetParent is null when hidden.
       const items = Array.from(
         innerRef.current?.querySelectorAll<HTMLElement>(MENU_ITEM_SELECTOR) ??
           [],
-      );
+      ).filter((el) => el.offsetParent !== null);
       if (!items.length) return;
 
       const current = items.indexOf(document.activeElement as HTMLElement);

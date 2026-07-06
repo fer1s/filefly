@@ -1,5 +1,6 @@
 import { Volume, DirEntry, Tab } from "@/shared/models";
 import { FileSystemManager } from "@/shared/managers/FileSystemManager";
+import type { SearchFilters } from "@/shared/search/filters";
 import {
   type ViewMode,
   type StartupMode,
@@ -17,6 +18,8 @@ export type State = {
   newTab: (path?: string) => void;
   closeTab: (id: string) => void;
   selectTab: (id: string) => void;
+  // Reorder tabs by moving the one at index `from` to index `to` (drag-to-reorder).
+  reorderTab: (from: number, to: number) => void;
   path: string;
   setPath: (path: string) => void;
   canGoBack: boolean;
@@ -28,6 +31,9 @@ export type State = {
   // True when the current directory could not be read due to OS privacy protection
   // (e.g. macOS Full Disk Access required for the Trash).
   accessDenied: boolean;
+  // True while a navigation is still fetching the new folder's listing (after a short delay, so
+  // fast local reads don't flash). The directory view shows a spinner instead of the stale entries.
+  loadingDir: boolean;
   view: ViewMode;
   setView: (view: ViewMode) => void;
   // Whether hidden entries (dotfiles) are shown in the listing. Toggled via the keymap.
@@ -69,16 +75,32 @@ export type State = {
   // Whether a confirmation dialog is shown before a drag-and-drop move/copy.
   confirmDragDrop: boolean;
   toggleConfirmDragDrop: () => void;
+  // Whether a confirmation dialog is shown before moving entries to the Trash (permanent delete
+  // always confirms regardless). Read by the delete flow (useFileOperations).
+  confirmDelete: boolean;
   // Whether success toasts are clickable to jump to the affected file/folder.
   clickableToasts: boolean;
   toggleClickableToasts: () => void;
   // Whether dragging entries out of the window starts a native OS drag (drop into other apps).
   dragToExternalApps: boolean;
   toggleDragToExternalApps: () => void;
+  // Whether opening an image (Enter/double-click) shows it in the built-in preview instead of the
+  // OS default app. Read by the directory open flow.
+  previewImagesInApp: boolean;
+  // Whether opening a markdown file (Enter/double-click) shows it in the built-in preview instead
+  // of the OS default app. Read by the directory open flow.
+  previewMarkdownInApp: boolean;
+  // Whether to generate thumbnails for remote (SFTP) images (off by default — each downloads the
+  // whole file). Gates the thumbnail request for remote entries.
+  remoteThumbnails: boolean;
   // True while a settings change is being written to settings.toml (drives the StatusBar spinner).
   savingSettings: boolean;
   search: string;
   setSearch: (search: string) => void;
+  // Filters narrowing the active tab's search results (kind/date/size/scope). Per-tab, reset on
+  // navigation like `search`.
+  filters: SearchFilters;
+  setFilters: (filters: SearchFilters) => void;
   refreshDir: () => void;
   // Whether the right info panel (preview + properties of the single selected entry) is shown.
   infoPanelOpen: boolean;

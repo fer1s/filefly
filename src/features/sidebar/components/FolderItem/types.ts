@@ -17,6 +17,9 @@ export type FolderItemProps = {
   // Whether this preset is currently hidden (only meaningful with onToggleHidden). Drives the
   // eye/eye-slash icon and dims the row so it's clearly "off" while still editable.
   hidden?: boolean;
+  // When provided, an always-visible inline button (like a volume's eject) opens the row in a new
+  // tab — used by connection rows so a connection can be opened without the context menu.
+  onOpenInNewTab?: () => void;
   // Extra class on the row (e.g. a tag colour modifier that tints the icon).
   className?: string;
 };

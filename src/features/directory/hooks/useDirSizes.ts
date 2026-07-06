@@ -2,8 +2,15 @@ import { useEffect, useState } from "react";
 
 import { useStateContext } from "@/shared/providers/StateProvider";
 import { DirEntry } from "@/shared/models";
+import { SFTP_SCHEME } from "@/shared/constants";
 
 import { dirSizeCache } from "./dirSizeCache";
+
+// Bulk size-walking a remote folder would fire a recursive SFTP walk per subfolder (many network
+// round trips) just from listing it — too heavy. Remote folder sizes are computed only on demand
+// (the Properties panel via useEntrySize), so the bulk walk skips them entirely.
+const isWalkable = (entry: DirEntry) =>
+  entry.metadata.isDir && !entry.path.startsWith(SFTP_SCHEME);
 
 // How many folder walks run at once. Each walk is already parallel (jwalk/rayon) and runs
 // off the main thread, so a small pool overlaps IO latency without oversubscribing CPU/disk.
@@ -19,14 +26,35 @@ const FLUSH_INTERVAL_MS = 120;
 // map that fills in progressively without blocking the listing. Folders are processed by a
 // small bounded pool of workers; the work is cancelled when the directory (or `enabled`)
 // changes.
-export const useDirSizes = (entries: DirEntry[], enabled: boolean) => {
+// `ignoresKey` is a stable string derived from the size-ignore patterns. When it changes the
+// backend has recomputed under new rules and cleared its cache, so we drop our in-memory results
+// and re-walk the current view rather than showing stale totals.
+export const useDirSizes = (
+  entries: DirEntry[],
+  enabled: boolean,
+  ignoresKey: string,
+) => {
   const { fs } = useStateContext();
   const [sizes, setSizes] = useState<Record<string, number>>({});
+
+  // Patterns changed: the cached sizes were measured under the old rules. Drop local state right
+  // here (the React-sanctioned "reset state when a prop changes" render-phase pattern, tracking the
+  // previous key in state) so nothing stale is shown; the shared module cache is cleared in an
+  // effect below, and the walk then refills both.
+  const [prevKey, setPrevKey] = useState(ignoresKey);
+  if (prevKey !== ignoresKey) {
+    setPrevKey(ignoresKey);
+    setSizes({});
+  }
+
+  useEffect(() => {
+    dirSizeCache.clear();
+  }, [ignoresKey]);
 
   useEffect(() => {
     if (!enabled) return;
 
-    const queue = entries.filter((entry) => entry.metadata.isDir);
+    const queue = entries.filter(isWalkable);
     if (!queue.length) return;
 
     let cancelled = false;
@@ -79,13 +107,32 @@ export const useDirSizes = (entries: DirEntry[], enabled: boolean) => {
       cancelled = true;
       if (flushTimer !== null) window.clearTimeout(flushTimer);
     };
-  }, [entries, enabled, fs]);
+  }, [entries, enabled, fs, ignoresKey]);
+
+  // Live updates: the size-index watcher (Phase B) emits dir-size-changed when a folder's recursive
+  // size changes on disk, so the Size column updates without a re-walk. Only while the column is
+  // shown (enabled); the backend watcher itself is driven by navigation in useDirectoryContents.
+  useEffect(() => {
+    if (!enabled) return;
+    let cancelled = false;
+    let unlisten: (() => void) | undefined;
+    fs.onDirSizeChanged((change) => {
+      dirSizeCache.set(change.path, change.size);
+      setSizes((prev) => ({ ...prev, [change.path]: change.size }));
+    }).then((fn) => {
+      if (cancelled) fn();
+      else unlisten = fn;
+    });
+    return () => {
+      cancelled = true;
+      unlisten?.();
+    };
+  }, [enabled, fs]);
 
   // Still computing while any visible folder has no size yet. Derived (no extra state) so it
   // flips off on its own as the batches land.
   const computing =
-    enabled &&
-    entries.some((entry) => entry.metadata.isDir && sizes[entry.path] == null);
+    enabled && entries.some((entry) => isWalkable(entry) && sizes[entry.path] == null);
 
   return { sizes, computing };
 };

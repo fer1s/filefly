@@ -1,3 +1,5 @@
+export type DropdownCoords = { top: number; left: number; width: number };
+
 export type PathSearchProps = {
   value: string;
   onChange: (value: string) => void;

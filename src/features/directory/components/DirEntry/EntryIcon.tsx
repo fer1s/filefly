@@ -1,21 +1,11 @@
-import type { RefObject } from "react";
-
 import Icon from "@/shared/components/elements/Icon";
+import { classNames } from "@/shared/utils";
 
 import { faFolder } from "@fortawesome/free-solid-svg-icons";
 
 import { getFileIcon } from "./fileIcon";
 
-type EntryIconProps = {
-  isDir: boolean;
-  // File extension (lowercased or not) used to pick a type-specific glyph; "" for folders.
-  extension: string;
-  // A thumbnail (image/video/pdf preview) is available and loaded.
-  imgSrc: string | null;
-  imgRef: RefObject<HTMLImageElement | null>;
-  // Fires on both load and error so the placeholder is cleared either way.
-  finishLoad: () => void;
-};
+import type { EntryIconProps } from "./types";
 
 // The entry's leading visual: a lazy-loaded thumbnail when available, else a folder glyph or a
 // file-type glyph resolved from the extension (zip, audio, code, …).
@@ -26,7 +16,7 @@ const EntryIcon = ({
   imgRef,
   finishLoad,
 }: EntryIconProps) => (
-  <div className="icon">
+  <div className={classNames("icon", isDir && "is_dir")}>
     {imgSrc ? (
       <img
         ref={imgRef}

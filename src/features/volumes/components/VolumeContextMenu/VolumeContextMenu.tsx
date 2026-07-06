@@ -31,7 +31,7 @@ const VolumeContextMenu = ({
     ? {
         path: volume.mountPoint,
         name: volume.name,
-        isRemovable: volume.isRemovable,
+        isEjectable: volume.isEjectable,
         fs,
         setPath,
         openInNewTab: newTab,

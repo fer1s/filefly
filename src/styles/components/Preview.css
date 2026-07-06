@@ -55,6 +55,87 @@
   transition-delay: 0s;
 }
 
+/* Suppress text selection while dragging/resizing the panel. Needs !important + descendants to beat
+   the per-element `user-select: text` on the rendered markdown. Position (left/top/width/height) is
+   driven by inline style and isn't transitioned, so drag/resize/maximize track the pointer 1:1. */
+.preview_container.interacting,
+.preview_container.interacting * {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+}
+
+/* Resize handles: thin edge strips + slightly larger corner squares, laid over the panel edges. */
+.preview_container .preview_resize {
+  position: absolute;
+  z-index: 5;
+  touch-action: none;
+}
+
+.preview_container .preview_resize.n {
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--space-1-5);
+  cursor: ns-resize;
+}
+
+.preview_container .preview_resize.s {
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: var(--space-1-5);
+  cursor: ns-resize;
+}
+
+.preview_container .preview_resize.e {
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: var(--space-1-5);
+  cursor: ew-resize;
+}
+
+.preview_container .preview_resize.w {
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: var(--space-1-5);
+  cursor: ew-resize;
+}
+
+.preview_container .preview_resize.ne,
+.preview_container .preview_resize.nw,
+.preview_container .preview_resize.se,
+.preview_container .preview_resize.sw {
+  z-index: 6;
+  width: var(--space-3);
+  height: var(--space-3);
+}
+
+.preview_container .preview_resize.ne {
+  top: 0;
+  right: 0;
+  cursor: nesw-resize;
+}
+
+.preview_container .preview_resize.nw {
+  top: 0;
+  left: 0;
+  cursor: nwse-resize;
+}
+
+.preview_container .preview_resize.se {
+  bottom: 0;
+  right: 0;
+  cursor: nwse-resize;
+}
+
+.preview_container .preview_resize.sw {
+  bottom: 0;
+  left: 0;
+  cursor: nesw-resize;
+}
+
 .preview_container .preview_header,
 .preview_container .preview_content {
   padding: var(--space-2-5);
@@ -67,6 +148,16 @@
   justify-content: space-between;
   align-items: center;
   border-bottom: var(--border-width-default) solid var(--color-border-default);
+}
+
+/* The header bar is the drag handle. touch-action:none lets @use-gesture own the pointer. */
+.preview_container .preview_header.draggable {
+  cursor: grab;
+  touch-action: none;
+}
+
+.preview_container.interacting .preview_header.draggable {
+  cursor: grabbing;
 }
 
 .preview_container .preview_header h4 {
@@ -85,6 +176,9 @@
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
+  /* Match the macOS native title-bar height + compact padding (overrides the taller default). */
+  height: var(--size-titlebar-mac);
+  padding: var(--space-0) var(--space-2);
 }
 
 .preview_container .preview_header.mac .mac_close {
@@ -93,6 +187,9 @@
 
 .preview_container .preview_header.mac h4 {
   text-align: center;
+  /* macOS window titles are 13px semibold. */
+  font-size: var(--font-size-base);
+  font-weight: 600;
 }
 
 .preview_container .preview_content {
@@ -105,6 +202,81 @@
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+/* In-editor find bar (Cmd/Ctrl+F), floated over the top-right of the editor. */
+.preview_container .preview_find {
+  position: absolute;
+  top: calc(var(--size-preview-header) + var(--space-2));
+  right: var(--space-3);
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-1-5);
+  background-color: rgba(
+    var(--color-surface-popover-rgb),
+    var(--preview-controls-opacity)
+  );
+  backdrop-filter: blur(var(--blur-medium));
+  border: var(--border-width-default) solid var(--color-border-default);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-popover);
+}
+
+.preview_container .preview_find .preview_find_input {
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--color-text-primary);
+  font-size: 0.85em;
+  width: 12ch;
+}
+
+.preview_container .preview_find .preview_find_count {
+  min-width: 3.5ch;
+  color: var(--color-text-secondary);
+  font-size: 0.75em;
+  user-select: none;
+  white-space: nowrap;
+}
+
+/* Preview-mode find highlights: all matches tinted, the active one accented. */
+.preview_container .preview_content mark.preview_find_hit {
+  background: var(--color-find-highlight);
+  color: inherit;
+  border-radius: var(--radius-xs);
+}
+
+.preview_container .preview_content mark.preview_find_hit.active {
+  background: var(--color-find-highlight-active);
+}
+
+/* Unsaved-changes indicator next to the title. */
+.preview_container .preview_header .preview_dirty_dot {
+  display: inline-block;
+  width: 0.45em;
+  height: 0.45em;
+  margin-right: var(--space-1-5);
+  border-radius: 50%;
+  background: var(--color-accent);
+  vertical-align: middle;
+}
+
+/* Raw markdown source editor (edit mode). Fills the preview body. */
+.preview_container .preview_content .preview_md_editor {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  resize: none;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--color-text-primary);
+  font-family: var(--font-family-mono, monospace);
+  font-size: 0.85em;
+  line-height: 1.5;
+  tab-size: 2;
 }
 
 .preview_container .preview_content.markdown h1 {
@@ -176,6 +348,21 @@
   border-radius: var(--radius-sm);
 }
 
+/* Rendered markdown is selectable/copyable (the per-element rules above set user-select: none for
+   the chrome-like feel; override here so preview text can be selected and copied). Same specificity
+   as those rules, declared later, so it wins. */
+.preview_container .preview_content.markdown h1,
+.preview_container .preview_content.markdown h2,
+.preview_container .preview_content.markdown h3,
+.preview_container .preview_content.markdown h4,
+.preview_container .preview_content.markdown h5,
+.preview_container .preview_content.markdown p,
+.preview_container .preview_content.markdown a,
+.preview_container .preview_content.markdown li {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
 .preview_container .preview_content.image,
 .preview_container .preview_content.video,
 .preview_container .preview_content.pdf {
@@ -205,7 +392,13 @@
   align-items: center;
   gap: var(--space-2);
   padding: var(--space-1) var(--space-2-5);
-  background-color: var(--color-surface-popover);
+  /* Popover surface as raw RGB + a user-adjustable alpha (Settings › Appearance › Preview controls
+     transparency). The --preview-controls-opacity override is set inline on .App (see App.tsx).
+     Using the -rgb token (not --color-surface-popover) keeps the pill light in light mode. */
+  background-color: rgba(
+    var(--color-surface-popover-rgb),
+    var(--preview-controls-opacity)
+  );
   backdrop-filter: blur(var(--blur-medium));
   border: var(--border-width-default) solid var(--color-border-default);
   border-radius: var(--radius-pill);

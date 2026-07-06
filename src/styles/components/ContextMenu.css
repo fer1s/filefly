@@ -4,7 +4,12 @@
   max-height: var(--size-context-menu-max-height);
   max-width: var(--size-context-menu-max-width);
   overflow-y: auto;
-  background-color: var(--color-surface-popover);
+  /* Composed from raw channels + a user-adjustable alpha (Settings → Appearance → Context menu
+     transparency); the --context-menu-opacity override is set inline on .App (see App.tsx). */
+  background-color: rgba(
+    var(--color-surface-popover-rgb),
+    var(--context-menu-opacity)
+  );
   backdrop-filter: blur(var(--blur-medium));
   border-radius: var(--radius-sm);
   border: var(--border-width-default) solid var(--color-border-default);
@@ -57,8 +62,15 @@
   transition: all 0.2s ease-in-out;
 }
 
-.context_menu .context_menu_item.ctx_button:hover {
-  background-color: var(--color-overlay-hover);
+/* Soft-primary hover: a faint accent-tinted fill with accent label/icon, matching IconButton's
+   ghost hover (and the sidebar rows). Danger items override this with their solid-red hover below. */
+.context_menu .context_menu_item.ctx_button:hover:not(:disabled) {
+  background-color: var(--color-selection-hover);
+  color: var(--color-accent);
+}
+
+.context_menu .context_menu_item.ctx_button:hover:not(:disabled) svg {
+  color: var(--color-accent);
 }
 
 /* Fixed-width icon column so every label starts at the same x. */
@@ -96,8 +108,26 @@
   color: var(--color-danger);
 }
 
-.context_menu .context_menu_item.ctx_button.ctx_danger:hover {
-  background-color: var(--color-danger-surface);
+/* On hover the row fills with the solid danger colour (saturated red, ≈5.8:1 under white) in both
+   themes, so every part of the row — label, icon, and the hotkey glyphs (which otherwise stay
+   text-muted, dark and unreadable in light mode) — flips to a light on-danger colour.
+   Uses --color-danger-solid, not --color-danger-surface: the latter is a faint tint (for red-text-
+   on-tint hovers like the close button) and washes out under white text. */
+.context_menu .context_menu_item.ctx_button.ctx_danger:hover:not(:disabled) {
+  background-color: var(--color-danger-solid);
+}
+
+.context_menu .context_menu_item.ctx_button.ctx_danger:hover:not(:disabled),
+.context_menu
+  .context_menu_item.ctx_button.ctx_danger:hover:not(:disabled)
+  svg {
+  color: var(--color-text-on-solid);
+}
+
+.context_menu
+  .context_menu_item.ctx_button.ctx_danger:hover:not(:disabled)
+  .ctx_hotkey {
+  color: var(--color-text-on-solid-muted);
 }
 
 .context_menu .context_menu_item.ctx_button:disabled {
@@ -105,6 +135,31 @@
   opacity: 0.35;
 }
 
-.context_menu .context_menu_item.ctx_button:disabled:hover {
-  background-color: transparent;
+/* Trailing checkmark for toggle/selected rows (Show Hidden Files, active sort key/direction). */
+.context_menu .context_menu_item.ctx_button .ctx_check {
+  flex-shrink: 0;
+  margin-left: var(--space-3);
+  display: inline-flex;
+  align-items: center;
+}
+
+/* ── Submenu (hover flyout) ── */
+.context_menu_item_wrapper {
+  width: 100%;
+}
+
+/* Chevron pinned to the right edge of a submenu parent row. */
+.context_menu .context_menu_item.ctx_button.has_submenu .ctx_submenu_arrow {
+  flex-shrink: 0;
+  margin-left: auto;
+  padding-left: var(--space-2);
+  display: inline-flex;
+  align-items: center;
+}
+
+/* The flyout is portaled to <body> and reuses .context_menu's surface. It's fixed-positioned
+   in JS (to the right of its parent row) so the parent menu's overflow clipping can't hide it. */
+.context_menu.context_menu_submenu {
+  min-width: var(--size-context-menu-submenu-min-width);
+  z-index: 1101;
 }

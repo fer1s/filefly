@@ -22,6 +22,17 @@ mod = true
 keys = ["v"]
 mod = true
 
+# Undo / redo the last reversible file action (move, paste, trash, rename). Redo is the shifted
+# sibling — same key. Permanent deletes are not undoable.
+[undo]
+keys = ["z"]
+mod = true
+
+[redo]
+keys = ["z"]
+mod = true
+shift = true
+
 [trash]
 keys = ["Backspace", "Delete"]
 mod = true
@@ -38,9 +49,11 @@ mod = true
 [rename]
 keys = ["F2"]
 
+# Cmd/Ctrl+Shift+N (Cmd+N is New Window; see [new_window]).
 [new_folder]
 keys = ["n"]
 mod = true
+shift = true
 
 [nav_back]
 keys = ["ArrowLeft"]
@@ -119,6 +132,11 @@ mod = true
 # alt+arrow history navigation.
 [new_tab]
 keys = ["t"]
+mod = true
+
+# Cmd/Ctrl+N (Cmd+Shift+N is New Folder).
+[new_window]
+keys = ["n"]
 mod = true
 
 [close_tab]

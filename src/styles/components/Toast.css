@@ -35,14 +35,19 @@
   flex: 1;
 }
 
+/* Coloured toasts are a solid saturated fill with white text (icon + message) in both themes — the
+   success/error surface tokens are dark-theme-only, so on a light surface dark text went
+   unreadable. White on the solid green/red clears contrast (≈6:1 / 5.8:1). */
 .toast.success {
-  background-color: var(--color-success-surface);
+  background-color: var(--color-success-solid);
   border: var(--border-width-default) solid var(--color-success-border);
+  color: var(--color-text-on-solid);
 }
 
 .toast.error {
-  background-color: var(--color-danger-surface);
+  background-color: var(--color-danger-solid);
   border: var(--border-width-default) solid var(--color-danger-border);
+  color: var(--color-text-on-solid);
 }
 
 /* Exit: fade and slide out. Duration must match TOAST_EXIT_MS in ToastStack/constants.ts. */

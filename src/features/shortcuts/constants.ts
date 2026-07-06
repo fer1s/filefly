@@ -28,6 +28,8 @@ export const SHORTCUT_SECTIONS: readonly ShortcutSection[] = [
         label: () => t.shortcuts.actions.paste,
         actions: [KEYMAP_ACTION.PASTE],
       },
+      { label: () => t.shortcuts.actions.undo, actions: [KEYMAP_ACTION.UNDO] },
+      { label: () => t.shortcuts.actions.redo, actions: [KEYMAP_ACTION.REDO] },
       {
         label: () => t.shortcuts.actions.rename,
         actions: [KEYMAP_ACTION.RENAME],
@@ -140,6 +142,10 @@ export const SHORTCUT_SECTIONS: readonly ShortcutSection[] = [
       {
         label: () => t.shortcuts.actions.newTab,
         actions: [KEYMAP_ACTION.NEW_TAB],
+      },
+      {
+        label: () => t.shortcuts.actions.newWindow,
+        actions: [KEYMAP_ACTION.NEW_WINDOW],
       },
       {
         label: () => t.shortcuts.actions.closeTab,

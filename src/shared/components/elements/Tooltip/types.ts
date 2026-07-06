@@ -22,6 +22,10 @@ export type TooltipProps = {
   // arrows through the list.
   showOnFocus?: boolean;
   placement?: TooltipPlacement;
+  // Suppress the tooltip entirely: it won't open, and an already-open bubble is hidden. Lets a
+  // caller stand it down for context (e.g. the entry metadata card while a dialog / preview panel
+  // is open). Losing app focus hides every tooltip regardless (handled internally).
+  disabled?: boolean;
   className?: string;
   children: ReactNode;
 };

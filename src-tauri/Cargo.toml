@@ -1,6 +1,9 @@
 [package]
 name = "sito-file-browser"
 version = "0.0.0"
+# Two binaries live here (the GUI app + the `sfb` CLI). `cargo run` / `tauri dev` need to know
+# which one is the default; the GUI app is it.
+default-run = "sito-file-browser"
 description = "A Tauri App"
 authors = ["you"]
 license = ""
@@ -8,6 +11,22 @@ repository = ""
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+# Shared library crate: the file-operation cores live here so the GUI app and the `sfb` CLI drive
+# identical logic. Both binaries below link this.
+[lib]
+name = "sito_file_browser_lib"
+path = "src/lib.rs"
+
+# The Tauri GUI application (must keep the package name so `tauri build`/bundling finds it).
+[[bin]]
+name = "sito-file-browser"
+path = "src/main.rs"
+
+# Headless, AI-friendly CLI over the same filesystem cores. JSON in/out, `sfb schema` self-describes.
+[[bin]]
+name = "sfb"
+path = "src/bin/sfb.rs"
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
@@ -25,6 +44,12 @@ toml = "0.8"
 window-vibrancy = "0.5"
 sysinfo = "0.30.5"
 jwalk = "0.8.1"
+# Persistent on-disk cache of recursive directory sizes (size_index.db in the app data dir). Bundled
+# feature statically links SQLite so there's no system-libsqlite dependency. See index.rs.
+rusqlite = { version = "0.32", features = ["bundled"] }
+# Recursive filesystem watcher (FSEvents on macOS) that keeps the size index fresh in real time:
+# changes bubble a delta into the cached ancestor sizes and emit dir-size-changed. See watcher.rs.
+notify = "6"
 markdown = "0.3.0"
 trash = "5"
 image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp", "gif", "bmp"] }
@@ -32,10 +57,24 @@ imageproc = { version = "0.25", default-features = false }
 ab_glyph = "0.2"
 arboard = "3"
 
+# SSH/SFTP remote browsing (see SSH_PLAN.md). Pure-Rust SSH stack — no libssh2 C dependency, keeps
+# the cross-platform build clean. russh is fully async; it runs on Tauri's tokio runtime.
+russh = "0.62"
+russh-sftp = "2"
+tokio = { version = "1", features = ["rt", "sync", "macros", "fs", "io-util"] }
+
 # Finder tags live in a macOS extended attribute (a binary plist) — only needed there.
+# objc2 crates drive the custom Dock right-click menu (recent folders + quick actions).
 [target.'cfg(target_os = "macos")'.dependencies]
+# OS keychain for SSH connection secrets (passwords / key passphrases) — see SSH_PLAN.md phase 2.
+# apple-native = the macOS Keychain backend. Keychain code in filesystem/sftp.rs is cfg-gated so
+# non-macOS builds fall back to plaintext toml / env (no keyring dependency there).
+keyring = { version = "3", features = ["apple-native"] }
 xattr = "1"
 plist = "1"
+objc2 = "0.6"
+objc2-foundation = { version = "0.3", features = ["NSString"] }
+objc2-app-kit = { version = "0.3", features = ["NSApplication", "NSMenu", "NSMenuItem", "NSResponder", "NSRunningApplication"] }
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem

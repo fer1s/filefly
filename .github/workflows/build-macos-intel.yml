@@ -48,6 +48,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Build the `sfb` CLI and stage it as a sidecar so the .app embeds it at Contents/MacOS/sfb.
+      # Must run before `tauri build` and target the same triple the DMG is built for.
+      - name: Build sfb sidecar (x86_64)
+        run: ./scripts/build-sfb-sidecar.sh x86_64-apple-darwin
+
       - name: Build DMG (x86_64)
         run: pnpm tauri build --target x86_64-apple-darwin --bundles dmg
 

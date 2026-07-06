@@ -9,6 +9,8 @@ import {
   DEFAULT_DRAG_DROP_ACTION,
 } from "@/shared/constants";
 
+import { DEFAULT_FILTERS } from "@/shared/search/filters";
+
 import type { State } from "./types";
 
 // Default context value; also the seed used before the App provider mounts.
@@ -21,6 +23,7 @@ export const initialState: State = {
   newTab: () => {},
   closeTab: () => {},
   selectTab: () => {},
+  reorderTab: () => {},
   path: "",
   setPath: () => {},
   canGoBack: false,
@@ -30,6 +33,7 @@ export const initialState: State = {
   dirContent: [],
   setDirContent: () => {},
   accessDenied: false,
+  loadingDir: false,
   view: VIEW_MODE.GRID,
   setView: () => {},
   showHidden: false,
@@ -58,13 +62,19 @@ export const initialState: State = {
   setDragDropAction: () => {},
   confirmDragDrop: true,
   toggleConfirmDragDrop: () => {},
+  confirmDelete: true,
   clickableToasts: true,
   toggleClickableToasts: () => {},
   dragToExternalApps: true,
   toggleDragToExternalApps: () => {},
+  previewImagesInApp: false,
+  previewMarkdownInApp: false,
+  remoteThumbnails: false,
   savingSettings: false,
   search: "",
   setSearch: () => {},
+  filters: DEFAULT_FILTERS,
+  setFilters: () => {},
   refreshDir: () => {},
   infoPanelOpen: false,
   toggleInfoPanel: () => {},

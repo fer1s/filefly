@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { useStateContext } from "@/shared/providers/StateProvider";
+import { revealTargetFromUrl } from "@/features/tabs/utils";
 
 import { useDirectoryEntries } from "../../hooks/useDirectoryEntries";
 import { useSelection } from "../../hooks/useSelection";
@@ -20,12 +21,18 @@ export const DirectoryProvider = ({ children }: DirectoryProviderProps) => {
   const selection = useSelection(entries.sorted.map((entry) => entry.path));
   const [renamingID, setRenamingID] = useState("");
 
-  // A clickable toast asked to jump to `path` and select `paths` there. Applied once that
-  // folder's listing has loaded (below), since navigation + load are async.
+  // A clickable toast asked to jump to `path` and select `paths` there — or the window was opened
+  // to reveal a file (`sfb <file>` / window.rs, seeded from the URL). Applied once that folder's
+  // listing has loaded (below), since navigation + load are async.
   const [revealTarget, setRevealTarget] = useState<{
     path: string;
     paths: string[];
-  } | null>(null);
+  } | null>(revealTargetFromUrl);
+
+  // The single entry to scroll into view once selected (the revealed file). Consumed by the view,
+  // which ensures it's rendered and scrolls to it, then clears this.
+  const [revealID, setRevealID] = useState<string | null>(null);
+  const clearRevealID = useCallback(() => setRevealID(null), []);
 
   // Navigating to a different folder starts with a clean selection — otherwise the entry we
   // opened (or any prior selection) lingers as a stale, now-offscreen selection.
@@ -55,8 +62,10 @@ export const DirectoryProvider = ({ children }: DirectoryProviderProps) => {
     );
     if (present.length) {
       setSelectedIDs(present);
-      // One-shot: clear the request so a later refresh doesn't re-select these entries.
+      // Scroll the first revealed entry into view (the view mounts it if it's past the render
+      // batch, then scrolls). One-shot: clear the request so a later refresh doesn't repeat this.
       // eslint-disable-next-line react-hooks/set-state-in-effect
+      setRevealID(present[0]);
       setRevealTarget(null);
     }
   }, [revealTarget, path, sorted, setSelectedIDs]);
@@ -80,6 +89,8 @@ export const DirectoryProvider = ({ children }: DirectoryProviderProps) => {
         fileOps,
         preview,
         properties,
+        revealID,
+        clearRevealID,
       }}
     >
       {children}

@@ -1,5 +1,6 @@
 import * as api from "@/shared/services/api";
 import { DirEntry, Volume, Tag } from "@/shared/models";
+import type { DragDropAction } from "@/shared/constants";
 
 // Encapsulates all filesystem domain operations. Views/components consume this through the provider
 // instead of calling the Tauri service (`api`) directly. Also owns data shaping (filtering, sorting).
@@ -110,6 +111,19 @@ export class FileSystemManager {
     return api.getDirSize(path);
   }
 
+  // Start the recursive size-index watcher on `path` (empty path stops it). Keeps cached folder
+  // sizes fresh in real time; live updates arrive via onDirSizeChanged.
+  watchDirSizes(path: string): Promise<void> {
+    return api.watchDirSizes(path);
+  }
+
+  // Subscribe to live folder-size updates; returns an unlisten function.
+  onDirSizeChanged(
+    onChange: (change: api.DirSizeChanged) => void,
+  ): Promise<() => void> {
+    return api.onDirSizeChanged(onChange);
+  }
+
   getThumbnail(path: string, size: number): Promise<string> {
     return api.getThumbnail(path, size);
   }
@@ -118,19 +132,38 @@ export class FileSystemManager {
     return api.openFile(path);
   }
 
+  // Resolve a path to something locally openable: a remote (sftp://) file is downloaded to the
+  // cache and its local path returned; a local path is returned unchanged. Used before open/preview
+  // so remote files reuse the local flow (read-only — see SSH_PLAN.md phase 3a).
+  materialize(path: string): Promise<string> {
+    return api.materializePath(path);
+  }
+
   openInTerminal(path: string): Promise<void> {
     return api.openInTerminal(path);
   }
 
-  markdownPreview(path: string): Promise<string> {
-    return api.generateMarkdownPreview(path);
+  // Render a markdown source string to HTML (renders the live editor draft, so unsaved edits show).
+  renderMarkdown(content: string): Promise<string> {
+    return api.renderMarkdown(content);
   }
 
+  // Read a text file's raw contents (markdown source for the built-in editor).
+  readText(path: string): Promise<string> {
+    return api.readTextFile(path);
+  }
+
+  // Overwrite a text file with `content` (Cmd+S from the markdown editor).
+  writeText(path: string, content: string): Promise<void> {
+    return api.writeTextFile(path, content);
+  }
+
+  // Resolve to the final destination path (differs from destDir/basename on conflict-rename).
   copy(
     source: string,
     destDir: string,
     onProgress?: (progress: api.CopyProgress) => void,
-  ): Promise<void> {
+  ): Promise<string> {
     return api.copyEntry(source, destDir, onProgress);
   }
 
@@ -138,7 +171,7 @@ export class FileSystemManager {
     source: string,
     destDir: string,
     onProgress?: (progress: api.CopyProgress) => void,
-  ): Promise<void> {
+  ): Promise<string> {
     return api.moveEntry(source, destDir, onProgress);
   }
 
@@ -178,5 +211,11 @@ export class FileSystemManager {
 
   openFullDiskAccessSettings(): Promise<void> {
     return api.openFullDiskAccessSettings();
+  }
+
+  // Start a native OS drag of real files, so they can be dropped into other apps (Finder, Mail, …)
+  // and back into our own window. `mode` sets the OS drop-effect badge (move vs copy).
+  startNativeDrag(paths: string[], icon?: string, mode?: DragDropAction): void {
+    api.startNativeDrag(paths, icon, mode);
   }
 }

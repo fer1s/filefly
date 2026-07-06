@@ -7,4 +7,7 @@ export type UsePathBarShortcutsArgs = {
   toggleHidden: () => void;
   toggleInfo: () => void;
   toggleSearch: () => void;
+  // Close the search field on Escape — only meaningful while it's open (not already closing).
+  closeSearch: () => void;
+  searchActive: boolean;
 };

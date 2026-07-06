@@ -1,9 +1,10 @@
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 
 import type { UiColor } from "@/shared/constants";
-import type { EntryKind } from "@/features/directory/constants";
+import type { EntryKind, SortKey } from "@/features/directory/constants";
 import type { FileSystemManager } from "@/shared/managers/FileSystemManager";
 import type { KeymapAction } from "@/shared/keymap";
+import type { Sort } from "@/features/directory/sort";
 
 import type { EntryActionId } from "./constants";
 
@@ -37,6 +38,24 @@ export type EntryActionContext = {
     id: string,
     isCurrentDirectory: boolean,
   ) => void | Promise<void>;
+  // Current per-folder sort and the setter (toggles direction when the same key is chosen).
+  // Used by the sort_by submenu action.
+  sort: Sort;
+  onSort: (key: SortKey) => void;
+  // Global "show hidden entries" toggle (dotfiles), used by the toggle_hidden action.
+  showHidden: boolean;
+  toggleShowHidden: () => void;
+};
+
+// One row inside an action's submenu (e.g. the sort keys under "Sort By"). A check marks the
+// active choice; a separator renders a divider instead of a clickable row.
+export type EntryActionSubItem = {
+  key: string;
+  label: string;
+  icon?: IconDefinition;
+  checked?: boolean;
+  isSeparator?: boolean;
+  onClick?: () => void;
 };
 
 // A predefined, reusable context-menu action. Presentation (label/icon/hotkey/color) is
@@ -59,7 +78,12 @@ export type EntryAction = {
   // Whether the action is runnable in the given context (e.g. paste needs a clipboard).
   // Absent means always enabled.
   isEnabled?: (ctx: EntryActionContext) => boolean;
-  run: (ctx: EntryActionContext) => void | Promise<void>;
+  // A trailing checkmark reflecting a toggle's current state (e.g. toggle_hidden when on).
+  checked?: (ctx: EntryActionContext) => boolean;
+  // When present, the item opens a hover submenu of these rows instead of running on click.
+  submenu?: (ctx: EntryActionContext) => EntryActionSubItem[];
+  // Behavior on click. Optional for submenu-only actions (the submenu rows own their clicks).
+  run?: (ctx: EntryActionContext) => void | Promise<void>;
 };
 
 // Inputs for resolving which actions apply to an entry (see resolveActionIds).

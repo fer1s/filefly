@@ -3,11 +3,17 @@ import {
   useEffect,
   useMemo,
   useCallback,
+  useRef,
   type CSSProperties,
 } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 
 import { StateProvider } from "@/shared/providers/StateProvider";
+import { ModalProvider } from "@/shared/providers/ModalProvider";
+import { ConfirmProvider } from "@/shared/providers/ConfirmProvider";
+import { FolderPickerProvider } from "@/shared/providers/FolderPickerProvider";
+import { FilePickerProvider } from "@/shared/providers/FilePickerProvider";
 import { TagsProvider } from "@/shared/providers/TagsProvider";
 import {
   KeymapProvider,
@@ -27,6 +33,11 @@ import { useZoom } from "./hooks/useZoom";
 import { useDirectoryContents } from "./hooks/useDirectoryContents";
 import { useSidebarCollapsed } from "./hooks/useSidebarCollapsed";
 import { useAppSettings } from "./hooks/useAppSettings";
+import { useDockMenu } from "./hooks/useDockMenu";
+import { useTheme } from "./hooks/useTheme";
+import { useAccent } from "./hooks/useAccent";
+import { useControlBridge } from "./hooks/useControlBridge";
+import { useControlProbe } from "./hooks/useControlProbe";
 
 import { notify, setToastsEnabled, TOAST_TYPE } from "@/shared/toast";
 import { prewarmDragIcon } from "@/shared/services/api";
@@ -39,6 +50,8 @@ import {
   type ViewMode,
   type StartupMode,
   type DragDropAction,
+  type Theme,
+  type Accent,
 } from "@/shared/constants";
 
 const App = () => {
@@ -52,7 +65,12 @@ const App = () => {
   // together into the shared context (see ARCHITECTURE_RULES §6, §4).
   const tabs = useTabs();
   // App-wide settings persisted in settings.toml; hydrated on launch.
-  const { settings, update, saving: savingSettings } = useAppSettings();
+  const {
+    settings,
+    update,
+    saving: savingSettings,
+    ready: settingsReady,
+  } = useAppSettings();
   const directory = useDirectoryContents({
     fs,
     path: tabs.path,
@@ -60,11 +78,37 @@ const App = () => {
     locationPathname: location.pathname,
     hideSystemRecents: settings.hideSystemRecents,
   });
+  useTheme(settings.theme as Theme);
+  useAccent(settings.accentColor as Accent);
   const zoom = useZoom(fs, tabs.path, settings.defaultZoom);
   const { toasts, dismissToast } = useToasts();
   const sidebar = useSidebarCollapsed();
 
+  // Feed the macOS Dock right-click menu (recent folders + quick actions) and handle its clicks.
+  useDockMenu({
+    path: tabs.path,
+    newTab: tabs.newTab,
+    homePath: settings.homePath,
+  });
+
   const [view, setView] = useState<ViewMode>(VIEW_MODE.GRID);
+
+  // Bridge this window to the headless control channel (`sfb ui …` / MCP): mirror UI state to Rust
+  // and apply inbound navigate requests.
+  useControlBridge({
+    tabs: tabs.tabs,
+    activeTabId: tabs.activeTabId,
+    path: tabs.path,
+    view,
+    setPath: tabs.setPath,
+    newTab: tabs.newTab,
+    closeTab: tabs.closeTab,
+    reorderTab: tabs.reorderTab,
+  });
+
+  // Headless drag-drop diagnostics for `sfb ui-probe` (lets the AI inspect the drop hit-test).
+  useControlProbe();
+
   const toggleShowHidden = useCallback(() => {
     const next = !settings.showHidden;
     update({ showHidden: next });
@@ -105,6 +149,16 @@ const App = () => {
     setToastsEnabled(settings.showToasts);
   }, [settings.showToasts]);
 
+  // Dialogs render outside the .App subtree (their providers wrap it), so the modal-surface opacity
+  // is set on the document root where they can inherit it (see Dialog.css). Mirrors the inline
+  // --context-menu-opacity used for menus, which do live inside .App.
+  useEffect(() => {
+    document.documentElement.style.setProperty(
+      "--dialog-opacity",
+      String(settings.dialogOpacity),
+    );
+  }, [settings.dialogOpacity]);
+
   // Mirror the launch preference into localStorage so the next launch's (synchronous) tab
   // restoration can read it before settings.toml has finished loading.
   useEffect(() => {
@@ -120,6 +174,27 @@ const App = () => {
     void prewarmDragIcon();
     void prewarmDragGlyphs();
   }, []);
+
+  // The window launches hidden (tauri.conf visible:false) to avoid a blank-window flash while the
+  // webview cold-starts and the first listing loads. Reveal it once settings and the initial
+  // listing are ready so it appears fully painted. A fallback timer guarantees the window is never
+  // left hidden if some load hangs.
+  const windowShown = useRef(false);
+  const revealWindow = useCallback(() => {
+    if (windowShown.current) return;
+    windowShown.current = true;
+    const win = getCurrentWindow();
+    void win.show();
+    void win.setFocus();
+  }, []);
+  const contentReady = settingsReady && directory.ready;
+  useEffect(() => {
+    if (contentReady) revealWindow();
+  }, [contentReady, revealWindow]);
+  useEffect(() => {
+    const fallback = window.setTimeout(revealWindow, 4000);
+    return () => window.clearTimeout(fallback);
+  }, [revealWindow]);
 
   // The OS/webview context menu is replaced by the app's own; suppress it everywhere.
   useEffect(() => {
@@ -140,6 +215,7 @@ const App = () => {
         newTab: tabs.newTab,
         closeTab: tabs.closeTab,
         selectTab: tabs.selectTab,
+        reorderTab: tabs.reorderTab,
         path: tabs.path,
         setPath: tabs.setPath,
         canGoBack: tabs.canGoBack,
@@ -149,6 +225,7 @@ const App = () => {
         dirContent: directory.dirContent,
         setDirContent: directory.setDirContent,
         accessDenied: directory.accessDenied,
+        loadingDir: directory.loadingDir,
         view,
         setView,
         showHidden: settings.showHidden,
@@ -177,49 +254,79 @@ const App = () => {
         setDragDropAction: (dragDropAction) => update({ dragDropAction }),
         confirmDragDrop: settings.confirmDragDrop,
         toggleConfirmDragDrop,
+        confirmDelete: settings.confirmDelete,
         clickableToasts: settings.clickableToasts,
         toggleClickableToasts,
         dragToExternalApps: settings.dragToExternalApps,
         toggleDragToExternalApps,
+        previewImagesInApp: settings.previewImagesInApp,
+        previewMarkdownInApp: settings.previewMarkdownInApp,
+        remoteThumbnails: settings.remoteThumbnails,
         savingSettings,
         search: tabs.search,
         setSearch: tabs.setSearch,
+        filters: tabs.filters,
+        setFilters: tabs.setFilters,
         refreshDir: directory.refreshDir,
         infoPanelOpen: tabs.infoPanelOpen,
         toggleInfoPanel: tabs.toggleInfoPanel,
       }}
     >
-      <TagsProvider>
-        <KeymapProvider>
-          <HotkeyProvider>
-            <ShortcutHelpProvider>
-              <SettingsProvider>
-                <div
-                  className={classNames(
-                    "App",
-                    sidebar.collapsed && "collapsed",
-                  )}
-                  // Expanded-column width; the collapsed rule overrides it (see index.css).
-                  style={
-                    {
-                      "--sidebar-width": `${settings.sidebarWidth}px`,
-                    } as CSSProperties
-                  }
+      <ModalProvider>
+        <TagsProvider>
+          <KeymapProvider>
+            <HotkeyProvider>
+              {/* Inside HotkeyProvider so the confirm dialog's Escape-to-close (a MODAL-scope
+                  hotkey) and modal-scope suppression actually register. */}
+              <ConfirmProvider>
+                {/* Custom folder picker (vs native Finder dialog); inside HotkeyProvider/ModalProvider
+                  so its dialog gets MODAL-scope suppression and focus trapping like other dialogs. */}
+                <FolderPickerProvider
+                  useCustom={settings.useCustomFolderPicker}
                 >
-                  <SideBar
-                    collapsed={sidebar.collapsed}
-                    onToggle={sidebar.toggle}
-                  />
-                  {!sidebar.collapsed && <SidebarResizeHandle />}
-                  <AppContent />
-                </div>
-              </SettingsProvider>
-              <ShortcutsDialog />
-              <ToastStack toasts={toasts} onDismiss={dismissToast} />
-            </ShortcutHelpProvider>
-          </HotkeyProvider>
-        </KeymapProvider>
-      </TagsProvider>
+                  <FilePickerProvider
+                    useCustom={settings.useCustomFolderPicker}
+                  >
+                    <ShortcutHelpProvider>
+                      <SettingsProvider settings={settings} update={update}>
+                        <div
+                          className={classNames(
+                            "App",
+                            sidebar.collapsed && "collapsed",
+                          )}
+                          // Expanded-column width; the collapsed rule overrides it (see index.css).
+                          style={
+                            {
+                              "--sidebar-width": `${settings.sidebarWidth}px`,
+                              // Alpha of the context-menu background (see ContextMenu.css); menus are
+                              // descendants of .App, so they inherit this override.
+                              "--context-menu-opacity":
+                                settings.contextMenuOpacity,
+                              // Alpha of the preview controls pill (see Preview.css); the pill is a
+                              // descendant of .App, so it inherits this override.
+                              "--preview-controls-opacity":
+                                settings.previewControlsOpacity,
+                            } as CSSProperties
+                          }
+                        >
+                          <SideBar
+                            collapsed={sidebar.collapsed}
+                            onToggle={sidebar.toggle}
+                          />
+                          {!sidebar.collapsed && <SidebarResizeHandle />}
+                          <AppContent />
+                        </div>
+                      </SettingsProvider>
+                      <ShortcutsDialog />
+                      <ToastStack toasts={toasts} onDismiss={dismissToast} />
+                    </ShortcutHelpProvider>
+                  </FilePickerProvider>
+                </FolderPickerProvider>
+              </ConfirmProvider>
+            </HotkeyProvider>
+          </KeymapProvider>
+        </TagsProvider>
+      </ModalProvider>
     </StateProvider>
   );
 };

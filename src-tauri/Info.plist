@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <!-- Declares that this app can open folders, so Launch Services will let it become the default
+       folder handler (see functions/handler.rs). LSHandlerRank "Alternate" means Finder stays the
+       owner unless the user opts in via the Settings toggle. Merged into the generated Info.plist
+       by tauri-bundler at build time. -->
+  <key>CFBundleDocumentTypes</key>
+  <array>
+    <dict>
+      <key>CFBundleTypeName</key>
+      <string>Folder</string>
+      <key>CFBundleTypeRole</key>
+      <string>Viewer</string>
+      <key>LSHandlerRank</key>
+      <string>Alternate</string>
+      <key>LSItemContentTypes</key>
+      <array>
+        <string>public.folder</string>
+      </array>
+    </dict>
+  </array>
+  <!-- Custom URL scheme so other apps/scripts can drive the browser via a link:
+       sito-file-browser://open?path=<dir> and sito-file-browser://reveal?path=<file>.
+       Handled in main.rs's RunEvent::Opened. Registered with Launch Services from the bundled
+       .app (a dev build won't register it). -->
+  <key>CFBundleURLTypes</key>
+  <array>
+    <dict>
+      <key>CFBundleURLName</key>
+      <string>com.sito8943.file-browser</string>
+      <key>CFBundleURLSchemes</key>
+      <array>
+        <string>sito-file-browser</string>
+      </array>
+    </dict>
+  </array>
+</dict>
+</plist>

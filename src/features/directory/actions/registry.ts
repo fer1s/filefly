@@ -13,6 +13,8 @@ import { trashAction } from "./trash";
 import { restoreAction } from "./restore";
 import { destroyAction } from "./destroy";
 import { propertiesAction } from "./properties";
+import { sortByAction } from "./sortBy";
+import { toggleHiddenAction } from "./toggleHidden";
 
 // Lookup from an action id (as written in context_menu.toml) to its predefined descriptor.
 export const ENTRY_ACTIONS: Record<EntryActionId, EntryAction> = {
@@ -28,4 +30,6 @@ export const ENTRY_ACTIONS: Record<EntryActionId, EntryAction> = {
   [ENTRY_ACTION.RESTORE]: restoreAction,
   [ENTRY_ACTION.DESTROY]: destroyAction,
   [ENTRY_ACTION.PROPERTIES]: propertiesAction,
+  [ENTRY_ACTION.SORT_BY]: sortByAction,
+  [ENTRY_ACTION.TOGGLE_HIDDEN]: toggleHiddenAction,
 };

@@ -2,6 +2,118 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.5.0]
+
+### Added
+
+- SSH/SFTP remote hosts — connect to and browse remote servers from a connections sidebar, with an add-connection flow, Keychain-stored credentials, and an auth dialog (`9f317dc`, `f0544c6`, `bbb6cee`, `33bafc7`, `1c46a85`)
+- Remote file operations over SFTP — copy, move, delete, and rename on remote hosts (`d22aaa8`, `fcf28b5`)
+- Streaming remote downloads with byte-by-byte transfer progress (`675fc97`, `5ed372e`, `f911a3b`)
+- Recursive size calculation for remote folders (`0c39b1c`)
+- Remote image thumbnails (`865ec7d`)
+- Edit markdown files directly on remote hosts (`c62b709`)
+- Open a remote folder in the terminal (`cbb81b1`)
+- Automatic reconnection and SSH host-key verification (`365f71f`, `768ccda`)
+- `sfb` headless CLI to drive the app, with a bundled sidecar script (`65c870e`, `3884bb3`, `6a976ce`)
+- Live system stats (CPU / RAM / disk) in the status bar (`9d38c0e`)
+- Recursive folder sizes in list view — a persistent on-disk size index kept fresh by a live filesystem watcher, shown in the Size column with severity-coloured bars and a Settings toggle (`febe51f`, `bdfbb5c`, `f8f0d05`)
+- Folder-size ignore list — glob patterns excluded from size totals, pre-seeded on macOS with system junk (`.DS_Store`, `._*`, `.Spotlight-V100`, …) (`44ad8c1`)
+- Shared Chip UI components — toggleable and deletable variants (`f65c0c0`)
+- Reusable `SettingsButton` and shared dialog-action components (`7b6b5a3`, `fdd1331`)
+- Open a folder or reveal a file from outside the app — `sfb <path>` (`sfb .`, `sfb file.pdf`), a `sito-file-browser://open|reveal` URL, or a file handed over by macOS (dock drop, Open With, `open -a`); revealed files are selected and scrolled into view (`2f7a330`, `84ebda6`)
+
+### Changed
+
+- Settings dialog — settings grouped into subsections and the dialog resized to 80% of the window (`44ad8c1`)
+- Status-bar disk usage now opens macOS System Settings › Storage instead of a custom in-app breakdown (`1d2a01d`)
+- Remote download cache is cleared automatically (`d65b9de`)
+- Raised the maximum directory zoom to 500% (was 300%) (`22f633e`)
+
+## [0.4.1]
+
+### Added
+
+- "Clear cache" action in the Storage settings panel (`0cc9e4b`)
+
+### Fixed
+
+- On first launch, clicking a tab triggered a drag instead of selecting it — a reorder now requires real pointer movement past a threshold (`1c5cd45`)
+- Storage settings panel layout / UI (`0cc9e4b`)
+
+## [0.4.0]
+
+### Added
+
+- Light theme with a light/dark theme switcher (`cff2bf8`)
+- Accent colour palette — pick the app's accent colour (`c709c9e`, `a1bfd27`)
+- Finder tag colours (`3da34d9`)
+- Storage panel — the app's on-disk data locations and their sizes in Settings (`214ccb2`)
+- "Default folder handler" toggle — make the app macOS's default folder opener (`ba403fa`)
+- Custom in-app folder picker and file picker (`5505d0b`, `7a0b8c6`)
+- Search filters (`95c98fb`)
+- Built-in markdown preview + editor (`923e76d`)
+- Preview panel find bar (`88e2ba8`)
+- Preview panel resize / maximize (`1cd3438`)
+- Draggable dialogs + macOS header sizing (`4d8eb38`)
+- Transparency toggles (context menu / dialog / preview controls) and open-in-preview (`8d695b9`)
+- Register the app as the system default file browser (`5a08b8f`)
+- `sfb` headless UI control: tab commands and live UI-state probe (`d147202`, `d4b65b6`, `5911017`, `88e2ba8`)
+- Dev error overlay (`5f87505`)
+- Inline rename improvements (`66d0c8c`, `a0fe422`)
+
+### Fixed
+
+- Drag and drop: drop on empty space, drop on folder, entry drag, and sidebar drag (`e56963f`, `d4b65b6`, `261dad4`, `5505d0b`)
+- Sidebar sticky positioning (`1bcf1e7`)
+- Tab creation crash (`b799f56`)
+- Clicking a tab no longer starts a reorder — a jittery click stays a click via a drag threshold (`6a10c64`, `ee9af2c`)
+- Rename box unreadable on the light theme (was a dark scrim surface; now a solid theme surface) (`fed398a`)
+- Dialog crash when closing via the header ✕ (a cancelled drag left `memo` undefined) (`008788f`)
+- No hover state on disabled controls (`4d54e04`)
+- Enter with cancellation on inline edits (`00426b1`)
+
+### Refactored
+
+`ARCHITECTURE_RULES.md` compliance pass across the React app:
+
+- Design tokens — replaced literal CSS values with `theme.css` tokens (`8f7e027`)
+- Unit-level file structure — extracted inline constants/types/helpers to sibling files (`cdc7a4f`)
+- No magic literals — closed-set const objects and named constants (`18fd942`)
+- Manager/provider access — added `SettingsManager`; filesystem drag and folder creation now go through `FileSystemManager` (`008788f`)
+
+### Docs
+
+- Architecture rules (`60ae26f`, `80cb738`, `b00956a`)
+
+### Chore
+
+- Format / lint (`25385f1`, `b00956a`)
+
+## [0.3.0]
+
+### Added
+
+- Undo/redo (`35387fe`)
+- Custom dock menu (`163b1ba`)
+- Multiple windows support (`7eb69e5`)
+- Movable tabs (drag to reorder) (`9cd1125`)
+- `sfb` headless CLI sidecar sharing the filesystem cores (`47f2c9d`)
+- Homebrew cask and macOS ARM build workflow (`47f2c9d`)
+
+### Fixed
+
+- First load (`ff3e0b3`)
+
+### Changed
+
+- Settings dialog rebuilt as schema-driven with sections, controls and navigation (`a03dcca`)
+
+## [0.2.2]
+
+### Fixed
+
+- Native drag preview icons not showing in release builds (added `data:` to the `img-src` CSP so glyph rasterisation works in production)
+
 ## [0.2.0]
 
 ### Added

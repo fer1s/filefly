@@ -12,12 +12,15 @@ import type { SidebarActionId } from "./constants";
 export type SidebarActionContext = {
   path: string;
   kind: SidebarItemKind;
-  // Whether the clicked row is a removable volume (drives Eject visibility). False for non-volumes.
-  isRemovable: boolean;
+  // Whether the clicked row is an ejectable volume (drives Eject visibility). False for non-volumes.
+  isEjectable: boolean;
   currentPath: string;
   fs: FileSystemManager;
   openInNewTab: (path: string) => void;
   openProperties: (path: string) => void | Promise<void>;
+  // Edit / delete the saved connection whose row was clicked (its path is `sftp://<id>`).
+  editConnection: (path: string) => void;
+  removeConnection: (path: string) => void;
   refreshDir: () => void;
   // Re-list the volumes (used after ejecting).
   refreshVolumes: () => void;

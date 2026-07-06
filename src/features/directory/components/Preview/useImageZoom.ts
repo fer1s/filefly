@@ -1,11 +1,9 @@
 import { useCallback, useState } from "react";
 
-import { IMAGE_ZOOM_MIN, IMAGE_ZOOM_MAX } from "./constants";
+import { IMAGE_ZOOM_MIN, IMAGE_ZOOM_MAX, NO_PAN } from "./constants";
 
 const clamp = (value: number): number =>
   Math.min(IMAGE_ZOOM_MAX, Math.max(IMAGE_ZOOM_MIN, value));
-
-const NO_PAN = { x: 0, y: 0 };
 
 // Image-preview zoom + pan state, owned by Preview so the zoom control can live in the shared
 // bottom controls bar (next to prev/next) while ZoomableImage drives wheel/drag. Pan resets to

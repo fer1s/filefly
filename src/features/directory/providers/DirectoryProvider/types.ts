@@ -15,6 +15,10 @@ export type DirectoryContextValue = ReturnType<typeof useDirectoryEntries> &
     fileOps: ReturnType<typeof useFileOperations>;
     preview: ReturnType<typeof usePreview>;
     properties: ReturnType<typeof useProperties>;
+    // A revealed entry (sfb <file> / URL scheme / dock) to scroll into view once its folder has
+    // loaded. The view ensures it's rendered, scrolls to it, then calls clearRevealID.
+    revealID: string | null;
+    clearRevealID: () => void;
   };
 
 export type DirectoryProviderProps = {

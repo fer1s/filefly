@@ -14,6 +14,7 @@ import {
   SVG_FORMAT,
 } from "@/features/directory/constants";
 import Tooltip from "@/shared/components/elements/Tooltip";
+import { SFTP_SCHEME } from "@/shared/constants";
 import { t } from "@/lang";
 
 import { METADATA_TOOLTIP_DELAY } from "./constants";
@@ -39,6 +40,7 @@ const DirEntryItemComponent = ({
   focused,
   tabbable,
   onSelect,
+  onOpenFile,
 
   renaming,
   onRename,
@@ -49,6 +51,8 @@ const DirEntryItemComponent = ({
   setContextMenuElementType,
 
   bindDrag,
+  metadataTooltipDisabled,
+  remoteThumbnails,
 }: DirEntryItemProps) => {
   const itemRef = useRef<HTMLDivElement>(null);
 
@@ -63,9 +67,16 @@ const DirEntryItemComponent = ({
     setContextMenuVisible,
   });
 
-  // Move keyboard focus to the entry only when it's the single focused one (keyboard nav),
-  // never on bulk selection — focusing every item on Ctrl+A would scroll to the last one.
+  // Move keyboard focus to the entry only when it *becomes* the single focused one (keyboard nav),
+  // never on bulk selection — focusing every item on Ctrl+A would scroll to the last one. Skip the
+  // initial mount: a remounting list (e.g. search results appearing) must not yank focus away from
+  // wherever it is — notably the search input — just because a selected entry re-rendered.
+  const didFocusMount = useRef(false);
   useEffect(() => {
+    if (!didFocusMount.current) {
+      didFocusMount.current = true;
+      return;
+    }
     if (focused) itemRef.current?.focus();
   }, [focused]);
 
@@ -89,6 +100,10 @@ const DirEntryItemComponent = ({
   // SVG draws straight from the file (no backend thumbnail) — the webview rasterises it natively.
   const isSvg = entry.metadata.isFile && ext === SVG_FORMAT;
   const isThumbnail = isImage || isVideo || isPdf || isMarkdown;
+  // A remote (SFTP) file must be downloaded to make a thumbnail, so only do it when the setting is
+  // on. When off, remote entries fall back to the generic type icon (no network hit).
+  const remote = entry.path.startsWith(SFTP_SCHEME);
+  const thumbnailAllowed = !remote || remoteThumbnails;
 
   // Dotfiles are hidden on macOS/Unix; dim them to set them apart (Finder-style).
   const isHidden = entry.name.startsWith(".");
@@ -96,9 +111,11 @@ const DirEntryItemComponent = ({
   const { imgSrc, imgRef, finishLoad } = useEntryThumbnail(
     entry.path,
     fs,
-    isThumbnail || isSvg,
+    (isThumbnail || isSvg) && thumbnailAllowed,
     itemRef,
-    isSvg,
+    // Remote files can't be drawn straight from disk (convertFileSrc needs a local path); route
+    // them through the backend thumbnail (which downloads first) instead of the direct SVG path.
+    isSvg && !remote,
   );
 
   const { renameInputRef, submitRename, handleRenameKeyDown } = useInlineRename(
@@ -130,6 +147,7 @@ const DirEntryItemComponent = ({
       contents
       delay={METADATA_TOOLTIP_DELAY}
       showOnFocus={false}
+      disabled={metadataTooltipDisabled}
       content={<EntryMetadata entry={entry} extension={extension} />}
     >
       <div
@@ -140,6 +158,7 @@ const DirEntryItemComponent = ({
           isHidden && "hidden",
         )}
         id={id}
+        data-kind={entry.metadata.isDir ? "dir" : "file"}
         role="option"
         aria-selected={selected}
         aria-label={entry.name}
@@ -148,7 +167,7 @@ const DirEntryItemComponent = ({
         onDoubleClick={() =>
           entry.metadata.isDir
             ? navigateToPath(entry, setPath)
-            : fs.open(entry.path)
+            : onOpenFile(entry)
         }
         ref={itemRef}
         {...(renaming ? {} : bindDrag(entry.path))}

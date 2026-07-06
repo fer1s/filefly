@@ -1,3 +1,21 @@
+import { isMacPlatform } from "@/shared/keymap/utils";
+
+import type { AppSettings } from "@/shared/services/api";
+
+// Recommended folder-size exclusions on macOS: OS-generated junk (Finder metadata, AppleDouble
+// forks, Spotlight/Trash/Versions/FSEvents stores) that never holds user content and only inflates
+// size totals. Seeded as the default so new users get sensible exclusions out of the box. Mirrors
+// default_size_ignores() in functions/settings.rs (must stay in sync). Empty on other platforms.
+export const MACOS_SIZE_IGNORES = [
+  ".DS_Store",
+  "._*",
+  ".Spotlight-V100",
+  ".Trashes",
+  ".DocumentRevisions-V100",
+  ".apdisk",
+  ".fseventsd",
+];
+
 export const VIEW_MODE = {
   GRID: "grid",
   LIST: "list",
@@ -48,7 +66,7 @@ export type ViewMode = (typeof VIEW_MODE)[keyof typeof VIEW_MODE];
 
 // Directory zoom: a CSS `zoom` multiplier applied to the entries area. 1 = 100%.
 export const ZOOM_MIN = 0.75;
-export const ZOOM_MAX = 3;
+export const ZOOM_MAX = 5;
 export const ZOOM_STEP = 0.25;
 export const ZOOM_DEFAULT = 1;
 
@@ -58,6 +76,18 @@ export const SIDEBAR_OPACITY_MIN = 0;
 export const SIDEBAR_OPACITY_MAX = 1;
 export const SIDEBAR_OPACITY_STEP = 0.05;
 export const DEFAULT_SIDEBAR_OPACITY = 0.85;
+
+// User-adjustable context-menu background opacity (alpha of the popover surface). Same 0..1 range
+// and step as the sidebar; 0 = fully transparent (only the blur shows), 1 = opaque.
+export const DEFAULT_CONTEXT_MENU_OPACITY = 0.5;
+
+// User-adjustable opacity of the preview floating-controls pill (alpha of the popover surface).
+// Same 0..1 range and step as the sidebar; 0 = fully transparent (only the blur shows).
+export const DEFAULT_PREVIEW_CONTROLS_OPACITY = 0.5;
+
+// User-adjustable dialog (modal) background opacity — Preview, Confirmation, Properties, Settings,
+// etc. Same 0..1 range and step as the sidebar; 0 = fully transparent (only the blur shows).
+export const DEFAULT_DIALOG_OPACITY = 0.85;
 
 // User-adjustable sidebar width (px), the expanded grid column. Dragging the right edge clamps
 // between MIN and MAX; the collapsed rail keeps its own fixed width. DEFAULT matches the
@@ -86,6 +116,44 @@ export type StartupMode = (typeof STARTUP_MODE)[keyof typeof STARTUP_MODE];
 // Default before the user picks: restore the previous session (preserves prior behavior).
 export const DEFAULT_STARTUP_MODE: StartupMode = STARTUP_MODE.RESTORE;
 
+// App colour theme. SYSTEM follows the OS light/dark preference; LIGHT/DARK force one.
+export const THEME = {
+  SYSTEM: "system",
+  LIGHT: "light",
+  DARK: "dark",
+} as const;
+
+export type Theme = (typeof THEME)[keyof typeof THEME];
+
+// Default: follow the system appearance.
+export const DEFAULT_THEME: Theme = THEME.SYSTEM;
+
+// Accent colour — the single hue that drives selection wells, focus rings, and links. Neutral
+// surfaces/text stay black/white; the accent is the one "alive" colour on top. Values double as
+// the data-accent attribute on <html> and select the matching palette in theme.css (keep in sync).
+export const ACCENT = {
+  BLUE: "blue",
+  NAVY: "navy",
+  RED: "red",
+  TEAL: "teal",
+  GOLD: "gold",
+} as const;
+
+export type Accent = (typeof ACCENT)[keyof typeof ACCENT];
+
+// Ordered for the settings swatch row. `rgb` mirrors --color-accent-rgb in theme.css so the
+// preview swatches match the live tokens without re-reading CSS.
+export const ACCENTS: readonly { value: Accent; rgb: string }[] = [
+  { value: ACCENT.BLUE, rgb: "94, 154, 255" },
+  { value: ACCENT.NAVY, rgb: "42, 94, 168" },
+  { value: ACCENT.RED, rgb: "224, 74, 80" },
+  { value: ACCENT.TEAL, rgb: "20, 160, 135" },
+  { value: ACCENT.GOLD, rgb: "201, 144, 43" },
+];
+
+// Default: the friendly blue (matches the prior hardcoded selection colour).
+export const DEFAULT_ACCENT: Accent = ACCENT.BLUE;
+
 // What dragging entries onto a folder does: MOVE them there, or COPY them there.
 export const DRAG_DROP_ACTION = {
   MOVE: "move",
@@ -98,12 +166,47 @@ export type DragDropAction =
 // Default: move (matches most file managers).
 export const DEFAULT_DRAG_DROP_ACTION: DragDropAction = DRAG_DROP_ACTION.MOVE;
 
+// Seed settings used before settings.toml is hydrated and as the reset-to-default baseline in the
+// settings dialog. Must match the Rust defaults (functions/settings.rs).
+export const DEFAULT_SETTINGS: AppSettings = {
+  showHidden: false,
+  theme: DEFAULT_THEME,
+  accentColor: DEFAULT_ACCENT,
+  defaultZoom: ZOOM_DEFAULT,
+  dateFormat: DEFAULT_DATE_FORMAT,
+  sidebarOpacity: DEFAULT_SIDEBAR_OPACITY,
+  contextMenuOpacity: DEFAULT_CONTEXT_MENU_OPACITY,
+  previewControlsOpacity: DEFAULT_PREVIEW_CONTROLS_OPACITY,
+  dialogOpacity: DEFAULT_DIALOG_OPACITY,
+  sidebarWidth: DEFAULT_SIDEBAR_WIDTH,
+  hideSystemRecents: true,
+  showToasts: true,
+  startupMode: DEFAULT_STARTUP_MODE,
+  homePath: "",
+  dragDropAction: DEFAULT_DRAG_DROP_ACTION,
+  confirmDragDrop: true,
+  confirmDelete: true,
+  clickableToasts: true,
+  dragToExternalApps: true,
+  useCustomFolderPicker: false,
+  previewImagesInApp: false,
+  previewMarkdownInApp: false,
+  confirmExportOverwrite: false,
+  remoteThumbnails: false,
+  showSystemStats: false,
+  showFolderSizes: false,
+  showVolumeSize: false,
+  sizeIgnores: isMacPlatform() ? [...MACOS_SIZE_IGNORES] : [],
+};
+
 // DOM KeyboardEvent.key names used in non-configurable key handling (navigation, input
 // submit/cancel). These are not user-rebindable bindings — see shared/keymap for those — but
 // they still shouldn't be raw string literals scattered through the code.
 export const KEY = {
   ENTER: "Enter",
   ESCAPE: "Escape",
+  S: "s",
+  F: "f",
   BACKSPACE: "Backspace",
   SPACE: " ",
   TAB: "Tab",
@@ -118,6 +221,33 @@ export const KEY = {
 // Marker the Rust `read_directory` command returns when a folder is blocked by OS privacy
 // protection (e.g. macOS TCC on ~/.Trash). Matched in the UI to prompt for Full Disk Access.
 export const ACCESS_DENIED_ERROR = "ACCESS_DENIED";
+
+// The main application window's Tauri label. Runtime windows get "win-N" labels; the main window
+// keeps this fixed label (its tab session restores on launch, it runs the startup cleanup, etc.).
+export const MAIN_WINDOW_LABEL = "main";
+
+// The app's on-disk data locations (see AppStorageLocation / functions/storage.rs). Stable ids,
+// each mapped to a localized label in the Storage settings panel.
+export const STORAGE_KIND = {
+  CONFIG: "config",
+  CACHE: "cache",
+} as const;
+
+export type StorageKind = (typeof STORAGE_KIND)[keyof typeof STORAGE_KIND];
+
+// Path scheme marking a remote (SSH/SFTP) location: `sftp://<connId>/absolute/remote/path`. The
+// backend routes these to the SFTP backend; every other path is local. Mirrors SFTP_SCHEME in
+// src-tauri/src/filesystem/sftp.rs. See SSH_PLAN.md.
+export const SFTP_SCHEME = "sftp://";
+
+// Prefix the SFTP backend puts on an authentication-failure error (vs network/other), so the UI can
+// prompt for a password/passphrase instead of a generic error. Mirrors AUTH_FAILED_MARKER in
+// src-tauri/src/filesystem/sftp.rs.
+export const SSH_AUTH_FAILED = "SSH_AUTH_FAILED";
+
+// Prefix the SFTP backend puts on a changed-host-key error (possible MITM), so the UI can show a
+// clear security warning instead of a generic failure. Mirrors HOST_KEY_CHANGED_MARKER in sftp.rs.
+export const SSH_HOST_KEY_CHANGED = "SSH_HOST_KEY_CHANGED";
 
 // Semantic UI colors for elements that support a color variant (e.g. menu items, buttons).
 // Values double as CSS modifier class names.

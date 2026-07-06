@@ -1,0 +1,105 @@
+/* Filters button (boxed, in the PathBar) plus its floating panel. */
+.SearchFilters {
+  position: relative;
+  display: flex;
+  align-self: stretch;
+}
+
+.SearchFilters .filters_toggle.active {
+  background-color: var(--color-surface-interactive);
+  border-color: var(--color-border-default);
+}
+
+/* Count of active filter categories, pinned to the button's top-right corner. */
+.SearchFilters .filters_badge {
+  position: absolute;
+  top: calc(-1 * var(--space-1));
+  right: calc(-1 * var(--space-1));
+  min-width: var(--space-4);
+  height: var(--space-4);
+  padding: var(--space-0) var(--space-1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-pill);
+  background-color: var(--color-accent);
+  color: var(--color-accent-contrast);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  line-height: 1;
+  pointer-events: none;
+}
+
+/* Floating panel (portaled to body, so PathBar overflow can't clip it). */
+.search_filters_panel {
+  position: fixed;
+  z-index: 2500;
+  width: var(--space-72);
+  max-width: calc(100vw - var(--space-4));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background-color: var(--color-surface-solid);
+  border: var(--border-width-default) solid var(--color-border-default);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-popover);
+}
+
+.search_filters_panel .filters_panel_head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.search_filters_panel .filters_panel_title {
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.search_filters_panel .filters_clear {
+  padding: var(--space-0-25) var(--space-1-5);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-xs);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+}
+
+.search_filters_panel .filters_clear:hover {
+  background-color: var(--color-overlay-hover);
+  color: var(--color-text-primary);
+}
+
+.search_filters_panel .filters_group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1-5);
+}
+
+.search_filters_panel .filters_label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+/* Layout row for the filter option chips (the chips themselves are the shared ToggleableChip). */
+.search_filters_panel .filters_chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1-5);
+}
+
+.search_filters_panel .filters_scope {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.search_filters_panel .filters_scope input {
+  cursor: pointer;
+}

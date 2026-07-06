@@ -1,3 +1,4 @@
+import { KEY } from "@/shared/constants";
 import { KEYMAP_ACTION, useHotkey } from "@/shared/keymap";
 
 import type { UsePathBarShortcutsArgs } from "./types";
@@ -13,6 +14,8 @@ export const usePathBarShortcuts = ({
   toggleHidden,
   toggleInfo,
   toggleSearch,
+  closeSearch,
+  searchActive,
 }: UsePathBarShortcutsArgs) => {
   useHotkey(KEYMAP_ACTION.NAV_BACK, goBack);
   useHotkey(KEYMAP_ACTION.NAV_FORWARD, goForward);
@@ -22,4 +25,10 @@ export const usePathBarShortcuts = ({
   useHotkey(KEYMAP_ACTION.TOGGLE_HIDDEN, toggleHidden);
   useHotkey(KEYMAP_ACTION.TOGGLE_INFO, toggleInfo);
   useHotkey(KEYMAP_ACTION.SEARCH, toggleSearch);
+  // Escape closes the search field whether or not the input is focused (allowInInput), so it works
+  // both while typing and while browsing the results.
+  useHotkey({ keys: [KEY.ESCAPE] }, closeSearch, {
+    when: searchActive,
+    allowInInput: true,
+  });
 };
