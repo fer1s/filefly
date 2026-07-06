@@ -283,6 +283,11 @@ export type SystemStats = {
 export const getSystemStats = async (): Promise<SystemStats> =>
   (await invoke("get_system_stats")) as SystemStats;
 
+// Open the OS Storage settings pane (macOS: System Settings › General › Storage). Backs clicking
+// the disk readout in the status bar. No-op on platforms without such a pane.
+export const openStorageSettings = async (): Promise<void> =>
+  await invoke("open_storage_settings");
+
 // Eject/unmount a removable volume by its mount point (macOS: diskutil eject). Throws on failure.
 export const ejectVolume = async (mountPoint: string): Promise<void> =>
   await invoke("eject_volume", { mountPoint });

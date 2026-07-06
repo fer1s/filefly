@@ -5,7 +5,7 @@ import {
 
 import Icon from "@/shared/components/elements/Icon";
 import { formatBytes } from "@/shared/utils";
-import { openSystemMonitor } from "@/shared/services/api";
+import { openSystemMonitor, openStorageSettings } from "@/shared/services/api";
 import { notify, TOAST_TYPE } from "@/shared/toast";
 import { useSettings } from "@/features/settings";
 import { t } from "@/lang";
@@ -33,6 +33,12 @@ const StatusBar = ({
   const { settings } = useSettings();
   const stats = useSystemStats(settings.showSystemStats);
   const searching = search.length > 0;
+
+  const showStorage = () => {
+    openStorageSettings().catch((err) =>
+      notify(String(err), TOAST_TYPE.ERROR),
+    );
+  };
 
   const showMonitor = () => {
     openSystemMonitor().catch((err) =>
@@ -112,12 +118,17 @@ const StatusBar = ({
               formatBytes(stats.memTotal),
             )}
           </button>
-          <span className="stat">
+          <button
+            type="button"
+            className="stat stat_button"
+            onClick={showStorage}
+            title={t.storage.title}
+          >
             {t.directory.statDisk(
               formatBytes(stats.diskUsed),
               formatBytes(stats.diskTotal),
             )}
-          </span>
+          </button>
         </div>
       )}
     </div>

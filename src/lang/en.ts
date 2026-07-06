@@ -481,6 +481,10 @@ export const en = {
     usedOf: (used: string, total: string) => `${used} / ${total}`,
     ejected: (name: string) => `Ejected ${name}`,
   },
+  storage: {
+    // Tooltip on the status-bar disk readout, which opens the OS Storage settings pane.
+    title: "Storage",
+  },
   directory: {
     entriesLabel: "Files and folders",
     find: "Find",

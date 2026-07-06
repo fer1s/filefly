@@ -100,6 +100,7 @@ fn main() {
             functions::markdown::read_text_file,
             functions::markdown::write_text_file,
             functions::system::open_full_disk_access_settings,
+            functions::system::open_storage_settings,
             functions::system::open_system_monitor,
             functions::os_stats::get_system_stats,
             watcher::watch_directory,

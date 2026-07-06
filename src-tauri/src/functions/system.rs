@@ -5,6 +5,10 @@ use std::process::Command;
 const FULL_DISK_ACCESS_URL: &str =
     "x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles";
 
+// Deep link to the Storage pane in macOS System Settings (General › Storage).
+#[cfg(target_os = "macos")]
+const STORAGE_SETTINGS_URL: &str = "x-apple.systempreferences:com.apple.settings.Storage";
+
 // Open the OS privacy settings where the user can grant the app permission to read protected
 // folders (like the Trash). macOS only; other platforms don't gate the Trash this way.
 #[tauri::command]
@@ -13,6 +17,27 @@ pub fn open_full_disk_access_settings() -> Result<(), String> {
     {
         Command::new("/usr/bin/open")
             .arg(FULL_DISK_ACCESS_URL)
+            .spawn()
+            .map(|_| ())
+            .map_err(|error| error.to_string())
+    }
+
+    #[cfg(not(target_os = "macos"))]
+    {
+        let _ = Command::new("true");
+        Ok(())
+    }
+}
+
+// Open the OS Storage settings so the user sees a disk-usage breakdown maintained by the system
+// (macOS: System Settings › General › Storage). We defer to the OS rather than computing our own
+// breakdown. macOS only; other platforms have no equivalent single pane, so it's a no-op.
+#[tauri::command]
+pub fn open_storage_settings() -> Result<(), String> {
+    #[cfg(target_os = "macos")]
+    {
+        Command::new("/usr/bin/open")
+            .arg(STORAGE_SETTINGS_URL)
             .spawn()
             .map(|_| ())
             .map_err(|error| error.to_string())
