@@ -12,7 +12,7 @@
 //! its help, and its schema entry for free.
 
 use std::collections::HashMap;
-use std::path::PathBuf;
+use std::path::{Component, Path, PathBuf};
 use std::process::exit;
 
 use serde_json::{json, Value};
@@ -564,6 +564,97 @@ fn ui_call(_action: &str, _args: Value) -> Result<Value, String> {
     Err("UI control is only available on Unix (macOS).".to_string())
 }
 
+// ---- `sfb <path>` — open a folder / reveal a file in the running GUI --------------------------
+
+// Make a user-supplied path absolute and lexically clean (no symlink resolution, so it still
+// matches how the app lists entries as parent.join(name)). `.` becomes the current directory.
+fn absolutize(input: &str) -> Result<PathBuf, String> {
+    let raw = Path::new(input);
+    let base = if raw.is_absolute() {
+        raw.to_path_buf()
+    } else {
+        std::env::current_dir().map_err(|e| e.to_string())?.join(raw)
+    };
+    let mut out = PathBuf::new();
+    for comp in base.components() {
+        match comp {
+            Component::CurDir => {}
+            Component::ParentDir => {
+                out.pop();
+            }
+            other => out.push(other.as_os_str()),
+        }
+    }
+    Ok(out)
+}
+
+// Heuristic: treat the first token as a path (not a command) when it names something on disk or is
+// obviously path-shaped, so `sfb .` / `sfb ./x` / `sfb /abs` / `sfb file.pdf` work while a mistyped
+// command still reaches the unknown-command help.
+fn looks_like_path(token: &str) -> bool {
+    token == "."
+        || token == ".."
+        || token.starts_with('/')
+        || token.starts_with("./")
+        || token.starts_with("../")
+        || token.starts_with('~')
+        || Path::new(token).exists()
+}
+
+// Make sure the GUI is running (it lives in the tray, so usually is). If not, launch it by bundle
+// id and wait for its control socket to come up.
+#[cfg(unix)]
+fn ensure_running() -> Result<(), String> {
+    use std::os::unix::net::UnixStream;
+    use std::time::Duration;
+
+    let socket = app_config_dir()?.join("sfb-control.sock");
+    if UnixStream::connect(&socket).is_ok() {
+        return Ok(());
+    }
+    std::process::Command::new("open")
+        .arg("-b")
+        .arg("com.sito8943.file-browser")
+        .status()
+        .map_err(|e| format!("couldn't launch the app: {e}"))?;
+    for _ in 0..50 {
+        std::thread::sleep(Duration::from_millis(100));
+        if UnixStream::connect(&socket).is_ok() {
+            return Ok(());
+        }
+    }
+    Err("launched the app but its control socket didn't come up in time".to_string())
+}
+
+#[cfg(not(unix))]
+fn ensure_running() -> Result<(), String> {
+    Err("UI control is only available on Unix (macOS).".to_string())
+}
+
+// `sfb <path>`: open a directory in a new window, or reveal a file (parent folder + the file
+// selected), in the running app — launching it first if needed. Exits with the JSON envelope.
+fn open_or_reveal(token: &str) -> ! {
+    let abs = match absolutize(token) {
+        Ok(p) => p,
+        Err(e) => emit_err(e),
+    };
+    let path = abs.to_string_lossy().to_string();
+    let action = if abs.is_dir() {
+        "open-window"
+    } else if abs.is_file() {
+        "reveal"
+    } else {
+        emit_err(format!("no such file or directory: {path}"));
+    };
+    if let Err(e) = ensure_running() {
+        emit_err(e);
+    }
+    match ui_call(action, json!({ "path": path })) {
+        Ok(_) => emit_ok(json!({ "action": action, "path": path })),
+        Err(e) => emit_err(e),
+    }
+}
+
 // ---- Output helpers ---------------------------------------------------------------------------
 
 fn to_value<T: serde::Serialize>(v: &T) -> Result<Value, String> {
@@ -614,7 +705,7 @@ fn schema() -> Value {
 // Human-readable help, grouped like the registry.
 fn help_text() -> String {
     let mut out = String::from(
-        "sfb — headless file-browser CLI (JSON out).\n\nUsage: sfb <command> [--arg value ...]\n\n",
+        "sfb — headless file-browser CLI (JSON out).\n\nUsage: sfb <command> [--arg value ...]\n       sfb <path>   open a folder, or reveal a file, in the app (e.g. `sfb .`, `sfb x.pdf`)\n\n",
     );
     for group in ["read", "write", "delete", "tags", "ui"] {
         out.push_str(&format!("{}:\n", group));
@@ -672,6 +763,13 @@ fn main() {
         }
         "schema" | "--schema" => emit_ok(schema()),
         _ => {}
+    }
+
+    // `sfb <path>` — no subcommand: open a folder or reveal a file in the running GUI. Only when the
+    // first token names an existing/path-like target, so a mistyped command still falls through to
+    // the unknown-command help below.
+    if !COMMANDS.iter().any(|c| c.name == name) && looks_like_path(name) {
+        open_or_reveal(name);
     }
 
     let cmd = match COMMANDS.iter().find(|c| c.name == name) {

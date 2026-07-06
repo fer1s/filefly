@@ -29,6 +29,8 @@ const EntriesView = ({
   menu,
   bindDrag,
   metadataTooltipDisabled,
+  revealID,
+  clearRevealID,
 }: EntriesViewProps) => {
   const { fs, setPath, dateFormat, remoteThumbnails } = useStateContext();
   const { tags: tagsByPath, loadTags } = useTags();
@@ -36,6 +38,29 @@ const EntriesView = ({
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   const hasMore = renderCount < entries.length;
+
+  // Scroll a revealed entry into view. If it sits past the current render batch, grow the slice to
+  // include it first (this effect re-runs once it's mounted), then scroll and clear the request.
+  useEffect(() => {
+    if (!revealID) return;
+    const index = entries.findIndex((entry) => entry.path === revealID);
+    if (index === -1) {
+      clearRevealID(); // not in this folder (e.g. wrong window) — drop the request
+      return;
+    }
+    if (index >= renderCount) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setRenderCount((count) => Math.max(count, index + 1));
+      return;
+    }
+    const raf = requestAnimationFrame(() => {
+      document
+        .getElementById(revealID)
+        ?.scrollIntoView({ block: "center", inline: "nearest" });
+      clearRevealID();
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [revealID, entries, renderCount, clearRevealID]);
 
   // Finder tags for the rows currently rendered (lazy — grows with the slice, never reads twice).
   const renderedPaths = useMemo(

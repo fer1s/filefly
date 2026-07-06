@@ -104,6 +104,8 @@ const Directory = () => {
     properties,
     searchActive,
     searching,
+    revealID,
+    clearRevealID,
   } = useDirectory();
 
   // A modal dialog owns the keyboard while open. Keymap actions are already suppressed by the
@@ -426,6 +428,8 @@ const Directory = () => {
             }}
             bindDrag={bindDrag}
             metadataTooltipDisabled={metadataTooltipDisabled}
+            revealID={revealID}
+            clearRevealID={clearRevealID}
           />
         )}
 

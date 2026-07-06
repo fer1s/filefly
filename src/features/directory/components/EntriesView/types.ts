@@ -27,4 +27,8 @@ export type EntriesViewProps = {
   bindDrag: EntryDragBinder;
   // Suppress each entry's metadata hover card (dialog / preview panel open). Forwarded to rows.
   metadataTooltipDisabled: boolean;
+  // A revealed entry (sfb <file> / URL scheme / dock) to scroll into view once; the view grows the
+  // render slice to include it if needed, scrolls to it, then calls clearRevealID. Null when none.
+  revealID: string | null;
+  clearRevealID: () => void;
 };

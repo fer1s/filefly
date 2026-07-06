@@ -152,6 +152,24 @@ const startPathFromUrl = (): string | null => {
   }
 };
 
+// A window opened to reveal a file (see window.rs create_reveal_window / `sfb <file>`) carries the
+// file as a `reveal` query param alongside its parent as `startPath`. Returns a one-shot selection
+// request — `{ path: parent, paths: [file] }` — that DirectoryProvider applies once the parent
+// folder's listing has loaded, so the revealed file lands selected. Null when not a reveal window.
+export const revealTargetFromUrl = (): {
+  path: string;
+  paths: string[];
+} | null => {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const reveal = params.get("reveal");
+    const start = params.get("startPath");
+    return reveal && start ? { path: start, paths: [reveal] } : null;
+  } catch {
+    return null;
+  }
+};
+
 // Restore the persisted tab session, falling back to a single Volumes tab when absent/corrupt.
 // Normalises older sessions that predate per-tab fields (e.g. `infoPanelOpen`). When the launch
 // preference is a fresh session (Volumes or a home folder), the persisted tabs are ignored and a
