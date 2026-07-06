@@ -6,6 +6,8 @@ import IconButton, {
   ICON_BUTTON_VARIANT,
   ICON_BUTTON_SIZE,
 } from "@/shared/components/elements/IconButton";
+import ToggleableChip from "@/shared/components/elements/ToggleableChip";
+import { CHIP_SIZE } from "@/shared/components/elements/Chip";
 import { useStateContext } from "@/shared/providers/StateProvider";
 import { useCloseOnEscape } from "@/shared/hooks/useCloseOnEscape";
 import { classNames } from "@/shared/utils";
@@ -108,17 +110,14 @@ const SearchFilters = () => {
               <span className="filters_label">{t.filters.kind}</span>
               <div className="filters_chips">
                 {KIND_ORDER.map((kind) => (
-                  <button
+                  <ToggleableChip
                     key={kind}
-                    type="button"
-                    className={classNames(
-                      "filters_chip",
-                      filters.kinds.includes(kind) && "on",
-                    )}
+                    size={CHIP_SIZE.SM}
+                    active={filters.kinds.includes(kind)}
                     onClick={() => toggleKind(kind)}
                   >
                     {t.filters.kinds[kind]}
-                  </button>
+                  </ToggleableChip>
                 ))}
               </div>
             </div>
@@ -127,17 +126,14 @@ const SearchFilters = () => {
               <span className="filters_label">{t.filters.date}</span>
               <div className="filters_chips">
                 {DATE_ORDER.map((range) => (
-                  <button
+                  <ToggleableChip
                     key={range}
-                    type="button"
-                    className={classNames(
-                      "filters_chip",
-                      filters.date === range && "on",
-                    )}
+                    size={CHIP_SIZE.SM}
+                    active={filters.date === range}
                     onClick={() => setFilters({ ...filters, date: range })}
                   >
                     {t.filters.dates[range]}
-                  </button>
+                  </ToggleableChip>
                 ))}
               </div>
             </div>
@@ -146,17 +142,14 @@ const SearchFilters = () => {
               <span className="filters_label">{t.filters.size}</span>
               <div className="filters_chips">
                 {SIZE_ORDER.map((bucket) => (
-                  <button
+                  <ToggleableChip
                     key={bucket}
-                    type="button"
-                    className={classNames(
-                      "filters_chip",
-                      filters.size === bucket && "on",
-                    )}
+                    size={CHIP_SIZE.SM}
+                    active={filters.size === bucket}
                     onClick={() => setFilters({ ...filters, size: bucket })}
                   >
                     {t.filters.sizes[bucket]}
-                  </button>
+                  </ToggleableChip>
                 ))}
               </div>
             </div>
