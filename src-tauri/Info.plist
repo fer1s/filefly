@@ -21,5 +21,20 @@
       </array>
     </dict>
   </array>
+  <!-- Custom URL scheme so other apps/scripts can drive the browser via a link:
+       sito-file-browser://open?path=<dir> and sito-file-browser://reveal?path=<file>.
+       Handled in main.rs's RunEvent::Opened. Registered with Launch Services from the bundled
+       .app (a dev build won't register it). -->
+  <key>CFBundleURLTypes</key>
+  <array>
+    <dict>
+      <key>CFBundleURLName</key>
+      <string>com.sito8943.file-browser</string>
+      <key>CFBundleURLSchemes</key>
+      <array>
+        <string>sito-file-browser</string>
+      </array>
+    </dict>
+  </array>
 </dict>
 </plist>

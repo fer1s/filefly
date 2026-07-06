@@ -160,15 +160,45 @@ fn main() {
                 filesystem::sftp::clear_cache(app_handle);
             }
 
-            // macOS routes "open this folder" (Terminal `open`, folder links, aliases) here when we
-            // are the default folder handler — open each directory in a new window. Double-clicking
-            // a folder inside Finder never reaches this; Finder keeps that itself (see handler.rs).
+            // macOS routes URLs here in two cases:
+            //  - our custom scheme: sito-file-browser://open?path=<dir> / reveal?path=<file>
+            //    (registered in Info.plist) — open the folder, or reveal the file (parent +
+            //    selected), so other apps/scripts can drive the browser via a link.
+            //  - "open this folder" file URLs (Terminal `open`, folder links, aliases) when we are
+            //    the default folder handler — open each directory in a new window. Double-clicking a
+            //    folder inside Finder never reaches this; Finder keeps that itself (see handler.rs).
             #[cfg(target_os = "macos")]
             if let tauri::RunEvent::Opened { urls } = &event {
                 for url in urls {
+                    if url.scheme() == "sito-file-browser" {
+                        let action = url.host_str().unwrap_or_default();
+                        let path = url
+                            .query_pairs()
+                            .find(|(key, _)| key == "path")
+                            .map(|(_, value)| value.into_owned());
+                        if let Some(path) = path {
+                            match action {
+                                "open" => {
+                                    let _ = window::create_window(app_handle, Some(&path));
+                                }
+                                "reveal" => {
+                                    let _ = window::create_reveal_window(app_handle, &path);
+                                }
+                                _ => {}
+                            }
+                        }
+                        continue;
+                    }
+                    // A file/folder the OS handed us (drag onto the dock icon, "Open With", or
+                    // `open -a`). Folders open in a new window; files are revealed (parent folder +
+                    // the file selected). We don't declare broad document types, so this covers
+                    // forced opens — not becoming the default app for any file type.
                     if let Ok(path) = url.to_file_path() {
                         if path.is_dir() {
                             let _ = window::create_window(app_handle, Some(&path.to_string_lossy()));
+                        } else if path.is_file() {
+                            let _ =
+                                window::create_reveal_window(app_handle, &path.to_string_lossy());
                         }
                     }
                 }
