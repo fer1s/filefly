@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import * as api from "@/shared/services/api";
-import { SORT_KEY, type SortKey } from "@/shared/constants";
+import { SORT_KEY, type SortKey } from "@/features/directory/constants";
 
 import { COLUMN_KEYS, normalizeColumns } from "../../columns";
 

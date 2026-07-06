@@ -11,7 +11,8 @@ import {
   VIDEO_FORMATS,
   PDF_FORMAT,
   MARKDOWN_FORMATS,
-} from "@/shared/constants";
+  SVG_FORMAT,
+} from "@/features/directory/constants";
 import Tooltip from "@/shared/components/elements/Tooltip";
 import { t } from "@/lang";
 
@@ -21,17 +22,20 @@ import { useInlineRename } from "./useInlineRename";
 import { useEntryContextMenu } from "./useEntryContextMenu";
 import { EntryMetadata } from "./EntryMetadata";
 import { EntryIcon } from "./EntryIcon";
+import { TagDots } from "./TagDots";
 import type { DirEntryItemProps } from "./types";
 
 const DirEntryItemComponent = ({
   entry,
   fs,
   setPath,
+  tags,
   dateFormat,
   contextMenuRef,
   id,
 
   selected,
+  cut,
   focused,
   tabbable,
   onSelect,
@@ -43,6 +47,8 @@ const DirEntryItemComponent = ({
   setContextMenuVisible,
   setContextMenuElementID,
   setContextMenuElementType,
+
+  bindDrag,
 }: DirEntryItemProps) => {
   const itemRef = useRef<HTMLDivElement>(null);
 
@@ -63,6 +69,11 @@ const DirEntryItemComponent = ({
     if (focused) itemRef.current?.focus();
   }, [focused]);
 
+  // A freshly created folder starts in rename mode, possibly off-screen — scroll it into view.
+  useEffect(() => {
+    if (renaming) itemRef.current?.scrollIntoView({ block: "nearest" });
+  }, [renaming]);
+
   // Split extension from the file name.
   const name = entry.metadata.isFile ? entry.name.split(".")[0] : entry.name;
   const extension = entry.metadata.isFile
@@ -75,6 +86,8 @@ const DirEntryItemComponent = ({
   const isVideo = entry.metadata.isFile && VIDEO_FORMATS.includes(ext);
   const isPdf = entry.metadata.isFile && ext === PDF_FORMAT;
   const isMarkdown = entry.metadata.isFile && MARKDOWN_FORMATS.includes(ext);
+  // SVG draws straight from the file (no backend thumbnail) — the webview rasterises it natively.
+  const isSvg = entry.metadata.isFile && ext === SVG_FORMAT;
   const isThumbnail = isImage || isVideo || isPdf || isMarkdown;
 
   // Dotfiles are hidden on macOS/Unix; dim them to set them apart (Finder-style).
@@ -83,8 +96,9 @@ const DirEntryItemComponent = ({
   const { imgSrc, imgRef, finishLoad } = useEntryThumbnail(
     entry.path,
     fs,
-    isThumbnail,
+    isThumbnail || isSvg,
     itemRef,
+    isSvg,
   );
 
   const { renameInputRef, submitRename, handleRenameKeyDown } = useInlineRename(
@@ -107,6 +121,7 @@ const DirEntryItemComponent = ({
     />
   );
 
+  // Drag-to-move is disabled while renaming so dragging to select text in the input isn't hijacked.
   // One DOM for both views; .grid / .list on the container arranges it via CSS, so toggling
   // the view never rebuilds these subtrees (which is what made the switch laggy). The Tooltip
   // wrapper renders as `display: contents` so the entry keeps its slot in the flex layout.
@@ -121,6 +136,7 @@ const DirEntryItemComponent = ({
         className={classNames(
           "dir_entry_item",
           selected && "selected",
+          cut && "cut",
           isHidden && "hidden",
         )}
         id={id}
@@ -135,6 +151,7 @@ const DirEntryItemComponent = ({
             : fs.open(entry.path)
         }
         ref={itemRef}
+        {...(renaming ? {} : bindDrag(entry.path))}
       >
         {/* Grid-only extension badge (hidden in list). */}
         {extension && name && <div className="extension">{extension}</div>}
@@ -142,11 +159,15 @@ const DirEntryItemComponent = ({
         <div className="name">
           <EntryIcon
             isDir={entry.metadata.isDir}
+            extension={ext}
             imgSrc={imgSrc}
             imgRef={imgRef}
             finishLoad={finishLoad}
           />
-          {renaming ? renameInput : <h3>{name || extension}</h3>}
+          <span className="entry_label">
+            {renaming ? renameInput : <h3>{name || extension}</h3>}
+            <TagDots tags={tags} />
+          </span>
         </div>
 
         {/* List-only columns (hidden in grid). */}

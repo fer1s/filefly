@@ -5,7 +5,9 @@ import {
 import Icon from "@/shared/components/elements/Icon";
 import { useStateContext } from "@/shared/providers/StateProvider";
 import { extension } from "@/shared/utils";
-import { useKeymap, formatBinding } from "@/shared/keymap";
+import { useKeymap, formatBinding, isMacPlatform } from "@/shared/keymap";
+
+import { TagPicker } from "./TagPicker";
 
 import {
   ENTRY_ACTIONS,
@@ -67,8 +69,18 @@ const EntryContextMenu = ({
     extension: fileExtension,
   });
 
+  // Finder tags: a colour-swatch row at the top, for a real entry (not the empty-directory menu
+  // or the Trash). macOS only — tags are a native macOS feature.
+  const showTags = isMacPlatform() && !isCurrentDirectory && !inTrash;
+
   return (
     <ContextMenu contextMenuVisible={visible} ref={contextMenuRef}>
+      {showTags && (
+        <>
+          <TagPicker targets={targets} onClose={onClose} />
+          <ContextMenuItem isSeparator />
+        </>
+      )}
       {actionIds.map((id, index) => {
         if (id === ACTION_SEPARATOR)
           return <ContextMenuItem key={`separator-${index}`} isSeparator />;

@@ -21,7 +21,7 @@ export const KeymapProvider = ({ children }: KeymapProviderProps) => {
   }, [manager]);
 
   const setBinding = useCallback(
-    (action: KeymapAction, binding: KeyBinding) => {
+    (action: KeymapAction, binding: KeyBinding | KeyBinding[]) => {
       // Reflect the change immediately so consumers update live.
       setKeymap((prev) => ({ ...prev, [action]: binding }));
       // TODO: persist to keymap.toml (see KeymapManager).

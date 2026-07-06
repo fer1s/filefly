@@ -60,6 +60,18 @@
   cursor: pointer;
 }
 
+/* Action button in a settings row (e.g. the home-folder chooser). Matches the select's chrome. */
+.settings_modal .settings_button {
+  flex-shrink: 0;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  border: var(--border-width-default) solid var(--color-border-default);
+  background-color: var(--color-surface-input);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-base);
+  cursor: pointer;
+}
+
 /* Custom date-format pattern input + live preview, stacked under the format dropdown. */
 .settings_modal .settings_date_custom {
   display: flex;
@@ -102,36 +114,4 @@
   color: var(--color-text-dim);
 }
 
-/* Pill toggle built from the native checkbox (keeps it keyboard/screen-reader accessible). */
-.settings_modal .settings_switch {
-  appearance: none;
-  -webkit-appearance: none;
-  flex-shrink: 0;
-  position: relative;
-  width: var(--space-8);
-  height: var(--space-5);
-  border-radius: var(--radius-pill);
-  background-color: var(--color-range-track);
-  cursor: pointer;
-  transition: background-color 0.2s ease-in-out;
-}
-
-.settings_modal .settings_switch::before {
-  content: "";
-  position: absolute;
-  top: var(--space-0-5);
-  left: var(--space-0-5);
-  width: var(--space-4);
-  height: var(--space-4);
-  border-radius: var(--radius-pill);
-  background-color: var(--color-control-thumb);
-  transition: transform 0.2s ease-in-out;
-}
-
-.settings_modal .settings_switch:checked {
-  background-color: var(--color-selection-indicator);
-}
-
-.settings_modal .settings_switch:checked::before {
-  transform: translateX(var(--space-3));
-}
+/* The pill toggles are the shared <Switcher> element (see styles/components/Switcher.css). */

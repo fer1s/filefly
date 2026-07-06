@@ -1,6 +1,6 @@
 import type { RefObject } from "react";
 
-import type { SortKey } from "@/shared/constants";
+import type { SortKey } from "@/features/directory/constants";
 import type { Sort } from "../../sort";
 
 export type ListHeaderProps = {

@@ -1,0 +1,21 @@
+/* Overlays the border between the sidebar column and the content, anchored to the .App box (which
+   is position: absolute). Its left edge follows the live --sidebar-width so it always hugs the
+   sidebar's right edge; centered on that seam via a half-width negative offset. */
+.SidebarResizeHandle {
+  position: absolute;
+  top: var(--space-0);
+  height: 100vh;
+  width: var(--space-1);
+  left: calc(
+    var(--sidebar-width, var(--size-sidebar-expanded)) - var(--space-0-5)
+  );
+  z-index: 5;
+  cursor: col-resize;
+  background-color: transparent;
+  transition: background-color 0.15s ease-in-out;
+}
+
+.SidebarResizeHandle:hover,
+body.sidebar-resizing .SidebarResizeHandle {
+  background-color: var(--color-border-default);
+}

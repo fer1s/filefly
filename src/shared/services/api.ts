@@ -1,10 +1,13 @@
 import { invoke, Channel } from "@tauri-apps/api/core";
 import { watchImmediate } from "@tauri-apps/plugin-fs";
 import { openUrl } from "@tauri-apps/plugin-opener";
+import { open as openDialog } from "@tauri-apps/plugin-dialog";
+import { resolveResource } from "@tauri-apps/api/path";
+import { startDrag } from "@crabnebula/tauri-plugin-drag";
 
 import { notify, TOAST_TYPE } from "@/shared/toast";
 import { t } from "@/lang";
-import { Volume, DirEntry, ContextMenuLayout } from "@/shared/models";
+import { Volume, DirEntry, ContextMenuLayout, Tag } from "@/shared/models";
 import { ACCESS_DENIED_ERROR } from "@/shared/constants";
 import type { Keymap } from "@/shared/keymap/types";
 
@@ -15,7 +18,22 @@ export type AppSettings = {
   defaultZoom: number;
   dateFormat: string;
   sidebarOpacity: number;
+  // Expanded-sidebar width in px (see SIDEBAR_WIDTH_MIN/MAX).
+  sidebarWidth: number;
   hideSystemRecents: boolean;
+  showToasts: boolean;
+  // Launch behavior: "restore" | "volumes" | "home" (see STARTUP_MODE).
+  startupMode: string;
+  // Folder opened on launch when startupMode is "home" (empty = Volumes view).
+  homePath: string;
+  // What dragging entries onto a folder does: "move" | "copy" (see DRAG_DROP_ACTION).
+  dragDropAction: string;
+  // Whether a confirmation dialog is shown before a drag-and-drop move/copy.
+  confirmDragDrop: boolean;
+  // Whether success toasts are clickable to jump to the affected file/folder.
+  clickableToasts: boolean;
+  // Whether dragging entries out of the window starts a native OS drag (drop into other apps).
+  dragToExternalApps: boolean;
 };
 
 // Load the persisted app settings (falls back to defaults when settings.toml is absent).
@@ -26,9 +44,85 @@ export const getSettings = async (): Promise<AppSettings> =>
 export const setSettings = async (settings: AppSettings): Promise<void> =>
   await invoke("set_settings", { settings });
 
+// Per-group sidebar customization, persisted in sidebar.toml (keyed by stable group id). Mirrors
+// the SidebarGroup struct in functions/sidebar.rs. `name` is absent until the user renames a group.
+export type SidebarGroupConfig = {
+  name?: string;
+  order?: number;
+  items?: string[];
+  // Stable ids of built-in preset rows the user has hidden (presets are hidden, never deleted).
+  hiddenPresets?: string[];
+  // True for user-created groups (renamable + deletable). Absent/false for the built-in groups.
+  custom?: boolean;
+};
+export type SidebarGroups = Record<string, SidebarGroupConfig>;
+
+// Load all saved sidebar group settings (empty object when sidebar.toml is absent).
+export const getSidebarGroups = async (): Promise<SidebarGroups> =>
+  (await invoke("get_sidebar_groups")) as SidebarGroups;
+
+// Persist a custom name for one sidebar group.
+export const setSidebarGroupName = async (
+  id: string,
+  name: string,
+): Promise<void> => await invoke("set_sidebar_group_name", { id, name });
+
+// Persist the group display order from a top-to-bottom list of group ids.
+export const setSidebarOrder = async (ids: string[]): Promise<void> =>
+  await invoke("set_sidebar_order", { ids });
+
+// Persist a group's user-added item paths (the full ordered list).
+export const setSidebarItems = async (
+  id: string,
+  items: string[],
+): Promise<void> => await invoke("set_sidebar_items", { id, items });
+
+// Persist the set of hidden built-in preset ids for a group (the full list after a toggle).
+export const setHiddenPresets = async (
+  id: string,
+  presets: string[],
+): Promise<void> => await invoke("set_hidden_presets", { id, presets });
+
+// Create a user group with a generated id, display name and display position.
+export const addSidebarGroup = async (
+  id: string,
+  name: string,
+  order: number,
+): Promise<void> => await invoke("add_sidebar_group", { id, name, order });
+
+// Delete a group entirely (its items/name go with it). For custom groups only.
+export const deleteSidebarGroup = async (id: string): Promise<void> =>
+  await invoke("delete_sidebar_group", { id });
+
+// Open the native folder picker; resolves to the chosen directory path, or null if cancelled.
+export const pickFolder = async (): Promise<string | null> => {
+  const result = await openDialog({ directory: true, multiple: false });
+  return typeof result === "string" ? result : null;
+};
+
 // Load the keybindings (reads keymap.toml, falling back to bundled defaults).
 export const getKeymap = async (): Promise<Keymap> =>
   (await invoke("get_keymap")) as Keymap;
+
+// Finder tags for a batch of paths, keyed by path (macOS only; empty on other platforms). Lazy —
+// call for the rows currently shown, not the whole directory.
+export const getFileTags = async (
+  paths: string[],
+): Promise<Record<string, Tag[]>> =>
+  (await invoke("get_tags_for", { paths })) as Record<string, Tag[]>;
+
+// Replace a file's Finder tags (macOS only; a no-op elsewhere). An empty list clears them.
+export const setFileTags = async (path: string, tags: Tag[]): Promise<void> => {
+  await invoke("set_file_tags", { path, tags });
+};
+
+// Files carrying a given Finder tag (macOS only; empty elsewhere), via Spotlight.
+export const findTagged = async (tag: string): Promise<DirEntry[]> =>
+  (await invoke("find_tagged", { tag })) as DirEntry[];
+
+// Distinct Finder tags currently in use (macOS only; empty elsewhere), for the sidebar list.
+export const listAllTags = async (): Promise<Tag[]> =>
+  (await invoke("list_all_tags")) as Tag[];
 
 // Load the context-menu layout (reads context_menu.toml, falling back to bundled defaults).
 export const getContextMenu = async (): Promise<ContextMenuLayout> =>
@@ -99,6 +193,13 @@ export const readDirectory = async (path: string): Promise<DirEntry[]> => {
     return [];
   }
 };
+
+// Recursively search under `path` for entries whose name contains `query` (case-insensitive).
+export const searchDirectory = async (
+  path: string,
+  query: string,
+): Promise<DirEntry[]> =>
+  (await invoke("search_directory", { path, query })) as DirEntry[];
 
 export const getEntry = async (path: string): Promise<DirEntry> =>
   await invoke("get_entry", { path });
@@ -210,6 +311,33 @@ export const openFullDiskAccessSettings = async (): Promise<void> =>
 // Open a URL in the user's default browser (used by the NTFS driver guidance links).
 export const openExternalUrl = async (url: string): Promise<void> =>
   await openUrl(url);
+
+// Bundled fallback drag preview, resolved once at startup so startNativeDrag can run fully
+// synchronously (the native drag only latches when started within the drag's event tick — an
+// await before startDrag breaks it).
+let bundledDragIcon = "";
+export const prewarmDragIcon = async (): Promise<void> => {
+  if (bundledDragIcon) return;
+  try {
+    bundledDragIcon = await resolveResource("icons/32x32.png");
+  } catch (err) {
+    console.error("Failed to resolve drag icon:\n" + err);
+  }
+};
+
+// Start a native OS drag of real files, so they can be dropped into other apps (Finder, Mail,
+// WhatsApp, …) and back into our own window. `icon` is a filesystem path to the preview image
+// (e.g. a cached thumbnail); it falls back to the bundled icon. `mode` sets the OS drop-effect
+// badge (copy → green "+", move → arrow). Synchronous on purpose — see prewarmDragIcon.
+export const startNativeDrag = (
+  paths: string[],
+  icon?: string,
+  mode?: "copy" | "move",
+): void => {
+  const image = icon || bundledDragIcon;
+  if (!paths.length || !image) return;
+  void startDrag({ item: paths, icon: image, mode });
+};
 
 // Helper function to invoke methods with a path argument
 const invokeWithPathArg = async (

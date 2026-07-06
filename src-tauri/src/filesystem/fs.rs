@@ -36,7 +36,7 @@ pub struct DirEntry {
     metadata: DirMetadata,
 }
 
-fn build_dir_entry(path: PathBuf) -> Result<DirEntry, String> {
+pub(crate) fn build_dir_entry(path: PathBuf) -> Result<DirEntry, String> {
     let metadata = fs::metadata(&path).map_err(|error| error.to_string())?;
     let modified = metadata.modified().unwrap_or(SystemTime::UNIX_EPOCH);
     let accessed = metadata.accessed().unwrap_or(SystemTime::UNIX_EPOCH);
@@ -95,6 +95,55 @@ pub async fn get_dir_size(path: String) -> u64 {
     })
     .await
     .unwrap_or(0)
+}
+
+// Cap recursive search results so a query like "a" near the home dir can't return a million rows.
+const SEARCH_RESULT_LIMIT: usize = 1000;
+
+// Recursively search under `path` for entries whose name contains `query` (case-insensitive),
+// returning up to SEARCH_RESULT_LIMIT matches. Async + spawn_blocking so the (IO-bound) walk runs
+// off the main thread and keeps the UI responsive; symlinks aren't followed (jwalk default).
+#[tauri::command]
+pub async fn search_directory(
+    path: String,
+    query: String,
+) -> Result<Vec<DirEntry>, String> {
+    let needle = query.trim().to_lowercase();
+    if needle.is_empty() {
+        return Ok(Vec::new());
+    }
+
+    tauri::async_runtime::spawn_blocking(move || {
+        let root = Path::new(&path);
+        let mut results: Vec<DirEntry> = Vec::new();
+
+        for entry in jwalk::WalkDir::new(&path)
+            .skip_hidden(false)
+            .into_iter()
+            .filter_map(|entry| entry.ok())
+        {
+            let entry_path = entry.path();
+            if entry_path == root {
+                continue; // the folder being searched isn't a result
+            }
+            let matches = entry_path
+                .file_name()
+                .map(|name| name.to_string_lossy().to_lowercase().contains(&needle))
+                .unwrap_or(false);
+            if matches {
+                if let Ok(found) = build_dir_entry(entry_path) {
+                    results.push(found);
+                    if results.len() >= SEARCH_RESULT_LIMIT {
+                        break;
+                    }
+                }
+            }
+        }
+
+        results
+    })
+    .await
+    .map_err(|error| error.to_string())
 }
 
 // Extensions whose thumbnail comes from QuickLook rather than the image decoder (videos and

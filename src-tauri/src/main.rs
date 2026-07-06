@@ -16,6 +16,7 @@ fn main() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_drag::init())
         .setup(|app| {
             tray::create_tray(app.handle())?;
 
@@ -45,6 +46,7 @@ fn main() {
             filesystem::fs::get_recent_files,
             filesystem::fs::get_thumbnail,
             filesystem::fs::read_directory,
+            filesystem::fs::search_directory,
             filesystem::fs::can_write,
             filesystem::fs::open_file,
             filesystem::fs::copy_entry,
@@ -56,6 +58,10 @@ fn main() {
             filesystem::fs::restore_trashed,
             filesystem::fs::delete_entry_permanently,
             filesystem::fs::empty_trash,
+            filesystem::tags::get_tags_for,
+            filesystem::tags::set_file_tags,
+            filesystem::tags::find_tagged,
+            filesystem::tags::list_all_tags,
             functions::terminal::open_in_terminal,
             functions::markdown::md_to_html,
             functions::system::open_full_disk_access_settings,
@@ -63,6 +69,13 @@ fn main() {
             functions::context_menu::get_context_menu,
             functions::settings::get_settings,
             functions::settings::set_settings,
+            functions::sidebar::get_sidebar_groups,
+            functions::sidebar::set_sidebar_group_name,
+            functions::sidebar::set_sidebar_order,
+            functions::sidebar::set_sidebar_items,
+            functions::sidebar::set_hidden_presets,
+            functions::sidebar::add_sidebar_group,
+            functions::sidebar::delete_sidebar_group,
             functions::folder_columns::get_folder_columns,
             functions::folder_columns::set_folder_columns,
             functions::folder_columns::get_folder_view,

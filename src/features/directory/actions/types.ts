@@ -1,6 +1,7 @@
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 
-import type { EntryKind, UiColor } from "@/shared/constants";
+import type { UiColor } from "@/shared/constants";
+import type { EntryKind } from "@/features/directory/constants";
 import type { FileSystemManager } from "@/shared/managers/FileSystemManager";
 import type { KeymapAction } from "@/shared/keymap";
 

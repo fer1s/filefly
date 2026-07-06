@@ -113,11 +113,12 @@ actions = [
   "properties",
 ]
 
+# Videos open in the OS's default player (no in-app "preview" action — the webview struggles
+# with large/long files). Thumbnails still work.
 [file_type.video]
 extensions = ["mp4", "webm", "mov", "m4v", "ogv"]
 actions = [
   "open",
-  "preview",
   "copy",
   "cut",
   "rename",

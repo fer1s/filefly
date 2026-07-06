@@ -36,9 +36,13 @@ export const useToasts = () => {
 
   // Register the global notifier; auto-dismiss each toast after a few seconds.
   useEffect(() => {
-    const addToast = (message: string, type: ToastType) => {
+    const addToast = (
+      message: string,
+      type: ToastType,
+      onAction?: () => void,
+    ) => {
       const id = ++toastId.current;
-      setToasts((prev) => [...prev, { id, message, type }]);
+      setToasts((prev) => [...prev, { id, message, type, onAction }]);
       setTimeout(() => dismissToast(id), TOAST_VISIBLE_MS);
     };
 

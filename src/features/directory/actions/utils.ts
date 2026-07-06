@@ -1,4 +1,4 @@
-import { ENTRY_KIND } from "@/shared/constants";
+import { ENTRY_KIND } from "@/features/directory/constants";
 import type { ContextMenuLayout } from "@/shared/models";
 
 import type { EntryAction, EntryActionContext, ResolveArgs } from "./types";

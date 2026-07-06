@@ -17,6 +17,12 @@
   gap: var(--space-2-5);
 }
 
+/* The edit toggle stays highlighted while sidebar edit mode is on. */
+.SideBar .sidebar_header [aria-pressed="true"] {
+  background-color: var(--color-overlay-hover);
+  color: var(--color-text);
+}
+
 /* Collapsed: icon-only rail. Stack the header buttons. */
 .SideBar.collapsed .sidebar_header {
   flex-direction: column;
@@ -24,6 +30,11 @@
 
 .SideBar.collapsed .sidebar_header .new_tab_toggle {
   margin-left: var(--space-0);
+}
+
+/* No edit mode in the icon rail — the group headers (and their edit affordances) are hidden. */
+.SideBar.collapsed .sidebar_header .edit_toggle {
+  display: none;
 }
 
 .SideBar.collapsed section .section_content .folder_item,
@@ -53,10 +64,57 @@
   transition: all 0.2s ease-in-out;
 }
 
+/* Trash button on custom items: pushed to the right, and clickable even though the row itself is
+   non-interactive in edit mode (the row gets pointer-events:none). */
+.SideBar section .section_content .folder_item .item_remove {
+  margin-left: auto;
+  pointer-events: auto;
+}
+
+.SideBar section .section_content .folder_item .item_remove .IconButton,
+.SideBar section .section_content .folder_item .item_remove .IconButton svg {
+  color: var(--color-danger);
+}
+
+/* Eye toggle on preset rows: same right-aligned, still-clickable placement as the trash button,
+   but neutral (presets are hidden, not deleted). */
+.SideBar section .section_content .folder_item .item_hide {
+  margin-left: auto;
+  pointer-events: auto;
+}
+
+/* A hidden preset only shows in edit mode; dim it so it reads as "off" while still toggleable. */
+.SideBar section .section_content .folder_item.hidden {
+  opacity: 0.5;
+}
+
 .SideBar section .section_content .folder_item svg {
   font-size: var(--font-size-base);
   color: var(--color-text-tertiary);
   transition: all 0.2s ease-in-out;
+}
+
+/* Finder tag rows: tint the dot with its colour (kept on hover/active too). */
+.SideBar section .section_content .folder_item.tag_gray svg {
+  color: var(--color-tag-gray);
+}
+.SideBar section .section_content .folder_item.tag_green svg {
+  color: var(--color-tag-green);
+}
+.SideBar section .section_content .folder_item.tag_purple svg {
+  color: var(--color-tag-purple);
+}
+.SideBar section .section_content .folder_item.tag_blue svg {
+  color: var(--color-tag-blue);
+}
+.SideBar section .section_content .folder_item.tag_yellow svg {
+  color: var(--color-tag-yellow);
+}
+.SideBar section .section_content .folder_item.tag_red svg {
+  color: var(--color-tag-red);
+}
+.SideBar section .section_content .folder_item.tag_orange svg {
+  color: var(--color-tag-orange);
 }
 
 .SideBar section .section_content .folder_item p {
@@ -169,12 +227,27 @@
   color: var(--color-text-primary);
 }
 
-.SideBar section .section_content .folder_item,
-.SideBar section .section_content .drive_item {
-  margin-bottom: var(--space-2);
+/* "Add group" button, shown at the bottom of the sidebar in edit mode. Full-width dashed row with
+   a centered plus + label, echoing the dashed item outlines of editable groups. */
+.SideBar .add_group_button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2-5);
+  padding: var(--space-2-5);
+  border: var(--border-width-default) dashed var(--color-border-default);
+  border-radius: var(--radius-sm);
+  background-color: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
 }
 
-.SideBar section .section_content .folder_item:last-child,
-.SideBar section .section_content .drive_item:last-child {
-  margin-bottom: var(--space-0);
+.SideBar .add_group_button:hover {
+  color: var(--color-text-primary);
+  border-color: var(--color-text-primary);
+  background-color: var(--color-overlay-hover);
 }
+
+/* Row spacing comes from the flex `gap` on .section_content_inner (see SidebarSection.css). */

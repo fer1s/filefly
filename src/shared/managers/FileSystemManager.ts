@@ -1,5 +1,5 @@
 import * as api from "@/shared/services/api";
-import { DirEntry, Volume } from "@/shared/models";
+import { DirEntry, Volume, Tag } from "@/shared/models";
 
 // Encapsulates all filesystem domain operations. Views/components consume this through the provider
 // instead of calling the Tauri service (`api`) directly. Also owns data shaping (filtering, sorting).
@@ -45,6 +45,32 @@ export class FileSystemManager {
   // filters out this app's own background files (config/cache/temp).
   getRecentFiles(hideAppFiles: boolean): Promise<DirEntry[]> {
     return api.getRecentFiles(hideAppFiles);
+  }
+
+  // Recursively search under `path` for entries whose name contains `query`.
+  searchDirectory(path: string, query: string): Promise<DirEntry[]> {
+    return api.searchDirectory(path, query);
+  }
+
+  // Finder tags for a batch of paths, keyed by path (macOS only; empty on other platforms).
+  getFileTags(paths: string[]): Promise<Record<string, Tag[]>> {
+    return api.getFileTags(paths);
+  }
+
+  // Replace a file's Finder tags (macOS only; no-op elsewhere). Empty list clears them.
+  setFileTags(path: string, tags: Tag[]): Promise<void> {
+    return api.setFileTags(path, tags);
+  }
+
+  // Files carrying a given Finder tag (macOS only; empty elsewhere). Virtual listing for the
+  // sidebar tag filter — like getRecentFiles, ordered as Spotlight returns them.
+  findTagged(tag: string): Promise<DirEntry[]> {
+    return api.findTagged(tag);
+  }
+
+  // Distinct Finder tags currently in use (macOS only; empty elsewhere), for the sidebar list.
+  listAllTags(): Promise<Tag[]> {
+    return api.listAllTags();
   }
 
   // Eject/unmount a removable volume by its mount point.

@@ -1,0 +1,64 @@
+/* Breadcrumb view of the path. Mirrors the box of `.PathBar input` so toggling to the editable
+   input is seamless. Fills the central slot and scrolls horizontally when the path is long. */
+.PathCrumbs {
+  width: 100%;
+  /* Allow the flex item to shrink below its content so the overflow scrolls instead of the bar. */
+  min-width: 0;
+  height: var(--size-control-large);
+  display: flex;
+  align-items: center;
+  padding: var(--space-0-5) var(--space-1-5);
+  background-color: var(--color-overlay-faint);
+  border: var(--border-width-default) solid var(--color-border-faint);
+  border-radius: var(--radius-sm);
+  /* The empty area is the click target that opens the editable input. */
+  cursor: text;
+  overflow-x: auto;
+  white-space: nowrap;
+  scrollbar-width: none;
+  gap: var(--space-1);
+}
+
+.PathCrumbs::-webkit-scrollbar {
+  display: none;
+}
+
+.PathCrumbs .crumb_group {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* Styled like an IconButton: balanced padding, muted by default, overlay-hover highlight. */
+.PathCrumbs .crumb {
+  padding: var(--space-1) var(--space-2);
+  min-height: var(--size-control-small);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  font-family: "Inter", sans-serif;
+  font-size: var(--font-size-base);
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+.PathCrumbs .crumb:hover {
+  background-color: var(--color-overlay-hover);
+  color: var(--color-text-primary);
+}
+
+/* Current folder: the last crumb isn't a navigation target. */
+.PathCrumbs .crumb.current {
+  color: var(--color-text-primary);
+  cursor: default;
+}
+
+.PathCrumbs .crumb.current:hover {
+  background: transparent;
+}
+
+.PathCrumbs .crumb_separator {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-2xs);
+}

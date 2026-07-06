@@ -3,7 +3,7 @@ import {
   ContextMenuItem,
 } from "@/shared/components/patterns/ContextMenu";
 import Icon from "@/shared/components/elements/Icon";
-import { SORT_KEY } from "@/shared/constants";
+import { SORT_KEY } from "@/features/directory/constants";
 
 import { faCheck } from "@fortawesome/free-solid-svg-icons";
 

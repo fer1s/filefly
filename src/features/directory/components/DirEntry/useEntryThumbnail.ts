@@ -7,6 +7,8 @@ import {
   imagePreviewLoad,
   acquireImageSlot,
 } from "../../hooks/useImagePreviewLoading";
+import { setThumbnailPath } from "../../thumbnailCache";
+import { cacheSvgDragPreview } from "../../dragPreview";
 import { THUMBNAIL_SIZE, THUMBNAIL_PREFETCH_MARGIN } from "./constants";
 
 // Lazy + throttled image/video/PDF thumbnail for one entry. A row only "wants" its thumbnail
@@ -21,6 +23,9 @@ export const useEntryThumbnail = (
   fs: FileSystemManager,
   enabled: boolean,
   itemRef: RefObject<HTMLDivElement | null>,
+  // When set, the file is drawn straight from disk (e.g. SVG, which the webview rasterises
+  // natively) instead of asking the backend for a cached raster thumbnail.
+  direct = false,
 ) => {
   const [wanted, setWanted] = useState(false);
   const [imgSrc, setImgSrc] = useState<string | null>(null);
@@ -62,8 +67,19 @@ export const useEntryThumbnail = (
     loadEndedRef.current = false;
     imagePreviewLoad.start();
     releaseSlotRef.current = acquireImageSlot(() => {
+      if (direct) {
+        // Drawn straight from disk (e.g. SVG). For the drag preview, rasterise the SVG to a
+        // bounded PNG — the raw file would drag at its huge intrinsic size.
+        setImgSrc(convertFileSrc(path));
+        void cacheSvgDragPreview(path);
+        return;
+      }
       fs.getThumbnail(path, THUMBNAIL_SIZE)
-        .then((thumb) => setImgSrc(convertFileSrc(thumb)))
+        .then((thumb) => {
+          // Remember the on-disk thumbnail so a native drag can use it as its preview image.
+          setThumbnailPath(path, thumb);
+          setImgSrc(convertFileSrc(thumb));
+        })
         .catch(() => finishLoad());
     });
 
@@ -75,7 +91,7 @@ export const useEntryThumbnail = (
         imagePreviewLoad.end();
       }
     };
-  }, [wanted, path, fs]);
+  }, [wanted, path, fs, direct]);
 
   // Cached images can already be complete before onLoad fires — settle now so the slot frees
   // and the spinner count doesn't get stuck.

@@ -1,6 +1,7 @@
 import { faArrowUpRightFromSquare } from "@fortawesome/free-solid-svg-icons";
 
-import { ENTRY_KIND, KEY } from "@/shared/constants";
+import { KEY } from "@/shared/constants";
+import { ENTRY_KIND } from "@/features/directory/constants";
 import { formatBinding } from "@/shared/keymap";
 import { t } from "@/lang";
 

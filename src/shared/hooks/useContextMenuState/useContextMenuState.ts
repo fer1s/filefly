@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { KEY } from "@/shared/constants";
+import { HOTKEY_SCOPE, useHotkey, useHotkeyScope } from "@/shared/keymap";
 
 // Gap (px) kept between the menu and the viewport edges when clamping.
 const VIEWPORT_PADDING = 8;
@@ -46,19 +47,12 @@ export const useContextMenuState = <T>() => {
     };
   }, [visible]);
 
-  // Close on Escape (capture + stopPropagation so it doesn't also trigger other handlers).
-  useEffect(() => {
-    if (!visible) return;
-
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key !== KEY.ESCAPE) return;
-      e.stopPropagation();
-      setVisible(false);
-    };
-
-    document.addEventListener("keydown", handleEscape, true);
-    return () => document.removeEventListener("keydown", handleEscape, true);
-  }, [visible]);
+  // Close on Escape in the MENU scope, so it doesn't also trigger lower-scope handlers.
+  useHotkeyScope(HOTKEY_SCOPE.MENU, visible);
+  useHotkey({ keys: [KEY.ESCAPE] }, () => setVisible(false), {
+    scope: HOTKEY_SCOPE.MENU,
+    when: visible,
+  });
 
   // Keep the menu inside the viewport once it has rendered with its final content.
   useLayoutEffect(() => {

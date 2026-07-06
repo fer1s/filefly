@@ -22,10 +22,12 @@
     "fs:default",
     "fs:allow-watch",
     "fs:allow-unwatch",
+    "fs:allow-read-text-file",
     {
       "identifier": "fs:scope",
       "allow": [{ "path": "$HOME/**" }, { "path": "/**" }]
     },
-    "dialog:default"
+    "dialog:default",
+    "drag:default"
   ]
 }

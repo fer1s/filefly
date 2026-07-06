@@ -2,6 +2,9 @@ import {
   ZOOM_DEFAULT,
   DEFAULT_DATE_FORMAT,
   DEFAULT_SIDEBAR_OPACITY,
+  DEFAULT_SIDEBAR_WIDTH,
+  DEFAULT_STARTUP_MODE,
+  DEFAULT_DRAG_DROP_ACTION,
 } from "@/shared/constants";
 import type { AppSettings } from "@/shared/services/api";
 
@@ -11,7 +14,15 @@ export const DEFAULT_SETTINGS: AppSettings = {
   defaultZoom: ZOOM_DEFAULT,
   dateFormat: DEFAULT_DATE_FORMAT,
   sidebarOpacity: DEFAULT_SIDEBAR_OPACITY,
+  sidebarWidth: DEFAULT_SIDEBAR_WIDTH,
   hideSystemRecents: true,
+  showToasts: true,
+  startupMode: DEFAULT_STARTUP_MODE,
+  homePath: "",
+  dragDropAction: DEFAULT_DRAG_DROP_ACTION,
+  confirmDragDrop: true,
+  clickableToasts: true,
+  dragToExternalApps: true,
 };
 
 // Coalesce rapid changes (e.g. dragging the opacity slider) into one disk write.

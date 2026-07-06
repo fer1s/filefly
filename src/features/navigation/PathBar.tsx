@@ -1,3 +1,5 @@
+import { useCallback, useState } from "react";
+
 import { useStateContext } from "@/shared/providers/StateProvider";
 import IconButton, {
   ICON_BUTTON_SIZE,
@@ -5,11 +7,12 @@ import IconButton, {
 } from "@/shared/components/elements/IconButton";
 import { VIEW_MODE, RECENTS } from "@/shared/constants";
 import { useKeymap, formatBinding, KEYMAP_ACTION } from "@/shared/keymap";
-import { classNames } from "@/shared/utils";
+import { classNames, isTagsPath, tagFromPath } from "@/shared/utils";
 import { t } from "@/lang";
 
 import { usePathBarShortcuts } from "./hooks/usePathBarShortcuts";
-import PathInput from "./components/PathInput";
+import PathField from "./components/PathField";
+import PathSearch from "./components/PathSearch";
 
 import {
   faArrowLeft,
@@ -17,6 +20,7 @@ import {
   faArrowUp,
   faHouse,
   faList,
+  faMagnifyingGlass,
   faTableCellsLarge,
   faCircleInfo,
 } from "@fortawesome/free-solid-svg-icons";
@@ -36,13 +40,47 @@ const PathBar = () => {
     toggleShowHidden,
     infoPanelOpen,
     toggleInfoPanel,
+    search,
+    setSearch,
   } = useStateContext();
+
+  // Inline search field. `searchOpen` = mounted (replacing the search button); `searchClosing` =
+  // playing the exit animation before unmount. Closing also clears the filter.
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchClosing, setSearchClosing] = useState(false);
+
+  const openSearch = useCallback(() => {
+    setSearchClosing(false);
+    setSearchOpen(true);
+  }, []);
+  // Start the exit animation and clear the filter; the unmount happens on the animation's end.
+  const closeSearch = useCallback(() => {
+    setSearchClosing(true);
+    setSearch("");
+  }, [setSearch]);
+  const finishCloseSearch = useCallback(() => {
+    setSearchOpen(false);
+    setSearchClosing(false);
+  }, []);
+  const toggleSearch = useCallback(
+    () => (searchOpen && !searchClosing ? closeSearch() : openSearch()),
+    [searchOpen, searchClosing, closeSearch, openSearch],
+  );
+
+  // Collapse search on navigation (the filter is per-tab and resets on a new folder anyway).
+  // Adjusting state during render on a changed value, per React's "you might not need an effect".
+  const [prevPath, setPrevPath] = useState(path);
+  if (path !== prevPath) {
+    setPrevPath(path);
+    setSearchOpen(false);
+    setSearchClosing(false);
+  }
 
   const goHome = () => setPath("");
 
   // Go up one level to the parent directory. Uses the POSIX separator since paths come from the backend as '/'.
   const goUp = () => {
-    if (path === RECENTS) return; // Recents has no parent.
+    if (path === RECENTS || isTagsPath(path)) return; // Virtual views have no parent.
     if (path === "" || path === "/") return setPath("");
     const trimmed = path.replace(/\/+$/, "");
     const idx = trimmed.lastIndexOf("/");
@@ -57,8 +95,11 @@ const PathBar = () => {
     goBack,
     goForward,
     goUp,
+    goHome,
     toggleView: switchView,
     toggleHidden: toggleShowHidden,
+    toggleInfo: toggleInfoPanel,
+    toggleSearch,
   });
 
   return (
@@ -69,6 +110,7 @@ const PathBar = () => {
         variant={ICON_BUTTON_VARIANT.BOXED}
         size={ICON_BUTTON_SIZE.LG}
         tooltip={t.pathbar.home}
+        hotkey={formatBinding(keymap[KEYMAP_ACTION.GO_HOME])}
         aria-label={t.pathbar.home}
         className="shadow"
       />
@@ -97,7 +139,7 @@ const PathBar = () => {
         <IconButton
           icon={faArrowUp}
           onClick={goUp}
-          disabled={path === "" || path === RECENTS}
+          disabled={path === "" || path === RECENTS || isTagsPath(path)}
           variant={ICON_BUTTON_VARIANT.BOXED}
           size={ICON_BUTTON_SIZE.LG}
           tooltip={t.pathbar.up}
@@ -108,8 +150,33 @@ const PathBar = () => {
 
       {path === RECENTS ? (
         <div className="path_label shadow">{t.pathbar.recents}</div>
+      ) : isTagsPath(path) ? (
+        <div className="path_label shadow">{tagFromPath(path)}</div>
       ) : (
-        <PathInput key={path} path={path} onCommit={setPath} />
+        <PathField key={path} path={path} onCommit={setPath} />
+      )}
+
+      {/* The search button expands into an inline folder filter; while open it replaces the
+          button (no redundancy) and shrinks the path field. */}
+      {searchOpen ? (
+        <PathSearch
+          value={search}
+          onChange={setSearch}
+          onClose={closeSearch}
+          closing={searchClosing}
+          onExited={finishCloseSearch}
+        />
+      ) : (
+        <IconButton
+          icon={faMagnifyingGlass}
+          onClick={openSearch}
+          variant={ICON_BUTTON_VARIANT.BOXED}
+          size={ICON_BUTTON_SIZE.LG}
+          tooltip={t.pathbar.search}
+          hotkey={formatBinding(keymap[KEYMAP_ACTION.SEARCH])}
+          aria-label={t.pathbar.search}
+          className="shadow search_toggle"
+        />
       )}
 
       <IconButton
@@ -129,6 +196,7 @@ const PathBar = () => {
         variant={ICON_BUTTON_VARIANT.BOXED}
         size={ICON_BUTTON_SIZE.LG}
         tooltip={t.pathbar.toggleInfo}
+        hotkey={formatBinding(keymap[KEYMAP_ACTION.TOGGLE_INFO])}
         aria-label={t.pathbar.toggleInfo}
         className={classNames(
           "shadow",

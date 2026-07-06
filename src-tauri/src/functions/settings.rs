@@ -18,8 +18,25 @@ pub struct AppSettings {
     date_format: String,
     // Sidebar background opacity (alpha of --color-background-sidebar), 0..1.
     sidebar_opacity: f64,
+    // User-adjustable sidebar width (px) for the expanded rail (see SIDEBAR_WIDTH_MIN/MAX).
+    sidebar_width: f64,
     // Hide this app's own background files (config/cache/temp) from the Recents listing.
     hide_system_recents: bool,
+    // Show transient toast notifications (e.g. "Copied"). When off, they're suppressed.
+    show_toasts: bool,
+    // What to open on launch: "restore" (previous session), "volumes" (fresh at Volumes), or
+    // "home" (fresh at home_path).
+    startup_mode: String,
+    // Folder opened on launch when startup_mode is "home" (empty = Volumes view).
+    home_path: String,
+    // What dragging entries onto a folder does: "move" or "copy".
+    drag_drop_action: String,
+    // Whether a confirmation dialog is shown before a drag-and-drop move/copy.
+    confirm_drag_drop: bool,
+    // Whether success toasts are clickable to jump to the affected file/folder.
+    clickable_toasts: bool,
+    // Whether dragging entries out of the window starts a native OS drag (drop into other apps).
+    drag_to_external_apps: bool,
 }
 
 // Must mirror the frontend defaults (shared/constants.ts).
@@ -30,7 +47,15 @@ impl Default for AppSettings {
             default_zoom: 1.0,
             date_format: "locale".to_string(),
             sidebar_opacity: 0.85,
+            sidebar_width: 220.0,
             hide_system_recents: true,
+            show_toasts: true,
+            startup_mode: "restore".to_string(),
+            home_path: String::new(),
+            drag_drop_action: "move".to_string(),
+            confirm_drag_drop: true,
+            clickable_toasts: true,
+            drag_to_external_apps: true,
         }
     }
 }

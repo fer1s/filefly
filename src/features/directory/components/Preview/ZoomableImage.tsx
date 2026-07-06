@@ -26,6 +26,35 @@ export const ZoomableImage = ({
   // Drag origin while panning; null when not dragging.
   const dragRef = useRef<{ x: number; y: number } | null>(null);
 
+  // Max pan (screen px) that keeps the scaled image covering the viewport. Transform origin is
+  // centre, so each axis allows half the overflow. offsetWidth/Height are the 1x layout box
+  // (unaffected by the CSS transform); the parent is the visible container.
+  const clampPan = (next: { x: number; y: number }, scale: number) => {
+    const el = imgRef.current;
+    if (!el) return next;
+    const parent = el.parentElement;
+    const maxX = Math.max(
+      0,
+      (el.offsetWidth * scale - (parent?.clientWidth ?? 0)) / 2,
+    );
+    const maxY = Math.max(
+      0,
+      (el.offsetHeight * scale - (parent?.clientHeight ?? 0)) / 2,
+    );
+    return {
+      x: Math.min(maxX, Math.max(-maxX, next.x)),
+      y: Math.min(maxY, Math.max(-maxY, next.y)),
+    };
+  };
+
+  // Re-clamp pan whenever zoom changes (e.g. zooming out shrinks the valid pan range, so a pan
+  // set at higher zoom would otherwise push the image off-screen).
+  useEffect(() => {
+    const clamped = clampPan(pan, zoom);
+    if (clamped.x !== pan.x || clamped.y !== pan.y) onPanChange(clamped);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [zoom]);
+
   // Wheel zoom needs a non-passive listener to preventDefault (React's onWheel is passive).
   useEffect(() => {
     const el = imgRef.current;
@@ -48,10 +77,12 @@ export const ZoomableImage = ({
 
   const onPointerMove = (e: PointerEvent<HTMLImageElement>) => {
     if (!dragRef.current) return;
-    onPanChange({
-      x: e.clientX - dragRef.current.x,
-      y: e.clientY - dragRef.current.y,
-    });
+    onPanChange(
+      clampPan(
+        { x: e.clientX - dragRef.current.x, y: e.clientY - dragRef.current.y },
+        zoom,
+      ),
+    );
   };
 
   const onPointerUp = () => {

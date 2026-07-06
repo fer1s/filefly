@@ -7,7 +7,8 @@
   margin-bottom: var(--space-0);
 }
 
-/* Accordion header: clickable, full-width, styled like the old section title. */
+/* Accordion header: title and chevron are sibling buttons (never nested) so both stay
+   keyboard-accessible. */
 .SideBar .SidebarSection .section_header {
   width: 100%;
   height: var(--size-control-medium);
@@ -15,14 +16,9 @@
   padding: var(--space-0) var(--space-2-5);
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: var(--space-2-5);
-  background-color: transparent;
-  border: none;
   border-radius: var(--radius-sm);
-  cursor: pointer;
   color: var(--color-text-muted);
-  user-select: none;
   transition: background-color 0.25s ease-in-out;
 }
 
@@ -30,21 +26,173 @@
   background-color: var(--color-overlay-hover);
 }
 
-.SideBar .SidebarSection .section_header h2 {
+/* Title control: stretches to fill the header so most of the row stays clickable. */
+.SideBar .SidebarSection .section_title {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  text-align: left;
+  user-select: none;
+}
+
+.SideBar .SidebarSection .section_title h2 {
   font-size: var(--font-size-base);
   font-weight: 500;
   color: inherit;
 }
 
-/* Chevron points down when open, right when collapsed. */
-.SideBar .SidebarSection .section_header svg {
-  font-size: var(--font-size-xs);
+/* Delete button on custom group headers (edit mode only). Danger-tinted like item removal. */
+.SideBar .SidebarSection .section_delete .IconButton,
+.SideBar .SidebarSection .section_delete .IconButton svg {
+  color: var(--color-danger);
+}
+
+/* Inline rename input mirrors the title typography in place. */
+.SideBar .SidebarSection .section_title_input {
+  flex: 1;
+  min-width: 0;
+  background-color: transparent;
+  border: none;
+  border-bottom: var(--border-width-default) solid var(--color-text-muted);
+  color: var(--color-text);
+  font-size: var(--font-size-base);
+  font-weight: 500;
+}
+
+.SideBar .SidebarSection .section_title_input:focus {
+  outline: none;
+}
+
+/* Drag handle (edit mode only): grips the group for vertical reordering. touch-action:none lets
+   the pointer gesture own the drag instead of scrolling. */
+.SideBar .SidebarSection .section_grip {
+  display: flex;
+  align-items: center;
   color: var(--color-text-muted);
+  cursor: grab;
+  touch-action: none;
+}
+
+.SideBar .SidebarSection .section_grip:active {
+  cursor: grabbing;
+}
+
+.SideBar .SidebarSection .section_grip svg {
+  font-size: var(--font-size-xs);
+}
+
+/* The group being dragged floats above the others and shows it's being lifted. */
+.SideBar .SidebarSection.dragging {
+  cursor: grabbing;
+  opacity: 0.9;
+}
+
+/* Chevron toggle button, points down when open and right when collapsed. */
+.SideBar .SidebarSection .section_chevron {
+  display: flex;
+  align-items: center;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-muted);
+}
+
+.SideBar .SidebarSection .section_chevron svg {
+  font-size: var(--font-size-xs);
   transition: transform 0.15s ease-in-out;
 }
 
-.SideBar .SidebarSection.closed .section_header svg {
+.SideBar .SidebarSection.closed .section_chevron svg {
   transform: rotate(-90deg);
+}
+
+/* Edit mode: the group and each of its rows get a dashed outline (outline, not border, so the
+   layout doesn't shift), and the add-item buttons become visible. */
+.SideBar .SidebarSection.editing {
+  outline: var(--border-width-default) dashed var(--color-text-muted);
+  outline-offset: var(--space-0-5);
+  border-radius: var(--radius-sm);
+}
+
+/* In edit mode no row is navigable — clicks shouldn't open the folder/volume. */
+.SideBar
+  .SidebarSection.editing
+  .section_content_inner
+  > *:not(.section_insert) {
+  pointer-events: none;
+}
+
+/* Dashed item outlines only on editable groups; Volumes is reorderable but its rows aren't editable. */
+.SideBar
+  .SidebarSection.editing.editable
+  .section_content_inner
+  > *:not(.section_insert) {
+  outline: var(--border-width-default) dashed var(--color-border-strong);
+  outline-offset: calc(-1 * var(--border-width-default));
+  border-radius: var(--radius-sm);
+}
+
+/* Add-item affordance (edit mode only): a thin hover strip between rows. The button is hidden
+   (scaled to nothing) until the strip is hovered, then scales in smoothly while the strip grows. */
+.SideBar .SidebarSection .section_insert {
+  min-height: var(--space-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: min-height 0.15s ease-in-out;
+}
+
+.SideBar .SidebarSection .section_insert:hover {
+  min-height: var(--size-control-medium);
+}
+
+/* Full-width button: a centered plus flanked by dashed rules (----- + -----). */
+.SideBar .SidebarSection .section_insert_button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1-5);
+  padding: var(--space-0) var(--space-2-5);
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  opacity: 0;
+  transform: scale(0);
+  transition:
+    opacity 0.15s ease-in-out,
+    transform 0.15s ease-in-out;
+}
+
+.SideBar .SidebarSection .section_insert_button::before,
+.SideBar .SidebarSection .section_insert_button::after {
+  content: "";
+  flex: 1;
+  border-top: var(--border-width-default) dashed var(--color-border-strong);
+}
+
+.SideBar .SidebarSection .section_insert:hover .section_insert_button {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Hovering the button itself highlights the plus. */
+.SideBar .SidebarSection .section_insert_button:hover {
+  background-color: transparent;
+  color: var(--color-text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .SideBar .SidebarSection .section_insert,
+  .SideBar .SidebarSection .section_insert_button {
+    transition: none;
+  }
 }
 
 .SideBar.collapsed .SidebarSection {
@@ -72,6 +220,10 @@
 .SideBar .SidebarSection .section_content_inner {
   min-height: 0;
   overflow: hidden;
+  /* Stack rows (and edit-mode insert strips) with one uniform gap, instead of per-item margins. */
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
 }
 
 /* Collapse the content only in the expanded sidebar; the rail always shows it. */
@@ -92,7 +244,7 @@
 /* Respect users who prefer reduced motion: toggle instantly, no chevron spin or height slide. */
 @media (prefers-reduced-motion: reduce) {
   .SideBar .SidebarSection .section_header,
-  .SideBar .SidebarSection .section_header svg,
+  .SideBar .SidebarSection .section_chevron svg,
   .SideBar .SidebarSection .section_content {
     transition: none;
   }

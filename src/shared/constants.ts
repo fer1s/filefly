@@ -7,6 +7,39 @@ export const VIEW_MODE = {
 // special-cases it to fetch recent files instead of reading a folder.
 export const RECENTS = "recents://";
 
+// Sentinel "path" prefix for a Finder tag view (e.g. "tags://Red"). Like RECENTS, not a real
+// directory — the loader fetches the tagged files instead. See tagsPath / tagFromPath / isTagsPath.
+export const TAGS_PREFIX = "tags://";
+
+// Finder tag colour indices — the byte stored after the tag name in the xattr (`Name\nIndex`).
+// 0 = no colour; 1..=7 are the standard Finder colours. Shared by the directory (dots, picker)
+// and the sidebar (tag filter), so it lives here rather than in one feature.
+export const TAG_COLOR = {
+  NONE: 0,
+  GRAY: 1,
+  GREEN: 2,
+  PURPLE: 3,
+  BLUE: 4,
+  YELLOW: 5,
+  RED: 6,
+  ORANGE: 7,
+} as const;
+
+export type TagColor = (typeof TAG_COLOR)[keyof typeof TAG_COLOR];
+
+// CSS modifier class per colour index (array position = the index), driving the --color-tag-*
+// styling. Index 0 is the uncoloured (hollow) dot.
+export const TAG_COLOR_CLASS = [
+  "none",
+  "gray",
+  "green",
+  "purple",
+  "blue",
+  "yellow",
+  "red",
+  "orange",
+] as const;
+
 // System Trash directory name (relative to home on macOS/Linux). Used to detect when the user is
 // browsing the Trash so the entry menu offers Restore instead of Move-to-Trash.
 export const TRASH_DIR_NAME = ".Trash";
@@ -26,6 +59,13 @@ export const SIDEBAR_OPACITY_MAX = 1;
 export const SIDEBAR_OPACITY_STEP = 0.05;
 export const DEFAULT_SIDEBAR_OPACITY = 0.85;
 
+// User-adjustable sidebar width (px), the expanded grid column. Dragging the right edge clamps
+// between MIN and MAX; the collapsed rail keeps its own fixed width. DEFAULT matches the
+// --size-sidebar-expanded token (theme.css) so first launch looks unchanged.
+export const SIDEBAR_WIDTH_MIN = 180;
+export const SIDEBAR_WIDTH_MAX = 400;
+export const DEFAULT_SIDEBAR_WIDTH = 220;
+
 // Sentinel date-format value meaning "use the OS locale's date-time string" (Date.toLocaleString).
 // Any other value is a token pattern (YYYY, MM, DD, HH, …) interpreted by formatDate.
 export const DATE_FORMAT_LOCALE = "locale";
@@ -33,39 +73,30 @@ export const DATE_FORMAT_LOCALE = "locale";
 // Default date format before the user picks one: the system locale (preserves prior behavior).
 export const DEFAULT_DATE_FORMAT = DATE_FORMAT_LOCALE;
 
-export const ENTRY_KIND = {
-  FILE: "file",
-  DIRECTORY: "dir",
-  NONE: "none",
+// What the app opens on launch. RESTORE reopens the previous tab session; VOLUMES starts a
+// fresh session at the Volumes view; HOME starts a fresh session at a user-picked folder.
+export const STARTUP_MODE = {
+  RESTORE: "restore",
+  VOLUMES: "volumes",
+  HOME: "home",
 } as const;
 
-export type EntryKind = (typeof ENTRY_KIND)[keyof typeof ENTRY_KIND];
+export type StartupMode = (typeof STARTUP_MODE)[keyof typeof STARTUP_MODE];
 
-export const CLIPBOARD_MODE = {
+// Default before the user picks: restore the previous session (preserves prior behavior).
+export const DEFAULT_STARTUP_MODE: StartupMode = STARTUP_MODE.RESTORE;
+
+// What dragging entries onto a folder does: MOVE them there, or COPY them there.
+export const DRAG_DROP_ACTION = {
+  MOVE: "move",
   COPY: "copy",
-  CUT: "cut",
 } as const;
 
-export type ClipboardMode =
-  (typeof CLIPBOARD_MODE)[keyof typeof CLIPBOARD_MODE];
+export type DragDropAction =
+  (typeof DRAG_DROP_ACTION)[keyof typeof DRAG_DROP_ACTION];
 
-export const SORT_KEY = {
-  NAME: "name",
-  MODIFIED: "modified",
-  CREATED: "created",
-  SIZE: "size",
-  KIND: "kind",
-} as const;
-
-export type SortKey = (typeof SORT_KEY)[keyof typeof SORT_KEY];
-
-export const SORT_DIRECTION = {
-  ASC: "asc",
-  DESC: "desc",
-} as const;
-
-export type SortDirection =
-  (typeof SORT_DIRECTION)[keyof typeof SORT_DIRECTION];
+// Default: move (matches most file managers).
+export const DEFAULT_DRAG_DROP_ACTION: DragDropAction = DRAG_DROP_ACTION.MOVE;
 
 // DOM KeyboardEvent.key names used in non-configurable key handling (navigation, input
 // submit/cancel). These are not user-rebindable bindings — see shared/keymap for those — but
@@ -96,24 +127,3 @@ export const UI_COLOR = {
 } as const;
 
 export type UiColor = (typeof UI_COLOR)[keyof typeof UI_COLOR];
-
-export const MARKDOWN_FORMAT = "md";
-export const MARKDOWN_FORMATS: readonly string[] = ["md", "markdown"];
-export const PDF_FORMAT = "pdf";
-export const IMAGE_FORMATS: readonly string[] = ["png", "jpg", "jpeg", "webp"];
-export const AUDIO_FORMATS: readonly string[] = ["mp3", "wav", "ogg"];
-export const VIDEO_FORMATS: readonly string[] = [
-  "mp4",
-  "webm",
-  "mov",
-  "m4v",
-  "ogv",
-];
-
-export const ACCEPTED_PREVIEW_FORMATS: readonly string[] = [
-  MARKDOWN_FORMAT,
-  PDF_FORMAT,
-  ...IMAGE_FORMATS,
-  ...AUDIO_FORMATS,
-  ...VIDEO_FORMATS,
-];

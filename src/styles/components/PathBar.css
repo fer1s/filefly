@@ -16,8 +16,9 @@
   height: var(--size-control-large);
 }
 
-/* Info-panel toggle: highlight the button while the panel is open. */
-.PathBar .info_toggle.active .IconButton {
+/* Info-panel and search toggles: highlight the button while active. */
+.PathBar .info_toggle.active .IconButton,
+.PathBar .search_toggle.active .IconButton {
   color: var(--color-text-primary);
   background-color: var(--color-overlay-active);
 }

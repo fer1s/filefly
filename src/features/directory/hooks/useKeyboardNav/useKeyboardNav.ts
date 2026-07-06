@@ -20,8 +20,13 @@ export const useKeyboardNav = ({
 
   // Latest selection, read inside the keydown handler without re-subscribing on every change.
   const selectedRef = useRef(selectedIDs);
+  // Anchor for Shift+Arrow range selection: the fixed end of the range. It tracks the last
+  // single selection (plain arrow / click / type-to-find), so a click then Shift+Arrow extends
+  // from the clicked item. Left untouched while a multi-selection is active.
+  const anchorRef = useRef<string | null>(null);
   useEffect(() => {
     selectedRef.current = selectedIDs;
+    if (selectedIDs.length <= 1) anchorRef.current = selectedIDs[0] ?? null;
   }, [selectedIDs]);
 
   useEffect(() => {
@@ -53,19 +58,47 @@ export const useKeyboardNav = ({
       return cols || 1;
     };
 
+    const indexOf = (path: string) => items.findIndex((e) => e.path === path);
+    const clampIndex = (i: number) =>
+      Math.max(0, Math.min(items.length - 1, i));
+
     // Move the cursor by delta relative to the last selected entry and select that single entry.
     const move = (delta: number) =>
       setSelectedIDs((prev) => {
         if (!items.length) return prev;
-        const current = prev.length
-          ? items.findIndex((e) => e.path === prev[prev.length - 1])
-          : -1;
-        const next = Math.max(
-          0,
-          Math.min(items.length - 1, current < 0 ? 0 : current + delta),
-        );
+        const current = prev.length ? indexOf(prev[prev.length - 1]) : -1;
+        const next = clampIndex(current < 0 ? 0 : current + delta);
         return [items[next].path];
       });
+
+    // Extend the selection by delta: keep the anchor fixed, move the cursor, and select the whole
+    // contiguous range between them (the cursor end stays last so further moves read it back).
+    const extend = (delta: number) => {
+      if (!items.length) return;
+      const sel = selectedRef.current;
+      const anchorPath =
+        anchorRef.current ?? sel[sel.length - 1] ?? items[0].path;
+      const anchorIndex = Math.max(0, indexOf(anchorPath));
+      const cursorPath = sel[sel.length - 1] ?? anchorPath;
+      const cursorIndex = indexOf(cursorPath);
+      const nextCursor = clampIndex(
+        (cursorIndex < 0 ? anchorIndex : cursorIndex) + delta,
+      );
+
+      const range: string[] = [];
+      const step = anchorIndex <= nextCursor ? 1 : -1;
+      for (let i = anchorIndex; ; i += step) {
+        range.push(items[i].path);
+        if (i === nextCursor) break;
+      }
+
+      anchorRef.current = anchorPath;
+      setSelectedIDs(range);
+      // The cursor isn't focused during a multi-selection, so scroll it into view ourselves.
+      document
+        .getElementById(items[nextCursor].path)
+        ?.scrollIntoView({ block: "nearest", inline: "nearest" });
+    };
 
     // Open the last selected entry.
     const open = () =>
@@ -92,6 +125,14 @@ export const useKeyboardNav = ({
       );
     };
 
+    // Select the first entry whose name starts with `buf` (searching the whole list from the top).
+    const selectFirstMatch = (buf: string) =>
+      setSelectedIDs((prev) => {
+        if (!items.length || !buf) return prev;
+        const match = items.find((e) => e.name.toLowerCase().startsWith(buf));
+        return match ? [match.path] : prev;
+      });
+
     // Type-to-find: accumulate typed chars; a single-char buffer starts after the current entry so
     // repeated presses cycle through matches.
     const typeahead = (char: string) => {
@@ -114,6 +155,22 @@ export const useKeyboardNav = ({
       });
     };
 
+    // Backspace while type-to-find is active edits the search (instead of navigating back).
+    // Returns whether it consumed the key, so the caller can stop the PathBar's back shortcut.
+    const backspaceTypeahead = () => {
+      if (!searchBufferRef.current) return false;
+      const next = searchBufferRef.current.slice(0, -1);
+      searchBufferRef.current = next;
+      onTypeaheadChange(next);
+      if (!next) {
+        clearTypeahead();
+      } else {
+        scheduleTypeaheadReset();
+        selectFirstMatch(next.toLowerCase());
+      }
+      return true;
+    };
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (isTypingTarget(e.target)) return;
       if (!enabled) return;
@@ -125,9 +182,21 @@ export const useKeyboardNav = ({
         return;
       }
 
-      // Cursor nav handles only unmodified keys; modified combos (e.g. Alt+Arrow for history
-      // navigation) belong to the keymap listeners.
+      // Backspace edits an active type-to-find search rather than navigating back. Consuming it
+      // (capture phase + stopImmediatePropagation) keeps the PathBar's Backspace=back from firing.
+      if (e.key === KEY.BACKSPACE && !e.shiftKey && backspaceTypeahead()) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        return;
+      }
+
+      // Cursor nav handles unmodified keys (and Shift for range selection); other modified combos
+      // (e.g. Alt+Arrow for history navigation) belong to the keymap listeners.
       if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+      // Shift+Arrow extends the selection as a range; a plain arrow selects a single entry.
+      const step = (delta: number) =>
+        e.shiftKey ? extend(delta) : move(delta);
 
       switch (e.key) {
         case KEY.ESCAPE:
@@ -142,19 +211,19 @@ export const useKeyboardNav = ({
           break;
         case KEY.ARROW_RIGHT:
           e.preventDefault();
-          move(1);
+          step(1);
           break;
         case KEY.ARROW_LEFT:
           e.preventDefault();
-          move(-1);
+          step(-1);
           break;
         case KEY.ARROW_DOWN:
           e.preventDefault();
-          move(view === VIEW_MODE.GRID ? columns() : 1);
+          step(view === VIEW_MODE.GRID ? columns() : 1);
           break;
         case KEY.ARROW_UP:
           e.preventDefault();
-          move(view === VIEW_MODE.GRID ? -columns() : -1);
+          step(view === VIEW_MODE.GRID ? -columns() : -1);
           break;
         case KEY.ENTER:
           e.preventDefault();
@@ -163,9 +232,11 @@ export const useKeyboardNav = ({
       }
     };
 
-    document.addEventListener("keydown", handleKeyDown);
+    // Capture phase so this runs before the PathBar's bubble-phase keydown — letting an active
+    // type-to-find swallow Backspace (via stopImmediatePropagation) before it navigates back.
+    document.addEventListener("keydown", handleKeyDown, true);
     return () => {
-      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("keydown", handleKeyDown, true);
       clearTypeahead();
     };
   }, [items, view, enabled, setSelectedIDs, onOpen, onTypeaheadChange]);

@@ -13,3 +13,8 @@ export const entryLabel = (targets: string[]) =>
   targets.length === 1
     ? `"${basename(targets[0])}"`
     : t.directory.items(targets.length);
+
+// The paths an operation produces in `destDir` (destDir/basename for each source), used by the
+// clickable "jump to the file" toast. Names may differ on conflict-rename; reveal tolerates misses.
+export const destPaths = (sources: string[], destDir: string) =>
+  sources.map((src) => `${destDir}/${basename(src)}`);

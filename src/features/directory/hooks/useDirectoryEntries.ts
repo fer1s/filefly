@@ -1,24 +1,35 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { useStateContext } from "@/shared/providers/StateProvider";
+import { RECENTS, VIEW_MODE, type ViewMode } from "@/shared/constants";
 import {
   ACCEPTED_PREVIEW_FORMATS,
   SORT_DIRECTION,
   SORT_KEY,
-  VIEW_MODE,
   type SortKey,
-  type ViewMode,
-} from "@/shared/constants";
+} from "@/features/directory/constants";
 import * as api from "@/shared/services/api";
 import { extension } from "@/shared/utils";
 import { FEATURE_FLAGS } from "@/shared/featureFlags";
 import { sortEntries, type Sort } from "../sort";
 import { useDirSizes } from "./useDirSizes";
+import { useDirectorySearch } from "./useDirectorySearch";
 
 const DEFAULT_SORT: Sort = {
   key: SORT_KEY.NAME,
   direction: SORT_DIRECTION.ASC,
 };
+
+// Recents is ordered by most-recently-modified first by default — that's the whole point of the
+// view. Still overridable: a sort the user picks there is persisted and wins on the next visit.
+const RECENTS_DEFAULT_SORT: Sort = {
+  key: SORT_KEY.MODIFIED,
+  direction: SORT_DIRECTION.DESC,
+};
+
+// The fallback sort when a folder has no persisted preference yet.
+const defaultSortFor = (path: string): Sort =>
+  path === RECENTS ? RECENTS_DEFAULT_SORT : DEFAULT_SORT;
 
 // Whether a persisted sort (loaded from the folder config) is a recognised key/direction.
 const isValidSort = (
@@ -31,27 +42,28 @@ const isValidSort = (
 // Owns the visible entry list: search filter, column sort, lazily computed folder
 // sizes, and the previewable subset (for prev/next navigation).
 export const useDirectoryEntries = (view: ViewMode) => {
-  const { dirContent, search, showHidden, path } = useStateContext();
+  const { dirContent, showHidden, path } = useStateContext();
 
-  // Entries visible after applying the hidden-files toggle and the sidebar search filter.
+  // While a search is active, the recursive results replace the folder's own entries (the
+  // directory content is hidden in favor of the results); otherwise show the folder as usual.
+  const { searchActive, searching, results } = useDirectorySearch();
+  const base = searchActive ? results : dirContent;
+
+  // Entries visible after applying the hidden-files toggle. (Search matching is done by the
+  // backend, so no name filter is needed here.)
   const filtered = useMemo(
-    () =>
-      dirContent.filter((e) => {
-        if (!showHidden && e.name.startsWith(".")) return false;
-        if (search && !e.name.toLowerCase().includes(search.toLowerCase()))
-          return false;
-        return true;
-      }),
-    [dirContent, search, showHidden],
+    () => base.filter((e) => showHidden || !e.name.startsWith(".")),
+    [base, showHidden],
   );
 
   // Column sort (driven by the list-view headers), loaded per folder from the config.
-  const [sort, setSort] = useState<Sort>(DEFAULT_SORT);
+  const [sort, setSort] = useState<Sort>(() => defaultSortFor(path));
 
   useEffect(() => {
     let cancelled = false;
     api.getFolderSort(path).then((saved) => {
-      if (!cancelled) setSort(isValidSort(saved) ? saved : DEFAULT_SORT);
+      if (!cancelled)
+        setSort(isValidSort(saved) ? saved : defaultSortFor(path));
     });
     return () => {
       cancelled = true;
@@ -107,5 +119,14 @@ export const useDirectoryEntries = (view: ViewMode) => {
     [sorted],
   );
 
-  return { filtered, sorted, previewables, sort, handleSort, computingSizes };
+  return {
+    filtered,
+    sorted,
+    previewables,
+    sort,
+    handleSort,
+    computingSizes,
+    searchActive,
+    searching,
+  };
 };

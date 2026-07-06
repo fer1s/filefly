@@ -24,6 +24,7 @@ const IconButton = ({
         "IconButton",
         size,
         variant === ICON_BUTTON_VARIANT.BOXED && "boxed",
+        variant === ICON_BUTTON_VARIANT.DANGER && "danger",
         // Without a tooltip the consumer className lands on the button; with one it goes to
         // the Tooltip wrapper (below) so layout classes keep working on the outer element.
         !tooltip && className,

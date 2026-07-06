@@ -35,6 +35,8 @@ export const SIDEBAR_MENU_LAYOUT: Record<SidebarItemKind, readonly string[]> = {
   ],
   // Recents is a virtual listing, not a real folder — only opening it in a tab makes sense.
   [SIDEBAR_ITEM_KIND.RECENTS]: [SIDEBAR_ACTION.OPEN_IN_NEW_TAB],
+  // A tag view is virtual too (Spotlight results) — same single action.
+  [SIDEBAR_ITEM_KIND.TAG]: [SIDEBAR_ACTION.OPEN_IN_NEW_TAB],
   [SIDEBAR_ITEM_KIND.TRASH]: [
     SIDEBAR_ACTION.OPEN_IN_NEW_TAB,
     SIDEBAR_ACTION.OPEN_IN_TERMINAL,

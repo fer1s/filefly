@@ -2,12 +2,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Volume, DirEntry } from "@/shared/models";
 import { ACCESS_DENIED_ERROR, RECENTS } from "@/shared/constants";
+import { isTagsPath, tagFromPath } from "@/shared/utils";
 
 import { ROUTES } from "../../routes";
-import {
-  DIRECTORY_WATCH_DEBOUNCE_MS,
-  VOLUMES_MOUNT_DIR,
-} from "./constants";
+import { DIRECTORY_WATCH_DEBOUNCE_MS, VOLUMES_MOUNT_DIR } from "./constants";
 import type { UseDirectoryContentsArgs } from "./types";
 
 // Owns the listing for the active folder: volumes, entries and the access-denied flag. Loads on
@@ -34,11 +32,13 @@ export const useDirectoryContents = ({
   const loadDirectory = useCallback(
     async (target: string): Promise<{ files: DirEntry[]; denied: boolean }> => {
       try {
-        // Recents is a virtual listing (Finder-style), not a real folder to read.
+        // Recents and tag views are virtual listings (Finder-style), not real folders to read.
         const files =
           target === RECENTS
             ? await fs.getRecentFiles(hideSystemRecents)
-            : await fs.readDirectory(target);
+            : isTagsPath(target)
+              ? await fs.findTagged(tagFromPath(target))
+              : await fs.readDirectory(target);
         return { files, denied: false };
       } catch (err) {
         return { files: [], denied: String(err).includes(ACCESS_DENIED_ERROR) };
@@ -66,7 +66,7 @@ export const useDirectoryContents = ({
   // Watch the current directory so external changes (e.g. `mv`/`rm` from a terminal, or another
   // app) refresh the listing automatically. Debounced, and torn down when the path changes.
   useEffect(() => {
-    if (path === "" || path === RECENTS) return; // Nothing real to watch.
+    if (path === "" || path === RECENTS || isTagsPath(path)) return; // Nothing real to watch.
 
     let cancelled = false;
     let stopWatching: (() => void) | undefined;
@@ -142,12 +142,19 @@ export const useDirectoryContents = ({
       return;
     }
 
+    // Guard against a stale load resolving after we've already navigated away: e.g. leaving the
+    // Trash (slow, ends denied) for Recents would otherwise leave the access-denied notice up.
+    let cancelled = false;
     loadDirectory(path).then(({ files, denied }) => {
+      if (cancelled) return;
       setDirContent(files);
       setAccessDenied(denied);
       if (locationPathname !== ROUTES.directory && path !== "")
         navigate(ROUTES.directory);
     });
+    return () => {
+      cancelled = true;
+    };
   }, [loadDirectory, locationPathname, navigate, path]);
 
   return {
