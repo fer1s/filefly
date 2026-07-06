@@ -17,7 +17,7 @@ use std::process::exit;
 
 use serde_json::{json, Value};
 
-use sito_file_browser_lib::filesystem::{fs, sftp, tags};
+use sito_file_browser_lib::filesystem::{archive, fs, sftp, tags};
 
 // ---- Command table (declarative registry) ----------------------------------------------------
 
@@ -133,6 +133,65 @@ const COMMANDS: &[Command] = &[
             let mut noop = |_p, _t| {};
             let dest = fs::copy_entry_core(a.require("source")?, a.require("dest-dir")?, &mut noop)?;
             Ok(json!({ "dest": dest }))
+        },
+    },
+    Command {
+        name: "compress",
+        group: "write",
+        summary: "Compress a file or directory into a new .zip in a destination directory (collision-safe).",
+        args: &[
+            val("source", true, "File or directory to compress."),
+            val("dest-dir", true, "Directory to write the archive into."),
+            val("name", false, "Archive file name (default: <source>.zip)."),
+            val("level", false, "DEFLATE compression level 0-9 (default 6)."),
+            val("password", false, "Encrypt entries with AES-256 using this password."),
+        ],
+        run: |a| {
+            let mut noop = |_p, _t| {};
+            let source = a.require("source")?;
+            let dest_dir = a.require("dest-dir")?;
+            let name = match a.opt("name") {
+                Some(n) => n.to_string(),
+                None => format!(
+                    "{}.zip",
+                    Path::new(source)
+                        .file_name()
+                        .map(|n| n.to_string_lossy().into_owned())
+                        .unwrap_or_else(|| "archive".to_string())
+                ),
+            };
+            let level = a.opt("level").and_then(|l| l.parse::<i64>().ok()).unwrap_or(6);
+            let dest = archive::compress_entries_core(
+                &[source.to_string()],
+                dest_dir,
+                &name,
+                level,
+                a.opt("password"),
+                &mut noop,
+            )?;
+            Ok(json!({ "dest": dest }))
+        },
+    },
+    Command {
+        name: "extract",
+        group: "write",
+        summary: "Extract a .zip into a destination directory.",
+        args: &[
+            val("archive", true, "Zip archive to extract."),
+            val("dest-dir", true, "Directory to extract into."),
+            val("password", false, "Password for an encrypted archive."),
+            flag("into-folder", "Wrap output in a new subfolder named after the archive (default: extract top-level entries directly into dest-dir)."),
+        ],
+        run: |a| {
+            let mut noop = |_p, _t| {};
+            let outputs = archive::extract_archive_core(
+                a.require("archive")?,
+                a.require("dest-dir")?,
+                a.opt("password"),
+                a.has("into-folder"),
+                &mut noop,
+            )?;
+            Ok(json!({ "outputs": outputs }))
         },
     },
     Command {

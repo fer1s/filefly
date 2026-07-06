@@ -552,7 +552,7 @@ pub fn open_file(path: String) -> Result<(), String> {
 }
 
 // Pick a destination path inside `dir` for `name`, avoiding collisions by appending " copy".
-fn unique_dest(dir: &Path, name: &OsStr) -> PathBuf {
+pub(crate) fn unique_dest(dir: &Path, name: &OsStr) -> PathBuf {
     let candidate = dir.join(name);
     if !candidate.exists() {
         return candidate;
@@ -588,7 +588,7 @@ pub struct ProgressPayload {
 }
 
 // Total bytes a copy will move: the file's own length, or the recursive sum for a directory.
-fn entry_total_bytes(path: &Path) -> u64 {
+pub(crate) fn entry_total_bytes(path: &Path) -> u64 {
     if path.is_dir() {
         jwalk::WalkDir::new(path)
             .skip_hidden(false)
