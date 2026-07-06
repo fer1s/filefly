@@ -18,6 +18,9 @@ export type SidebarActionContext = {
   fs: FileSystemManager;
   openInNewTab: (path: string) => void;
   openProperties: (path: string) => void | Promise<void>;
+  // Edit / delete the saved connection whose row was clicked (its path is `sftp://<id>`).
+  editConnection: (path: string) => void;
+  removeConnection: (path: string) => void;
   refreshDir: () => void;
   // Re-list the volumes (used after ejecting).
   refreshVolumes: () => void;

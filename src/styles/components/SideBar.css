@@ -96,6 +96,13 @@
   pointer-events: auto;
 }
 
+/* Open-in-new-tab quick action on connection rows: always visible and right-aligned, like the
+   inline eject button on ejectable volumes. */
+.SideBar section .section_content .folder_item .item_open_tab {
+  margin-left: auto;
+  pointer-events: auto;
+}
+
 /* A hidden preset only shows in edit mode; dim it so it reads as "off" while still toggleable. */
 .SideBar section .section_content .folder_item.hidden {
   opacity: 0.5;
@@ -234,6 +241,12 @@
 /* Base bar styling lives in UsageBar.css; only the width is sidebar-specific. */
 .SideBar section .section_content .drive_item .details .usage {
   width: 90%;
+}
+
+/* "used / total" line under the usage bar (toggled by showVolumeSize). Fainter than the path so it
+   reads as secondary detail. */
+.SideBar section .section_content .drive_item .details .drive_size {
+  color: var(--color-text-muted);
 }
 
 /* Details take the free space so the inline eject button sits flush right and the path ellipsizes

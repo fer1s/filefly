@@ -1,7 +1,9 @@
+/* Footer column: the counts/busy row on top, the optional OS-stats readout on its own row below. */
 .directory_page .status_bar {
   flex-shrink: 0;
   display: flex;
-  gap: var(--space-4);
+  flex-direction: column;
+  gap: var(--space-1);
   padding: var(--space-1-5) var(--space-2);
   font-size: var(--font-size-sm);
   color: var(--color-text-muted);
@@ -9,6 +11,40 @@
   border-top: var(--border-width-default) solid var(--color-border-soft);
   -webkit-user-select: none;
   user-select: none;
+}
+
+/* Top row: item/selection counts on the left, busy indicators pushed to the right. */
+.directory_page .status_bar .status_row {
+  display: flex;
+  gap: var(--space-4);
+}
+
+/* Bottom row: live CPU / RAM / disk readout, right-aligned under the counts. */
+.directory_page .status_bar .stats_row {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+}
+
+.directory_page .status_bar .stats_row .stat {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* CPU / RAM readouts double as buttons that open the OS resource monitor. Reset the native button
+   look so they sit inline with the plain-text disk stat, and hint interactivity on hover. */
+.directory_page .status_bar .stats_row .stat_button {
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.directory_page .status_bar .stats_row .stat_button:hover {
+  color: var(--color-text-secondary);
+  text-decoration: underline;
 }
 
 .directory_page .status_bar .selected {

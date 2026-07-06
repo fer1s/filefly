@@ -256,6 +256,56 @@ export const en = {
     choose: "Choose",
     empty: "No files here",
   },
+  connections: {
+    // Shown when browsing a remote SSH/SFTP location fails (connect/auth/read). `error` is the
+    // backend message, e.g. "no password for 'x'", "authentication failed", "connect failed".
+    listError: (error: string) => `Couldn't open remote folder: ${error}`,
+    // Shown when the server's host key no longer matches the one recorded in known_hosts.
+    hostKeyChanged:
+      "The server's host key has changed. This could be a man-in-the-middle attack — or the server was rebuilt. If you trust it, remove its line from ~/.ssh/known_hosts and reconnect.",
+    // Create-connection dialog (sidebar Network group → "+").
+    newTitle: "New connection",
+    fieldName: "Name",
+    fieldNamePlaceholder: "My server",
+    fieldHost: "Host",
+    fieldHostPlaceholder: "example.com",
+    fieldUser: "User",
+    fieldUserPlaceholder: "root",
+    fieldPort: "Port",
+    fieldAuth: "Authentication",
+    authAgent: "SSH agent",
+    authKey: "Private key",
+    authPassword: "Password",
+    fieldKeyPath: "Key file",
+    fieldKeyPathPlaceholder: "~/.ssh/id_ed25519",
+    fieldKeyPassphrase: "Key passphrase",
+    fieldPassword: "Password",
+    optional: "optional",
+    authHint:
+      "SSH agent is tried first, then a key file, then a password — whichever the server accepts. Secrets are stored in your macOS Keychain, never on disk.",
+    create: "Create",
+    save: "Save",
+    editTitle: "Edit connection",
+    edit: "Edit connection",
+    remove: "Delete connection",
+    confirmRemove: (name: string) =>
+      `Delete the connection "${name}"? This only removes it here — nothing on the server is touched.`,
+    removed: "Connection deleted",
+    removeError: (error: string) => `Couldn't delete the connection: ${error}`,
+    invalidPort: "Port must be a number between 1 and 65535.",
+    addError: (error: string) => `Couldn't save the connection: ${error}`,
+    added: "Connection created",
+    // Downloading a remote file to open/preview it failed (read-only cache copy — phase 3a).
+    openError: (error: string) => `Couldn't open remote file: ${error}`,
+    // Interactive auth dialog, shown when opening a connection fails authentication (phase 4).
+    authTitle: (name: string) => `Authenticate ${name}`,
+    authFailed: (target: string) => `Couldn't authenticate to ${target}.`,
+    authSecret: "Password or key passphrase",
+    authKeyHint:
+      "Using an SSH key? Make sure it's loaded in your agent — run `ssh-add ~/.ssh/id_ed25519` in a terminal — then retry. Leave the field empty for agent auth.",
+    retry: "Retry",
+    authFailedRetry: (error: string) => `Still couldn't connect: ${error}`,
+  },
   settings: {
     title: "Settings",
     search: "Search settings",
@@ -279,13 +329,52 @@ export const en = {
       appearance: "Appearance",
       files: "Files & Transfers",
       notifications: "Notifications",
+      remote: "Remote",
       storage: "Storage",
+    },
+    // Sub-headings grouping related settings within a section.
+    subsections: {
+      filesFolders: "Files & folders",
+      folderSizes: "Folder sizes",
+      startup: "Startup",
+      systemIntegration: "System integration",
+      previews: "Previews",
+      statusBar: "Status bar",
+      theme: "Theme & colour",
+      layout: "Layout & format",
+      transparency: "Transparency",
+      dragDrop: "Drag & drop",
+      deletion: "Deletion",
+      importExport: "Import & export",
+      toasts: "Toasts",
     },
     showHidden: "Show hidden files",
     showHiddenHint: "Display dotfiles and other hidden entries in folders.",
     hideSystemRecents: "Hide app files in Recents",
     hideSystemRecentsHint:
       "Keep files this app writes in the background (cache, settings, temp) out of Recents.",
+    remoteThumbnails: "Thumbnails for remote files",
+    remoteThumbnailsHint:
+      "Generate image thumbnails on SSH/SFTP hosts. Off by default — each one downloads the whole file over the network.",
+    showSystemStats: "Show system stats",
+    showSystemStatsHint:
+      "Display live CPU, memory and disk usage in the status bar. Off by default — it polls the system on an interval.",
+    showFolderSizes: "Show folder sizes",
+    showFolderSizesHint:
+      "Compute recursive folder sizes for the list-view Size column. Off by default — walking large folders is costly (results are cached).",
+    showFolderSizesConfirmTitle: "Enable folder sizes?",
+    showFolderSizesConfirmMessage:
+      "Computing folder sizes walks every folder in view, which can increase CPU usage on large directories. Results are cached after the first pass. Enable anyway?",
+    showVolumeSize: "Show volume size in sidebar",
+    showVolumeSizeHint:
+      "Display used / total space under each volume's usage bar in the sidebar.",
+    sizeIgnores: "Exclude from folder sizes",
+    sizeIgnoresHint:
+      "Name patterns skipped when computing folder sizes. Matches a file or folder name; use * for any run of characters and ? for one (e.g. .DS_Store, *.tmp, node_modules).",
+    sizeIgnoresPlaceholder: "e.g. .DS_Store or *.tmp",
+    sizeIgnoresAdd: "Add pattern",
+    sizeIgnoresRemove: "Remove pattern",
+    sizeIgnoresEmpty: "No patterns — every file counts toward folder sizes.",
     showToasts: "Show notifications",
     showToastsHint: "Show transient pop-up messages (e.g. “Copied”, errors).",
     theme: "Appearance",
@@ -391,7 +480,13 @@ export const en = {
     removable: "Removable",
     localDrive: "Local drive",
     freeOf: (free: string, total: string) => `${free} free of ${total}`,
+    // Sidebar "used / total" readout under a volume's usage bar (toggled by showVolumeSize).
+    usedOf: (used: string, total: string) => `${used} / ${total}`,
     ejected: (name: string) => `Ejected ${name}`,
+  },
+  storage: {
+    // Tooltip on the status-bar disk readout, which opens the OS Storage settings pane.
+    title: "Storage",
   },
   directory: {
     entriesLabel: "Files and folders",
@@ -408,6 +503,9 @@ export const en = {
     confirmDelete: (label: string) => `Move ${label} to the Trash?`,
     confirmDeletePermanently: (label: string) =>
       `Permanently delete ${label}? This can't be undone.`,
+    // Remote (SFTP) has no Trash — deletion is immediate and irreversible, so always warn.
+    confirmDeleteRemote: (label: string) =>
+      `Delete ${label} from the server? There's no Trash on a remote host — this can't be undone.`,
     confirmDragMove: (label: string, dest: string) =>
       `Move ${label} to "${dest}"?`,
     confirmDragCopy: (label: string, dest: string) =>
@@ -424,6 +522,12 @@ export const en = {
     filters: "Filters",
     loadingPreviews: "Loading thumbnails...",
     calculatingSizes: "Calculating sizes…",
+    // Status-bar OS stats readout (opt-in via the showSystemStats setting).
+    statCpu: (percent: number) => `CPU ${percent}%`,
+    statRam: (used: string, total: string) => `RAM ${used} / ${total}`,
+    statDisk: (used: string, total: string) => `Disk ${used} / ${total}`,
+    // Tooltip on the clickable CPU / RAM readouts.
+    openSystemMonitor: "Open the system resource monitor",
     copying: "Copying…",
     moving: "Moving…",
     deleting: "Moving to Trash…",
@@ -477,6 +581,8 @@ export const en = {
     eject: (reason: string) => `Could not eject: ${reason}`,
     save: (reason: string) => `Could not save: ${reason}`,
     read: (reason: string) => `Could not read file: ${reason}`,
+    openSystemMonitor: (reason: string) =>
+      `Could not open the system monitor: ${reason}`,
   },
   markdownEditor: {
     unsavedTitle: "Unsaved changes",

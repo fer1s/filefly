@@ -1,0 +1,54 @@
+/* Shared pill. Base chrome + two fill variants (outline / solid) and two sizes (sm / md). Behavior
+   is layered by the interactive wrappers: ToggleableChip (.Chip--toggle) and DeletableChip
+   (.Chip--deletable). Kept feature-agnostic so any surface can drop a chip in. */
+.Chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  border-radius: var(--radius-pill);
+  border: var(--border-width-default) solid var(--color-border-default);
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+  background: transparent;
+}
+
+/* Sizes — padding + text scale. */
+.Chip.sm {
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--font-size-sm);
+}
+
+.Chip.md {
+  padding: var(--space-1) var(--space-2-5);
+}
+
+/* Fill variants. OUTLINE is the base look above; SOLID fills with the accent (selected state). */
+.Chip.solid {
+  background-color: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-accent-contrast);
+}
+
+/* Toggle: the whole pill is a button. Hover lifts an outline chip; a solid (selected) one keeps its
+   accent fill. */
+.Chip--toggle {
+  cursor: pointer;
+}
+
+.Chip--toggle.outline:hover {
+  background-color: var(--color-overlay-hover);
+  color: var(--color-text-primary);
+}
+
+/* Deletable: a value label plus a trailing × button. Trim the trailing padding so the small icon
+   button sits snugly, and let the label carry a monospace value cleanly. */
+.Chip--deletable {
+  gap: var(--space-1-5);
+  padding-right: var(--space-1);
+  color: var(--color-text-primary);
+}
+
+.Chip--deletable .Chip_label {
+  font-family: var(--font-mono, monospace);
+  font-size: var(--font-size-md);
+}

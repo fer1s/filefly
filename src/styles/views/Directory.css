@@ -682,3 +682,11 @@ body.is-entry-dragging .drag_ghost {
   justify-content: center;
   padding: var(--space-12);
 }
+
+/* Half the default spinner size for the folder-loading indicator — it's a transient inline hint,
+   not a full-screen loader. (--space-6 = 24px = 50% of --size-spinner's 48px.) */
+.directory_page .search_loading .loader {
+  width: var(--space-6);
+  height: var(--space-6);
+  font-size: var(--space-6);
+}

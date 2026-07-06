@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 import Dialog from "@/shared/components/patterns/Dialog";
 import DialogHeader from "@/shared/components/patterns/DialogHeader";
+import DialogActions from "@/shared/components/patterns/DialogActions";
 import Button from "@/shared/components/elements/Button";
 import { useCloseOnEscape } from "@/shared/hooks/useCloseOnEscape";
 import { classNames } from "@/shared/utils";
@@ -82,7 +83,7 @@ const ConfirmationDialog = ({
         {content.extra && (
           <div className="confirmation_extra">{content.extra}</div>
         )}
-        <div className="confirmation_actions">
+        <DialogActions>
           <Button className="confirmation_cancel" onClick={onClose}>
             {cancelLabel ?? t.common.cancel}
           </Button>
@@ -95,7 +96,7 @@ const ConfirmationDialog = ({
           >
             {confirmLabel ?? t.common.confirm}
           </Button>
-        </div>
+        </DialogActions>
       </div>
     </Dialog>
   );

@@ -209,6 +209,15 @@ fn run_action(app: &AppHandle, action: &str, args: &Value) -> Result<Value, Stri
                 .to_string();
             open_window_on_main(app, path)
         }
+        // Open a new window revealing `path` (a file): rooted at its parent, with the file selected.
+        "reveal" => {
+            let path = args
+                .get("path")
+                .and_then(Value::as_str)
+                .ok_or("reveal requires args.path")?
+                .to_string();
+            reveal_window_on_main(app, path)
+        }
         other => Err(format!("unknown action '{other}'")),
     }
 }
@@ -228,4 +237,22 @@ fn open_window_on_main(app: &AppHandle, path: String) -> Result<Value, String> {
     .map_err(|error| error.to_string())?;
     rx.recv().map_err(|error| error.to_string())??;
     Ok(json!({ "opened": path }))
+}
+
+// Reveal `file` in a new window (parent folder + the file selected). Window creation must run on
+// the main thread; hop there and wait for the Result via a channel.
+#[cfg(unix)]
+fn reveal_window_on_main(app: &AppHandle, file: String) -> Result<Value, String> {
+    let (tx, rx) = std::sync::mpsc::channel();
+    let app_for_main = app.clone();
+    let file_for_main = file.clone();
+    app.run_on_main_thread(move || {
+        let result = crate::window::create_reveal_window(&app_for_main, &file_for_main)
+            .map(|_| ())
+            .map_err(|error| error.to_string());
+        let _ = tx.send(result);
+    })
+    .map_err(|error| error.to_string())?;
+    rx.recv().map_err(|error| error.to_string())??;
+    Ok(json!({ "revealed": file }))
 }

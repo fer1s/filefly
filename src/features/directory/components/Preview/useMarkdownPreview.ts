@@ -15,10 +15,15 @@ import type { MarkdownDoc } from "./types";
 // attach to the textarea / rendered container / find input.
 export const useMarkdownPreview = ({
   filePath,
+  savePath,
   isMarkdown,
   previewVisible,
 }: {
+  // Path read/rendered — for a remote file this is the local cache copy.
   filePath: string;
+  // Path saved to on Cmd+S — the original (a remote `sftp://` path writes back to the server; the
+  // backend routes it). Defaults to filePath for local files.
+  savePath: string;
   isMarkdown: boolean;
   previewVisible: boolean;
 }) => {
@@ -139,7 +144,10 @@ export const useMarkdownPreview = ({
     if (!doc || !dirty || saving) return;
     setSaving(true);
     try {
-      await fs.writeText(doc.path, doc.draft);
+      // Write to the original path — a remote one saves back to the server (backend routes it).
+      await fs.writeText(savePath, doc.draft);
+      // For a remote file, keep the local cache copy (doc.path) in sync so a re-open isn't stale.
+      if (savePath !== doc.path) await fs.writeText(doc.path, doc.draft);
       setDoc((d) => (d && d.path === doc.path ? { ...d, source: d.draft } : d));
       notify(t.common.saved, TOAST_TYPE.SUCCESS);
     } catch (err) {
@@ -147,7 +155,7 @@ export const useMarkdownPreview = ({
     } finally {
       setSaving(false);
     }
-  }, [doc, dirty, saving, fs]);
+  }, [doc, dirty, saving, fs, savePath]);
 
   const openFind = useCallback(() => {
     setFindOpen(true);

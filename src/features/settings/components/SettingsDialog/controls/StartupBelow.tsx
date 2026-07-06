@@ -4,6 +4,7 @@ import { STARTUP_MODE } from "@/shared/constants";
 import { t } from "@/lang";
 
 import type { CustomControlProps } from "../../../schema";
+import SettingsButton from "../SettingsButton";
 
 // Full-width extra for the startup setting: the home-folder chooser, shown only when the "home"
 // launch mode is selected. An empty home path falls back to the Volumes view on launch.
@@ -28,9 +29,7 @@ const StartupBelow = ({ settings, update }: CustomControlProps) => {
             ? basename(settings.homePath)
             : t.settings.homeFolderVolumes}
         </span>
-        <button type="button" className="settings_button" onClick={onChoose}>
-          {t.settings.choose}
-        </button>
+        <SettingsButton onClick={onChoose}>{t.settings.choose}</SettingsButton>
       </span>
     </div>
   );

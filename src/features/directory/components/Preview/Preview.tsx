@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { convertFileSrc } from "@tauri-apps/api/core";
 
 import { useStateContext } from "@/shared/providers/StateProvider";
@@ -13,7 +13,7 @@ import {
   ContextMenu,
   ContextMenuItem,
 } from "@/shared/components/patterns/ContextMenu";
-import { KEY } from "@/shared/constants";
+import { KEY, SFTP_SCHEME } from "@/shared/constants";
 import {
   AUDIO_FORMATS,
   IMAGE_FORMATS,
@@ -85,6 +85,37 @@ const Preview = ({
     setVisible: setImageMenuVisible,
   } = useContextMenu();
 
+  // The webview can only read local files (convertFileSrc / readText). A remote (sftp://) file is
+  // downloaded to the cache first; local files resolve to themselves synchronously (no flicker).
+  // `materialized` records which remote file the cached copy belongs to, so `localPath` derives to
+  // "" (spinner) while a different file downloads — the previous file's bytes are never rendered.
+  // Read-only — see SSH_PLAN.md phase 3a.
+  const [materialized, setMaterialized] = useState<{
+    remote: string;
+    local: string;
+  } | null>(null);
+  const localPath = !filePath.startsWith(SFTP_SCHEME)
+    ? filePath
+    : materialized?.remote === filePath
+      ? materialized.local
+      : "";
+  useEffect(() => {
+    if (!previewVisible || !filePath || !filePath.startsWith(SFTP_SCHEME))
+      return;
+    let cancelled = false;
+    fs.materialize(filePath)
+      .then((resolved) => {
+        if (!cancelled) setMaterialized({ remote: filePath, local: resolved });
+      })
+      .catch((err) => {
+        if (!cancelled)
+          notify(t.connections.openError(String(err)), TOAST_TYPE.ERROR);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [filePath, previewVisible, fs]);
+
   const mac = isMacPlatform();
   const isImage = IMAGE_FORMATS.includes(fileType);
   const isMarkdown = fileType === MARKDOWN_FORMAT;
@@ -128,7 +159,13 @@ const Preview = ({
     goToMatch,
     handleFindKeyDown,
     onQueryChange,
-  } = useMarkdownPreview({ filePath, isMarkdown, previewVisible });
+  } = useMarkdownPreview({
+    filePath: localPath,
+    // Save back to the original path (remote → server); reading still uses the local cache copy.
+    savePath: filePath,
+    isMarkdown,
+    previewVisible: previewVisible && !!localPath,
+  });
 
   // Image zoom lives here (not in ZoomableImage) so its control sits in the shared bottom bar.
   const {
@@ -177,7 +214,9 @@ const Preview = ({
     videoRef.current.currentTime = 0;
   }, [previewVisible]);
 
-  const isReady = !isMarkdown || docReady;
+  // Not ready until the (possibly remote) file is materialized locally; markdown also waits on its
+  // parsed doc. An empty localPath means a remote download is still in flight → show the spinner.
+  const isReady = !!localPath && (!isMarkdown || docReady);
 
   // Close / navigate are guarded by the unsaved-edits prompt (they'd otherwise swap the file out
   // from under an in-progress markdown edit).
@@ -342,7 +381,7 @@ const Preview = ({
               ) : IMAGE_FORMATS.includes(fileType) ? (
                 <ZoomableImage
                   key={filePath}
-                  src={convertFileSrc(filePath)}
+                  src={convertFileSrc(localPath)}
                   alt={filePath}
                   onContextMenu={handleImageContextMenu}
                   zoom={zoom}
@@ -353,13 +392,13 @@ const Preview = ({
               ) : VIDEO_FORMATS.includes(fileType) ? (
                 <video
                   ref={videoRef}
-                  src={convertFileSrc(filePath)}
+                  src={convertFileSrc(localPath)}
                   controls
                   autoPlay
                 />
               ) : fileType === PDF_FORMAT ? (
                 <iframe
-                  src={convertFileSrc(filePath)}
+                  src={convertFileSrc(localPath)}
                   title={t.common.preview}
                 />
               ) : (

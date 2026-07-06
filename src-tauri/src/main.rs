@@ -5,7 +5,9 @@
 // (`sito_file_browser_lib`), which the `sfb` CLI also links. `generate_context!` — which validates
 // the `externalBin` sidecar at compile time — lives here, not in the lib, so building the CLI never
 // requires the sidecar to already exist.
-use sito_file_browser_lib::{dock_menu, filesystem, functions, tray, window};
+use sito_file_browser_lib::{
+    dock_menu, filesystem, functions, ignore, index, tray, watcher, window,
+};
 use tauri::Manager;
 
 fn main() {
@@ -31,6 +33,29 @@ fn main() {
             // Headless control channel (Unix socket) so `sfb` / an MCP server can drive the UI.
             app.manage(functions::control::ControlState::default());
             functions::control::start(app.handle().clone());
+
+            // Persistent System handle for the status-bar OS stats (CPU deltas across polls).
+            app.manage(functions::os_stats::StatsState::default());
+
+            // Persistent SQLite index of recursive directory sizes (see index.rs). The app's own
+            // data dir (where size_index.db lives) is ignored so our writes never feed a future
+            // watcher back into itself. The cache is lazy: each folder is (re)walked on demand when
+            // its own mtime no longer matches the cached row — no startup reconcile (which would
+            // re-stat every path ever cached). Deep offline changes stay stale until the folder is
+            // revisited; the Phase B watcher will close that gap in real time.
+            // Internal prefix: the app's own data dir. User name-globs: hydrated from settings.toml
+            // so ".DS_Store" & friends are excluded from folder sizes from the first walk.
+            let ignore_list = ignore::IgnoreList::new(
+                app.path().app_data_dir().map(|d| vec![d]).unwrap_or_default(),
+                functions::settings::get_settings(app.handle().clone()).size_ignores(),
+            );
+            let size_index = index::init(app.handle())?;
+            app.manage(size_index);
+            app.manage(ignore_list);
+            // Recursive watcher that keeps the size index fresh in real time for the viewed folder
+            // (Phase B): the frontend calls watch_directory on navigation; changes bubble deltas
+            // into cached ancestor sizes and emit dir-size-changed so the open view updates live.
+            app.manage(watcher::DirWatcher::new());
 
             // Trim the thumbnail cache to its size budget, off the UI thread.
             if let Ok(cache_dir) = app.path().app_cache_dir() {
@@ -75,6 +100,10 @@ fn main() {
             functions::markdown::read_text_file,
             functions::markdown::write_text_file,
             functions::system::open_full_disk_access_settings,
+            functions::system::open_storage_settings,
+            functions::system::open_system_monitor,
+            functions::os_stats::get_system_stats,
+            watcher::watch_directory,
             functions::keymap::get_keymap,
             functions::context_menu::get_context_menu,
             functions::settings::get_settings,
@@ -83,6 +112,11 @@ fn main() {
             functions::settings::export_settings,
             functions::storage::get_app_storage,
             functions::storage::clear_app_cache,
+            filesystem::sftp::sftp_list_connections,
+            filesystem::sftp::sftp_add_connection,
+            filesystem::sftp::sftp_remove_connection,
+            filesystem::sftp::sftp_home,
+            filesystem::sftp::sftp_download,
             functions::control::set_ui_state,
             functions::control::set_probe_result,
             functions::handler::is_default_folder_handler,
@@ -120,15 +154,51 @@ fn main() {
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
         .run(|app_handle, event| {
-            // macOS routes "open this folder" (Terminal `open`, folder links, aliases) here when we
-            // are the default folder handler — open each directory in a new window. Double-clicking
-            // a folder inside Finder never reaches this; Finder keeps that itself (see handler.rs).
+            // On exit, drop the SFTP download cache (materialized remote files + ssh scripts) so it
+            // doesn't linger across sessions. Other caches (thumbnails) are kept.
+            if let tauri::RunEvent::Exit = &event {
+                filesystem::sftp::clear_cache(app_handle);
+            }
+
+            // macOS routes URLs here in two cases:
+            //  - our custom scheme: sito-file-browser://open?path=<dir> / reveal?path=<file>
+            //    (registered in Info.plist) — open the folder, or reveal the file (parent +
+            //    selected), so other apps/scripts can drive the browser via a link.
+            //  - "open this folder" file URLs (Terminal `open`, folder links, aliases) when we are
+            //    the default folder handler — open each directory in a new window. Double-clicking a
+            //    folder inside Finder never reaches this; Finder keeps that itself (see handler.rs).
             #[cfg(target_os = "macos")]
             if let tauri::RunEvent::Opened { urls } = &event {
                 for url in urls {
+                    if url.scheme() == "sito-file-browser" {
+                        let action = url.host_str().unwrap_or_default();
+                        let path = url
+                            .query_pairs()
+                            .find(|(key, _)| key == "path")
+                            .map(|(_, value)| value.into_owned());
+                        if let Some(path) = path {
+                            match action {
+                                "open" => {
+                                    let _ = window::create_window(app_handle, Some(&path));
+                                }
+                                "reveal" => {
+                                    let _ = window::create_reveal_window(app_handle, &path);
+                                }
+                                _ => {}
+                            }
+                        }
+                        continue;
+                    }
+                    // A file/folder the OS handed us (drag onto the dock icon, "Open With", or
+                    // `open -a`). Folders open in a new window; files are revealed (parent folder +
+                    // the file selected). We don't declare broad document types, so this covers
+                    // forced opens — not becoming the default app for any file type.
                     if let Ok(path) = url.to_file_path() {
                         if path.is_dir() {
                             let _ = window::create_window(app_handle, Some(&path.to_string_lossy()));
+                        } else if path.is_file() {
+                            let _ =
+                                window::create_reveal_window(app_handle, &path.to_string_lossy());
                         }
                     }
                 }

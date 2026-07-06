@@ -6,7 +6,7 @@ import { useStateContext } from "@/shared/providers/StateProvider";
 import { useConfirm } from "@/shared/providers/ConfirmProvider";
 import { notify, TOAST_TYPE } from "@/shared/toast";
 import { basename, dirname } from "@/shared/utils";
-import { TRASH_DIR_NAME } from "@/shared/constants";
+import { TRASH_DIR_NAME, SFTP_SCHEME } from "@/shared/constants";
 import { t } from "@/lang";
 import { CLIPBOARD_MODE } from "@/features/directory/constants";
 
@@ -75,13 +75,20 @@ export const useFileOperations = ({
       if (!targets.length || !targets[0]) return;
 
       const label = entryLabel(targets);
-      // Trash confirmation is opt-out via the setting; permanent delete (irreversible) always asks.
-      if (permanent || confirmDelete) {
+      // Remote (SFTP) delete is permanent — there's no server-side Trash — so it behaves like a
+      // permanent delete for the confirm/history/toast below, and the actual removal goes through
+      // fs.trash (delete_entry routes it to sftp remove). A selection is uniformly one filesystem.
+      const remote = targets[0].startsWith(SFTP_SCHEME);
+      // Trash confirmation is opt-out via the setting; permanent AND remote deletes (irreversible)
+      // always ask, regardless of the setting.
+      if (permanent || remote || confirmDelete) {
         const confirmed = await confirm({
           title: t.directory.deleteTitle,
           message: permanent
             ? t.directory.confirmDeletePermanently(label)
-            : t.directory.confirmDelete(label),
+            : remote
+              ? t.directory.confirmDeleteRemote(label)
+              : t.directory.confirmDelete(label),
           destructive: true,
         });
         if (!confirmed) return;
@@ -98,7 +105,8 @@ export const useFileOperations = ({
         for (const target of targets) {
           try {
             await (permanent ? fs.deletePermanently(target) : fs.trash(target));
-            if (!permanent) trashed.push(target);
+            // Remote removals don't reach any Trash, so they're not put-back-able.
+            if (!permanent && !remote) trashed.push(target);
           } catch (err) {
             failed++;
             notify(
@@ -121,9 +129,11 @@ export const useFileOperations = ({
       if (!failed)
         // Trashing offers a click to open the Trash; a permanent delete has nowhere to go.
         notify(
-          permanent ? t.directory.deleted(label) : t.directory.trashed(label),
+          permanent || remote
+            ? t.directory.deleted(label)
+            : t.directory.trashed(label),
           TOAST_TYPE.SUCCESS,
-          permanent || !clickableToasts
+          permanent || remote || !clickableToasts
             ? undefined
             : async () =>
                 revealEntries(await join(await homeDir(), TRASH_DIR_NAME), []),

@@ -14,6 +14,8 @@ import StartupControl from "../components/SettingsDialog/controls/StartupControl
 import StartupBelow from "../components/SettingsDialog/controls/StartupBelow";
 import StorageControl from "../components/SettingsDialog/controls/StorageControl";
 import StorageBelow from "../components/SettingsDialog/controls/StorageBelow";
+import SizeIgnoresControl from "../components/SettingsDialog/controls/SizeIgnoresControl";
+import SizeIgnoresBelow from "../components/SettingsDialog/controls/SizeIgnoresBelow";
 import AccentControl from "../components/SettingsDialog/controls/AccentControl";
 import FolderHandlerControl from "../components/SettingsDialog/controls/FolderHandlerControl";
 
@@ -33,6 +35,7 @@ export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
     kind: SETTING_KIND.TOGGLE,
     key: "showHidden",
     section: SETTINGS_SECTION.GENERAL,
+    subsection: () => t.settings.subsections.filesFolders,
     label: () => t.settings.showHidden,
     hint: () => t.settings.showHiddenHint,
   },
@@ -40,13 +43,42 @@ export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
     kind: SETTING_KIND.TOGGLE,
     key: "hideSystemRecents",
     section: SETTINGS_SECTION.GENERAL,
+    subsection: () => t.settings.subsections.filesFolders,
     label: () => t.settings.hideSystemRecents,
     hint: () => t.settings.hideSystemRecentsHint,
+  },
+  {
+    kind: SETTING_KIND.TOGGLE,
+    key: "showFolderSizes",
+    section: SETTINGS_SECTION.GENERAL,
+    subsection: () => t.settings.subsections.folderSizes,
+    label: () => t.settings.showFolderSizes,
+    hint: () => t.settings.showFolderSizesHint,
+    // Walking every folder can spike CPU on large directories — confirm before enabling.
+    confirmOn: {
+      title: () => t.settings.showFolderSizesConfirmTitle,
+      message: () => t.settings.showFolderSizesConfirmMessage,
+    },
+  },
+  {
+    kind: SETTING_KIND.CUSTOM,
+    key: "sizeIgnores",
+    section: SETTINGS_SECTION.GENERAL,
+    subsection: () => t.settings.subsections.folderSizes,
+    label: () => t.settings.sizeIgnores,
+    hint: () => t.settings.sizeIgnoresHint,
+    Control: SizeIgnoresControl,
+    Below: SizeIgnoresBelow,
+    isModified: (settings, defaults) =>
+      settings.sizeIgnores.join("\n") !== defaults.sizeIgnores.join("\n"),
+    reset: (update, defaults) =>
+      update({ sizeIgnores: [...defaults.sizeIgnores] }),
   },
   {
     kind: SETTING_KIND.CUSTOM,
     key: "startupMode",
     section: SETTINGS_SECTION.GENERAL,
+    subsection: () => t.settings.subsections.startup,
     label: () => t.settings.startup,
     hint: () => t.settings.startupHint,
     Control: StartupControl,
@@ -66,6 +98,7 @@ export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
     kind: SETTING_KIND.CUSTOM,
     key: "defaultFolderHandler",
     section: SETTINGS_SECTION.GENERAL,
+    subsection: () => t.settings.subsections.systemIntegration,
     label: () => t.settings.folderHandler,
     hint: () => t.settings.folderHandlerHint,
     Control: FolderHandlerControl,
@@ -76,6 +109,7 @@ export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
     kind: SETTING_KIND.TOGGLE,
     key: "useCustomFolderPicker",
     section: SETTINGS_SECTION.GENERAL,
+    subsection: () => t.settings.subsections.systemIntegration,
     label: () => t.settings.useCustomFolderPicker,
     hint: () => t.settings.useCustomFolderPickerHint,
   },
@@ -83,6 +117,7 @@ export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
     kind: SETTING_KIND.TOGGLE,
     key: "previewImagesInApp",
     section: SETTINGS_SECTION.GENERAL,
+    subsection: () => t.settings.subsections.previews,
     label: () => t.settings.previewImagesInApp,
     hint: () => t.settings.previewImagesInAppHint,
   },
@@ -90,22 +125,41 @@ export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
     kind: SETTING_KIND.TOGGLE,
     key: "previewMarkdownInApp",
     section: SETTINGS_SECTION.GENERAL,
+    subsection: () => t.settings.subsections.previews,
     label: () => t.settings.previewMarkdownInApp,
     hint: () => t.settings.previewMarkdownInAppHint,
   },
   {
     kind: SETTING_KIND.TOGGLE,
+    key: "showSystemStats",
+    section: SETTINGS_SECTION.GENERAL,
+    subsection: () => t.settings.subsections.statusBar,
+    label: () => t.settings.showSystemStats,
+    hint: () => t.settings.showSystemStatsHint,
+  },
+  {
+    kind: SETTING_KIND.TOGGLE,
     key: "confirmExportOverwrite",
     section: SETTINGS_SECTION.FILES,
+    subsection: () => t.settings.subsections.importExport,
     label: () => t.settings.confirmExportOverwrite,
     hint: () => t.settings.confirmExportOverwriteHint,
   },
 
   // ── Appearance ── everything visual (theme, accent, zoom, dates, sidebar).
   {
+    kind: SETTING_KIND.TOGGLE,
+    key: "showVolumeSize",
+    section: SETTINGS_SECTION.APPEARANCE,
+    subsection: () => t.settings.subsections.layout,
+    label: () => t.settings.showVolumeSize,
+    hint: () => t.settings.showVolumeSizeHint,
+  },
+  {
     kind: SETTING_KIND.SELECT,
     key: "theme",
     section: SETTINGS_SECTION.APPEARANCE,
+    subsection: () => t.settings.subsections.theme,
     label: () => t.settings.theme,
     hint: () => t.settings.themeHint,
     options: () => [
@@ -118,6 +172,7 @@ export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
     kind: SETTING_KIND.CUSTOM,
     key: "accentColor",
     section: SETTINGS_SECTION.APPEARANCE,
+    subsection: () => t.settings.subsections.theme,
     label: () => t.settings.accent,
     hint: () => t.settings.accentHint,
     Control: AccentControl,
@@ -129,6 +184,7 @@ export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
     kind: SETTING_KIND.SELECT,
     key: "defaultZoom",
     section: SETTINGS_SECTION.APPEARANCE,
+    subsection: () => t.settings.subsections.layout,
     label: () => t.settings.defaultZoom,
     hint: () => t.settings.defaultZoomHint,
     options: () =>
@@ -142,6 +198,7 @@ export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
     kind: SETTING_KIND.CUSTOM,
     key: "dateFormat",
     section: SETTINGS_SECTION.APPEARANCE,
+    subsection: () => t.settings.subsections.layout,
     label: () => t.settings.dateFormat,
     hint: () => t.settings.dateFormatHint,
     Control: DateFormatControl,
@@ -154,6 +211,7 @@ export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
     kind: SETTING_KIND.RANGE,
     key: "sidebarOpacity",
     section: SETTINGS_SECTION.APPEARANCE,
+    subsection: () => t.settings.subsections.transparency,
     label: () => t.settings.sidebarTransparency,
     hint: () => t.settings.sidebarTransparencyHint,
     min: SIDEBAR_OPACITY_MIN,
@@ -168,6 +226,7 @@ export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
     kind: SETTING_KIND.RANGE,
     key: "contextMenuOpacity",
     section: SETTINGS_SECTION.APPEARANCE,
+    subsection: () => t.settings.subsections.transparency,
     label: () => t.settings.contextMenuTransparency,
     hint: () => t.settings.contextMenuTransparencyHint,
     // Same 0..1 range/step as the sidebar; shown inverted as transparency.
@@ -182,6 +241,7 @@ export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
     kind: SETTING_KIND.RANGE,
     key: "previewControlsOpacity",
     section: SETTINGS_SECTION.APPEARANCE,
+    subsection: () => t.settings.subsections.transparency,
     label: () => t.settings.previewControlsTransparency,
     hint: () => t.settings.previewControlsTransparencyHint,
     // Same 0..1 range/step as the sidebar; shown inverted as transparency.
@@ -196,6 +256,7 @@ export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
     kind: SETTING_KIND.RANGE,
     key: "dialogOpacity",
     section: SETTINGS_SECTION.APPEARANCE,
+    subsection: () => t.settings.subsections.transparency,
     label: () => t.settings.dialogTransparency,
     hint: () => t.settings.dialogTransparencyHint,
     // Same 0..1 range/step as the sidebar; shown inverted as transparency.
@@ -212,6 +273,7 @@ export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
     kind: SETTING_KIND.SELECT,
     key: "dragDropAction",
     section: SETTINGS_SECTION.FILES,
+    subsection: () => t.settings.subsections.dragDrop,
     label: () => t.settings.dragDrop,
     hint: () => t.settings.dragDropHint,
     options: () => [
@@ -223,6 +285,7 @@ export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
     kind: SETTING_KIND.TOGGLE,
     key: "confirmDragDrop",
     section: SETTINGS_SECTION.FILES,
+    subsection: () => t.settings.subsections.dragDrop,
     label: () => t.settings.confirmDragDrop,
     hint: () => t.settings.confirmDragDropHint,
   },
@@ -230,6 +293,7 @@ export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
     kind: SETTING_KIND.TOGGLE,
     key: "confirmDelete",
     section: SETTINGS_SECTION.FILES,
+    subsection: () => t.settings.subsections.deletion,
     label: () => t.settings.confirmDelete,
     hint: () => t.settings.confirmDeleteHint,
   },
@@ -237,8 +301,18 @@ export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
     kind: SETTING_KIND.TOGGLE,
     key: "dragToExternalApps",
     section: SETTINGS_SECTION.FILES,
+    subsection: () => t.settings.subsections.dragDrop,
     label: () => t.settings.dragToExternalApps,
     hint: () => t.settings.dragToExternalAppsHint,
+  },
+
+  // ── Remote ── SSH/SFTP connection behaviour.
+  {
+    kind: SETTING_KIND.TOGGLE,
+    key: "remoteThumbnails",
+    section: SETTINGS_SECTION.REMOTE,
+    label: () => t.settings.remoteThumbnails,
+    hint: () => t.settings.remoteThumbnailsHint,
   },
 
   // ── Notifications ──
@@ -246,6 +320,7 @@ export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
     kind: SETTING_KIND.TOGGLE,
     key: "showToasts",
     section: SETTINGS_SECTION.NOTIFICATIONS,
+    subsection: () => t.settings.subsections.toasts,
     label: () => t.settings.showToasts,
     hint: () => t.settings.showToastsHint,
   },
@@ -253,6 +328,7 @@ export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
     kind: SETTING_KIND.TOGGLE,
     key: "clickableToasts",
     section: SETTINGS_SECTION.NOTIFICATIONS,
+    subsection: () => t.settings.subsections.toasts,
     label: () => t.settings.clickableToasts,
     hint: () => t.settings.clickableToastsHint,
   },

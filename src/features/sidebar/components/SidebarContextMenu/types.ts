@@ -8,4 +8,6 @@ export type SidebarContextMenuProps = {
   target: SidebarMenuTarget | null;
   onClose: () => void;
   openProperties: (path: string) => void | Promise<void>;
+  editConnection: (path: string) => void;
+  removeConnection: (path: string) => void;
 };

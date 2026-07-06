@@ -1,7 +1,10 @@
 use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Manager, State};
+
+use crate::ignore::IgnoreList;
+use crate::index::{self, SizeIndex};
 
 // App-wide user settings, persisted as settings.toml in the app config dir (the source of truth;
 // the frontend hydrates its state from this on launch). Field names are camelCase to match the
@@ -61,6 +64,34 @@ pub struct AppSettings {
     // On export, ask before replacing an existing settings.toml. When off (default), a unique
     // filename is used instead so nothing is overwritten silently.
     confirm_export_overwrite: bool,
+    // Generate thumbnails for images on remote (SFTP) hosts. Off by default: each thumbnail must
+    // download the whole file over the network, so browsing an image-heavy remote folder would be
+    // slow/costly. When on, remote images thumbnail like local ones (via the cache).
+    remote_thumbnails: bool,
+    // Show a live CPU / RAM / disk readout in the status bar. Off by default — it polls the OS on
+    // an interval, so it's opt-in.
+    show_system_stats: bool,
+    // Compute and show recursive folder sizes in the list-view "Size" column. Off by default —
+    // walking every folder is costly on large directories (sizes are cached in size_index.db).
+    show_folder_sizes: bool,
+    // Show "used / total" text under each volume's usage bar in the sidebar. Off by default.
+    show_volume_size: bool,
+    // Glob patterns (matched against an entry's file name) excluded from recursive folder-size
+    // calculation, e.g. ".DS_Store", "*.tmp", "node_modules". Empty by default. Applied live: on
+    // save these replace the size-index name-globs and the size cache is cleared so it recomputes.
+    size_ignores: Vec<String>,
+}
+
+impl AppSettings {
+    // The size-ignore globs, trimmed and de-blanked so an empty editor row never becomes a
+    // match-everything (glob_match treats "" as a no-op anyway, but this keeps the stored list clean).
+    pub fn size_ignores(&self) -> Vec<String> {
+        self.size_ignores
+            .iter()
+            .map(|s| s.trim().to_string())
+            .filter(|s| !s.is_empty())
+            .collect()
+    }
 }
 
 // Must mirror the frontend defaults (shared/constants.ts).
@@ -90,8 +121,38 @@ impl Default for AppSettings {
             preview_images_in_app: false,
             preview_markdown_in_app: false,
             confirm_export_overwrite: false,
+            remote_thumbnails: false,
+            show_system_stats: false,
+            show_folder_sizes: false,
+            show_volume_size: false,
+            size_ignores: default_size_ignores(),
         }
     }
+}
+
+// Default folder-size exclusions. On macOS, OS-generated junk (Finder metadata, AppleDouble forks,
+// Spotlight/Trash/Versions/FSEvents stores) that never holds user content and only inflates size
+// totals — so new users get sensible exclusions. Mirrors MACOS_SIZE_IGNORES in shared/constants.ts
+// (must stay in sync). Empty on other platforms.
+#[cfg(target_os = "macos")]
+fn default_size_ignores() -> Vec<String> {
+    [
+        ".DS_Store",
+        "._*",
+        ".Spotlight-V100",
+        ".Trashes",
+        ".DocumentRevisions-V100",
+        ".apdisk",
+        ".fseventsd",
+    ]
+    .iter()
+    .map(|s| s.to_string())
+    .collect()
+}
+
+#[cfg(not(target_os = "macos"))]
+fn default_size_ignores() -> Vec<String> {
+    Vec::new()
 }
 
 fn config_path(app: &AppHandle) -> Result<PathBuf, String> {
@@ -111,15 +172,30 @@ pub fn get_settings(app: AppHandle) -> AppSettings {
     }
 }
 
-// Persist the whole settings struct to settings.toml (creating the config dir if needed).
+// Persist the whole settings struct to settings.toml (creating the config dir if needed), then
+// push the size-ignore globs into the live IgnoreList. When they changed, the size cache is cleared
+// so recursive sizes recompute under the new rules (they're keyed on mtime, which the rule change
+// doesn't touch, so stale rows would otherwise linger).
 #[tauri::command]
-pub fn set_settings(app: AppHandle, settings: AppSettings) -> Result<(), String> {
+pub fn set_settings(
+    app: AppHandle,
+    settings: AppSettings,
+    ignore: State<'_, IgnoreList>,
+    size_index: State<'_, SizeIndex>,
+) -> Result<(), String> {
     let serialized = toml::to_string_pretty(&settings).map_err(|e| e.to_string())?;
     let target = config_path(&app)?;
     if let Some(parent) = target.parent() {
         std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
     }
-    std::fs::write(target, serialized).map_err(|e| e.to_string())
+    std::fs::write(target, serialized).map_err(|e| e.to_string())?;
+
+    let new_globs = settings.size_ignores();
+    if new_globs != ignore.snapshot().name_globs {
+        ignore.set_globs(new_globs);
+        index::clear(&size_index.0);
+    }
+    Ok(())
 }
 
 // Read and parse a settings.toml the user chose (via the file picker), filling any missing keys

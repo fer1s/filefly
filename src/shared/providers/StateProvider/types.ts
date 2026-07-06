@@ -31,6 +31,9 @@ export type State = {
   // True when the current directory could not be read due to OS privacy protection
   // (e.g. macOS Full Disk Access required for the Trash).
   accessDenied: boolean;
+  // True while a navigation is still fetching the new folder's listing (after a short delay, so
+  // fast local reads don't flash). The directory view shows a spinner instead of the stale entries.
+  loadingDir: boolean;
   view: ViewMode;
   setView: (view: ViewMode) => void;
   // Whether hidden entries (dotfiles) are shown in the listing. Toggled via the keymap.
@@ -87,6 +90,9 @@ export type State = {
   // Whether opening a markdown file (Enter/double-click) shows it in the built-in preview instead
   // of the OS default app. Read by the directory open flow.
   previewMarkdownInApp: boolean;
+  // Whether to generate thumbnails for remote (SFTP) images (off by default — each downloads the
+  // whole file). Gates the thumbnail request for remote entries.
+  remoteThumbnails: boolean;
   // True while a settings change is being written to settings.toml (drives the StatusBar spinner).
   savingSettings: boolean;
   search: string;

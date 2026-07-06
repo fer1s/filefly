@@ -33,6 +33,10 @@ type BaseDescriptor = {
   // reset, so their `key` only needs to be unique.
   key: SettingKey;
   section: SettingsSectionId;
+  // Optional sub-heading grouping related settings within a section. Items sharing a resolved
+  // subsection label cluster under it (in schema order); items without one render first, un-grouped.
+  // Lazily resolved so it honors the active i18n dictionary.
+  subsection?: () => string;
   // Lazily resolved so labels/hints honor the active i18n dictionary; also matched by the search.
   label: () => string;
   hint: () => string;
@@ -44,6 +48,13 @@ type BaseDescriptor = {
 
 export type ToggleDescriptor = BaseDescriptor & {
   kind: typeof SETTING_KIND.TOGGLE;
+  // Optional confirmation shown before switching the toggle ON (off → on only). Use for toggles
+  // whose enabled state carries a cost the user should acknowledge (e.g. extra CPU). Turning the
+  // toggle back OFF never prompts. Copy is resolved lazily so it honours the active i18n dictionary.
+  confirmOn?: {
+    title: () => string;
+    message: () => string;
+  };
 };
 
 export type SelectOption = { value: string; label: string };

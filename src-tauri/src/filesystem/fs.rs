@@ -10,9 +10,12 @@ use std::io::Read;
 use std::os::unix::fs::MetadataExt;
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
-use std::time::SystemTime;
+use std::time::{Duration, SystemTime};
 use tauri::ipc::Channel;
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Manager, State};
+
+use crate::ignore::IgnoreList;
+use crate::index::SizeIndex;
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -69,9 +72,49 @@ pub(crate) fn build_dir_entry(path: PathBuf) -> Result<DirEntry, String> {
     })
 }
 
-#[tauri::command]
-pub fn get_entry(path: String) -> Result<DirEntry, String> {
+// Build a DirEntry for a remote (SFTP) file. Times come from the SFTP attributes (unix seconds);
+// `size_on_disk` mirrors `size` since remote block allocation isn't exposed. `url` is the full
+// `sftp://<conn>/path` so the frontend navigates and refetches it exactly like a local path.
+pub fn remote_dir_entry(
+    name: String,
+    url: String,
+    size: u64,
+    is_dir: bool,
+    mtime: u64,
+    atime: u64,
+) -> DirEntry {
+    let to_time = |secs: u64| SystemTime::UNIX_EPOCH + Duration::from_secs(secs);
+    let modified = to_time(mtime);
+    DirEntry {
+        name,
+        path: PathBuf::from(url),
+        size,
+        size_on_disk: size,
+        metadata: DirMetadata {
+            is_dir,
+            is_file: !is_dir,
+            modified,
+            accessed: to_time(atime),
+            created: modified,
+        },
+    }
+}
+
+// Local core: read a single entry's metadata. Shared by the CLI and the routing command below.
+pub fn get_entry_local(path: String) -> Result<DirEntry, String> {
     build_dir_entry(PathBuf::from(path))
+}
+
+// Read one entry, local or remote. `sftp://<conn>/path` routes to the SFTP backend; anything else
+// is a local path handled by `get_entry_local`. Async so the remote branch can await the network.
+#[tauri::command]
+pub async fn get_entry(app: AppHandle, path: String) -> Result<DirEntry, String> {
+    match super::sftp::resolve(&path) {
+        super::sftp::Target::Local(p) => get_entry_local(p),
+        super::sftp::Target::Remote { conn, path } => {
+            super::sftp::stat(&app, &conn, &path).await
+        }
+    }
 }
 
 // Recursively sum the apparent size (bytes) of every file under `path`. Used to fill the
@@ -81,11 +124,32 @@ pub fn get_entry(path: String) -> Result<DirEntry, String> {
 // The command is `async` and the walk runs on `spawn_blocking`: Tauri executes synchronous
 // commands on the main thread, so a plain sync version froze the UI for the whole walk.
 // This keeps the webview responsive while the (CPU/IO-bound) walk runs on a worker thread.
+//
+// Local paths go through the persistent SQLite size index (index::cached_size): a cache hit (the
+// folder's mtime is unchanged) returns instantly, a miss walks once and caches. Remote (SFTP)
+// paths are computed on demand and never cached here.
 #[tauri::command]
-pub async fn get_dir_size(path: String) -> u64 {
-    tauri::async_runtime::spawn_blocking(move || dir_size_core(&path))
-        .await
-        .unwrap_or(0)
+pub async fn get_dir_size(
+    app: AppHandle,
+    path: String,
+    index: State<'_, SizeIndex>,
+    ignore: State<'_, IgnoreList>,
+) -> Result<u64, String> {
+    match super::sftp::resolve(&path) {
+        super::sftp::Target::Local(p) => {
+            let conn = index.0.clone();
+            let ignores = ignore.snapshot();
+            tauri::async_runtime::spawn_blocking(move || {
+                crate::index::cached_size(&conn, &p, &ignores)
+            })
+            .await
+            .map_err(|e| e.to_string())?
+        }
+        // Remote sizes are computed on demand (Properties) — the frontend never bulk-walks them.
+        super::sftp::Target::Remote { conn, path } => {
+            Ok(super::sftp::dir_size(&app, &conn, &path).await.unwrap_or(0))
+        }
+    }
 }
 
 // Recursively sum the apparent size of every file under `path`. Shared by the Tauri command and
@@ -172,7 +236,7 @@ pub struct TypeaheadResult {
 pub fn typeahead_core(path: &str, query: &str) -> Result<TypeaheadResult, String> {
     let needle = query.trim().to_lowercase();
 
-    let mut entries = read_directory(path)?;
+    let mut entries = read_directory_local(path)?;
     entries.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
 
     if needle.is_empty() {
@@ -341,6 +405,16 @@ fn quicklook_thumbnail(
 // folder full of screenshots from saturating the compositor with huge bitmaps.
 #[tauri::command]
 pub async fn get_thumbnail(app: AppHandle, path: String, size: u32) -> Result<String, String> {
+    // Remote (sftp://) images: download to the cache first, then thumbnail the local copy. The
+    // frontend only requests these when the "remote thumbnails" setting is on (it's off by default,
+    // since each one downloads the whole file). See SSH_PLAN.md phase 4.
+    let path = match super::sftp::resolve(&path) {
+        super::sftp::Target::Local(p) => p,
+        super::sftp::Target::Remote { conn, path: remote } => {
+            super::sftp::download(&app, &conn, &remote).await?
+        }
+    };
+
     let cache_dir = app
         .path()
         .app_cache_dir()
@@ -434,8 +508,9 @@ pub fn prune_thumbnail_cache(cache_dir: &Path) {
 // (e.g. macOS TCC guards ~/.Trash). The frontend matches this to prompt for Full Disk Access.
 const ACCESS_DENIED: &str = "ACCESS_DENIED";
 
-#[tauri::command]
-pub fn read_directory(path: &str) -> Result<Vec<DirEntry>, String> {
+// Local core: list a directory on the local filesystem. Shared by the CLI, `typeahead_core`, and
+// the routing command below — this one only ever sees local paths.
+pub fn read_directory_local(path: &str) -> Result<Vec<DirEntry>, String> {
     let entries = fs::read_dir(path).map_err(|e| match e.kind() {
         std::io::ErrorKind::PermissionDenied => ACCESS_DENIED.to_string(),
         _ => e.to_string(),
@@ -449,6 +524,19 @@ pub fn read_directory(path: &str) -> Result<Vec<DirEntry>, String> {
     }
 
     Ok(result)
+}
+
+// List a directory, local or remote. A `sftp://<conn>/path` argument routes to the SFTP backend;
+// anything else is a local path handled by `read_directory_local`. Async so the remote branch can
+// await the network without blocking the UI thread.
+#[tauri::command]
+pub async fn read_directory(app: AppHandle, path: String) -> Result<Vec<DirEntry>, String> {
+    match super::sftp::resolve(&path) {
+        super::sftp::Target::Local(p) => read_directory_local(&p),
+        super::sftp::Target::Remote { conn, path } => {
+            super::sftp::read_dir(&app, &conn, &path).await
+        }
+    }
 }
 
 // Open a file with the OS default application. Logs the path to the Tauri terminal (stdout)
@@ -590,10 +678,18 @@ fn copy_with_progress(
 // triggered a rename (e.g. "file (1).txt") — so the frontend can reveal or undo the exact result.
 #[tauri::command]
 pub async fn copy_entry(
+    app: AppHandle,
     source: String,
     dest_dir: String,
     on_progress: Channel<ProgressPayload>,
 ) -> Result<String, String> {
+    // Any remote endpoint → SFTP transfer, reporting byte progress through the same channel.
+    if super::sftp::involves_remote(&source, &dest_dir) {
+        let report = move |processed: u64, total: u64| {
+            on_progress.send(ProgressPayload { processed, total }).ok();
+        };
+        return super::sftp::transfer(&app, &source, &dest_dir, false, &report).await;
+    }
     tauri::async_runtime::spawn_blocking(move || {
         let mut sink = |processed, total| {
             on_progress.send(ProgressPayload { processed, total }).ok();
@@ -627,10 +723,18 @@ pub fn copy_entry_core(
 // Returns the final destination path (see copy_entry) so the frontend can reveal or undo it.
 #[tauri::command]
 pub async fn move_entry(
+    app: AppHandle,
     source: String,
     dest_dir: String,
     on_progress: Channel<ProgressPayload>,
 ) -> Result<String, String> {
+    // Any remote endpoint → SFTP transfer (same-host move is a server-side rename; see sftp.rs).
+    if super::sftp::involves_remote(&source, &dest_dir) {
+        let report = move |processed: u64, total: u64| {
+            on_progress.send(ProgressPayload { processed, total }).ok();
+        };
+        return super::sftp::transfer(&app, &source, &dest_dir, true, &report).await;
+    }
     tauri::async_runtime::spawn_blocking(move || {
         let mut sink = |processed, total| {
             on_progress.send(ProgressPayload { processed, total }).ok();
@@ -673,8 +777,7 @@ pub fn move_entry_core(
 
 // Create a new folder inside `parent`, picking a unique "untitled folder" name. Returns the
 // created folder's path so the frontend can start an inline rename on it.
-#[tauri::command]
-pub fn create_folder(parent: String) -> Result<String, String> {
+pub fn create_folder_local(parent: String) -> Result<String, String> {
     let dir = Path::new(&parent);
     let base = "untitled folder";
 
@@ -687,6 +790,18 @@ pub fn create_folder(parent: String) -> Result<String, String> {
 
     fs::create_dir(&candidate).map_err(|e| e.to_string())?;
     Ok(candidate.to_string_lossy().into_owned())
+}
+
+// Create a folder locally or on a remote host, routing on the parent path. Async so the remote
+// branch can await SFTP; the local core stays sync (also used by the CLI).
+#[tauri::command]
+pub async fn create_folder(app: AppHandle, parent: String) -> Result<String, String> {
+    match super::sftp::resolve(&parent) {
+        super::sftp::Target::Local(p) => create_folder_local(p),
+        super::sftp::Target::Remote { conn, path } => {
+            super::sftp::create_dir(&app, &conn, &path).await
+        }
+    }
 }
 
 // Copy an image file to the system clipboard (as a bitmap), so it can be pasted into other
@@ -707,8 +822,7 @@ pub fn copy_image(path: String) -> Result<(), String> {
 }
 
 // Rename an entry in place within its parent directory.
-#[tauri::command]
-pub fn rename_entry(path: String, new_name: String) -> Result<(), String> {
+pub fn rename_entry_local(path: String, new_name: String) -> Result<(), String> {
     let p = Path::new(&path);
     let parent = p.parent().ok_or_else(|| "No parent directory".to_string())?;
     let dest = parent.join(&new_name);
@@ -717,6 +831,18 @@ pub fn rename_entry(path: String, new_name: String) -> Result<(), String> {
         return Err("An item with that name already exists".to_string());
     }
     fs::rename(p, dest).map_err(|e| e.to_string())
+}
+
+// Rename an entry, local or remote (routes on the path). Async for the remote SFTP branch; the
+// local core stays sync (also used by the CLI).
+#[tauri::command]
+pub async fn rename_entry(app: AppHandle, path: String, new_name: String) -> Result<(), String> {
+    match super::sftp::resolve(&path) {
+        super::sftp::Target::Local(p) => rename_entry_local(p, new_name),
+        super::sftp::Target::Remote { conn, path } => {
+            super::sftp::rename(&app, &conn, &path, &new_name).await
+        }
+    }
 }
 
 // Filename prefix for the temp files our write-probe creates. Also used to keep these out of the
@@ -728,6 +854,11 @@ const WRITE_PROBE_PREFIX: &str = ".sfb_write_probe_";
 // write-capable driver), where the filesystem may report space but reject writes.
 #[tauri::command]
 pub fn can_write(path: String) -> bool {
+    // Remote (sftp://) dirs: assume writable (the write itself surfaces any permission error). The
+    // local probe below can't run against them anyway.
+    if matches!(super::sftp::resolve(&path), super::sftp::Target::Remote { .. }) {
+        return true;
+    }
     let dir = Path::new(&path);
     if !dir.is_dir() {
         return false;
@@ -800,10 +931,19 @@ fn record_trash_origin(config_dir: &Path, original: &str) {
 // which requires Automation/Apple Events permission. In an unsigned/dev bundle that prompt can be
 // denied or fail, so files never reach ~/.Trash. Force the NsFileManager backend (trashItemAtURL):
 // no permission needed, faster, and reliably moves the item to the volume's Trash.
+// Local paths go to the system Trash (reversible). Remote (sftp://) paths have no trash, so they're
+// removed permanently (recursively for directories) — the frontend's delete confirmation covers it.
 #[tauri::command]
-pub fn delete_entry(app: AppHandle, path: String) -> Result<(), String> {
-    let config_dir = app.path().app_config_dir().map_err(|e| e.to_string())?;
-    trash_entry_core(&config_dir, &path)
+pub async fn delete_entry(app: AppHandle, path: String) -> Result<(), String> {
+    match super::sftp::resolve(&path) {
+        super::sftp::Target::Local(p) => {
+            let config_dir = app.path().app_config_dir().map_err(|e| e.to_string())?;
+            trash_entry_core(&config_dir, &p)
+        }
+        super::sftp::Target::Remote { conn, path } => {
+            super::sftp::remove(&app, &conn, &path).await
+        }
+    }
 }
 
 // Move an entry to the system Trash and record its origin (under `config_dir`) for later restore.

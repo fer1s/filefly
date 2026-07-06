@@ -10,6 +10,7 @@
   --space-3-5: 14px;
   --space-4: 16px;
   --space-5: 20px;
+  --space-6: 24px;
   --space-8: 32px;
   --space-10: 40px;
   --space-12: 48px;
@@ -37,6 +38,8 @@
   --size-control-large: var(--space-8);
   --size-path-controls: 96px;
   --size-path-search: 260px;
+  --size-connection-dialog-width: 420px;
+  --size-connection-port-width: 96px;
   --size-progress-track: var(--space-1);
   --size-slider-thumb: var(--space-2);
   --size-spinner: var(--space-12);
@@ -67,9 +70,11 @@
   --size-toast-max-width: 320px;
   --size-properties-width: 400px;
   --size-shortcuts-width: 560px;
-  --size-settings-width: 640px;
-  --size-settings-nav-width: 148px;
-  --size-settings-panel-height: 420px;
+  /* Settings dialog fills 80% of the window (width + height), centred, capped so it never exceeds
+     the viewport on small windows. The body flexes to fill this height; the panel scrolls. */
+  --size-settings-width: 80vw;
+  --size-settings-height: 80vh;
+  --size-settings-nav-width: 172px;
   --size-settings-dot: var(--space-1-5);
   --size-confirmation-width: 380px;
   --size-folder-picker-width: 680px;
@@ -204,6 +209,12 @@
   /* Solid success fill (+ white text) for coloured toasts. Shared across themes — white on it is
      ≈6:1. Mirrors --color-danger-solid. */
   --color-success-solid: rgb(30, 110, 62);
+  /* Disk-usage bar fills by severity (see UsageBar): info ≤50%, warning >50%, danger >80%. Solid
+     saturated mid-tones so they read on both the light and dark track behind them (like the shared
+     *-solid tokens above); danger reuses the shared solid red. */
+  --color-usage-info: rgb(52, 168, 83);
+  --color-usage-warning: rgb(230, 162, 35);
+  --color-usage-danger: var(--color-danger-solid);
   --color-link: var(--color-accent);
 
   /* Finder tag colours (indices 1..7: gray, green, purple, blue, yellow, red, orange). */

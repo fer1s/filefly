@@ -13,3 +13,16 @@
   border-radius: var(--space-0) var(--radius-sm) var(--radius-sm) var(--space-0);
   background-color: var(--color-progress-fill);
 }
+
+/* Severity colours by fill level (see usageLevel): healthy, getting full, nearly full. */
+.usage_bar.info {
+  background-color: var(--color-usage-info);
+}
+
+.usage_bar.warning {
+  background-color: var(--color-usage-warning);
+}
+
+.usage_bar.danger {
+  background-color: var(--color-usage-danger);
+}

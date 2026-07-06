@@ -25,7 +25,7 @@ import {
   type SettingsSectionId,
 } from "../../schema";
 import { SETTINGS_TITLE_ID } from "./constants";
-import { matchesQuery } from "./utils";
+import { matchesQuery, groupBySubsection } from "./utils";
 import SettingsNav from "./SettingsNav";
 import SettingItem from "./SettingItem";
 import type { SettingsDialogProps } from "./types";
@@ -205,14 +205,21 @@ const SettingsDialog = ({ visible, onClose }: SettingsDialogProps) => {
                 <h5 className="settings_section_title">
                   {group.section.label()}
                 </h5>
-                {group.items.map((descriptor) => (
-                  <SettingItem
-                    key={descriptor.key}
-                    descriptor={descriptor}
-                    settings={settings}
-                    update={update}
-                    defaults={defaults}
-                  />
+                {groupBySubsection(group.items).map((sub) => (
+                  <div key={sub.title ?? "_"} className="settings_subsection">
+                    {sub.title && (
+                      <h6 className="settings_subsection_title">{sub.title}</h6>
+                    )}
+                    {sub.items.map((descriptor) => (
+                      <SettingItem
+                        key={descriptor.key}
+                        descriptor={descriptor}
+                        settings={settings}
+                        update={update}
+                        defaults={defaults}
+                      />
+                    ))}
+                  </div>
                 ))}
               </section>
             ))

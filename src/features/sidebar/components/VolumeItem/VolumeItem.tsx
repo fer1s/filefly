@@ -10,6 +10,7 @@ import Tooltip, {
   TOOLTIP_PLACEMENT,
 } from "@/shared/components/elements/Tooltip";
 import { classNames, activateOnKey, volumeIcon } from "@/shared/utils";
+import { useSettings } from "@/features/settings";
 import { t } from "@/lang";
 
 import { VOLUME_ITEM_STAGGER_MS } from "./constants";
@@ -24,6 +25,7 @@ const VolumeItem = ({
   onContextMenu,
   onEject,
 }: VolumeItemProps) => {
+  const { settings } = useSettings();
   const open = () => setPath(volume.mountPoint);
 
   const row = (
@@ -45,6 +47,11 @@ const VolumeItem = ({
           <span>{volume.mountPoint}</span> {volume.name}
         </p>
         <UsageBar percentage={volume.diskUsage.percentage} />
+        {settings.showVolumeSize && (
+          <p className="drive_size">
+            {t.volumes.usedOf(volume.diskUsage.used, volume.totalSpace)}
+          </p>
+        )}
       </div>
       {onEject && (
         <IconButton

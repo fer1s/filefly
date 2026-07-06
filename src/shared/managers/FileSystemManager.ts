@@ -111,12 +111,32 @@ export class FileSystemManager {
     return api.getDirSize(path);
   }
 
+  // Start the recursive size-index watcher on `path` (empty path stops it). Keeps cached folder
+  // sizes fresh in real time; live updates arrive via onDirSizeChanged.
+  watchDirSizes(path: string): Promise<void> {
+    return api.watchDirSizes(path);
+  }
+
+  // Subscribe to live folder-size updates; returns an unlisten function.
+  onDirSizeChanged(
+    onChange: (change: api.DirSizeChanged) => void,
+  ): Promise<() => void> {
+    return api.onDirSizeChanged(onChange);
+  }
+
   getThumbnail(path: string, size: number): Promise<string> {
     return api.getThumbnail(path, size);
   }
 
   open(path: string): Promise<void> {
     return api.openFile(path);
+  }
+
+  // Resolve a path to something locally openable: a remote (sftp://) file is downloaded to the
+  // cache and its local path returned; a local path is returned unchanged. Used before open/preview
+  // so remote files reuse the local flow (read-only — see SSH_PLAN.md phase 3a).
+  materialize(path: string): Promise<string> {
+    return api.materializePath(path);
   }
 
   openInTerminal(path: string): Promise<void> {

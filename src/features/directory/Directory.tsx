@@ -65,9 +65,11 @@ const Directory = () => {
     fs,
     path,
     setPath,
+    refreshDir,
     view,
     search,
     accessDenied,
+    loadingDir,
     zoom,
     savingSettings,
     dragDropAction,
@@ -102,6 +104,8 @@ const Directory = () => {
     properties,
     searchActive,
     searching,
+    revealID,
+    clearRevealID,
   } = useDirectory();
 
   // A modal dialog owns the keyboard while open. Keymap actions are already suppressed by the
@@ -206,13 +210,26 @@ const Directory = () => {
   // else (and those when it's off) opens in the OS default app. Shared by Enter (below) and
   // double-click (DirEntry via onOpenFile) so both honour the setting.
   const openFile = useCallback(
-    (entry: DirEntry) => {
+    async (entry: DirEntry) => {
       const ext = extension(entry.name);
       const inApp =
         (previewImagesInApp && IMAGE_FORMATS.includes(ext)) ||
         (previewMarkdownInApp && ext === MARKDOWN_FORMAT);
-      if (inApp) preview.open(entry.path);
-      else fs.open(entry.path);
+      // In-app preview keeps the real (possibly remote) path so prev/next works over the folder's
+      // entries; the Preview panel downloads a remote file to the cache itself. Opening in the OS
+      // app needs a local path now, so materialize first (read-only — see SSH_PLAN.md phase 3a).
+      if (inApp) {
+        preview.open(entry.path);
+        return;
+      }
+      try {
+        // TODO(SSH_PLAN.md §9): opening a remote file in an external OS app edits only the local
+        // cache copy — changes are NOT pushed back to the server. Would need to watch the temp and
+        // re-upload on change. The in-app markdown editor does save back (see useMarkdownPreview).
+        fs.open(await fs.materialize(entry.path));
+      } catch (err) {
+        notify(t.connections.openError(String(err)), TOAST_TYPE.ERROR);
+      }
     },
     [previewImagesInApp, previewMarkdownInApp, preview, fs],
   );
@@ -232,11 +249,14 @@ const Directory = () => {
   const handleNewFolder = useCallback(async () => {
     try {
       const created = await fs.createFolder(path);
+      // Refresh so the new folder shows immediately. Local dirs also get this via the fs watcher,
+      // but remote (SFTP) paths aren't watchable, so without it the folder only appears on reload.
+      refreshDir();
       setRenamingID(created);
     } catch (err) {
       notify(t.errors.createFolder(String(err)), TOAST_TYPE.ERROR);
     }
-  }, [fs, path, setRenamingID]);
+  }, [fs, path, refreshDir, setRenamingID]);
 
   // Open a terminal at the selection's folder (a folder → itself, a file → its parent), or the
   // current directory when the selection isn't a single entry. Skipped in the virtual views.
@@ -318,6 +338,12 @@ const Directory = () => {
     menu.openAt(e.clientX, e.clientY, path, ENTRY_KIND.DIRECTORY);
   };
 
+  // Show a spinner instead of the listing while a navigation loads the new folder (matters for
+  // slow SFTP), or while a search hasn't returned its first result yet. Both hide the (stale or
+  // empty) directory content underneath rather than flashing it.
+  const showLoader =
+    !accessDenied && (loadingDir || (searching && sorted.length === 0));
+
   return (
     <div
       className="directory_page"
@@ -362,6 +388,7 @@ const Directory = () => {
 
         {!accessDenied &&
           !searchActive &&
+          !showLoader &&
           view === VIEW_MODE.LIST &&
           sorted.length > 0 && (
             <ListHeader
@@ -373,14 +400,15 @@ const Directory = () => {
             />
           )}
 
-        {/* Searching with nothing to show yet: a spinner stands in for the (hidden) directory. */}
-        {!accessDenied && searching && sorted.length === 0 && (
+        {/* Loading a folder, or searching with nothing to show yet: a spinner stands in for the
+            (hidden) directory content. */}
+        {showLoader && (
           <div className="search_loading">
             <Spinner />
           </div>
         )}
 
-        {!accessDenied && !(searching && sorted.length === 0) && (
+        {!accessDenied && !showLoader && (
           <EntriesView
             key={searchActive ? "search" : path}
             entries={sorted}
@@ -400,12 +428,18 @@ const Directory = () => {
             }}
             bindDrag={bindDrag}
             metadataTooltipDisabled={metadataTooltipDisabled}
+            revealID={revealID}
+            clearRevealID={clearRevealID}
           />
         )}
 
-        {!accessDenied && searchActive && !searching && sorted.length === 0 && (
-          <p className="no_results">{t.directory.noResults(search)}</p>
-        )}
+        {!accessDenied &&
+          !showLoader &&
+          searchActive &&
+          !searching &&
+          sorted.length === 0 && (
+            <p className="no_results">{t.directory.noResults(search)}</p>
+          )}
       </div>
 
       <StatusBar

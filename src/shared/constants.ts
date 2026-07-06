@@ -1,4 +1,20 @@
+import { isMacPlatform } from "@/shared/keymap/utils";
+
 import type { AppSettings } from "@/shared/services/api";
+
+// Recommended folder-size exclusions on macOS: OS-generated junk (Finder metadata, AppleDouble
+// forks, Spotlight/Trash/Versions/FSEvents stores) that never holds user content and only inflates
+// size totals. Seeded as the default so new users get sensible exclusions out of the box. Mirrors
+// default_size_ignores() in functions/settings.rs (must stay in sync). Empty on other platforms.
+export const MACOS_SIZE_IGNORES = [
+  ".DS_Store",
+  "._*",
+  ".Spotlight-V100",
+  ".Trashes",
+  ".DocumentRevisions-V100",
+  ".apdisk",
+  ".fseventsd",
+];
 
 export const VIEW_MODE = {
   GRID: "grid",
@@ -50,7 +66,7 @@ export type ViewMode = (typeof VIEW_MODE)[keyof typeof VIEW_MODE];
 
 // Directory zoom: a CSS `zoom` multiplier applied to the entries area. 1 = 100%.
 export const ZOOM_MIN = 0.75;
-export const ZOOM_MAX = 3;
+export const ZOOM_MAX = 5;
 export const ZOOM_STEP = 0.25;
 export const ZOOM_DEFAULT = 1;
 
@@ -176,6 +192,11 @@ export const DEFAULT_SETTINGS: AppSettings = {
   previewImagesInApp: false,
   previewMarkdownInApp: false,
   confirmExportOverwrite: false,
+  remoteThumbnails: false,
+  showSystemStats: false,
+  showFolderSizes: false,
+  showVolumeSize: false,
+  sizeIgnores: isMacPlatform() ? [...MACOS_SIZE_IGNORES] : [],
 };
 
 // DOM KeyboardEvent.key names used in non-configurable key handling (navigation, input
@@ -213,6 +234,20 @@ export const STORAGE_KIND = {
 } as const;
 
 export type StorageKind = (typeof STORAGE_KIND)[keyof typeof STORAGE_KIND];
+
+// Path scheme marking a remote (SSH/SFTP) location: `sftp://<connId>/absolute/remote/path`. The
+// backend routes these to the SFTP backend; every other path is local. Mirrors SFTP_SCHEME in
+// src-tauri/src/filesystem/sftp.rs. See SSH_PLAN.md.
+export const SFTP_SCHEME = "sftp://";
+
+// Prefix the SFTP backend puts on an authentication-failure error (vs network/other), so the UI can
+// prompt for a password/passphrase instead of a generic error. Mirrors AUTH_FAILED_MARKER in
+// src-tauri/src/filesystem/sftp.rs.
+export const SSH_AUTH_FAILED = "SSH_AUTH_FAILED";
+
+// Prefix the SFTP backend puts on a changed-host-key error (possible MITM), so the UI can show a
+// clear security warning instead of a generic failure. Mirrors HOST_KEY_CHANGED_MARKER in sftp.rs.
+export const SSH_HOST_KEY_CHANGED = "SSH_HOST_KEY_CHANGED";
 
 // Semantic UI colors for elements that support a color variant (e.g. menu items, buttons).
 // Values double as CSS modifier class names.

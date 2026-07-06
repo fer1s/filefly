@@ -1,6 +1,7 @@
 pub mod terminal;
 pub mod markdown;
 pub mod system;
+pub mod os_stats;
 pub mod keymap;
 pub mod folder_columns;
 pub mod context_menu;

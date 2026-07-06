@@ -1,4 +1,5 @@
 import { invoke, Channel } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import { watchImmediate } from "@tauri-apps/plugin-fs";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
@@ -10,6 +11,7 @@ import { t } from "@/lang";
 import { Volume, DirEntry, ContextMenuLayout, Tag } from "@/shared/models";
 import {
   ACCESS_DENIED_ERROR,
+  SFTP_SCHEME,
   type DragDropAction,
   type StorageKind,
 } from "@/shared/constants";
@@ -61,6 +63,19 @@ export type AppSettings = {
   // On export, ask before replacing an existing settings.toml. When off (default), a unique
   // filename is used instead so nothing is overwritten silently.
   confirmExportOverwrite: boolean;
+  // Generate thumbnails for images on remote (SFTP) hosts. Off by default — each downloads the whole
+  // file over the network. See SSH_PLAN.md phase 4.
+  remoteThumbnails: boolean;
+  // Show a live CPU / RAM / disk readout in the status bar. Off by default (it polls the OS).
+  showSystemStats: boolean;
+  // Compute and show recursive folder sizes in the list-view "Size" column. Off by default (each
+  // folder is walked; results are cached in size_index.db).
+  showFolderSizes: boolean;
+  // Show "used / total" text under each volume's usage bar in the sidebar. Off by default.
+  showVolumeSize: boolean;
+  // Glob patterns (matched against an entry's file name) excluded from recursive folder-size
+  // calculation, e.g. ".DS_Store", "*.tmp", "node_modules". Applied live on save.
+  sizeIgnores: string[];
 };
 
 // Load the persisted app settings (falls back to defaults when settings.toml is absent).
@@ -252,6 +267,27 @@ export const setFolderZoom = async (
 export const getVolumes = async (): Promise<Volume[]> =>
   await invoke("get_volumes");
 
+// A live snapshot of host resource usage for the optional status-bar readout. cpuUsage is a 0..100
+// percentage across all cores; the rest are raw byte counts. Mirrors SystemStats in
+// functions/os_stats.rs.
+export type SystemStats = {
+  cpuUsage: number;
+  memUsed: number;
+  memTotal: number;
+  diskUsed: number;
+  diskTotal: number;
+};
+
+// Current CPU / memory / boot-disk usage. Cheap enough to poll on a short interval; backed by a
+// persistent System handle in Rust so CPU deltas are accurate between calls.
+export const getSystemStats = async (): Promise<SystemStats> =>
+  (await invoke("get_system_stats")) as SystemStats;
+
+// Open the OS Storage settings pane (macOS: System Settings › General › Storage). Backs clicking
+// the disk readout in the status bar. No-op on platforms without such a pane.
+export const openStorageSettings = async (): Promise<void> =>
+  await invoke("open_storage_settings");
+
 // Eject/unmount a removable volume by its mount point (macOS: diskutil eject). Throws on failure.
 export const ejectVolume = async (mountPoint: string): Promise<void> =>
   await invoke("eject_volume", { mountPoint });
@@ -294,6 +330,24 @@ export const watchDirectory = async (
 // Recursively computed total size (bytes) of a directory.
 export const getDirSize = async (path: string): Promise<number> =>
   await invoke("get_dir_size", { path });
+
+// A live folder-size update pushed by the size-index watcher (see watcher.rs): `path` is a folder
+// whose recursive size just changed, `size` its new total in bytes.
+export type DirSizeChanged = { path: string; size: number };
+
+// Start the recursive size-index watcher on `path`, replacing any previous watch (there's one
+// active watcher for the viewed folder). Pass an empty/non-directory path to stop watching. Fired
+// on navigation so live filesystem changes bubble into the size cache and keep it fresh.
+export const watchDirSizes = async (path: string): Promise<void> =>
+  await invoke("watch_directory", { path });
+
+// Subscribe to live folder-size updates emitted by the watcher. Returns an unlisten function.
+export const onDirSizeChanged = async (
+  onChange: (change: DirSizeChanged) => void,
+): Promise<() => void> =>
+  await listen<DirSizeChanged>("dir-size-changed", (event) =>
+    onChange(event.payload),
+  );
 
 // Recently modified files (Finder-style Recents), newest first. macOS only (Spotlight). When
 // `hideAppFiles` is set, this app's own background files (config/cache/temp) are filtered out.
@@ -402,6 +456,11 @@ export const emptyTrash = async (): Promise<number> =>
 export const openFullDiskAccessSettings = async (): Promise<void> =>
   await invoke("open_full_disk_access_settings");
 
+// Open the OS resource monitor (macOS Activity Monitor, Windows Task Manager, Linux system monitor).
+// Backs clicking the CPU/RAM readout in the status bar.
+export const openSystemMonitor = async (): Promise<void> =>
+  await invoke("open_system_monitor");
+
 // Open a URL in the user's default browser (used by the NTFS driver guidance links).
 export const openExternalUrl = async (url: string): Promise<void> =>
   await openUrl(url);
@@ -471,6 +530,67 @@ export const getAppStorage = async (): Promise<AppStorageLocation[]> =>
 // Backs the "clear" button in the Storage settings panel.
 export const clearAppCache = async (): Promise<void> =>
   await invoke("clear_app_cache");
+
+// A saved SSH/SFTP connection. Secrets (password/passphrase) are never sent to the frontend — the
+// backend strips them. Mirrors the Connection struct in filesystem/sftp.rs. See SSH_PLAN.md.
+export type Connection = {
+  id: string;
+  name: string;
+  host: string;
+  port: number;
+  user: string;
+};
+
+// The saved SSH connections, surfaced as rows in the sidebar's Network group. Read from
+// connections.toml in the config dir; empty when the file is absent.
+export const sftpListConnections = async (): Promise<Connection[]> =>
+  (await invoke("sftp_list_connections")) as Connection[];
+
+// A connection being created from the GUI. Non-secret fields land in connections.toml; the optional
+// secrets (password / key passphrase) are stored in the OS keychain by the backend, never the toml.
+export type NewConnection = {
+  id: string;
+  name: string;
+  host: string;
+  port: number;
+  user: string;
+  keyPath?: string;
+  keyPassphrase?: string;
+  password?: string;
+};
+
+// Create (or replace by id) a connection. Secrets go to the OS keychain (see sftp.rs).
+export const sftpAddConnection = async (
+  connection: NewConnection,
+): Promise<void> => await invoke("sftp_add_connection", { connection });
+
+// Remove a saved connection and its keychain secrets.
+export const sftpRemoveConnection = async (id: string): Promise<void> =>
+  await invoke("sftp_remove_connection", { id });
+
+// The connection's login directory as a `sftp://<id>/home` URL — where `ssh` lands. Used to open a
+// connection on its home instead of the filesystem root. Connects on first call.
+export const sftpHome = async (conn: string): Promise<string> =>
+  (await invoke("sftp_home", { conn })) as string;
+
+// Download a remote file to the local cache and return its local path. Read-only: local edits are
+// not pushed back (phase 3a). Reuses a cached copy when the size matches.
+export const sftpDownload = async (
+  conn: string,
+  path: string,
+): Promise<string> => (await invoke("sftp_download", { conn, path })) as string;
+
+// Make a path locally openable: a remote `sftp://<conn>/path` is downloaded to the cache and its
+// local path returned; a local path passes through unchanged. Lets open/preview reuse the local
+// flow for remote files.
+export const materializePath = async (path: string): Promise<string> => {
+  if (!path.startsWith(SFTP_SCHEME)) return path;
+  const rest = path.slice(SFTP_SCHEME.length);
+  const slash = rest.indexOf("/");
+  const conn = slash === -1 ? rest : rest.slice(0, slash);
+  const remote = slash === -1 ? "/" : rest.slice(slash);
+  return sftpDownload(conn, remote);
+};
 
 // Mirror this window's live UI state (current path, view, tabs) to Rust so the headless control
 // socket (`sfb ui get-state`) can report it without a round-trip to the webview. Called on every

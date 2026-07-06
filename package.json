@@ -1,7 +1,7 @@
 {
   "name": "sito-file-browser",
   "private": true,
-  "version": "0.4.1",
+  "version": "0.5.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -11,7 +11,9 @@
     "format": "prettier . --write",
     "format:check": "prettier . --check",
     "preview": "vite preview",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "sidecar": "cargo build --release --manifest-path src-tauri/Cargo.toml --bin sfb && cp src-tauri/target/release/sfb \"src-tauri/binaries/sfb-$(rustc -vV | sed -n 's/host: //p')\"",
+    "build:app": "npm run sidecar && tauri build"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "7.2.0",

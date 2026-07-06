@@ -84,31 +84,11 @@
   color: var(--color-text-muted);
 }
 
+/* Layout row for the filter option chips (the chips themselves are the shared ToggleableChip). */
 .search_filters_panel .filters_chips {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-1-5);
-}
-
-.search_filters_panel .filters_chip {
-  padding: var(--space-1) var(--space-2);
-  background: transparent;
-  border: var(--border-width-default) solid var(--color-border-default);
-  border-radius: var(--radius-pill);
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-sm);
-  cursor: pointer;
-}
-
-.search_filters_panel .filters_chip:hover {
-  background-color: var(--color-overlay-hover);
-  color: var(--color-text-primary);
-}
-
-.search_filters_panel .filters_chip.on {
-  background-color: var(--color-accent);
-  border-color: var(--color-accent);
-  color: var(--color-accent-contrast);
 }
 
 .search_filters_panel .filters_scope {
