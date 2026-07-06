@@ -86,21 +86,26 @@ const Preview = ({
   } = useContextMenu();
 
   // The webview can only read local files (convertFileSrc / readText). A remote (sftp://) file is
-  // downloaded to the cache first and `localPath` points at that copy; local files resolve to
-  // themselves synchronously (no flicker). Reset on file change so we never render the previous
-  // file's bytes while the next one downloads. Read-only — see SSH_PLAN.md phase 3a.
-  const [localPath, setLocalPath] = useState("");
+  // downloaded to the cache first; local files resolve to themselves synchronously (no flicker).
+  // `materialized` records which remote file the cached copy belongs to, so `localPath` derives to
+  // "" (spinner) while a different file downloads — the previous file's bytes are never rendered.
+  // Read-only — see SSH_PLAN.md phase 3a.
+  const [materialized, setMaterialized] = useState<{
+    remote: string;
+    local: string;
+  } | null>(null);
+  const localPath = !filePath.startsWith(SFTP_SCHEME)
+    ? filePath
+    : materialized?.remote === filePath
+      ? materialized.local
+      : "";
   useEffect(() => {
-    if (!previewVisible || !filePath) return;
-    if (!filePath.startsWith(SFTP_SCHEME)) {
-      setLocalPath(filePath);
+    if (!previewVisible || !filePath || !filePath.startsWith(SFTP_SCHEME))
       return;
-    }
     let cancelled = false;
-    setLocalPath("");
     fs.materialize(filePath)
       .then((resolved) => {
-        if (!cancelled) setLocalPath(resolved);
+        if (!cancelled) setMaterialized({ remote: filePath, local: resolved });
       })
       .catch((err) => {
         if (!cancelled)

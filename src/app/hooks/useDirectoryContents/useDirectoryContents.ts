@@ -104,12 +104,17 @@ export const useDirectoryContents = ({
   // Refs so the navigation-load effect can depend on `path` alone. Otherwise it also re-runs when
   // the route transition it triggers changes `locationPathname`/`navigate`, firing a second load
   // for the same path — cheap for local reads, but a wasted second SSH connection for slow SFTP.
+  // Updated in an effect (not during render, which the react-hooks lint forbids); effects run in
+  // declaration order, so this one refreshes the refs before the navigation-load effect below
+  // reads them on the same commit.
   const loadDirectoryRef = useRef(loadDirectory);
   const navigateRef = useRef(navigate);
   const locationRef = useRef(locationPathname);
-  loadDirectoryRef.current = loadDirectory;
-  navigateRef.current = navigate;
-  locationRef.current = locationPathname;
+  useEffect(() => {
+    loadDirectoryRef.current = loadDirectory;
+    navigateRef.current = navigate;
+    locationRef.current = locationPathname;
+  }, [loadDirectory, navigate, locationPathname]);
 
   // Watch the current directory so external changes (e.g. `mv`/`rm` from a terminal, or another
   // app) refresh the listing automatically. Debounced, and torn down when the path changes.

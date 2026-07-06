@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import Dialog from "@/shared/components/patterns/Dialog";
 import DialogHeader from "@/shared/components/patterns/DialogHeader";
@@ -30,13 +30,19 @@ const ConnectionAuthDialog = ({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (visible) {
+  // Reset the form each time the dialog opens (or switches connection). Done during render with a
+  // prev-guard — the React-sanctioned "adjust state when props change" pattern — instead of an
+  // effect, so the reset lands in the same render pass with no cascading re-render.
+  const openKey = visible ? (connection?.id ?? "") : null;
+  const [prevOpenKey, setPrevOpenKey] = useState<string | null>(null);
+  if (openKey !== prevOpenKey) {
+    setPrevOpenKey(openKey);
+    if (openKey !== null) {
       setSecret("");
       setBusy(false);
       setError(null);
     }
-  }, [visible, connection?.id]);
+  }
 
   const retry = async () => {
     if (busy) return;

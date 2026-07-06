@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import Dialog from "@/shared/components/patterns/Dialog";
 import DialogHeader from "@/shared/components/patterns/DialogHeader";
@@ -45,19 +45,25 @@ const ConnectionDialog = ({
   // (Re)seed the form each time it opens: from the edited connection, or blank for a new one.
   // Secrets are never prefilled (they're in the keychain); the auth selector defaults to key when
   // a key path is set, else agent — a best guess, since we don't persist the auth kind.
-  useEffect(() => {
-    if (!visible) return;
-    setName(initial?.name ?? "");
-    setHost(initial?.host ?? "");
-    setPort(String(initial?.port ?? SSH_DEFAULT_PORT));
-    setUser(initial?.user ?? "");
-    setAuthKind(AUTH_KIND.AGENT);
-    setKeyPath("");
-    setKeyPassphrase("");
-    setPassword("");
-    setBusy(false);
-    setError(null);
-  }, [visible, initial]);
+  // Done during render with a prev-guard (the React "adjust state when props change" pattern)
+  // instead of an effect, so the seed lands in the same render pass with no cascading re-render.
+  const seed = visible ? initial : null;
+  const [prevSeed, setPrevSeed] = useState<typeof seed | false>(false);
+  if (seed !== prevSeed) {
+    setPrevSeed(seed);
+    if (visible) {
+      setName(initial?.name ?? "");
+      setHost(initial?.host ?? "");
+      setPort(String(initial?.port ?? SSH_DEFAULT_PORT));
+      setUser(initial?.user ?? "");
+      setAuthKind(AUTH_KIND.AGENT);
+      setKeyPath("");
+      setKeyPassphrase("");
+      setPassword("");
+      setBusy(false);
+      setError(null);
+    }
+  }
 
   const canSubmit =
     name.trim() !== "" && host.trim() !== "" && user.trim() !== "" && !busy;
@@ -128,7 +134,7 @@ const ConnectionDialog = ({
           <span>{t.connections.fieldHost}</span>
           <input
             value={host}
-            placeholder="example.com"
+            placeholder={t.connections.fieldHostPlaceholder}
             onChange={(event) => setHost(event.target.value)}
           />
         </label>
@@ -138,7 +144,7 @@ const ConnectionDialog = ({
             <span>{t.connections.fieldUser}</span>
             <input
               value={user}
-              placeholder="root"
+              placeholder={t.connections.fieldUserPlaceholder}
               onChange={(event) => setUser(event.target.value)}
             />
           </label>
@@ -175,7 +181,7 @@ const ConnectionDialog = ({
               <span>{t.connections.fieldKeyPath}</span>
               <input
                 value={keyPath}
-                placeholder="~/.ssh/id_ed25519"
+                placeholder={t.connections.fieldKeyPathPlaceholder}
                 onChange={(event) => setKeyPath(event.target.value)}
               />
             </label>
