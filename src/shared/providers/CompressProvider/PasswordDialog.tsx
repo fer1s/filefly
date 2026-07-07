@@ -23,6 +23,7 @@ const PasswordDialog = ({ visible, onSubmit, onClose }: PasswordDialogProps) => 
 
   // Clear the field each time the dialog (re)opens.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- clear field on (re)open
     if (visible) setPassword("");
   }, [visible]);
 
@@ -57,6 +58,7 @@ const PasswordDialog = ({ visible, onSubmit, onClose }: PasswordDialogProps) => 
             autoFocus
             placeholder={t.archive.passwordPrompt}
             value={password}
+            // eslint-disable-next-line i18next/no-literal-string -- HTML autocomplete token
             autoComplete="current-password"
             onChange={(event) => setPassword(event.target.value)}
           />

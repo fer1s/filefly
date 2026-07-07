@@ -49,7 +49,9 @@ const SizeIgnoresBelow = ({ settings, update }: CustomControlProps) => {
           onChange={(event) => setDraft(event.target.value)}
           onKeyDown={onKeyDown}
           spellCheck={false}
+          // eslint-disable-next-line i18next/no-literal-string -- HTML input attribute value
           autoCapitalize="off"
+          // eslint-disable-next-line i18next/no-literal-string -- HTML input attribute value
           autoCorrect="off"
         />
         <IconButton

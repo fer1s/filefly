@@ -2,6 +2,36 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.6.0]
+
+### Added
+
+- Archive support — compress files/folders to `.zip` (optional password) and extract archives, with extract-here / extract-to-folder, entry actions, and context-menu wiring (`431cc4d`, `0e104ea`)
+- 7-Zip archives — compress & extract via the system 7-Zip binary, with a compress/extract UI gated on 7z availability (`2b29b35`, `b7777d0`)
+- Copy files to the OS clipboard the Finder way — a copied selection pastes as real files into file-aware apps (Finder, Mail) and as names into text fields (macOS multi-flavor `NSPasteboard`) (`c00d537`)
+- Open properties in its own detached window — an `openPropertiesInWindow` setting, plus `sfb ui-properties` and a `properties` control action (`2cf1633`)
+- Open an image preview in its own window (`422a16c`)
+- Copy path — a context-menu action and keybinding that copy an entry's path (`84dcce8`, `71d804b`)
+- Edit a saved SSH connection from the sidebar; the stored key path rehydrates the auth dialog (`0f19b2c`)
+- Persistent notice when a remote folder fails to load, with a Retry — replaces the transient toast that left the folder deceptively empty (`ec3b4cc`)
+- Indeterminate progress bar for operations without a byte total (`684e5ba`)
+- Reload button on the dev error overlay (`6dad352`)
+- `sfb ui-windows` and `ui-preview` control commands (`96e7c8a`)
+- Remote write over SFTP, host-key verification, and Keychain-stored connection secrets (`642f272`)
+- Shared UI element library — `Checkbox`, `Select`, `TextArea`, `TextInput`, `Slider`, `PasswordInput`; feature code is barred from raw form elements and routed through these primitives (`2065dd0`, `7c782e6`, `54440fd`, `dd6e01e`)
+
+### Changed
+
+- More macOS/Windows junk excluded from folder-size totals by default (`com.apple.chrono`, `.localized`, `.AppleDouble`, `Thumbs.db`, `desktop.ini`); ignore rules now match any path component, so deep watcher events under an ignored dir are dropped (`5419b0f`)
+- Committing a file path in the path bar now opens the file (open routing centralized through the directory provider; the redundant Preview action is hidden when Open already previews) (`669a783`)
+- Reordered the Compress action in the context menu — after Destroy, before Properties (`029f6c3`)
+
+### Fixed
+
+- Context-menu opacity now mirrors to portaled submenu flyouts (`7df372e`)
+- Derive a file's extension from the last dot, not the first (`2076701`)
+- Preview iframe background uses the app-background token (`d610f54`)
+
 ## [0.5.0]
 
 ### Added

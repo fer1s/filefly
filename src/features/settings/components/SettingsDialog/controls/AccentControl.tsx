@@ -24,6 +24,7 @@ const AccentControl = ({ settings, update }: CustomControlProps) => (
         <Button
           key={value}
           unstyled
+          // eslint-disable-next-line i18next/no-literal-string -- ARIA role, not user-facing copy
           role="radio"
           aria-checked={active}
           aria-label={name}

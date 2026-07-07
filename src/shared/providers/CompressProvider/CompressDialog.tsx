@@ -36,6 +36,7 @@ const CompressDialog = ({
   // Reset fields each time the dialog (re)opens for a new selection.
   useEffect(() => {
     if (visible) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- reset fields on (re)open
       setName(defaultName);
       setLevel(DEFAULT_LEVEL);
       setPassword("");
@@ -105,6 +106,7 @@ const CompressDialog = ({
           <PasswordInput
             placeholder={t.archive.passwordOptional}
             value={password}
+            // eslint-disable-next-line i18next/no-literal-string -- HTML autocomplete token
             autoComplete="new-password"
             onChange={(event) => setPassword(event.target.value)}
           />
