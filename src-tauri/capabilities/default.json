@@ -1,8 +1,8 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Capabilities for the main window, runtime windows (win-N) and detached preview windows (preview-N): window controls, path resolution, asset protocol and the opener/fs/dialog plugins.",
-  "windows": ["main", "win-*", "preview-*"],
+  "description": "Capabilities for the main window, runtime windows (win-N) and detached panel windows (preview-N, properties-N): window controls, path resolution, asset protocol and the opener/fs/dialog plugins.",
+  "windows": ["main", "win-*", "preview-*", "properties-*"],
   "permissions": [
     "core:default",
     "core:window:allow-minimize",
@@ -17,6 +17,7 @@
     "core:window:allow-unminimize",
     "core:window:allow-center",
     "core:window:allow-start-dragging",
+    "core:window:allow-close",
     "core:path:default",
     "core:event:default",
     "opener:default",

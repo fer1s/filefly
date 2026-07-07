@@ -3,6 +3,21 @@
   max-width: calc(100% - var(--space-10));
 }
 
+/* Detached properties window (PropertiesWindow): the content fills the native window opaquely,
+   framed by the window chrome (no dialog header). Fixed to the viewport since #root isn't sized —
+   a plain height:100% would collapse and clip the rows (overflow:auto) to nothing. */
+.properties_window {
+  position: fixed;
+  inset: 0;
+  overflow: auto;
+  background-color: var(--color-background-app);
+  /* Baseline like .App: the window chrome isn't text, so focusing it must not select-all (WebKit
+     highlights everything otherwise). The metadata rows opt back into text selection for copy via
+     the more specific .properties_content rules below. */
+  -webkit-user-select: none;
+  user-select: none;
+}
+
 /* Shared by the Properties dialog and the info side panel. */
 .properties_content {
   padding: var(--space-4);

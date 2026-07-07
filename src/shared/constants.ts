@@ -192,6 +192,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   previewImagesInApp: false,
   previewMarkdownInApp: false,
   openPreviewInWindow: false,
+  openPropertiesInWindow: false,
   confirmExportOverwrite: false,
   remoteThumbnails: false,
   showSystemStats: false,

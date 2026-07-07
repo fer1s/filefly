@@ -64,6 +64,9 @@ pub struct AppSettings {
     // Open the built-in preview in its own detached window instead of the in-app overlay. A new
     // window is spawned per open (see window::create_preview_window).
     open_preview_in_window: bool,
+    // Open the properties in their own detached window instead of the in-app dialog. A new window
+    // is spawned per open (see window::create_properties_window).
+    open_properties_in_window: bool,
     // On export, ask before replacing an existing settings.toml. When off (default), a unique
     // filename is used instead so nothing is overwritten silently.
     confirm_export_overwrite: bool,
@@ -124,6 +127,7 @@ impl Default for AppSettings {
             preview_images_in_app: false,
             preview_markdown_in_app: false,
             open_preview_in_window: false,
+            open_properties_in_window: false,
             confirm_export_overwrite: false,
             remote_thumbnails: false,
             show_system_stats: false,

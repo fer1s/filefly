@@ -436,6 +436,13 @@ const COMMANDS: &[Command] = &[
         run: |a| ui_call("preview", json!({ "path": a.require("path")? })),
     },
     Command {
+        name: "ui-properties",
+        group: "ui",
+        summary: "Open the detached properties window for an entry (the openPropertiesInWindow flow).",
+        args: &[val("path", true, "File or folder to inspect.")],
+        run: |a| ui_call("properties", json!({ "path": a.require("path")? })),
+    },
+    Command {
         name: "ui-navigate",
         group: "ui",
         summary: "Navigate the focused window's active tab to a directory.",

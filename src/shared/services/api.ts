@@ -63,6 +63,9 @@ export type AppSettings = {
   // Open the built-in preview in its own detached window instead of the in-app overlay. A new
   // window is spawned per open (see openPreviewWindow / window::create_preview_window).
   openPreviewInWindow: boolean;
+  // Open the properties in their own detached window instead of the in-app dialog. A new window is
+  // spawned per open (see openPropertiesWindow / window::create_properties_window).
+  openPropertiesInWindow: boolean;
   // On export, ask before replacing an existing settings.toml. When off (default), a unique
   // filename is used instead so nothing is overwritten silently.
   confirmExportOverwrite: boolean;
@@ -577,6 +580,11 @@ export const openPathInNewWindow = async (path: string): Promise<void> =>
 // on). A fresh window is spawned per call so several previews can sit side by side.
 export const openPreviewWindow = async (path: string): Promise<void> =>
   await invoke("open_preview_window", { path });
+
+// Open the properties for `path` in its own detached window (used when openPropertiesInWindow is
+// on). A fresh window is spawned per call.
+export const openPropertiesWindow = async (path: string): Promise<void> =>
+  await invoke("open_properties_window", { path });
 
 // One of the app's on-disk data locations, with its recursively-summed size in bytes. `kind` is a
 // stable id (see STORAGE_KIND) mapped to a localized label in the UI. Mirrors StorageLocation in

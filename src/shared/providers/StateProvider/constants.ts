@@ -70,6 +70,7 @@ export const initialState: State = {
   previewImagesInApp: false,
   previewMarkdownInApp: false,
   openPreviewInWindow: false,
+  openPropertiesInWindow: false,
   remoteThumbnails: false,
   savingSettings: false,
   search: "",

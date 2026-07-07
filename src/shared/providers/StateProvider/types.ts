@@ -93,6 +93,9 @@ export type State = {
   // Whether the built-in preview opens in its own detached window instead of the in-app overlay.
   // Read by the directory open flow, which spawns a preview window instead of the local preview.
   openPreviewInWindow: boolean;
+  // Whether the properties open in their own detached window instead of the in-app dialog. Read by
+  // the properties flow (useProperties via DirectoryProvider), which spawns a properties window.
+  openPropertiesInWindow: boolean;
   // Whether to generate thumbnails for remote (SFTP) images (off by default — each downloads the
   // whole file). Gates the thumbnail request for remote entries.
   remoteThumbnails: boolean;

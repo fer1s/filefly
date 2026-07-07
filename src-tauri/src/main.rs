@@ -149,6 +149,7 @@ fn main() {
             window::open_new_window,
             window::open_path_in_new_window,
             window::open_preview_window,
+            window::open_properties_window,
         ])
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {

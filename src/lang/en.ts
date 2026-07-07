@@ -13,6 +13,7 @@ export const en = {
     edit: "Edit",
     preview: "Preview",
     previewTitle: (name: string) => `Preview - ${name}`,
+    propertiesTitle: (name: string) => `Properties - ${name}`,
     editTitle: (name: string) => `Edit - ${name}`,
     previous: "Previous",
     next: "Next",
@@ -477,6 +478,9 @@ export const en = {
     openPreviewInWindow: "Open preview in its own window",
     openPreviewInWindowHint:
       "The built-in preview opens as a separate, movable window instead of an overlay inside the current window. A new window opens each time, so you can compare several files side by side.",
+    openPropertiesInWindow: "Open properties in its own window",
+    openPropertiesInWindowHint:
+      "Properties open as a separate, movable window instead of a dialog inside the current window. A new window opens each time.",
     saving: "Saving settings…",
     storage: "Disk usage",
     storageHint: "Space the app's data uses on disk and where it's stored.",

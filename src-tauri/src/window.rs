@@ -53,6 +53,31 @@ pub fn create_window(app: &AppHandle, start_path: Option<&str>) -> tauri::Result
     build_window(app, url)
 }
 
+// Open a detached properties window for a single entry: loads `index.html?panel=properties&path=…`,
+// which the frontend detects at mount (see main.tsx) to render only the Properties surface. A fresh
+// window is spawned per call (unique `properties-N` label). Small and opaque; starts hidden and the
+// frontend reveals it once the entry's metadata has loaded.
+pub fn create_properties_window(app: &AppHandle, path: &str) -> tauri::Result<WebviewWindow> {
+    let n = WINDOW_COUNTER.fetch_add(1, Ordering::Relaxed);
+    let label = format!("properties-{n}");
+    let url = WebviewUrl::App(
+        format!("index.html?panel=properties&path={}", encode_query(path)).into(),
+    );
+    let window = WebviewWindowBuilder::new(app, label, url)
+        .title("Properties")
+        .inner_size(440.0, 520.0)
+        .min_inner_size(320.0, 360.0)
+        .resizable(true)
+        .transparent(false)
+        .decorations(true)
+        .shadow(true)
+        .center()
+        .visible(false)
+        .build()?;
+    configure_window(&window);
+    Ok(window)
+}
+
 // Open a window that reveals a single file: rooted at the file's parent folder (as `startPath`),
 // with the file itself carried as a `reveal` query param so the frontend selects it once the
 // listing loads (see DirectoryProvider). Mirrors Finder's "Show in Finder".
@@ -151,6 +176,15 @@ pub fn open_path_in_new_window(app: AppHandle, path: String) -> Result<(), Strin
 #[tauri::command]
 pub fn open_preview_window(app: AppHandle, path: String) -> Result<(), String> {
     create_preview_window(&app, &path)
+        .map(|_| ())
+        .map_err(|e| e.to_string())
+}
+
+// Open the properties for `path` in its own window (used when the openPropertiesInWindow setting is
+// on, in place of the in-app dialog).
+#[tauri::command]
+pub fn open_properties_window(app: AppHandle, path: String) -> Result<(), String> {
+    create_properties_window(&app, &path)
         .map(|_| ())
         .map_err(|e| e.to_string())
 }
