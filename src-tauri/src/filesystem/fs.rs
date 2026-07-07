@@ -111,9 +111,7 @@ pub fn get_entry_local(path: String) -> Result<DirEntry, String> {
 pub async fn get_entry(app: AppHandle, path: String) -> Result<DirEntry, String> {
     match super::sftp::resolve(&path) {
         super::sftp::Target::Local(p) => get_entry_local(p),
-        super::sftp::Target::Remote { conn, path } => {
-            super::sftp::stat(&app, &conn, &path).await
-        }
+        super::sftp::Target::Remote { conn, path } => super::sftp::stat(&app, &conn, &path).await,
     }
 }
 
@@ -172,10 +170,7 @@ const SEARCH_RESULT_LIMIT: usize = 1000;
 // returning up to SEARCH_RESULT_LIMIT matches. Async + spawn_blocking so the (IO-bound) walk runs
 // off the main thread and keeps the UI responsive; symlinks aren't followed (jwalk default).
 #[tauri::command]
-pub async fn search_directory(
-    path: String,
-    query: String,
-) -> Result<Vec<DirEntry>, String> {
+pub async fn search_directory(path: String, query: String) -> Result<Vec<DirEntry>, String> {
     tauri::async_runtime::spawn_blocking(move || search_directory_core(&path, &query))
         .await
         .map_err(|error| error.to_string())?
@@ -240,7 +235,11 @@ pub fn typeahead_core(path: &str, query: &str) -> Result<TypeaheadResult, String
     entries.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
 
     if needle.is_empty() {
-        return Ok(TypeaheadResult { query: needle, selected_index: None, matches: Vec::new() });
+        return Ok(TypeaheadResult {
+            query: needle,
+            selected_index: None,
+            matches: Vec::new(),
+        });
     }
 
     let matches: Vec<DirEntry> = entries
@@ -249,7 +248,11 @@ pub fn typeahead_core(path: &str, query: &str) -> Result<TypeaheadResult, String
         .collect();
     let selected_index = if matches.is_empty() { None } else { Some(0) };
 
-    Ok(TypeaheadResult { query: needle, selected_index, matches })
+    Ok(TypeaheadResult {
+        query: needle,
+        selected_index,
+        matches,
+    })
 }
 
 // Extensions whose thumbnail comes from QuickLook rather than the image decoder (videos and
@@ -279,11 +282,7 @@ fn has_ext(path: &str, exts: &[&str]) -> bool {
 
 // Decode the source image used to build a thumbnail: a text-document render for markdown, a
 // frame/page rendered by QuickLook for videos and PDFs, or the image file itself.
-fn thumbnail_source(
-    path: &str,
-    size: u32,
-    tmp_dir: &Path,
-) -> Result<image::DynamicImage, String> {
+fn thumbnail_source(path: &str, size: u32, tmp_dir: &Path) -> Result<image::DynamicImage, String> {
     if is_text(path) {
         text_thumbnail(path)
     } else if needs_quicklook(path) {
@@ -661,7 +660,14 @@ fn copy_with_progress(
     let mut processed = 0u64;
     let mut last_percent = 0i32;
     if src.is_dir() {
-        copy_dir_with_progress(src, dest, &mut processed, total, &mut last_percent, progress)?;
+        copy_dir_with_progress(
+            src,
+            dest,
+            &mut processed,
+            total,
+            &mut last_percent,
+            progress,
+        )?;
     } else {
         fs::copy(src, dest)?;
     }
@@ -824,7 +830,9 @@ pub fn copy_image(path: String) -> Result<(), String> {
 // Rename an entry in place within its parent directory.
 pub fn rename_entry_local(path: String, new_name: String) -> Result<(), String> {
     let p = Path::new(&path);
-    let parent = p.parent().ok_or_else(|| "No parent directory".to_string())?;
+    let parent = p
+        .parent()
+        .ok_or_else(|| "No parent directory".to_string())?;
     let dest = parent.join(&new_name);
 
     if dest.exists() {
@@ -856,7 +864,10 @@ const WRITE_PROBE_PREFIX: &str = ".sfb_write_probe_";
 pub fn can_write(path: String) -> bool {
     // Remote (sftp://) dirs: assume writable (the write itself surfaces any permission error). The
     // local probe below can't run against them anyway.
-    if matches!(super::sftp::resolve(&path), super::sftp::Target::Remote { .. }) {
+    if matches!(
+        super::sftp::resolve(&path),
+        super::sftp::Target::Remote { .. }
+    ) {
         return true;
     }
     let dir = Path::new(&path);
@@ -940,9 +951,7 @@ pub async fn delete_entry(app: AppHandle, path: String) -> Result<(), String> {
             let config_dir = app.path().app_config_dir().map_err(|e| e.to_string())?;
             trash_entry_core(&config_dir, &p)
         }
-        super::sftp::Target::Remote { conn, path } => {
-            super::sftp::remove(&app, &conn, &path).await
-        }
+        super::sftp::Target::Remote { conn, path } => super::sftp::remove(&app, &conn, &path).await,
     }
 }
 

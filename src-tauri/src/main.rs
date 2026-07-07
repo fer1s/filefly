@@ -46,7 +46,10 @@ fn main() {
             // Internal prefix: the app's own data dir. User name-globs: hydrated from settings.toml
             // so ".DS_Store" & friends are excluded from folder sizes from the first walk.
             let ignore_list = ignore::IgnoreList::new(
-                app.path().app_data_dir().map(|d| vec![d]).unwrap_or_default(),
+                app.path()
+                    .app_data_dir()
+                    .map(|d| vec![d])
+                    .unwrap_or_default(),
                 functions::settings::get_settings(app.handle().clone()).size_ignores(),
             );
             let size_index = index::init(app.handle())?;
@@ -198,7 +201,8 @@ fn main() {
                     // forced opens — not becoming the default app for any file type.
                     if let Ok(path) = url.to_file_path() {
                         if path.is_dir() {
-                            let _ = window::create_window(app_handle, Some(&path.to_string_lossy()));
+                            let _ =
+                                window::create_window(app_handle, Some(&path.to_string_lossy()));
                         } else if path.is_file() {
                             let _ =
                                 window::create_reveal_window(app_handle, &path.to_string_lossy());

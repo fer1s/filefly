@@ -13,7 +13,8 @@ fn focused_or_first<R: Runtime>(app: &AppHandle<R>) -> Option<WebviewWindow<R>> 
 }
 
 pub fn create_tray<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
-    let center_window = MenuItem::with_id(app, "center_window", "Center Window", true, None::<&str>)?;
+    let center_window =
+        MenuItem::with_id(app, "center_window", "Center Window", true, None::<&str>)?;
     let hide = MenuItem::with_id(app, "hide", "Hide", true, None::<&str>)?;
     let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
     let separator = PredefinedMenuItem::separator(app)?;

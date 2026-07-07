@@ -47,7 +47,12 @@ pub fn get_system_stats(state: tauri::State<'_, StatsState>) -> SystemStats {
         .iter()
         .find(|disk| disk.mount_point() == Path::new("/"))
         .or_else(|| disks.iter().next())
-        .map(|disk| (disk.total_space(), disk.total_space() - disk.available_space()))
+        .map(|disk| {
+            (
+                disk.total_space(),
+                disk.total_space() - disk.available_space(),
+            )
+        })
         .unwrap_or((0, 0));
 
     SystemStats {

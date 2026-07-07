@@ -21,7 +21,11 @@ pub struct SidebarGroup {
     items: Vec<String>,
     // Stable ids of built-in preset rows the user has hidden (see PRESET_ID on the frontend).
     // Presets can't be deleted (we couldn't re-create them), only hidden; edit mode toggles this.
-    #[serde(rename = "hiddenPresets", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "hiddenPresets",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     hidden_presets: Vec<String>,
     // True for user-created groups (vs the built-in pinned/volumes/network/tags). Only custom
     // groups can be deleted; deleting one drops the whole entry, taking its items with it.
@@ -107,7 +111,12 @@ pub fn set_hidden_presets(app: AppHandle, id: String, presets: Vec<String>) -> R
 // Create a user group with a generated id, a display name and a display position. Marked `custom`
 // so the UI knows it can be renamed and deleted (built-in groups can't be deleted).
 #[tauri::command]
-pub fn add_sidebar_group(app: AppHandle, id: String, name: String, order: u32) -> Result<(), String> {
+pub fn add_sidebar_group(
+    app: AppHandle,
+    id: String,
+    name: String,
+    order: u32,
+) -> Result<(), String> {
     let mut config = read_config(&app);
     let group = config.entry(id).or_default();
     group.custom = true;

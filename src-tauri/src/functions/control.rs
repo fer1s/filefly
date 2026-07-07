@@ -175,8 +175,12 @@ fn run_action(app: &AppHandle, action: &str, args: &Value) -> Result<Value, Stri
             let id = control.probe_seq.fetch_add(1, Ordering::SeqCst) + 1;
             *control.probe_result.lock().unwrap() = None;
             let window = crate::window::target_window(app).ok_or("no open window to probe")?;
-            app.emit_to(window.label(), "control://probe", json!({ "id": id, "args": args }))
-                .map_err(|error| error.to_string())?;
+            app.emit_to(
+                window.label(),
+                "control://probe",
+                json!({ "id": id, "args": args }),
+            )
+            .map_err(|error| error.to_string())?;
             // Poll for the reply (the webview needs a moment to hit-test the DOM and answer).
             for _ in 0..150 {
                 std::thread::sleep(std::time::Duration::from_millis(20));

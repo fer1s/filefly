@@ -41,10 +41,20 @@ struct Command {
 
 // Shorthands to keep the table readable.
 const fn val(name: &'static str, required: bool, description: &'static str) -> ArgSpec {
-    ArgSpec { name, required, takes_value: true, description }
+    ArgSpec {
+        name,
+        required,
+        takes_value: true,
+        description,
+    }
 }
 const fn flag(name: &'static str, description: &'static str) -> ArgSpec {
-    ArgSpec { name, required: false, takes_value: false, description }
+    ArgSpec {
+        name,
+        required: false,
+        takes_value: false,
+        description,
+    }
 }
 
 const COMMANDS: &[Command] = &[
@@ -579,7 +589,9 @@ fn app_config_dir() -> Result<PathBuf, String> {
         .join("com.sito8943.file-browser"))
 }
 fn app_cache_dir() -> Result<PathBuf, String> {
-    Ok(home()?.join("Library/Caches").join("com.sito8943.file-browser"))
+    Ok(home()?
+        .join("Library/Caches")
+        .join("com.sito8943.file-browser"))
 }
 
 // ---- UI control socket (drive the running GUI) ------------------------------------------------
@@ -632,7 +644,9 @@ fn absolutize(input: &str) -> Result<PathBuf, String> {
     let base = if raw.is_absolute() {
         raw.to_path_buf()
     } else {
-        std::env::current_dir().map_err(|e| e.to_string())?.join(raw)
+        std::env::current_dir()
+            .map_err(|e| e.to_string())?
+            .join(raw)
     };
     let mut out = PathBuf::new();
     for comp in base.components() {

@@ -105,7 +105,9 @@ pub fn target_window(app: &AppHandle) -> Option<WebviewWindow> {
 
 #[tauri::command]
 pub fn open_new_window(app: AppHandle) -> Result<(), String> {
-    create_window(&app, None).map(|_| ()).map_err(|e| e.to_string())
+    create_window(&app, None)
+        .map(|_| ())
+        .map_err(|e| e.to_string())
 }
 
 // Open a new file-browser window rooted at `path` (e.g. one of the app's data directories from the

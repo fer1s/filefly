@@ -96,9 +96,11 @@ fn resolve(raw: RawBinding) -> KeyBinding {
 }
 
 fn parse(content: &str) -> Result<HashMap<String, ResolvedEntry>, String> {
-    let raw: HashMap<String, RawEntry> =
-        toml::from_str(content).map_err(|e| e.to_string())?;
-    Ok(raw.into_iter().map(|(k, v)| (k, resolve_entry(v))).collect())
+    let raw: HashMap<String, RawEntry> = toml::from_str(content).map_err(|e| e.to_string())?;
+    Ok(raw
+        .into_iter()
+        .map(|(k, v)| (k, resolve_entry(v)))
+        .collect())
 }
 
 // Bundled defaults, used when the user has no keymap file yet (or it can't be read).

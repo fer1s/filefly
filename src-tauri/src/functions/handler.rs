@@ -61,7 +61,8 @@ fn current_folder_handler() -> Option<String> {
     use objc2_foundation::NSString;
     let content_type = NSString::from_str(FOLDER_UTI);
     unsafe {
-        let handler = ls::LSCopyDefaultRoleHandlerForContentType(as_cf(&content_type), ls::LS_ROLES_ALL);
+        let handler =
+            ls::LSCopyDefaultRoleHandlerForContentType(as_cf(&content_type), ls::LS_ROLES_ALL);
         if handler.is_null() {
             return None;
         }
@@ -109,7 +110,9 @@ pub fn set_default_folder_handler(app: AppHandle, enable: bool) -> Result<(), St
         if status == 0 {
             Ok(())
         } else {
-            Err(format!("Launch Services rejected the change (OSStatus {status})"))
+            Err(format!(
+                "Launch Services rejected the change (OSStatus {status})"
+            ))
         }
     }
     #[cfg(not(target_os = "macos"))]
