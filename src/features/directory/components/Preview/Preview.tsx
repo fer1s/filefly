@@ -7,6 +7,7 @@ import IconButton, {
 } from "@/shared/components/elements/IconButton";
 import Spinner from "@/shared/components/elements/Spinner";
 import Icon from "@/shared/components/elements/Icon";
+import TextArea from "@/shared/components/elements/TextArea";
 import CloseButton from "@/shared/components/patterns/CloseButton";
 import ZoomControl from "@/shared/components/patterns/ZoomControl";
 import {
@@ -364,7 +365,7 @@ const Preview = ({
             {isReady ? (
               isMarkdown ? (
                 editMode ? (
-                  <textarea
+                  <TextArea
                     ref={editorRef}
                     className="preview_md_editor"
                     value={doc?.draft ?? ""}

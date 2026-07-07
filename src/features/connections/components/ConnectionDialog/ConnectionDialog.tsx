@@ -5,6 +5,7 @@ import DialogHeader from "@/shared/components/patterns/DialogHeader";
 import DialogActions from "@/shared/components/patterns/DialogActions";
 import Button from "@/shared/components/elements/Button";
 import TextInput from "@/shared/components/elements/TextInput";
+import Select from "@/shared/components/elements/Select";
 import PasswordInput from "@/shared/components/patterns/PasswordInput";
 import { useCloseOnEscape } from "@/shared/hooks/useCloseOnEscape";
 import type { NewConnection } from "@/shared/services/api";
@@ -166,8 +167,7 @@ const ConnectionDialog = ({
 
         <label className="connection_field">
           <span>{t.connections.fieldAuth}</span>
-          <select
-            className="connection_select"
+          <Select
             value={authKind}
             onChange={(event) => setAuthKind(event.target.value as AuthKind)}
           >
@@ -176,7 +176,7 @@ const ConnectionDialog = ({
             <option value={AUTH_KIND.PASSWORD}>
               {t.connections.authPassword}
             </option>
-          </select>
+          </Select>
         </label>
 
         {authKind === AUTH_KIND.KEY && (
