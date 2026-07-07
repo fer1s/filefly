@@ -220,6 +220,12 @@ export const listAllTags = async (): Promise<Tag[]> =>
 export const getContextMenu = async (): Promise<ContextMenuLayout> =>
   (await invoke("get_context_menu")) as ContextMenuLayout;
 
+// Mirror a Copy to the OS clipboard with Finder-style multi-flavor data: the entries paste as
+// real files into file-aware apps (Finder, Mail) and as their name (+ ext) into text fields.
+// Best-effort — callers ignore failures so the in-app clipboard still works.
+export const copyFilesToClipboard = async (paths: string[]): Promise<void> =>
+  await invoke("copy_files_to_clipboard", { paths });
+
 // Visible list columns for a folder (saved preference, or a well-known-folder default).
 export const getFolderColumns = async (path: string): Promise<string[]> =>
   (await invoke("get_folder_columns", { path })) as string[];

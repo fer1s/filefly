@@ -76,8 +76,8 @@ keyring = { version = "3", features = ["apple-native"] }
 xattr = "1"
 plist = "1"
 objc2 = "0.6"
-objc2-foundation = { version = "0.3", features = ["NSString"] }
-objc2-app-kit = { version = "0.3", features = ["NSApplication", "NSMenu", "NSMenuItem", "NSResponder", "NSRunningApplication"] }
+objc2-foundation = { version = "0.3", features = ["NSString", "NSURL", "NSArray"] }
+objc2-app-kit = { version = "0.3", features = ["NSApplication", "NSMenu", "NSMenuItem", "NSResponder", "NSRunningApplication", "NSPasteboard", "NSPasteboardItem"] }
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem

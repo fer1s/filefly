@@ -4,7 +4,11 @@ import { homeDir, join } from "@tauri-apps/api/path";
 
 import { useStateContext } from "@/shared/providers/StateProvider";
 import { useConfirm } from "@/shared/providers/ConfirmProvider";
-import { compressEntries, extractArchive } from "@/shared/services/api";
+import {
+  compressEntries,
+  extractArchive,
+  copyFilesToClipboard,
+} from "@/shared/services/api";
 import { notify, TOAST_TYPE } from "@/shared/toast";
 import { basename, dirname } from "@/shared/utils";
 import { TRASH_DIR_NAME, SFTP_SCHEME } from "@/shared/constants";
@@ -61,6 +65,9 @@ export const useFileOperations = ({
   const copy = useCallback((targets: string[]) => {
     if (!targets.length || !targets[0]) return;
     setClipboard({ paths: targets, mode: CLIPBOARD_MODE.COPY });
+    // Mirror to the OS clipboard (Finder-style) so the selection can also be pasted into other
+    // apps and text fields. Best-effort: a failure here must not break the in-app copy.
+    copyFilesToClipboard(targets).catch(() => {});
     notify(t.directory.copied(entryLabel(targets)), TOAST_TYPE.SUCCESS);
   }, []);
 

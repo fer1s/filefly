@@ -1,3 +1,4 @@
+pub mod clipboard;
 pub mod context_menu;
 pub mod control;
 pub mod folder_columns;
