@@ -445,7 +445,7 @@
   height: 100%;
   border: none;
   border-radius: var(--space-0);
-  background-color: var(--color-background);
+  background-color: var(--color-background-app);
   backdrop-filter: none;
   opacity: 1;
   transform: none;
