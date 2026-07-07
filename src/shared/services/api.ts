@@ -610,13 +610,15 @@ export const clearAppCache = async (): Promise<void> =>
   await invoke("clear_app_cache");
 
 // A saved SSH/SFTP connection. Secrets (password/passphrase) are never sent to the frontend — the
-// backend strips them. Mirrors the Connection struct in filesystem/sftp.rs. See SSH_PLAN.md.
+// backend strips them; the key path is not a secret and rehydrates the edit dialog's auth fields.
+// Mirrors ConnectionInfo in filesystem/sftp.rs. See SSH_PLAN.md.
 export type Connection = {
   id: string;
   name: string;
   host: string;
   port: number;
   user: string;
+  keyPath?: string;
 };
 
 // The saved SSH connections, surfaced as rows in the sidebar's Network group. Read from

@@ -59,8 +59,8 @@ const ConnectionDialog = ({
       setHost(initial?.host ?? "");
       setPort(String(initial?.port ?? SSH_DEFAULT_PORT));
       setUser(initial?.user ?? "");
-      setAuthKind(AUTH_KIND.AGENT);
-      setKeyPath("");
+      setAuthKind(initial?.keyPath ? AUTH_KIND.KEY : AUTH_KIND.AGENT);
+      setKeyPath(initial?.keyPath ?? "");
       setKeyPassphrase("");
       setPassword("");
       setBusy(false);

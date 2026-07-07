@@ -240,7 +240,8 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
   };
 
   // Saved SSH/SFTP connections (see SSH_PLAN.md). Clicking opens the connection's home dir; the row
-  // stays highlighted for any remote folder browsed under it (prefix match).
+  // stays highlighted for any remote folder browsed under it (prefix match). In edit mode the
+  // open-in-new-tab quick action gives way to edit + delete buttons.
   const connectionRows = connections.map((connection) => {
     const prefix = connectionsManager.prefix(connection.id);
     return (
@@ -256,7 +257,13 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
         collapsed={collapsed}
         active={path === prefix || path.startsWith(`${prefix}/`)}
         onContextMenu={onRowContextMenu(prefix, SIDEBAR_ITEM_KIND.CONNECTION)}
-        onOpenInNewTab={() => openConnectionInNewTab(connection)}
+        onOpenInNewTab={
+          editingSidebar ? undefined : () => openConnectionInNewTab(connection)
+        }
+        onEdit={
+          editingSidebar ? () => setEditConnectionTarget(connection) : undefined
+        }
+        onRemove={editingSidebar ? () => removeConnection(prefix) : undefined}
       />
     );
   });

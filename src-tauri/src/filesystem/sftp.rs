@@ -116,7 +116,8 @@ fn default_port() -> u16 {
     SSH_DEFAULT_PORT
 }
 
-// The non-secret view of a connection sent to the frontend (no password). Backs the sidebar rows.
+// The non-secret view of a connection sent to the frontend (no password/passphrase). The key PATH
+// is not a secret, and the edit dialog needs it to rehydrate the auth selector. Backs the sidebar rows.
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ConnectionInfo {
@@ -125,6 +126,8 @@ pub struct ConnectionInfo {
     pub host: String,
     pub port: u16,
     pub user: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub key_path: Option<String>,
 }
 
 impl From<Connection> for ConnectionInfo {
@@ -135,6 +138,7 @@ impl From<Connection> for ConnectionInfo {
             host: c.host,
             port: c.port,
             user: c.user,
+            key_path: c.key_path,
         }
     }
 }
@@ -1310,9 +1314,6 @@ pub fn sftp_list_connections(app: AppHandle) -> Vec<ConnectionInfo> {
         .collect()
 }
 
-// Add (or replace by id) a connection from the GUI. Secrets go to the OS keychain — never the toml;
-// connections.toml keeps only non-sensitive fields. Passing an empty/absent secret clears any
-// stored one. Backs the "+" form in the sidebar's Network group (SSH_PLAN.md phase 2).
 // Add (or replace by id) a connection, routing secrets to the OS keychain and persisting only the
 // non-sensitive fields to connections.toml. Shared by the GUI command and the `sfb` CLI so both
 // keep secrets out of the plaintext toml. On macOS an entered secret goes to the keychain (an empty
