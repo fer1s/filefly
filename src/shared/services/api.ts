@@ -305,12 +305,15 @@ export const ejectVolume = async (mountPoint: string): Promise<void> =>
   await invoke("eject_volume", { mountPoint });
 
 // Read directory invokement method. Rethrows ACCESS_DENIED_ERROR so the UI can prompt for Full
-// Disk Access; any other failure (invalid/missing path) resolves to an empty listing.
+// Disk Access, and any remote (SFTP) failure so the directory view can show the connect/auth error
+// — swallowing those would render an unreachable server as an empty folder. Other local failures
+// (invalid/missing path) resolve to an empty listing.
 export const readDirectory = async (path: string): Promise<DirEntry[]> => {
   try {
     return (await invoke("read_directory", { path })) as DirEntry[];
   } catch (err) {
     if (String(err).includes(ACCESS_DENIED_ERROR)) throw err;
+    if (path.startsWith(SFTP_SCHEME)) throw err;
     console.error("Path is either not valid or does not exist:\n" + err);
     return [];
   }

@@ -50,6 +50,7 @@ import Switcher from "@/shared/components/elements/Switcher";
 import ListHeader from "./components/ListHeader";
 import EntriesView from "./components/EntriesView";
 import AccessDeniedNotice from "./components/AccessDeniedNotice";
+import RemoteErrorNotice from "./components/RemoteErrorNotice";
 import EntryContextMenu from "./components/EntryContextMenu";
 import StatusBar from "./components/StatusBar";
 import TypeaheadPopup from "./components/TypeaheadPopup";
@@ -69,6 +70,7 @@ const Directory = () => {
     view,
     search,
     accessDenied,
+    loadError,
     loadingDir,
     zoom,
     savingSettings,
@@ -345,6 +347,10 @@ const Directory = () => {
   const showLoader =
     !accessDenied && (loadingDir || (searching && sorted.length === 0));
 
+  // A failed remote load shows a persistent notice instead of a deceptively empty listing. The
+  // loader wins while a retry is in flight.
+  const showLoadError = !accessDenied && !showLoader && !!loadError;
+
   return (
     <div
       className="directory_page"
@@ -383,6 +389,10 @@ const Directory = () => {
       >
         {accessDenied && <AccessDeniedNotice />}
 
+        {showLoadError && (
+          <RemoteErrorNotice error={loadError!} retry={refreshDir} />
+        )}
+
         {!accessDenied && isNtfsReadOnly && (
           <NtfsNotice recheck={recheckWritability} />
         )}
@@ -409,7 +419,7 @@ const Directory = () => {
           </div>
         )}
 
-        {!accessDenied && !showLoader && (
+        {!accessDenied && !showLoader && !showLoadError && (
           <EntriesView
             key={searchActive ? "search" : path}
             entries={sorted}

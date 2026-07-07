@@ -236,6 +236,7 @@ const App = () => {
         dirContent: directory.dirContent,
         setDirContent: directory.setDirContent,
         accessDenied: directory.accessDenied,
+        loadError: directory.loadError,
         loadingDir: directory.loadingDir,
         view,
         setView,

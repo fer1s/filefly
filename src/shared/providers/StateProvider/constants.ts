@@ -33,6 +33,7 @@ export const initialState: State = {
   dirContent: [],
   setDirContent: () => {},
   accessDenied: false,
+  loadError: null,
   loadingDir: false,
   view: VIEW_MODE.GRID,
   setView: () => {},

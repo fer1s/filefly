@@ -588,6 +588,12 @@ export const en = {
       grant: "Open Full Disk Access settings",
       hint: "After enabling access, reopen the app.",
     },
+    // Shown in place of the listing when a remote (SFTP) folder fails to load — the description is
+    // the loader's error (connections.listError / hostKeyChanged).
+    remoteError: {
+      title: "Can't reach this server",
+      retry: "Retry",
+    },
     ntfs: {
       title: "Read-only NTFS drive",
       description:

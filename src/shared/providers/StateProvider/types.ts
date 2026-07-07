@@ -31,6 +31,9 @@ export type State = {
   // True when the current directory could not be read due to OS privacy protection
   // (e.g. macOS Full Disk Access required for the Trash).
   accessDenied: boolean;
+  // Why the current listing failed (remote connect/auth errors), or null. Drives the persistent
+  // error notice in the directory view.
+  loadError: string | null;
   // True while a navigation is still fetching the new folder's listing (after a short delay, so
   // fast local reads don't flash). The directory view shows a spinner instead of the stale entries.
   loadingDir: boolean;
