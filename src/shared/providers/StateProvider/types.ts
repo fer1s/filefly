@@ -31,6 +31,9 @@ export type State = {
   // True when the current directory could not be read due to OS privacy protection
   // (e.g. macOS Full Disk Access required for the Trash).
   accessDenied: boolean;
+  // Why the current listing failed (remote connect/auth errors), or null. Drives the persistent
+  // error notice in the directory view.
+  loadError: string | null;
   // True while a navigation is still fetching the new folder's listing (after a short delay, so
   // fast local reads don't flash). The directory view shows a spinner instead of the stale entries.
   loadingDir: boolean;
@@ -90,6 +93,12 @@ export type State = {
   // Whether opening a markdown file (Enter/double-click) shows it in the built-in preview instead
   // of the OS default app. Read by the directory open flow.
   previewMarkdownInApp: boolean;
+  // Whether the built-in preview opens in its own detached window instead of the in-app overlay.
+  // Read by the directory open flow, which spawns a preview window instead of the local preview.
+  openPreviewInWindow: boolean;
+  // Whether the properties open in their own detached window instead of the in-app dialog. Read by
+  // the properties flow (useProperties via DirectoryProvider), which spawns a properties window.
+  openPropertiesInWindow: boolean;
   // Whether to generate thumbnails for remote (SFTP) images (off by default — each downloads the
   // whole file). Gates the thumbnail request for remote entries.
   remoteThumbnails: boolean;

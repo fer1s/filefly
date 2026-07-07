@@ -17,7 +17,10 @@ import {
   type EntryActionContext,
   type EntryActionId,
 } from "../../actions";
+import { opensInAppPreview } from "../../constants";
 import { useContextMenuLayout } from "../../hooks/useContextMenuLayout";
+import { useArchiveActions } from "../../hooks/useArchiveActions";
+import { useSevenzipAvailable } from "@/shared/hooks/useSevenzipAvailable";
 import { useDirectory } from "../../providers/DirectoryProvider";
 
 import type { EntryContextMenuProps } from "./types";
@@ -40,7 +43,17 @@ const EntryContextMenu = ({
   onPreview,
   onProperties,
 }: EntryContextMenuProps) => {
-  const { fs, setPath, showHidden, toggleShowHidden } = useStateContext();
+  const {
+    fs,
+    setPath,
+    showHidden,
+    toggleShowHidden,
+    previewImagesInApp,
+    previewMarkdownInApp,
+  } = useStateContext();
+  const { onCompress, onExtract, onExtractToFolder } =
+    useArchiveActions(fileOps);
+  const sevenzipAvailable = useSevenzipAvailable();
   const { sort, handleSort } = useDirectory();
   const { keymap } = useKeymap();
   const layout = useContextMenuLayout();
@@ -62,10 +75,19 @@ const EntryContextMenu = ({
     onStartRename,
     onPreview,
     onProperties,
+    onCompress,
+    onExtract,
+    onExtractToFolder,
+    sevenzipAvailable,
     sort,
     onSort: handleSort,
     showHidden,
     toggleShowHidden,
+    opensInAppPreview: opensInAppPreview(
+      fileExtension.toLowerCase(),
+      previewImagesInApp,
+      previewMarkdownInApp,
+    ),
   };
 
   const actionIds = resolveActionIds(layout, {

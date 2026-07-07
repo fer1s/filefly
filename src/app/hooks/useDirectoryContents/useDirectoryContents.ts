@@ -9,7 +9,6 @@ import {
   SSH_HOST_KEY_CHANGED,
 } from "@/shared/constants";
 import { isTagsPath, tagFromPath } from "@/shared/utils";
-import { notify, TOAST_TYPE } from "@/shared/toast";
 import { t } from "@/lang";
 
 import { ROUTES } from "../../routes";
@@ -33,6 +32,10 @@ export const useDirectoryContents = ({
   const [volumes, setVolumes] = useState<Volume[]>([]);
   const [dirContent, setDirContent] = useState<DirEntry[]>([]);
   const [accessDenied, setAccessDenied] = useState<boolean>(false);
+  // Human-readable reason the current listing failed (remote connect/auth errors), or null. Shown
+  // as a persistent notice in the directory view — a toast would vanish while the folder stays
+  // deceptively empty. Cleared by the next successful load.
+  const [loadError, setLoadError] = useState<string | null>(null);
   // True while a *navigation* is fetching the new folder and the old entries are still in state.
   // The directory view shows a spinner instead of the stale listing (matters for slow SFTP loads).
   // Set only by the path-change effect, never by refreshDir, so background refreshes don't flash it.
@@ -58,7 +61,13 @@ export const useDirectoryContents = ({
   // Read a directory, reporting whether the OS blocked it (Full Disk Access required, e.g. the
   // Trash). Kept free of setState so callers own state updates in their async callbacks.
   const loadDirectory = useCallback(
-    async (target: string): Promise<{ files: DirEntry[]; denied: boolean }> => {
+    async (
+      target: string,
+    ): Promise<{
+      files: DirEntry[];
+      denied: boolean;
+      error: string | null;
+    }> => {
       try {
         // Recents and tag views are virtual listings (Finder-style), not real folders to read.
         const files =
@@ -67,19 +76,19 @@ export const useDirectoryContents = ({
             : isTagsPath(target)
               ? await fs.findTagged(tagFromPath(target))
               : await fs.readDirectory(target);
-        return { files, denied: false };
+        return { files, denied: false, error: null };
       } catch (err) {
         const denied = String(err).includes(ACCESS_DENIED_ERROR);
         // Remote (SFTP) failures are opaque — connect/auth errors would otherwise show as a blank
-        // folder with no clue why. Surface them; a changed host key gets its own clear warning.
-        if (!denied && target.startsWith(SFTP_SCHEME))
-          notify(
-            String(err).includes(SSH_HOST_KEY_CHANGED)
+        // folder with no clue why. Surface them as a persistent notice in the directory view; a
+        // changed host key gets its own clear warning.
+        const error =
+          !denied && target.startsWith(SFTP_SCHEME)
+            ? String(err).includes(SSH_HOST_KEY_CHANGED)
               ? t.connections.hostKeyChanged
-              : t.connections.listError(String(err)),
-            TOAST_TYPE.ERROR,
-          );
-        return { files: [], denied };
+              : t.connections.listError(String(err))
+            : null;
+        return { files: [], denied, error };
       }
     },
     [fs, hideSystemRecents],
@@ -88,9 +97,10 @@ export const useDirectoryContents = ({
   // Reload the current view (used after filesystem operations like copy/move/rename/delete).
   const refreshDir = useCallback(() => {
     if (path === "") return fetchVolumes();
-    loadDirectory(path).then(({ files, denied }) => {
+    loadDirectory(path).then(({ files, denied, error }) => {
       setDirContent(files);
       setAccessDenied(denied);
+      setLoadError(error);
     });
   }, [loadDirectory, fetchVolumes, path]);
 
@@ -252,12 +262,13 @@ export const useDirectoryContents = ({
 
     // Guard against a stale load resolving after we've already navigated away: e.g. leaving the
     // Trash (slow, ends denied) for Recents would otherwise leave the access-denied notice up.
-    loadDirectoryRef.current(path).then(({ files, denied }) => {
+    loadDirectoryRef.current(path).then(({ files, denied, error }) => {
       if (cancelled) return;
       window.clearTimeout(spinnerTimer);
       setLoadingDir(false);
       setDirContent(files);
       setAccessDenied(denied);
+      setLoadError(error);
       markReady();
       if (locationRef.current !== ROUTES.directory && path !== "")
         navigateRef.current(ROUTES.directory);
@@ -275,6 +286,7 @@ export const useDirectoryContents = ({
     dirContent,
     setDirContent,
     accessDenied,
+    loadError,
     loadingDir,
     refreshDir,
     ready,

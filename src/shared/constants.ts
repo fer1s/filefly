@@ -3,8 +3,8 @@ import { isMacPlatform } from "@/shared/keymap/utils";
 import type { AppSettings } from "@/shared/services/api";
 
 // Recommended folder-size exclusions on macOS: OS-generated junk (Finder metadata, AppleDouble
-// forks, Spotlight/Trash/Versions/FSEvents stores) that never holds user content and only inflates
-// size totals. Seeded as the default so new users get sensible exclusions out of the box. Mirrors
+// forks, Spotlight/Trash/Versions/FSEvents stores, WidgetKit timeline caches, localization
+// markers, Windows-share droppings) that never holds user content and only inflates size totals. Seeded as the default so new users get sensible exclusions out of the box. Mirrors
 // default_size_ignores() in functions/settings.rs (must stay in sync). Empty on other platforms.
 export const MACOS_SIZE_IGNORES = [
   ".DS_Store",
@@ -14,6 +14,11 @@ export const MACOS_SIZE_IGNORES = [
   ".DocumentRevisions-V100",
   ".apdisk",
   ".fseventsd",
+  "com.apple.chrono",
+  ".localized",
+  ".AppleDouble",
+  "Thumbs.db",
+  "desktop.ini",
 ];
 
 export const VIEW_MODE = {
@@ -191,6 +196,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   useCustomFolderPicker: false,
   previewImagesInApp: false,
   previewMarkdownInApp: false,
+  openPreviewInWindow: false,
+  openPropertiesInWindow: false,
   confirmExportOverwrite: false,
   remoteThumbnails: false,
   showSystemStats: false,

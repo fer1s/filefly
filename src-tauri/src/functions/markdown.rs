@@ -21,11 +21,7 @@ pub fn read_text_file(path: String) -> Result<String, String> {
 // written back over SFTP so editing a remote markdown saves to the server; local paths write to
 // disk. Async for the remote branch.
 #[tauri::command]
-pub async fn write_text_file(
-    app: AppHandle,
-    path: String,
-    content: String,
-) -> Result<(), String> {
+pub async fn write_text_file(app: AppHandle, path: String, content: String) -> Result<(), String> {
     match resolve(&path) {
         Target::Local(p) => std::fs::write(&p, content).map_err(|e| e.to_string()),
         Target::Remote { conn, path } => write_text(&app, &conn, &path, &content).await,

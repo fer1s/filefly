@@ -245,7 +245,13 @@ pub fn resync_dir(conn: &Connection, path: &Path, ignores: &IgnoreRules) -> Opti
 
     let delta = subtree as i64 - old;
     if delta != 0 {
-        crate::dlog!("resync     {} {} -> {} (Δ {})", path_str, old, subtree, delta);
+        crate::dlog!(
+            "resync     {} {} -> {} (Δ {})",
+            path_str,
+            old,
+            subtree,
+            delta
+        );
         Some(delta)
     } else {
         None

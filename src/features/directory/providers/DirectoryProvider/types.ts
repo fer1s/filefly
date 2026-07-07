@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 
+import type { DirEntry } from "@/shared/models";
+
 import type { useDirectoryEntries } from "../../hooks/useDirectoryEntries";
 import type { useSelection } from "../../hooks/useSelection";
 import type { useFileOperations } from "../../hooks/useFileOperations";
@@ -19,6 +21,9 @@ export type DirectoryContextValue = ReturnType<typeof useDirectoryEntries> &
     // loaded. The view ensures it's rendered, scrolls to it, then calls clearRevealID.
     revealID: string | null;
     clearRevealID: () => void;
+    // Open a file like a double-click in the listing: in-app preview when its setting covers the
+    // type, the OS default app otherwise. Shared by the view and the path bar.
+    openFile: (entry: DirEntry) => Promise<void>;
   };
 
 export type DirectoryProviderProps = {

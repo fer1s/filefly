@@ -1,4 +1,4 @@
-use std::path::{Path, PathBuf};
+use std::path::{Component, Path, PathBuf};
 use std::sync::{Arc, RwLock};
 
 // A snapshot of the rules that exclude entries from size indexing and watching. Two kinds:
@@ -15,7 +15,11 @@ pub struct IgnoreRules {
 }
 
 impl IgnoreRules {
-    // True if `path` is (or lives under) an ignored prefix, or its file name matches a name-glob.
+    // True if `path` is (or lives under) an ignored prefix, or ANY of its components matches a
+    // name-glob. Checking every component (not just the file name) matters for watcher events,
+    // which arrive as full deep paths: an event for .../com.apple.chrono/timelines/x must be
+    // dropped by the "com.apple.chrono" glob even though the leaf name doesn't match. (The index
+    // walker never descends into an ignored dir, so for it the leaf check was already enough.)
     pub fn is_ignored(&self, path: &Path) -> bool {
         if self
             .prefixes
@@ -24,10 +28,12 @@ impl IgnoreRules {
         {
             return true;
         }
-        match path.file_name().and_then(|n| n.to_str()) {
-            Some(name) => self.name_globs.iter().any(|pat| glob_match(pat, name)),
-            None => false,
-        }
+        path.components().any(|component| match component {
+            Component::Normal(name) => name
+                .to_str()
+                .is_some_and(|n| self.name_globs.iter().any(|pat| glob_match(pat, n))),
+            _ => false,
+        })
     }
 }
 
@@ -95,7 +101,22 @@ fn glob_match(pattern: &str, name: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use super::glob_match;
+    use super::{glob_match, IgnoreRules};
+    use std::path::Path;
+
+    // A dir-name glob must drop deep watcher-event paths whose ANCESTOR matches, not just the leaf.
+    #[test]
+    fn ignores_by_ancestor_component() {
+        let rules = IgnoreRules {
+            prefixes: Vec::new(),
+            name_globs: vec!["com.apple.chrono".into(), ".DS_Store".into()],
+        };
+        assert!(rules.is_ignored(Path::new(
+            "/Users/x/Library/Containers/a/Data/SystemData/com.apple.chrono/timelines/W/s.chrono-timeline"
+        )));
+        assert!(rules.is_ignored(Path::new("/Users/x/Desktop/.DS_Store")));
+        assert!(!rules.is_ignored(Path::new("/Users/x/Documents/report.pdf")));
+    }
 
     #[test]
     fn literals_and_wildcards() {

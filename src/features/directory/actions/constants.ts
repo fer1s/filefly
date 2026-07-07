@@ -6,6 +6,7 @@ export const ENTRY_ACTION = {
   OPEN_IN_TERMINAL: "open_in_terminal",
   PREVIEW: "preview",
   COPY: "copy",
+  COPY_PATH: "copy_path",
   CUT: "cut",
   PASTE: "paste",
   RENAME: "rename",
@@ -13,6 +14,9 @@ export const ENTRY_ACTION = {
   RESTORE: "restore",
   DESTROY: "destroy",
   PROPERTIES: "properties",
+  COMPRESS: "compress",
+  EXTRACT: "extract",
+  EXTRACT_TO_FOLDER: "extract_to_folder",
   SORT_BY: "sort_by",
   TOGGLE_HIDDEN: "toggle_hidden",
 } as const;

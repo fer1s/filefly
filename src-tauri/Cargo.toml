@@ -52,6 +52,9 @@ rusqlite = { version = "0.32", features = ["bundled"] }
 notify = "6"
 markdown = "0.3.0"
 trash = "5"
+# Archive support (zip compress/extract). Pure-Rust — no system binary or C dependency; keeps the
+# cross-platform build clean. 7z/rar are handled separately by shelling out to system binaries.
+zip = { version = "2", features = ["aes-crypto"] }
 image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp", "gif", "bmp"] }
 imageproc = { version = "0.25", default-features = false }
 ab_glyph = "0.2"
@@ -73,8 +76,8 @@ keyring = { version = "3", features = ["apple-native"] }
 xattr = "1"
 plist = "1"
 objc2 = "0.6"
-objc2-foundation = { version = "0.3", features = ["NSString"] }
-objc2-app-kit = { version = "0.3", features = ["NSApplication", "NSMenu", "NSMenuItem", "NSResponder", "NSRunningApplication"] }
+objc2-foundation = { version = "0.3", features = ["NSString", "NSURL", "NSArray"] }
+objc2-app-kit = { version = "0.3", features = ["NSApplication", "NSMenu", "NSMenuItem", "NSResponder", "NSRunningApplication", "NSPasteboard", "NSPasteboardItem"] }
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem

@@ -13,8 +13,6 @@ const DialogActions = ({
 }: {
   children: ReactNode;
   className?: string;
-}) => (
-  <div className={classNames("dialog_actions", className)}>{children}</div>
-);
+}) => <div className={classNames("dialog_actions", className)}>{children}</div>;
 
 export default DialogActions;

@@ -5,6 +5,7 @@ import type { EntryKind, SortKey } from "@/features/directory/constants";
 import type { FileSystemManager } from "@/shared/managers/FileSystemManager";
 import type { KeymapAction } from "@/shared/keymap";
 import type { Sort } from "@/features/directory/sort";
+import type { ArchiveFormat } from "@/shared/providers/CompressProvider";
 
 import type { EntryActionId } from "./constants";
 
@@ -12,6 +13,7 @@ import type { EntryActionId } from "./constants";
 // the generic actions need). Kept narrow so actions don't depend on the whole hook.
 export type FileActions = {
   copy: (targets: string[]) => void;
+  copyPath: (targets: string[]) => void;
   cut: (targets: string[]) => void;
   paste: () => Promise<void>;
   remove: (targets: string[]) => Promise<void>;
@@ -38,6 +40,15 @@ export type EntryActionContext = {
     id: string,
     isCurrentDirectory: boolean,
   ) => void | Promise<void>;
+  // Compress the given targets into an archive in the given format (opens the compress-options
+  // dialog). Defaults to zip.
+  onCompress: (targets: string[], format?: ArchiveFormat) => void;
+  // Whether a 7-Zip binary is available (gates the "To 7z" submenu entry).
+  sevenzipAvailable: boolean;
+  // Extract an archive's top-level entries directly beside it ("Extract Here").
+  onExtract: (archivePath: string) => void;
+  // Extract an archive into a new subfolder beside it, named after the archive ("Extract to Folder").
+  onExtractToFolder: (archivePath: string) => void;
   // Current per-folder sort and the setter (toggles direction when the same key is chosen).
   // Used by the sort_by submenu action.
   sort: Sort;
@@ -45,6 +56,9 @@ export type EntryActionContext = {
   // Global "show hidden entries" toggle (dotfiles), used by the toggle_hidden action.
   showHidden: boolean;
   toggleShowHidden: () => void;
+  // Whether opening the clicked entry already launches the in-app preview (per the preview-in-app
+  // settings + its type). Used to hide the redundant Preview action when Open == preview.
+  opensInAppPreview: boolean;
 };
 
 // One row inside an action's submenu (e.g. the sort keys under "Sort By"). A check marks the
@@ -75,6 +89,10 @@ export type EntryAction = {
   // Whether the action makes sense for more than one target. When false (e.g. rename), it is
   // hidden once multiple entries are selected. Defaults to true.
   multiple?: boolean;
+  // Context-dependent visibility: when it returns false the action is omitted entirely (not just
+  // disabled) from the menu and quick bar — e.g. Preview when Open already opens the in-app
+  // preview. Absent means always visible (subject to the `multiple` rule).
+  isVisible?: (ctx: EntryActionContext) => boolean;
   // Whether the action is runnable in the given context (e.g. paste needs a clipboard).
   // Absent means always enabled.
   isEnabled?: (ctx: EntryActionContext) => boolean;

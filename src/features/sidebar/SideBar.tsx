@@ -89,8 +89,11 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
 
   const { keymap } = useKeymap();
   const { open: openSettings } = useSettings();
-  const { connections, manager: connectionsManager, reload: reloadConnections } =
-    useConnections();
+  const {
+    connections,
+    manager: connectionsManager,
+    reload: reloadConnections,
+  } = useConnections();
   // Open state for the create-connection form (opened from the Network group's "+").
   const [connectionFormOpen, setConnectionFormOpen] = useState(false);
   // The connection being edited (null = not editing); drives the same form dialog prefilled.
@@ -237,7 +240,8 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
   };
 
   // Saved SSH/SFTP connections (see SSH_PLAN.md). Clicking opens the connection's home dir; the row
-  // stays highlighted for any remote folder browsed under it (prefix match).
+  // stays highlighted for any remote folder browsed under it (prefix match). In edit mode the
+  // open-in-new-tab quick action gives way to edit + delete buttons.
   const connectionRows = connections.map((connection) => {
     const prefix = connectionsManager.prefix(connection.id);
     return (
@@ -253,7 +257,13 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
         collapsed={collapsed}
         active={path === prefix || path.startsWith(`${prefix}/`)}
         onContextMenu={onRowContextMenu(prefix, SIDEBAR_ITEM_KIND.CONNECTION)}
-        onOpenInNewTab={() => openConnectionInNewTab(connection)}
+        onOpenInNewTab={
+          editingSidebar ? undefined : () => openConnectionInNewTab(connection)
+        }
+        onEdit={
+          editingSidebar ? () => setEditConnectionTarget(connection) : undefined
+        }
+        onRemove={editingSidebar ? () => removeConnection(prefix) : undefined}
       />
     );
   });

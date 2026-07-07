@@ -60,6 +60,12 @@ export type AppSettings = {
   // Open markdown files in the app's built-in preview (on Enter/double-click) instead of the OS
   // default app.
   previewMarkdownInApp: boolean;
+  // Open the built-in preview in its own detached window instead of the in-app overlay. A new
+  // window is spawned per open (see openPreviewWindow / window::create_preview_window).
+  openPreviewInWindow: boolean;
+  // Open the properties in their own detached window instead of the in-app dialog. A new window is
+  // spawned per open (see openPropertiesWindow / window::create_properties_window).
+  openPropertiesInWindow: boolean;
   // On export, ask before replacing an existing settings.toml. When off (default), a unique
   // filename is used instead so nothing is overwritten silently.
   confirmExportOverwrite: boolean;
@@ -217,6 +223,12 @@ export const listAllTags = async (): Promise<Tag[]> =>
 export const getContextMenu = async (): Promise<ContextMenuLayout> =>
   (await invoke("get_context_menu")) as ContextMenuLayout;
 
+// Mirror a Copy to the OS clipboard with Finder-style multi-flavor data: the entries paste as
+// real files into file-aware apps (Finder, Mail) and as their name (+ ext) into text fields.
+// Best-effort — callers ignore failures so the in-app clipboard still works.
+export const copyFilesToClipboard = async (paths: string[]): Promise<void> =>
+  await invoke("copy_files_to_clipboard", { paths });
+
 // Visible list columns for a folder (saved preference, or a well-known-folder default).
 export const getFolderColumns = async (path: string): Promise<string[]> =>
   (await invoke("get_folder_columns", { path })) as string[];
@@ -293,12 +305,15 @@ export const ejectVolume = async (mountPoint: string): Promise<void> =>
   await invoke("eject_volume", { mountPoint });
 
 // Read directory invokement method. Rethrows ACCESS_DENIED_ERROR so the UI can prompt for Full
-// Disk Access; any other failure (invalid/missing path) resolves to an empty listing.
+// Disk Access, and any remote (SFTP) failure so the directory view can show the connect/auth error
+// — swallowing those would render an unreachable server as an empty folder. Other local failures
+// (invalid/missing path) resolve to an empty listing.
 export const readDirectory = async (path: string): Promise<DirEntry[]> => {
   try {
     return (await invoke("read_directory", { path })) as DirEntry[];
   } catch (err) {
     if (String(err).includes(ACCESS_DENIED_ERROR)) throw err;
+    if (path.startsWith(SFTP_SCHEME)) throw err;
     console.error("Path is either not valid or does not exist:\n" + err);
     return [];
   }
@@ -428,6 +443,59 @@ export const moveEntry = async (
     onProgress: channel,
   })) as string;
 };
+// Compress the given entries into a new .zip inside `destDir`, at DEFLATE `level` (0..9). Streams
+// byte progress (input bytes read) over the same Channel as copy. Resolves to the created archive's
+// path, which differs from destDir/archiveName when a name collision forced a rename.
+export const compressEntries = async (
+  sources: string[],
+  destDir: string,
+  archiveName: string,
+  level: number,
+  password?: string,
+  onProgress?: (progress: CopyProgress) => void,
+): Promise<string> => {
+  const channel = new Channel<CopyProgress>();
+  if (onProgress) channel.onmessage = onProgress;
+  return (await invoke("compress_entries", {
+    sources,
+    destDir,
+    archiveName,
+    level,
+    password: password || null,
+    onProgress: channel,
+  })) as string;
+};
+
+// True if the zip has any encrypted entry, so the caller can prompt for a password before extract.
+export const archiveEncrypted = async (archive: string): Promise<boolean> =>
+  (await invoke("archive_encrypted", { archive })) as boolean;
+
+// True if a 7-Zip binary (7zz/7z/7za) is on PATH. Gates the "To 7z" compress option and .7z extract.
+export const sevenzipAvailable = async (): Promise<boolean> =>
+  (await invoke("sevenzip_available")) as boolean;
+
+// Extract a .zip into `destDir`. `password` decrypts an encrypted archive. `intoSubfolder` wraps
+// output in a new subfolder named after the archive ("Extract to Folder"); when false, the archive's
+// top-level entries land directly in `destDir` ("Extract Here"). Resolves to the created top-level
+// output paths (for reveal/select).
+export const extractArchive = async (
+  archive: string,
+  destDir: string,
+  password?: string,
+  intoSubfolder = false,
+  onProgress?: (progress: CopyProgress) => void,
+): Promise<string[]> => {
+  const channel = new Channel<CopyProgress>();
+  if (onProgress) channel.onmessage = onProgress;
+  return (await invoke("extract_archive", {
+    archive,
+    destDir,
+    password: password || null,
+    intoSubfolder,
+    onProgress: channel,
+  })) as string[];
+};
+
 export const renameEntry = async (
   path: string,
   newName: string,
@@ -511,6 +579,16 @@ export const openNewWindow = async (): Promise<void> =>
 export const openPathInNewWindow = async (path: string): Promise<void> =>
   await invoke("open_path_in_new_window", { path });
 
+// Open the built-in preview for `path` in its own detached window (used when openPreviewInWindow is
+// on). A fresh window is spawned per call so several previews can sit side by side.
+export const openPreviewWindow = async (path: string): Promise<void> =>
+  await invoke("open_preview_window", { path });
+
+// Open the properties for `path` in its own detached window (used when openPropertiesInWindow is
+// on). A fresh window is spawned per call.
+export const openPropertiesWindow = async (path: string): Promise<void> =>
+  await invoke("open_properties_window", { path });
+
 // One of the app's on-disk data locations, with its recursively-summed size in bytes. `kind` is a
 // stable id (see STORAGE_KIND) mapped to a localized label in the UI. Mirrors StorageLocation in
 // functions/storage.rs.
@@ -532,13 +610,15 @@ export const clearAppCache = async (): Promise<void> =>
   await invoke("clear_app_cache");
 
 // A saved SSH/SFTP connection. Secrets (password/passphrase) are never sent to the frontend — the
-// backend strips them. Mirrors the Connection struct in filesystem/sftp.rs. See SSH_PLAN.md.
+// backend strips them; the key path is not a secret and rehydrates the edit dialog's auth fields.
+// Mirrors ConnectionInfo in filesystem/sftp.rs. See SSH_PLAN.md.
 export type Connection = {
   id: string;
   name: string;
   host: string;
   port: number;
   user: string;
+  keyPath?: string;
 };
 
 // The saved SSH connections, surfaced as rows in the sidebar's Network group. Read from

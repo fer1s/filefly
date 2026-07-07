@@ -7,6 +7,7 @@ import IconButton, {
   ICON_BUTTON_VARIANT,
   ICON_BUTTON_SIZE,
 } from "@/shared/components/elements/IconButton";
+import TextInput from "@/shared/components/elements/TextInput";
 import { useCloseOnEscape } from "@/shared/hooks/useCloseOnEscape";
 import { useStateContext } from "@/shared/providers/StateProvider";
 import { useConfirm } from "@/shared/providers/ConfirmProvider";
@@ -160,7 +161,7 @@ const SettingsDialog = ({ visible, onClose }: SettingsDialogProps) => {
       />
 
       <div className="settings_toolbar">
-        <input
+        <TextInput
           type="search"
           className="settings_search"
           value={rawQuery}

@@ -17,7 +17,7 @@ use std::process::exit;
 
 use serde_json::{json, Value};
 
-use sito_file_browser_lib::filesystem::{fs, sftp, tags};
+use sito_file_browser_lib::filesystem::{archive, fs, sftp, tags};
 
 // ---- Command table (declarative registry) ----------------------------------------------------
 
@@ -41,10 +41,20 @@ struct Command {
 
 // Shorthands to keep the table readable.
 const fn val(name: &'static str, required: bool, description: &'static str) -> ArgSpec {
-    ArgSpec { name, required, takes_value: true, description }
+    ArgSpec {
+        name,
+        required,
+        takes_value: true,
+        description,
+    }
 }
 const fn flag(name: &'static str, description: &'static str) -> ArgSpec {
-    ArgSpec { name, required: false, takes_value: false, description }
+    ArgSpec {
+        name,
+        required: false,
+        takes_value: false,
+        description,
+    }
 }
 
 const COMMANDS: &[Command] = &[
@@ -133,6 +143,77 @@ const COMMANDS: &[Command] = &[
             let mut noop = |_p, _t| {};
             let dest = fs::copy_entry_core(a.require("source")?, a.require("dest-dir")?, &mut noop)?;
             Ok(json!({ "dest": dest }))
+        },
+    },
+    Command {
+        name: "compress",
+        group: "write",
+        summary: "Compress a file or directory into a new .zip in a destination directory (collision-safe).",
+        args: &[
+            val("source", true, "File or directory to compress."),
+            val("dest-dir", true, "Directory to write the archive into."),
+            val("name", false, "Archive file name (default: <source>.zip)."),
+            val("level", false, "DEFLATE compression level 0-9 (default 6)."),
+            val("password", false, "Encrypt entries with AES-256 using this password."),
+        ],
+        run: |a| {
+            let mut noop = |_p, _t| {};
+            let source = a.require("source")?;
+            let dest_dir = a.require("dest-dir")?;
+            let name = match a.opt("name") {
+                Some(n) => n.to_string(),
+                None => format!(
+                    "{}.zip",
+                    Path::new(source)
+                        .file_name()
+                        .map(|n| n.to_string_lossy().into_owned())
+                        .unwrap_or_else(|| "archive".to_string())
+                ),
+            };
+            let level = a.opt("level").and_then(|l| l.parse::<i64>().ok()).unwrap_or(6);
+            // Format follows the archive name's extension: .7z shells out to 7-Zip, else pure-Rust zip.
+            let dest = if name.to_lowercase().ends_with(".7z") {
+                archive::compress_7z_core(&[source.to_string()], dest_dir, &name, level, a.opt("password"))?
+            } else {
+                archive::compress_entries_core(
+                    &[source.to_string()],
+                    dest_dir,
+                    &name,
+                    level,
+                    a.opt("password"),
+                    &mut noop,
+                )?
+            };
+            Ok(json!({ "dest": dest }))
+        },
+    },
+    Command {
+        name: "extract",
+        group: "write",
+        summary: "Extract a .zip or .7z into a destination directory.",
+        args: &[
+            val("archive", true, "Archive to extract (.zip or .7z)."),
+            val("dest-dir", true, "Directory to extract into."),
+            val("password", false, "Password for an encrypted archive."),
+            flag("into-folder", "Wrap output in a new subfolder named after the archive (default: extract top-level entries directly into dest-dir)."),
+        ],
+        run: |a| {
+            let mut noop = |_p, _t| {};
+            let archive_path = a.require("archive")?;
+            let dest_dir = a.require("dest-dir")?;
+            // .zip uses the pure-Rust path; anything else (.7z) shells out to 7-Zip.
+            let outputs = if archive_path.to_lowercase().ends_with(".zip") {
+                archive::extract_archive_core(
+                    archive_path,
+                    dest_dir,
+                    a.opt("password"),
+                    a.has("into-folder"),
+                    &mut noop,
+                )?
+            } else {
+                archive::extract_7z_core(archive_path, dest_dir, a.opt("password"), a.has("into-folder"))?
+            };
+            Ok(json!({ "outputs": outputs }))
         },
     },
     Command {
@@ -341,6 +422,27 @@ const COMMANDS: &[Command] = &[
         run: |_a| ui_call("get-state", json!({})),
     },
     Command {
+        name: "ui-windows",
+        group: "ui",
+        summary: "List every open window straight from Tauri (label, URL, visible, focused) — includes hidden windows and the detached preview panel.",
+        args: &[],
+        run: |_a| ui_call("windows", json!({})),
+    },
+    Command {
+        name: "ui-preview",
+        group: "ui",
+        summary: "Open the detached preview window for a file (the openPreviewInWindow flow).",
+        args: &[val("path", true, "File to preview.")],
+        run: |a| ui_call("preview", json!({ "path": a.require("path")? })),
+    },
+    Command {
+        name: "ui-properties",
+        group: "ui",
+        summary: "Open the detached properties window for an entry (the openPropertiesInWindow flow).",
+        args: &[val("path", true, "File or folder to inspect.")],
+        run: |a| ui_call("properties", json!({ "path": a.require("path")? })),
+    },
+    Command {
         name: "ui-navigate",
         group: "ui",
         summary: "Navigate the focused window's active tab to a directory.",
@@ -520,7 +622,9 @@ fn app_config_dir() -> Result<PathBuf, String> {
         .join("com.sito8943.file-browser"))
 }
 fn app_cache_dir() -> Result<PathBuf, String> {
-    Ok(home()?.join("Library/Caches").join("com.sito8943.file-browser"))
+    Ok(home()?
+        .join("Library/Caches")
+        .join("com.sito8943.file-browser"))
 }
 
 // ---- UI control socket (drive the running GUI) ------------------------------------------------
@@ -573,7 +677,9 @@ fn absolutize(input: &str) -> Result<PathBuf, String> {
     let base = if raw.is_absolute() {
         raw.to_path_buf()
     } else {
-        std::env::current_dir().map_err(|e| e.to_string())?.join(raw)
+        std::env::current_dir()
+            .map_err(|e| e.to_string())?
+            .join(raw)
     };
     let mut out = PathBuf::new();
     for comp in base.components() {

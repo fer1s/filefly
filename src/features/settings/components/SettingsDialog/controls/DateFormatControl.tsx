@@ -1,5 +1,6 @@
 import type { ChangeEvent } from "react";
 
+import Select from "@/shared/components/elements/Select";
 import { formatWithPattern } from "@/shared/utils";
 import { DATE_FORMAT_LOCALE } from "@/shared/constants";
 import { t } from "@/lang";
@@ -29,7 +30,7 @@ const DateFormatControl = ({ settings, update }: CustomControlProps) => {
   };
 
   return (
-    <select className="settings_select" value={selectValue} onChange={onSelect}>
+    <Select className="settings_select" value={selectValue} onChange={onSelect}>
       <option value={DATE_FORMAT_LOCALE}>{t.settings.dateFormatLocale}</option>
       {DATE_FORMAT_PRESETS.map((pattern) => (
         <option key={pattern} value={pattern}>
@@ -37,7 +38,7 @@ const DateFormatControl = ({ settings, update }: CustomControlProps) => {
         </option>
       ))}
       <option value={DATE_FORMAT_CUSTOM}>{t.settings.dateFormatCustom}</option>
-    </select>
+    </Select>
   );
 };
 

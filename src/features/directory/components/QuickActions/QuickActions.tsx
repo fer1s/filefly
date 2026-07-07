@@ -3,10 +3,12 @@ import { useKeymap, formatBinding } from "@/shared/keymap";
 import IconButton from "@/shared/components/elements/IconButton";
 import { extension } from "@/shared/utils";
 import { TRASH_DIR_NAME } from "@/shared/constants";
-import { ENTRY_KIND } from "@/features/directory/constants";
+import { ENTRY_KIND, opensInAppPreview } from "@/features/directory/constants";
 
 import { useDirectory } from "../../providers/DirectoryProvider";
 import { useContextMenuLayout } from "../../hooks/useContextMenuLayout";
+import { useArchiveActions } from "../../hooks/useArchiveActions";
+import { useSevenzipAvailable } from "@/shared/hooks/useSevenzipAvailable";
 import {
   ENTRY_ACTIONS,
   ACTION_SEPARATOR,
@@ -22,7 +24,15 @@ import "@/styles/components/QuickActions.css";
 // the current selection — the folder's own actions when nothing is selected, the selected
 // entry's actions otherwise (applied to every selected entry).
 const QuickActions = () => {
-  const { fs, path, setPath, showHidden, toggleShowHidden } = useStateContext();
+  const {
+    fs,
+    path,
+    setPath,
+    showHidden,
+    toggleShowHidden,
+    previewImagesInApp,
+    previewMarkdownInApp,
+  } = useStateContext();
   const { keymap } = useKeymap();
   const layout = useContextMenuLayout();
   const {
@@ -35,6 +45,9 @@ const QuickActions = () => {
     sort,
     handleSort,
   } = useDirectory();
+  const { onCompress, onExtract, onExtractToFolder } =
+    useArchiveActions(fileOps);
+  const sevenzipAvailable = useSevenzipAvailable();
 
   const hasSelection = selectedIDs.length > 0;
   const elementId = hasSelection ? selectedIDs[0] : path;
@@ -62,10 +75,19 @@ const QuickActions = () => {
     onStartRename: setRenamingID,
     onPreview: preview.open,
     onProperties: properties.open,
+    onCompress,
+    onExtract,
+    onExtractToFolder,
+    sevenzipAvailable,
     sort,
     onSort: handleSort,
     showHidden,
     toggleShowHidden,
+    opensInAppPreview: opensInAppPreview(
+      fileExtension.toLowerCase(),
+      previewImagesInApp,
+      previewMarkdownInApp,
+    ),
   };
 
   const actionIds = resolveActionIds(layout, {

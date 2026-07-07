@@ -131,6 +131,22 @@ export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
   },
   {
     kind: SETTING_KIND.TOGGLE,
+    key: "openPreviewInWindow",
+    section: SETTINGS_SECTION.GENERAL,
+    subsection: () => t.settings.subsections.previews,
+    label: () => t.settings.openPreviewInWindow,
+    hint: () => t.settings.openPreviewInWindowHint,
+  },
+  {
+    kind: SETTING_KIND.TOGGLE,
+    key: "openPropertiesInWindow",
+    section: SETTINGS_SECTION.GENERAL,
+    subsection: () => t.settings.subsections.previews,
+    label: () => t.settings.openPropertiesInWindow,
+    hint: () => t.settings.openPropertiesInWindowHint,
+  },
+  {
+    kind: SETTING_KIND.TOGGLE,
     key: "showSystemStats",
     section: SETTINGS_SECTION.GENERAL,
     subsection: () => t.settings.subsections.statusBar,

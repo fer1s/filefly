@@ -1,0 +1,25 @@
+/* Base dropdown. Mirrors TextInput's theme-aware fill/border/text (never the browser's default white
+   box) with an accent ring on focus. Shared by every settings/connection field so the look lives in
+   one place. Layout (width, flex-shrink) stays with the caller's own class. */
+.Select {
+  font: inherit;
+  font-size: var(--font-size-base);
+  box-sizing: border-box;
+  padding: var(--space-1-5) var(--space-2);
+  background-color: var(--color-surface-input);
+  border: var(--border-width-default) solid var(--color-border-default);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: border-color 0.15s ease-in-out;
+}
+
+.Select:focus {
+  outline: none;
+  border-color: var(--color-selection-indicator);
+}
+
+.Select:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}

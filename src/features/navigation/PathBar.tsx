@@ -7,7 +7,8 @@ import IconButton, {
 } from "@/shared/components/elements/IconButton";
 import { VIEW_MODE, RECENTS } from "@/shared/constants";
 import { useKeymap, formatBinding, KEYMAP_ACTION } from "@/shared/keymap";
-import { classNames, isTagsPath, tagFromPath } from "@/shared/utils";
+import { classNames, isTagsPath, tagFromPath, dirname } from "@/shared/utils";
+import { useDirectory } from "@/features/directory";
 import { t } from "@/lang";
 
 import { usePathBarShortcuts } from "./hooks/usePathBarShortcuts";
@@ -30,6 +31,7 @@ import "@/styles/components/PathBar.css";
 
 const PathBar = () => {
   const {
+    fs,
     path,
     setPath,
     canGoBack,
@@ -76,6 +78,28 @@ const PathBar = () => {
     setSearchOpen(false);
     setSearchClosing(false);
   }
+
+  const { openFile } = useDirectory();
+
+  // Committing a FILE path in the path field navigates to its folder and opens the file (like
+  // double-clicking it there). Anything else — a folder, or a path that can't be stat'ed —
+  // navigates as before (a bad path surfaces through the normal load-error handling).
+  const commitPath = useCallback(
+    async (next: string) => {
+      try {
+        const entry = await fs.getEntry(next);
+        if (entry.metadata.isFile) {
+          setPath(dirname(next));
+          void openFile(entry);
+          return;
+        }
+      } catch {
+        // Not stat-able (missing, remote error, virtual path) → plain navigation below.
+      }
+      setPath(next);
+    },
+    [fs, setPath, openFile],
+  );
 
   const goHome = () => setPath("");
 
@@ -156,7 +180,7 @@ const PathBar = () => {
       ) : isTagsPath(path) ? (
         <div className="path_label shadow">{tagFromPath(path)}</div>
       ) : (
-        <PathField key={path} path={path} onCommit={setPath} />
+        <PathField key={path} path={path} onCommit={commitPath} />
       )}
 
       {/* The search button expands into an inline folder filter; while open it replaces the

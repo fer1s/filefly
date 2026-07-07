@@ -101,8 +101,7 @@ pub fn get_volumes() -> Vec<Volume> {
             total_space: format_bytes(&total_space),
             disk_usage: format_disk_usage(&available_space, &total_space),
             is_removable: disk.is_removable(),
-            is_ejectable: disk.is_removable()
-                || disk.mount_point().starts_with("/Volumes/"),
+            is_ejectable: disk.is_removable() || disk.mount_point().starts_with("/Volumes/"),
             file_system: disk.file_system().to_string_lossy().to_lowercase(),
             total_bytes: total_space,
             available_bytes: available_space,

@@ -1,0 +1,11 @@
+/* Base checkbox. Uses the app accent for the checked fill (via accent-color) so it tracks the live
+   theme instead of the browser's default blue. Callers keep layout on their own container. */
+.Checkbox {
+  accent-color: var(--color-accent);
+  cursor: pointer;
+}
+
+.Checkbox:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}

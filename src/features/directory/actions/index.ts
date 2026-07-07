@@ -25,5 +25,7 @@ export { trashAction } from "./trash";
 export { restoreAction } from "./restore";
 export { destroyAction } from "./destroy";
 export { propertiesAction } from "./properties";
+export { compressAction } from "./compress";
+export { extractAction } from "./extract";
 export { sortByAction } from "./sortBy";
 export { toggleHiddenAction } from "./toggleHidden";

@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 
+import Button from "@/shared/components/elements/Button";
 import { classNames } from "@/shared/utils";
 import { ACCENTS } from "@/shared/constants";
 import { t } from "@/lang";
@@ -20,9 +21,10 @@ const AccentControl = ({ settings, update }: CustomControlProps) => (
       const active = settings.accentColor === value;
       const name = t.settings.accents[value];
       return (
-        <button
+        <Button
           key={value}
-          type="button"
+          unstyled
+          // eslint-disable-next-line i18next/no-literal-string -- ARIA role, not user-facing copy
           role="radio"
           aria-checked={active}
           aria-label={name}

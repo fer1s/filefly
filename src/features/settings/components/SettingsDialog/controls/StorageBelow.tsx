@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { faTrashCan } from "@fortawesome/free-solid-svg-icons";
 
 import type { AppStorageLocation } from "@/shared/services/api";
+import Button from "@/shared/components/elements/Button";
 import IconButton, {
   ICON_BUTTON_SIZE,
   ICON_BUTTON_VARIANT,
@@ -93,14 +94,14 @@ const StorageBelow = () => {
             <span className="settings_row_label">
               {kindLabel(location.kind)}
             </span>
-            <button
-              type="button"
+            <Button
+              unstyled
               className="settings_storage_path"
               title={t.settings.storageOpen}
               onClick={() => void manager.openPath(location.path)}
             >
               {location.path}
-            </button>
+            </Button>
           </span>
           <span className="settings_storage_meta">
             <span className="settings_range_value">

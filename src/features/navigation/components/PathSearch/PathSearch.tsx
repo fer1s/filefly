@@ -5,7 +5,9 @@ import {
   faClockRotateLeft,
 } from "@fortawesome/free-solid-svg-icons";
 
+import Button from "@/shared/components/elements/Button";
 import Icon from "@/shared/components/elements/Icon";
+import TextInput from "@/shared/components/elements/TextInput";
 import { useRecentSearches } from "@/shared/search/recentSearches";
 import { classNames } from "@/shared/utils";
 import { t } from "@/lang";
@@ -86,9 +88,9 @@ const PathSearch = ({
       }}
     >
       <Icon className="path_search_icon" icon={faMagnifyingGlass} />
-      <input
+      <TextInput
+        unstyled
         ref={inputRef}
-        type="text"
         className="path_search_input"
         value={value}
         onChange={(event) => onChange(event.target.value)}
@@ -110,26 +112,26 @@ const PathSearch = ({
             <div className="path_recents_header">
               <span>{t.pathbar.recentSearches}</span>
               {/* preventDefault on mousedown so clicking doesn't blur (and close) the field. */}
-              <button
-                type="button"
+              <Button
+                unstyled
                 className="path_recents_clear"
                 onMouseDown={(event) => event.preventDefault()}
                 onClick={clearRecents}
               >
                 {t.pathbar.clearRecents}
-              </button>
+              </Button>
             </div>
             {recents.map((query) => (
-              <button
+              <Button
                 key={query}
-                type="button"
+                unstyled
                 className="path_recents_item"
                 onMouseDown={(event) => event.preventDefault()}
                 onClick={() => selectRecent(query)}
               >
                 <Icon icon={faClockRotateLeft} />
                 <span>{query}</span>
-              </button>
+              </Button>
             ))}
           </div>,
           document.body,

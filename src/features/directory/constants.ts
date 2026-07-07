@@ -64,6 +64,19 @@ export const IMAGE_FORMATS: readonly string[] = [
   "gif",
   SVG_FORMAT,
 ];
+// Whether opening an entry with the given (lowercased) extension launches the in-app preview
+// rather than the OS default app, per the user's preview-in-app settings. Single source of truth
+// shared by open-routing (Directory.openFile) and by hiding the redundant Preview action when
+// Open already previews. Only images/markdown are gated here; pdf/audio/video always open in the
+// OS app, so their explicit Preview action stays.
+export const opensInAppPreview = (
+  ext: string,
+  previewImagesInApp: boolean,
+  previewMarkdownInApp: boolean,
+): boolean =>
+  (previewImagesInApp && IMAGE_FORMATS.includes(ext)) ||
+  (previewMarkdownInApp && ext === MARKDOWN_FORMAT);
+
 export const AUDIO_FORMATS: readonly string[] = ["mp3", "wav", "ogg"];
 export const VIDEO_FORMATS: readonly string[] = [
   "mp4",

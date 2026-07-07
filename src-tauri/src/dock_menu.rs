@@ -201,7 +201,8 @@ mod imp {
     /// time), so it always reflects the current recents.
     fn build_menu(mtm: MainThreadMarker) -> Retained<NSMenu> {
         let state = DOCK.get().unwrap();
-        let handler: &DockHandler = unsafe { &*(HANDLER_PTR.get().copied().unwrap_or(0) as *const DockHandler) };
+        let handler: &DockHandler =
+            unsafe { &*(HANDLER_PTR.get().copied().unwrap_or(0) as *const DockHandler) };
         let menu = NSMenu::new(mtm);
 
         let recents = state.recents.lock().unwrap().clone();
@@ -266,7 +267,10 @@ mod imp {
 
         unsafe {
             let obj = Retained::as_ptr(&delegate) as *mut AnyObject;
-            objc2::ffi::object_setClass(obj.cast(), (new_class as *const objc2::runtime::AnyClass).cast());
+            objc2::ffi::object_setClass(
+                obj.cast(),
+                (new_class as *const objc2::runtime::AnyClass).cast(),
+            );
         }
     }
 

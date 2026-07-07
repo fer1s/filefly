@@ -53,6 +53,31 @@ pub fn create_window(app: &AppHandle, start_path: Option<&str>) -> tauri::Result
     build_window(app, url)
 }
 
+// Open a detached properties window for a single entry: loads `index.html?panel=properties&path=…`,
+// which the frontend detects at mount (see main.tsx) to render only the Properties surface. A fresh
+// window is spawned per call (unique `properties-N` label). Small and opaque; starts hidden and the
+// frontend reveals it once the entry's metadata has loaded.
+pub fn create_properties_window(app: &AppHandle, path: &str) -> tauri::Result<WebviewWindow> {
+    let n = WINDOW_COUNTER.fetch_add(1, Ordering::Relaxed);
+    let label = format!("properties-{n}");
+    let url = WebviewUrl::App(
+        format!("index.html?panel=properties&path={}", encode_query(path)).into(),
+    );
+    let window = WebviewWindowBuilder::new(app, label, url)
+        .title("Properties")
+        .inner_size(440.0, 520.0)
+        .min_inner_size(320.0, 360.0)
+        .resizable(true)
+        .transparent(false)
+        .decorations(true)
+        .shadow(true)
+        .center()
+        .visible(false)
+        .build()?;
+    configure_window(&window);
+    Ok(window)
+}
+
 // Open a window that reveals a single file: rooted at the file's parent folder (as `startPath`),
 // with the file itself carried as a `reveal` query param so the frontend selects it once the
 // listing loads (see DirectoryProvider). Mirrors Finder's "Show in Finder".
@@ -92,6 +117,33 @@ fn build_window(app: &AppHandle, url: WebviewUrl) -> tauri::Result<WebviewWindow
     Ok(window)
 }
 
+// Open a detached preview window for a single file: loads `index.html?panel=preview&path=<file>`,
+// which the frontend detects at mount (see main.tsx) to render only the Preview surface. A fresh
+// window is spawned per call (unique `preview-N` label) so several previews can sit side by side.
+// Smaller than a browser window and starts hidden — the frontend reveals it once the file loads.
+pub fn create_preview_window(app: &AppHandle, file: &str) -> tauri::Result<WebviewWindow> {
+    let n = WINDOW_COUNTER.fetch_add(1, Ordering::Relaxed);
+    let label = format!("preview-{n}");
+    let url = WebviewUrl::App(
+        format!("index.html?panel=preview&path={}", encode_query(file)).into(),
+    );
+    // Opaque (unlike the browser windows' vibrancy): a content window framed by the native
+    // titlebar, not a translucent panel — otherwise the desktop/other windows show through.
+    let window = WebviewWindowBuilder::new(app, label, url)
+        .title("Preview")
+        .inner_size(820.0, 620.0)
+        .min_inner_size(420.0, 320.0)
+        .resizable(true)
+        .transparent(false)
+        .decorations(true)
+        .shadow(true)
+        .center()
+        .visible(false)
+        .build()?;
+    configure_window(&window);
+    Ok(window)
+}
+
 // The window tray/Dock actions should act on: the focused one if any, otherwise any open window.
 // Returns None only when every window has been closed (app living in the tray).
 pub fn target_window(app: &AppHandle) -> Option<WebviewWindow> {
@@ -105,7 +157,9 @@ pub fn target_window(app: &AppHandle) -> Option<WebviewWindow> {
 
 #[tauri::command]
 pub fn open_new_window(app: AppHandle) -> Result<(), String> {
-    create_window(&app, None).map(|_| ()).map_err(|e| e.to_string())
+    create_window(&app, None)
+        .map(|_| ())
+        .map_err(|e| e.to_string())
 }
 
 // Open a new file-browser window rooted at `path` (e.g. one of the app's data directories from the
@@ -113,6 +167,24 @@ pub fn open_new_window(app: AppHandle) -> Result<(), String> {
 #[tauri::command]
 pub fn open_path_in_new_window(app: AppHandle, path: String) -> Result<(), String> {
     create_window(&app, Some(&path))
+        .map(|_| ())
+        .map_err(|e| e.to_string())
+}
+
+// Open the built-in preview for `path` in its own window (used when the openPreviewInWindow
+// setting is on, in place of the in-app overlay).
+#[tauri::command]
+pub fn open_preview_window(app: AppHandle, path: String) -> Result<(), String> {
+    create_preview_window(&app, &path)
+        .map(|_| ())
+        .map_err(|e| e.to_string())
+}
+
+// Open the properties for `path` in its own window (used when the openPropertiesInWindow setting is
+// on, in place of the in-app dialog).
+#[tauri::command]
+pub fn open_properties_window(app: AppHandle, path: String) -> Result<(), String> {
+    create_properties_window(&app, &path)
         .map(|_| ())
         .map_err(|e| e.to_string())
 }

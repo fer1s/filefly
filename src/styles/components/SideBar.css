@@ -89,6 +89,17 @@
   color: var(--color-danger);
 }
 
+/* Pen button on connection rows in edit mode: right-aligned like the trash button; when both show
+   (edit + trash on a connection), the pen carries the auto margin and the trash sits next to it. */
+.SideBar section .section_content .folder_item .item_edit {
+  margin-left: auto;
+  pointer-events: auto;
+}
+
+.SideBar section .section_content .folder_item .item_edit + .item_remove {
+  margin-left: 0;
+}
+
 /* Eye toggle on preset rows: same right-aligned, still-clickable placement as the trash button,
    but neutral (presets are hidden, not deleted). */
 .SideBar section .section_content .folder_item .item_hide {
@@ -177,6 +188,18 @@
 .SideBar section .section_content .folder_item:hover svg,
 .SideBar section .section_content .folder_item:hover p {
   color: var(--color-accent);
+}
+
+/* Edit mode: rows aren't navigable, so drop the hover accent — it would still light up when
+   hovering the inline action buttons (they keep pointer-events while the row doesn't). */
+.SideBar .SidebarSection.editing .section_content .folder_item:hover {
+  background-color: transparent;
+  border-color: transparent;
+}
+
+.SideBar .SidebarSection.editing .section_content .folder_item:hover svg,
+.SideBar .SidebarSection.editing .section_content .folder_item:hover p {
+  color: var(--color-text-tertiary);
 }
 
 .SideBar section .section_content .drive_item {

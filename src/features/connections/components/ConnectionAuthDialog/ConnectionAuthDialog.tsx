@@ -4,8 +4,8 @@ import Dialog from "@/shared/components/patterns/Dialog";
 import DialogHeader from "@/shared/components/patterns/DialogHeader";
 import DialogActions from "@/shared/components/patterns/DialogActions";
 import Button from "@/shared/components/elements/Button";
+import PasswordInput from "@/shared/components/patterns/PasswordInput";
 import { useCloseOnEscape } from "@/shared/hooks/useCloseOnEscape";
-import { classNames } from "@/shared/utils";
 import { t } from "@/lang";
 
 import "@/styles/components/ConnectionDialog.css";
@@ -84,8 +84,7 @@ const ConnectionAuthDialog = ({
 
         <label className="connection_field">
           <span>{t.connections.authSecret}</span>
-          <input
-            type="password"
+          <PasswordInput
             autoFocus
             value={secret}
             placeholder={t.connections.optional}
@@ -100,11 +99,7 @@ const ConnectionAuthDialog = ({
           <Button type="button" onClick={onClose}>
             {t.common.cancel}
           </Button>
-          <Button
-            type="submit"
-            className={classNames("connection_submit", busy && "disabled")}
-            disabled={busy}
-          >
+          <Button type="submit" className="primary" disabled={busy}>
             {t.connections.retry}
           </Button>
         </DialogActions>

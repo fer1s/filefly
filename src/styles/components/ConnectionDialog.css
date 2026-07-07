@@ -19,25 +19,8 @@
   color: var(--color-text-dim);
 }
 
-.connection_field > input,
-.connection_select {
-  padding: var(--space-1-5) var(--space-2);
-  border-radius: var(--radius-sm);
-  border: var(--border-width-default) solid var(--color-border-default);
-  background-color: var(--color-surface-input);
-  color: var(--color-text-primary);
-  font-size: var(--font-size-base);
-}
-
-.connection_select {
-  cursor: pointer;
-}
-
-.connection_field > input:focus,
-.connection_select:focus {
-  outline: none;
-  border-color: var(--color-selection-indicator);
-}
+/* The auth dropdown uses the shared .Select element; text fields use TextInput. Both bring their own
+   theme-aware surface + focus ring, so this dialog no longer restyles them. */
 
 /* User (grow) + port (fixed narrow) side by side. */
 .connection_row {
@@ -65,12 +48,5 @@
   margin: 0;
 }
 
-.connection_submit {
-  background-color: var(--color-selection-indicator);
-  color: var(--color-text-on-solid);
-}
-
-.connection_submit.disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
+/* Submit uses the shared .Button.primary variant (accent fill + darkening hover); the disabled
+   look comes from the base .Button:disabled. */

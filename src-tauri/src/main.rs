@@ -46,7 +46,10 @@ fn main() {
             // Internal prefix: the app's own data dir. User name-globs: hydrated from settings.toml
             // so ".DS_Store" & friends are excluded from folder sizes from the first walk.
             let ignore_list = ignore::IgnoreList::new(
-                app.path().app_data_dir().map(|d| vec![d]).unwrap_or_default(),
+                app.path()
+                    .app_data_dir()
+                    .map(|d| vec![d])
+                    .unwrap_or_default(),
                 functions::settings::get_settings(app.handle().clone()).size_ignores(),
             );
             let size_index = index::init(app.handle())?;
@@ -91,6 +94,10 @@ fn main() {
             filesystem::fs::restore_trashed,
             filesystem::fs::delete_entry_permanently,
             filesystem::fs::empty_trash,
+            filesystem::archive::compress_entries,
+            filesystem::archive::extract_archive,
+            filesystem::archive::archive_encrypted,
+            filesystem::archive::sevenzip_available,
             filesystem::tags::get_tags_for,
             filesystem::tags::set_file_tags,
             filesystem::tags::find_tagged,
@@ -106,6 +113,7 @@ fn main() {
             watcher::watch_directory,
             functions::keymap::get_keymap,
             functions::context_menu::get_context_menu,
+            functions::clipboard::copy_files_to_clipboard,
             functions::settings::get_settings,
             functions::settings::set_settings,
             functions::settings::import_settings,
@@ -140,6 +148,8 @@ fn main() {
             dock_menu::clear_recent_folders,
             window::open_new_window,
             window::open_path_in_new_window,
+            window::open_preview_window,
+            window::open_properties_window,
         ])
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {
@@ -195,7 +205,8 @@ fn main() {
                     // forced opens — not becoming the default app for any file type.
                     if let Ok(path) = url.to_file_path() {
                         if path.is_dir() {
-                            let _ = window::create_window(app_handle, Some(&path.to_string_lossy()));
+                            let _ =
+                                window::create_window(app_handle, Some(&path.to_string_lossy()));
                         } else if path.is_file() {
                             let _ =
                                 window::create_reveal_window(app_handle, &path.to_string_lossy());

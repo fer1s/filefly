@@ -34,7 +34,11 @@ fn open_ssh_terminal(
     );
     let script = format!("#!/bin/bash\nexec {ssh}\n");
 
-    let dir = app.path().app_cache_dir().map_err(|e| e.to_string())?.join("ssh");
+    let dir = app
+        .path()
+        .app_cache_dir()
+        .map_err(|e| e.to_string())?
+        .join("ssh");
     std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
     // One reused file per host so these don't pile up in the cache.
     let file = dir.join(format!("ssh-{host}.command"));

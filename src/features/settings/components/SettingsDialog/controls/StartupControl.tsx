@@ -1,5 +1,6 @@
 import type { ChangeEvent } from "react";
 
+import Select from "@/shared/components/elements/Select";
 import { STARTUP_MODE } from "@/shared/constants";
 import { t } from "@/lang";
 
@@ -13,7 +14,7 @@ const StartupControl = ({ settings, update }: CustomControlProps) => {
     update({ startupMode: event.target.value });
 
   return (
-    <select
+    <Select
       className="settings_select"
       value={settings.startupMode}
       onChange={onSelect}
@@ -21,7 +22,7 @@ const StartupControl = ({ settings, update }: CustomControlProps) => {
       <option value={STARTUP_MODE.RESTORE}>{t.settings.startupRestore}</option>
       <option value={STARTUP_MODE.VOLUMES}>{t.settings.startupVolumes}</option>
       <option value={STARTUP_MODE.HOME}>{t.settings.startupHome}</option>
-    </select>
+    </Select>
   );
 };
 

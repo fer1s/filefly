@@ -3,6 +3,7 @@ import { convertFileSrc } from "@tauri-apps/api/core";
 import IconButton, {
   ICON_BUTTON_SIZE,
 } from "@/shared/components/elements/IconButton";
+import Slider from "@/shared/components/elements/Slider";
 import {
   SPACE_HOTKEY,
   useHotkey,
@@ -93,8 +94,7 @@ const AudioPreview = ({ isVisible, filePath }: AudioPreviewProps) => {
       />
       <div className="progress">
         <span className="currentTime">{formatTime(progress)}</span>
-        <input
-          type="range"
+        <Slider
           min={0}
           max={duration}
           value={progress}
@@ -114,8 +114,7 @@ const AudioPreview = ({ isVisible, filePath }: AudioPreviewProps) => {
             isVolumeVisible && "visible",
           )}
         >
-          <input
-            type="range"
+          <Slider
             min={0}
             max={100}
             value={volume}

@@ -4,6 +4,11 @@ import { homeDir, join } from "@tauri-apps/api/path";
 
 import { useStateContext } from "@/shared/providers/StateProvider";
 import { useConfirm } from "@/shared/providers/ConfirmProvider";
+import {
+  compressEntries,
+  extractArchive,
+  copyFilesToClipboard,
+} from "@/shared/services/api";
 import { notify, TOAST_TYPE } from "@/shared/toast";
 import { basename, dirname } from "@/shared/utils";
 import { TRASH_DIR_NAME, SFTP_SCHEME } from "@/shared/constants";
@@ -60,6 +65,9 @@ export const useFileOperations = ({
   const copy = useCallback((targets: string[]) => {
     if (!targets.length || !targets[0]) return;
     setClipboard({ paths: targets, mode: CLIPBOARD_MODE.COPY });
+    // Mirror to the OS clipboard (Finder-style) so the selection can also be pasted into other
+    // apps and text fields. Best-effort: a failure here must not break the in-app copy.
+    copyFilesToClipboard(targets).catch(() => {});
     notify(t.directory.copied(entryLabel(targets)), TOAST_TYPE.SUCCESS);
   }, []);
 
@@ -67,6 +75,14 @@ export const useFileOperations = ({
     if (!targets.length || !targets[0]) return;
     setClipboard({ paths: targets, mode: CLIPBOARD_MODE.CUT });
     notify(t.directory.cut(entryLabel(targets)), TOAST_TYPE.SUCCESS);
+  }, []);
+
+  // Copy the targets' filesystem path(s) to the OS clipboard (one per line), for pasting into a
+  // terminal or another app. Distinct from `copy`, which stages entries in the internal clipboard.
+  const copyPath = useCallback((targets: string[]) => {
+    if (!targets.length || !targets[0]) return;
+    navigator.clipboard.writeText(targets.join("\n"));
+    notify(t.directory.pathCopied(targets.length), TOAST_TYPE.SUCCESS);
   }, []);
 
   // Trash (reversible) or permanent delete, sharing the confirm + progress + error handling.
@@ -357,6 +373,80 @@ export const useFileOperations = ({
     [transferTo],
   );
 
+  // Compress the targets into an archive in their own folder. The status-bar progress bar covers
+  // the in-progress state (streamed byte progress), so there's no start toast — only the clickable
+  // success toast, which reveals + selects the created archive.
+  const compress = useCallback(
+    async (
+      targets: string[],
+      options: { name: string; level: number; password?: string },
+    ) => {
+      if (!targets.length || !targets[0]) return;
+      const destDir = dirname(targets[0]);
+      const label = t.archive.compressing;
+      const onProgress = (p: { processed: number; total: number }) =>
+        setProgress({ label, done: p.processed, total: p.total });
+
+      setProgress({ label, done: 0, total: 0 });
+      try {
+        const out = await compressEntries(
+          targets,
+          destDir,
+          options.name,
+          options.level,
+          options.password,
+          onProgress,
+        );
+        notify(
+          t.archive.compressed(basename(out)),
+          TOAST_TYPE.SUCCESS,
+          revealAction(destDir, [out]),
+        );
+      } catch (err) {
+        notify(t.archive.compressError(String(err)), TOAST_TYPE.ERROR);
+      } finally {
+        setProgress(null);
+      }
+      refreshDir();
+    },
+    [refreshDir, revealAction],
+  );
+
+  // Extract an archive beside it, then reveal + select the output. `intoSubfolder` picks "Extract to
+  // Folder" (wrap in a subfolder) vs "Extract Here" (top-level entries loose in the folder). Same
+  // progress/toast model as compress; the toast reveals the created top-level entries.
+  const extract = useCallback(
+    async (archivePath: string, password?: string, intoSubfolder = false) => {
+      if (!archivePath) return;
+      const destDir = dirname(archivePath);
+      const label = t.archive.extracting;
+      const onProgress = (p: { processed: number; total: number }) =>
+        setProgress({ label, done: p.processed, total: p.total });
+
+      setProgress({ label, done: 0, total: 0 });
+      try {
+        const outputs = await extractArchive(
+          archivePath,
+          destDir,
+          password,
+          intoSubfolder,
+          onProgress,
+        );
+        const message =
+          outputs.length === 1
+            ? t.archive.extracted(basename(outputs[0]))
+            : t.archive.extractedMany(outputs.length);
+        notify(message, TOAST_TYPE.SUCCESS, revealAction(destDir, outputs));
+      } catch (err) {
+        notify(t.archive.extractError(String(err)), TOAST_TYPE.ERROR);
+      } finally {
+        setProgress(null);
+      }
+      refreshDir();
+    },
+    [refreshDir, revealAction],
+  );
+
   const rename = useCallback(
     async (targetPath: string, newName: string) => {
       try {
@@ -410,6 +500,7 @@ export const useFileOperations = ({
   return {
     clipboard,
     copy,
+    copyPath,
     cut,
     remove,
     removePermanently,
@@ -417,6 +508,8 @@ export const useFileOperations = ({
     paste,
     moveTo,
     copyTo,
+    compress,
+    extract,
     rename,
     undo,
     redo,

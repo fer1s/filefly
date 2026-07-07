@@ -264,10 +264,12 @@
 }
 
 /* Raw markdown source editor (edit mode). Fills the preview body. */
+/* Fills the preview pane edge-to-edge: strips the shared .TextArea's frame + inset padding. */
 .preview_container .preview_content .preview_md_editor {
   width: 100%;
   height: 100%;
   box-sizing: border-box;
+  padding: 0;
   resize: none;
   border: none;
   outline: none;
@@ -429,4 +431,24 @@
 .preview_container.image {
   width: calc(100% - var(--space-20));
   height: calc(100% - var(--space-20));
+}
+
+/* Windowed mode (PreviewWindow): the panel IS the window's content, framed by the native window
+   chrome. Fill the window edge-to-edge, opaque, with no floating-panel styling (no margin, border,
+   radius, blur, shadow, or enter animation) and no free-floating geometry. */
+.preview_container.windowed,
+.preview_container.windowed.image {
+  position: absolute;
+  inset: 0;
+  margin: var(--space-0);
+  width: 100%;
+  height: 100%;
+  border: none;
+  border-radius: var(--space-0);
+  background-color: var(--color-background-app);
+  backdrop-filter: none;
+  opacity: 1;
+  transform: none;
+  visibility: visible;
+  pointer-events: auto;
 }

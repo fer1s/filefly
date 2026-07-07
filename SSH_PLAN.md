@@ -81,10 +81,10 @@ export type Connection = {
   id: string;
   name: string;
   host: string;
-  port: number;          // default constant SSH_DEFAULT_PORT = 22
+  port: number; // default constant SSH_DEFAULT_PORT = 22
   user: string;
-  authKind: AuthKind;    // const-object enum: PASSWORD | KEY | AGENT
-  keyPath?: string;      // for KEY
+  authKind: AuthKind; // const-object enum: PASSWORD | KEY | AGENT
+  keyPath?: string; // for KEY
 };
 ```
 
@@ -98,7 +98,11 @@ export type Connection = {
 
 ```ts
 // src/features/connections/constants.ts
-export const AUTH_KIND = { PASSWORD: "password", KEY: "key", AGENT: "agent" } as const;
+export const AUTH_KIND = {
+  PASSWORD: "password",
+  KEY: "key",
+  AGENT: "agent",
+} as const;
 export const SSH_DEFAULT_PORT = 22;
 export const SFTP_SCHEME = "sftp://";
 ```
@@ -141,13 +145,13 @@ features/connections/
 
 ## 5. Degradations in remote mode (must be designed up front)
 
-| Feature | Local | Remote (SFTP) |
-|---|---|---|
-| Live change watching | inotify via `tauri-plugin-fs` (`watch`) | **not available** → poll every N s, or manual refresh |
-| Thumbnails | reads local file | partial download or disable for remote |
-| Directory size (walk) | local walk | remote walk is slow → lazy / opt-in only |
-| Trash / restore | local trash ledger | SFTP has no trash → direct delete behind a confirm |
-| Drag-out to other apps | local path | requires downloading to a temp file first |
+| Feature                | Local                                   | Remote (SFTP)                                         |
+| ---------------------- | --------------------------------------- | ----------------------------------------------------- |
+| Live change watching   | inotify via `tauri-plugin-fs` (`watch`) | **not available** → poll every N s, or manual refresh |
+| Thumbnails             | reads local file                        | partial download or disable for remote                |
+| Directory size (walk)  | local walk                              | remote walk is slow → lazy / opt-in only              |
+| Trash / restore        | local trash ledger                      | SFTP has no trash → direct delete behind a confirm    |
+| Drag-out to other apps | local path                              | requires downloading to a temp file first             |
 
 Each of these needs an explicit remote branch or a graceful "not supported here" state — not a crash.
 
@@ -167,8 +171,10 @@ Each of these needs an explicit remote branch or a graceful "not supported here"
      `get_thumbnail`, `open_file`, all write commands. That's phases 2–3.
 
    ### Testing phase 1
+
    Create `connections.toml` in the app config dir
    (`~/Library/Application Support/com.sito8943.file-browser/`):
+
    ```toml
    [[connection]]
    id = "myserver"
@@ -179,12 +185,15 @@ Each of these needs an explicit remote branch or a graceful "not supported here"
    # Phase 1 only — inline password OR export SFB_SSH_PASSWORD before launching. Phase 2 → keychain.
    password = "secret"
    ```
+
    …or provision it headlessly with the `sfb` CLI (no GUI needed — an agent can do this in parallel):
+
    ```sh
    sfb sftp-add --id myserver --name "My Server" --host example.com --user sito --port 22 --password secret
    sfb sftp-list                 # non-secret view (passwords omitted)
    sfb sftp-remove --id myserver
    ```
+
    The CLI writes the same `connections.toml` the GUI reads (shared core `sftp::*_connection*`,
    config dir resolved by the CLI's own `app_config_dir()` mirroring the Tauri identifier).
 
@@ -193,6 +202,7 @@ Each of these needs an explicit remote branch or a graceful "not supported here"
 
    Original phase-1 scope, for reference: `sftp` module (`read_dir`, `stat`, `read`) + router on the
    read commands (`read_directory`, `get_entry`, open/download).
+
 2. **Connection management.** `connections.toml` + `keyring` secrets + `connections` feature +
    `ConnectionDialog` + Network-group rows. Outcome: users add/connect their own hosts.
 3. **Write operations.** Router on `move_entry`, `copy_entry`, `rename_entry`, `create_folder`,
@@ -225,7 +235,7 @@ local↔remote transfers with progress + streaming, known-hosts, keychain, recon
 opt-in remote thumbnails, auto-clean cache, full connection CRUD in the UI). Remaining:
 
 - **Edit-and-save-back — external apps only (TODO).** The in-app markdown editor now saves a remote
-  file back to the server (write_text_file routes `sftp://` over SFTP). Opening in an *external* OS
+  file back to the server (write_text_file routes `sftp://` over SFTP). Opening in an _external_ OS
   app still edits only the local cache copy — no write-back. Would need a temp watcher + re-upload.
 - **SSH certificate identities in the agent.** `try_agent_auth` only tries plain public keys, not
   `AgentIdentity::Certificate` (SSH-CA setups like Teleport/Vault). Niche — plain-key hosts work.

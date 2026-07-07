@@ -11,6 +11,9 @@ export type FolderItemProps = {
   onContextMenu?: (e: MouseEvent) => void;
   // When provided (edit mode, custom items only) a trash button shows to remove the item.
   onRemove?: () => void;
+  // When provided (edit mode, connection rows only) a pen button shows to edit the item, next to
+  // the trash button.
+  onEdit?: () => void;
   // When provided (edit mode, preset rows only) an eye button toggles the preset's visibility
   // instead of a trash button — presets are hidden, never deleted.
   onToggleHidden?: () => void;

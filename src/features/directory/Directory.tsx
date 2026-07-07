@@ -14,19 +14,8 @@ import {
   RECENTS,
   DRAG_DROP_ACTION,
 } from "@/shared/constants";
-import {
-  ENTRY_KIND,
-  CLIPBOARD_MODE,
-  IMAGE_FORMATS,
-  MARKDOWN_FORMAT,
-} from "@/features/directory/constants";
-import {
-  classNames,
-  isTagsPath,
-  basename,
-  dirname,
-  extension,
-} from "@/shared/utils";
+import { ENTRY_KIND, CLIPBOARD_MODE } from "@/features/directory/constants";
+import { classNames, isTagsPath, basename, dirname } from "@/shared/utils";
 import { notify, TOAST_TYPE } from "@/shared/toast";
 import { t } from "@/lang";
 import { DirEntry } from "@/shared/models";
@@ -50,6 +39,7 @@ import Switcher from "@/shared/components/elements/Switcher";
 import ListHeader from "./components/ListHeader";
 import EntriesView from "./components/EntriesView";
 import AccessDeniedNotice from "./components/AccessDeniedNotice";
+import RemoteErrorNotice from "./components/RemoteErrorNotice";
 import EntryContextMenu from "./components/EntryContextMenu";
 import StatusBar from "./components/StatusBar";
 import TypeaheadPopup from "./components/TypeaheadPopup";
@@ -69,6 +59,7 @@ const Directory = () => {
     view,
     search,
     accessDenied,
+    loadError,
     loadingDir,
     zoom,
     savingSettings,
@@ -76,8 +67,6 @@ const Directory = () => {
     confirmDragDrop,
     toggleConfirmDragDrop,
     dragToExternalApps,
-    previewImagesInApp,
-    previewMarkdownInApp,
     infoPanelOpen,
   } = useStateContext();
 
@@ -106,6 +95,7 @@ const Directory = () => {
     searching,
     revealID,
     clearRevealID,
+    openFile,
   } = useDirectory();
 
   // A modal dialog owns the keyboard while open. Keymap actions are already suppressed by the
@@ -206,34 +196,6 @@ const Directory = () => {
   // Browsing the system Trash (~/.Trash): entries offer Restore instead of Move-to-Trash.
   const inTrash = path.endsWith(`/${TRASH_DIR_NAME}`);
 
-  // Open a file: images/markdown go to the in-app preview when their setting is on, everything
-  // else (and those when it's off) opens in the OS default app. Shared by Enter (below) and
-  // double-click (DirEntry via onOpenFile) so both honour the setting.
-  const openFile = useCallback(
-    async (entry: DirEntry) => {
-      const ext = extension(entry.name);
-      const inApp =
-        (previewImagesInApp && IMAGE_FORMATS.includes(ext)) ||
-        (previewMarkdownInApp && ext === MARKDOWN_FORMAT);
-      // In-app preview keeps the real (possibly remote) path so prev/next works over the folder's
-      // entries; the Preview panel downloads a remote file to the cache itself. Opening in the OS
-      // app needs a local path now, so materialize first (read-only — see SSH_PLAN.md phase 3a).
-      if (inApp) {
-        preview.open(entry.path);
-        return;
-      }
-      try {
-        // TODO(SSH_PLAN.md §9): opening a remote file in an external OS app edits only the local
-        // cache copy — changes are NOT pushed back to the server. Would need to watch the temp and
-        // re-upload on change. The in-app markdown editor does save back (see useMarkdownPreview).
-        fs.open(await fs.materialize(entry.path));
-      } catch (err) {
-        notify(t.connections.openError(String(err)), TOAST_TYPE.ERROR);
-      }
-    },
-    [previewImagesInApp, previewMarkdownInApp, preview, fs],
-  );
-
   const handleKeyboardOpen = useCallback(
     (entry: DirEntry) =>
       entry.metadata.isDir ? setPath(entry.path) : openFile(entry),
@@ -308,6 +270,7 @@ const Directory = () => {
     enabled: !preview.visible && !properties.visible,
     selectedIDs,
     onCopy: fileOps.copy,
+    onCopyPath: fileOps.copyPath,
     onCut: fileOps.cut,
     onPaste: fileOps.paste,
     onUndo: fileOps.undo,
@@ -343,6 +306,10 @@ const Directory = () => {
   // empty) directory content underneath rather than flashing it.
   const showLoader =
     !accessDenied && (loadingDir || (searching && sorted.length === 0));
+
+  // A failed remote load shows a persistent notice instead of a deceptively empty listing. The
+  // loader wins while a retry is in flight.
+  const showLoadError = !accessDenied && !showLoader && !!loadError;
 
   return (
     <div
@@ -382,6 +349,10 @@ const Directory = () => {
       >
         {accessDenied && <AccessDeniedNotice />}
 
+        {showLoadError && (
+          <RemoteErrorNotice error={loadError!} retry={refreshDir} />
+        )}
+
         {!accessDenied && isNtfsReadOnly && (
           <NtfsNotice recheck={recheckWritability} />
         )}
@@ -408,7 +379,7 @@ const Directory = () => {
           </div>
         )}
 
-        {!accessDenied && !showLoader && (
+        {!accessDenied && !showLoader && !showLoadError && (
           <EntriesView
             key={searchActive ? "search" : path}
             entries={sorted}

@@ -2,6 +2,7 @@ export type UseClipboardShortcutsArgs = {
   enabled: boolean;
   selectedIDs: string[];
   onCopy: (targets: string[]) => void;
+  onCopyPath: (targets: string[]) => void;
   onCut: (targets: string[]) => void;
   onPaste: () => void;
   onUndo: () => void;

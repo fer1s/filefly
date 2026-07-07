@@ -12,6 +12,7 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { StateProvider } from "@/shared/providers/StateProvider";
 import { ModalProvider } from "@/shared/providers/ModalProvider";
 import { ConfirmProvider } from "@/shared/providers/ConfirmProvider";
+import { CompressProvider } from "@/shared/providers/CompressProvider";
 import { FolderPickerProvider } from "@/shared/providers/FolderPickerProvider";
 import { FilePickerProvider } from "@/shared/providers/FilePickerProvider";
 import { TagsProvider } from "@/shared/providers/TagsProvider";
@@ -150,14 +151,24 @@ const App = () => {
   }, [settings.showToasts]);
 
   // Dialogs render outside the .App subtree (their providers wrap it), so the modal-surface opacity
-  // is set on the document root where they can inherit it (see Dialog.css). Mirrors the inline
-  // --context-menu-opacity used for menus, which do live inside .App.
+  // is set on the document root where they can inherit it (see Dialog.css).
   useEffect(() => {
     document.documentElement.style.setProperty(
       "--dialog-opacity",
       String(settings.dialogOpacity),
     );
   }, [settings.dialogOpacity]);
+
+  // Context-menu submenu flyouts are portaled to <body>, outside .App, so they don't inherit the
+  // inline --context-menu-opacity below. Mirror it onto the document root (like --dialog-opacity) so
+  // the flyout gets the exact same surface as the main menu — one class, one variable, both styled
+  // together by any future change.
+  useEffect(() => {
+    document.documentElement.style.setProperty(
+      "--context-menu-opacity",
+      String(settings.contextMenuOpacity),
+    );
+  }, [settings.contextMenuOpacity]);
 
   // Mirror the launch preference into localStorage so the next launch's (synchronous) tab
   // restoration can read it before settings.toml has finished loading.
@@ -225,6 +236,7 @@ const App = () => {
         dirContent: directory.dirContent,
         setDirContent: directory.setDirContent,
         accessDenied: directory.accessDenied,
+        loadError: directory.loadError,
         loadingDir: directory.loadingDir,
         view,
         setView,
@@ -261,6 +273,8 @@ const App = () => {
         toggleDragToExternalApps,
         previewImagesInApp: settings.previewImagesInApp,
         previewMarkdownInApp: settings.previewMarkdownInApp,
+        openPreviewInWindow: settings.openPreviewInWindow,
+        openPropertiesInWindow: settings.openPropertiesInWindow,
         remoteThumbnails: settings.remoteThumbnails,
         savingSettings,
         search: tabs.search,
@@ -279,49 +293,53 @@ const App = () => {
               {/* Inside HotkeyProvider so the confirm dialog's Escape-to-close (a MODAL-scope
                   hotkey) and modal-scope suppression actually register. */}
               <ConfirmProvider>
-                {/* Custom folder picker (vs native Finder dialog); inside HotkeyProvider/ModalProvider
+                {/* Archive compress/extract flows + options dialog. Inside ConfirmProvider so its
+                    dialog shares the same modal/hotkey scope. */}
+                <CompressProvider>
+                  {/* Custom folder picker (vs native Finder dialog); inside HotkeyProvider/ModalProvider
                   so its dialog gets MODAL-scope suppression and focus trapping like other dialogs. */}
-                <FolderPickerProvider
-                  useCustom={settings.useCustomFolderPicker}
-                >
-                  <FilePickerProvider
+                  <FolderPickerProvider
                     useCustom={settings.useCustomFolderPicker}
                   >
-                    <ShortcutHelpProvider>
-                      <SettingsProvider settings={settings} update={update}>
-                        <div
-                          className={classNames(
-                            "App",
-                            sidebar.collapsed && "collapsed",
-                          )}
-                          // Expanded-column width; the collapsed rule overrides it (see index.css).
-                          style={
-                            {
-                              "--sidebar-width": `${settings.sidebarWidth}px`,
-                              // Alpha of the context-menu background (see ContextMenu.css); menus are
-                              // descendants of .App, so they inherit this override.
-                              "--context-menu-opacity":
-                                settings.contextMenuOpacity,
-                              // Alpha of the preview controls pill (see Preview.css); the pill is a
-                              // descendant of .App, so it inherits this override.
-                              "--preview-controls-opacity":
-                                settings.previewControlsOpacity,
-                            } as CSSProperties
-                          }
-                        >
-                          <SideBar
-                            collapsed={sidebar.collapsed}
-                            onToggle={sidebar.toggle}
-                          />
-                          {!sidebar.collapsed && <SidebarResizeHandle />}
-                          <AppContent />
-                        </div>
-                      </SettingsProvider>
-                      <ShortcutsDialog />
-                      <ToastStack toasts={toasts} onDismiss={dismissToast} />
-                    </ShortcutHelpProvider>
-                  </FilePickerProvider>
-                </FolderPickerProvider>
+                    <FilePickerProvider
+                      useCustom={settings.useCustomFolderPicker}
+                    >
+                      <ShortcutHelpProvider>
+                        <SettingsProvider settings={settings} update={update}>
+                          <div
+                            className={classNames(
+                              "App",
+                              sidebar.collapsed && "collapsed",
+                            )}
+                            // Expanded-column width; the collapsed rule overrides it (see index.css).
+                            style={
+                              {
+                                "--sidebar-width": `${settings.sidebarWidth}px`,
+                                // Alpha of the context-menu background (see ContextMenu.css); menus are
+                                // descendants of .App, so they inherit this override.
+                                "--context-menu-opacity":
+                                  settings.contextMenuOpacity,
+                                // Alpha of the preview controls pill (see Preview.css); the pill is a
+                                // descendant of .App, so it inherits this override.
+                                "--preview-controls-opacity":
+                                  settings.previewControlsOpacity,
+                              } as CSSProperties
+                            }
+                          >
+                            <SideBar
+                              collapsed={sidebar.collapsed}
+                              onToggle={sidebar.toggle}
+                            />
+                            {!sidebar.collapsed && <SidebarResizeHandle />}
+                            <AppContent />
+                          </div>
+                        </SettingsProvider>
+                        <ShortcutsDialog />
+                        <ToastStack toasts={toasts} onDismiss={dismissToast} />
+                      </ShortcutHelpProvider>
+                    </FilePickerProvider>
+                  </FolderPickerProvider>
+                </CompressProvider>
               </ConfirmProvider>
             </HotkeyProvider>
           </KeymapProvider>
