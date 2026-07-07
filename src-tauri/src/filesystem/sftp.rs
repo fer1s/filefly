@@ -65,7 +65,9 @@ mod keychain {
         entry(id, field).ok()?.get_password().ok()
     }
     pub fn set(id: &str, field: &str, secret: &str) -> Result<(), String> {
-        entry(id, field)?.set_password(secret).map_err(|e| e.to_string())
+        entry(id, field)?
+            .set_password(secret)
+            .map_err(|e| e.to_string())
     }
     // Best-effort clear (used when a field is left empty); a missing entry is fine.
     pub fn delete(id: &str, field: &str) {
@@ -127,7 +129,13 @@ pub struct ConnectionInfo {
 
 impl From<Connection> for ConnectionInfo {
     fn from(c: Connection) -> Self {
-        ConnectionInfo { id: c.id, name: c.name, host: c.host, port: c.port, user: c.user }
+        ConnectionInfo {
+            id: c.id,
+            name: c.name,
+            host: c.host,
+            port: c.port,
+            user: c.user,
+        }
     }
 }
 
@@ -228,7 +236,8 @@ impl client::Handler for ClientHandler {
         &mut self,
         server_public_key: &ssh_key::PublicKey,
     ) -> Result<bool, Self::Error> {
-        match russh::keys::known_hosts::check_known_hosts(&self.host, self.port, server_public_key) {
+        match russh::keys::known_hosts::check_known_hosts(&self.host, self.port, server_public_key)
+        {
             // Known host, key matches.
             Ok(true) => Ok(true),
             // Unknown host — trust on first use and record it (like ssh's accept-new).
@@ -237,7 +246,12 @@ impl client::Handler for ClientHandler {
                     "[sftp] new host {}:{} — recording its key in known_hosts",
                     self.host, self.port
                 );
-                russh::keys::known_hosts::learn_known_hosts(&self.host, self.port, server_public_key).ok();
+                russh::keys::known_hosts::learn_known_hosts(
+                    &self.host,
+                    self.port,
+                    server_public_key,
+                )
+                .ok();
                 Ok(true)
             }
             // Recorded key changed → refuse (possible man-in-the-middle).
@@ -253,8 +267,16 @@ impl client::Handler for ClientHandler {
             }
             // No known_hosts file yet / parse error → treat as first use and record.
             Err(other) => {
-                eprintln!("[sftp] known_hosts check for {}:{}: {other} — recording key", self.host, self.port);
-                russh::keys::known_hosts::learn_known_hosts(&self.host, self.port, server_public_key).ok();
+                eprintln!(
+                    "[sftp] known_hosts check for {}:{}: {other} — recording key",
+                    self.host, self.port
+                );
+                russh::keys::known_hosts::learn_known_hosts(
+                    &self.host,
+                    self.port,
+                    server_public_key,
+                )
+                .ok();
                 Ok(true)
             }
         }
@@ -390,11 +412,17 @@ async fn try_password_auth(
 // Logs each step to stderr (visible in the `tauri dev` terminal) so connection problems are
 // diagnosable — remote failures otherwise surface only as an empty folder.
 async fn open_session(conn: &Connection) -> Result<RemoteSession, String> {
-    eprintln!("[sftp] connecting to {}@{}:{}", conn.user, conn.host, conn.port);
+    eprintln!(
+        "[sftp] connecting to {}@{}:{}",
+        conn.user, conn.host, conn.port
+    );
     let config = Arc::new(client::Config::default());
     let key_changed = Arc::new(AtomicBool::new(false));
-    let handler =
-        ClientHandler { host: conn.host.clone(), port: conn.port, key_changed: key_changed.clone() };
+    let handler = ClientHandler {
+        host: conn.host.clone(),
+        port: conn.port,
+        key_changed: key_changed.clone(),
+    };
     let mut handle = client::connect(config, (conn.host.as_str(), conn.port), handler)
         .await
         .map_err(|e| {
@@ -461,7 +489,11 @@ async fn open_session(conn: &Connection) -> Result<RemoteSession, String> {
              public key is in the server's ~/.ssh/authorized_keys, or set a keyPath/password.",
             conn.user,
             conn.host,
-            if conn.password.is_some() { " and password rejected" } else { " (no password set)" }
+            if conn.password.is_some() {
+                " and password rejected"
+            } else {
+                " (no password set)"
+            }
         );
         // Prefixed with a stable marker so the frontend can recognise an auth failure (vs a network
         // error) and prompt for a password/passphrase instead of showing a generic toast.
@@ -472,29 +504,24 @@ async fn open_session(conn: &Connection) -> Result<RemoteSession, String> {
     }
     eprintln!("[sftp] authenticated, opening sftp subsystem…");
 
-    let channel = handle
-        .channel_open_session()
-        .await
-        .map_err(|e| {
-            eprintln!("[sftp] channel error: {e}");
-            format!("channel error: {e}")
-        })?;
-    channel
-        .request_subsystem(true, "sftp")
-        .await
-        .map_err(|e| {
-            eprintln!("[sftp] sftp subsystem error: {e}");
-            format!("sftp subsystem error: {e}")
-        })?;
-    let sftp = SftpSession::new(channel.into_stream())
-        .await
-        .map_err(|e| {
-            eprintln!("[sftp] sftp init error: {e}");
-            format!("sftp init error: {e}")
-        })?;
+    let channel = handle.channel_open_session().await.map_err(|e| {
+        eprintln!("[sftp] channel error: {e}");
+        format!("channel error: {e}")
+    })?;
+    channel.request_subsystem(true, "sftp").await.map_err(|e| {
+        eprintln!("[sftp] sftp subsystem error: {e}");
+        format!("sftp subsystem error: {e}")
+    })?;
+    let sftp = SftpSession::new(channel.into_stream()).await.map_err(|e| {
+        eprintln!("[sftp] sftp init error: {e}");
+        format!("sftp init error: {e}")
+    })?;
     eprintln!("[sftp] session ready for '{}'", conn.id);
 
-    Ok(RemoteSession { _handle: handle, sftp })
+    Ok(RemoteSession {
+        _handle: handle,
+        sftp,
+    })
 }
 
 // The pooled session for `conn_id` if it's still alive; a dropped session (SSH disconnect, timeout,
@@ -528,7 +555,10 @@ async fn session_for(app: &AppHandle, conn_id: &str) -> Result<Arc<RemoteSession
     // Serialize connects for this connection id (short global lock just to fetch/create its guard).
     let guard = {
         let mut locks = connect_locks().lock().await;
-        locks.entry(conn_id.to_string()).or_insert_with(|| Arc::new(Mutex::new(()))).clone()
+        locks
+            .entry(conn_id.to_string())
+            .or_insert_with(|| Arc::new(Mutex::new(())))
+            .clone()
     };
     let _connecting = guard.lock().await;
 
@@ -546,7 +576,10 @@ async fn session_for(app: &AppHandle, conn_id: &str) -> Result<Arc<RemoteSession
             format!("unknown connection '{conn_id}'")
         })?;
     let session = Arc::new(open_session(&conn).await?);
-    pool().lock().await.insert(conn_id.to_string(), session.clone());
+    pool()
+        .lock()
+        .await
+        .insert(conn_id.to_string(), session.clone());
     Ok(session)
 }
 
@@ -566,7 +599,10 @@ pub fn resolve(raw: &str) -> Target {
                 None => (rest, "/"),
             };
             let path = if path.is_empty() { "/" } else { path };
-            Target::Remote { conn: conn.to_string(), path: path.to_string() }
+            Target::Remote {
+                conn: conn.to_string(),
+                path: path.to_string(),
+            }
         }
         None => Target::Local(raw.to_string()),
     }
@@ -582,14 +618,10 @@ fn remote_url(conn: &str, path: &str) -> String {
 pub async fn read_dir(app: &AppHandle, conn: &str, path: &str) -> Result<Vec<DirEntry>, String> {
     eprintln!("[sftp] read_dir '{conn}':{path}");
     let session = session_for(app, conn).await?;
-    let entries = session
-        .sftp
-        .read_dir(path)
-        .await
-        .map_err(|e| {
-            eprintln!("[sftp] read_dir failed for '{conn}':{path}: {e}");
-            format!("read_dir failed: {e}")
-        })?;
+    let entries = session.sftp.read_dir(path).await.map_err(|e| {
+        eprintln!("[sftp] read_dir failed for '{conn}':{path}: {e}");
+        format!("read_dir failed: {e}")
+    })?;
 
     let base = path.trim_end_matches('/');
     let mut result = Vec::new();
@@ -625,7 +657,11 @@ pub async fn dir_size(app: &AppHandle, conn: &str, path: &str) -> Result<u64, St
             .map_err(|e| format!("read_dir failed: {e}"))?;
         for entry in entries {
             if entry.file_type().is_dir() {
-                stack.push(format!("{}/{}", dir.trim_end_matches('/'), entry.file_name()));
+                stack.push(format!(
+                    "{}/{}",
+                    dir.trim_end_matches('/'),
+                    entry.file_name()
+                ));
             } else {
                 total += entry.metadata().size.unwrap_or(0);
             }
@@ -636,7 +672,12 @@ pub async fn dir_size(app: &AppHandle, conn: &str, path: &str) -> Result<u64, St
 
 // Overwrite a remote text file with `content` (create/truncate). Backs saving an edited remote
 // markdown file back to the server (SSH_PLAN.md phase 4 — in-app editor save-back).
-pub async fn write_text(app: &AppHandle, conn: &str, path: &str, content: &str) -> Result<(), String> {
+pub async fn write_text(
+    app: &AppHandle,
+    conn: &str,
+    path: &str,
+    content: &str,
+) -> Result<(), String> {
     use tokio::io::AsyncWriteExt;
     let session = session_for(app, conn).await?;
     let mut file = session
@@ -644,8 +685,12 @@ pub async fn write_text(app: &AppHandle, conn: &str, path: &str, content: &str) 
         .create(path.to_string())
         .await
         .map_err(|e| format!("create failed: {e}"))?;
-    file.write_all(content.as_bytes()).await.map_err(|e| format!("write failed: {e}"))?;
-    file.flush().await.map_err(|e| format!("flush failed: {e}"))?;
+    file.write_all(content.as_bytes())
+        .await
+        .map_err(|e| format!("write failed: {e}"))?;
+    file.flush()
+        .await
+        .map_err(|e| format!("flush failed: {e}"))?;
     file.shutdown().await.ok();
     Ok(())
 }
@@ -678,7 +723,10 @@ pub async fn stat(app: &AppHandle, conn: &str, path: &str) -> Result<DirEntry, S
 // Storage settings "Clear cache" button (it wipes the whole cache dir).
 fn cache_path_for(app: &AppHandle, conn: &str, path: &str) -> Result<std::path::PathBuf, String> {
     let cache = app.path().app_cache_dir().map_err(|e| e.to_string())?;
-    Ok(cache.join("sftp").join(conn).join(path.trim_start_matches('/')))
+    Ok(cache
+        .join("sftp")
+        .join(conn)
+        .join(path.trim_start_matches('/')))
 }
 
 // Delete the SFTP cache subdir (materialized remote files + ssh .command scripts). Best-effort,
@@ -718,7 +766,11 @@ pub async fn download(app: &AppHandle, conn: &str, path: &str) -> Result<String,
     }
     // Opening/preview download reports no progress (the caller shows its own spinner).
     let noop = |_done: u64, _total: u64| {};
-    let prog = ProgressState { done: AtomicU64::new(0), total: remote_size, report: &noop };
+    let prog = ProgressState {
+        done: AtomicU64::new(0),
+        total: remote_size,
+        report: &noop,
+    };
     stream_from_remote(&session, path, &local, &prog).await?;
     Ok(local.to_string_lossy().into_owned())
 }
@@ -734,14 +786,10 @@ pub async fn sftp_download(app: AppHandle, conn: String, path: String) -> Result
 // /root) instead of the filesystem root, matching the shell.
 pub async fn home_url(app: &AppHandle, conn: &str) -> Result<String, String> {
     let session = session_for(app, conn).await?;
-    let home = session
-        .sftp
-        .canonicalize(".")
-        .await
-        .map_err(|e| {
-            eprintln!("[sftp] home lookup failed for '{conn}': {e}");
-            format!("home lookup failed: {e}")
-        })?;
+    let home = session.sftp.canonicalize(".").await.map_err(|e| {
+        eprintln!("[sftp] home lookup failed for '{conn}': {e}");
+        format!("home lookup failed: {e}")
+    })?;
     eprintln!("[sftp] home for '{conn}' = {home}");
     Ok(remote_url(conn, &home))
 }
@@ -779,7 +827,10 @@ pub async fn create_dir(app: &AppHandle, conn: &str, parent: &str) -> Result<Str
 // Rename a remote entry in place within its parent.
 pub async fn rename(app: &AppHandle, conn: &str, path: &str, new_name: &str) -> Result<(), String> {
     let session = session_for(app, conn).await?;
-    let parent = path.trim_end_matches('/').rsplit_once('/').map_or("", |(p, _)| p);
+    let parent = path
+        .trim_end_matches('/')
+        .rsplit_once('/')
+        .map_or("", |(p, _)| p);
     let dest = format!("{parent}/{new_name}");
     if session.sftp.metadata(&dest).await.is_ok() {
         return Err("An item with that name already exists".to_string());
@@ -850,7 +901,11 @@ type Transfer<'a> = Pin<Box<dyn Future<Output = Result<(), String>> + Send + 'a>
 
 // Last path segment of a local or sftp path.
 fn base_name(path: &str) -> String {
-    path.trim_end_matches('/').rsplit('/').next().unwrap_or(path).to_string()
+    path.trim_end_matches('/')
+        .rsplit('/')
+        .next()
+        .unwrap_or(path)
+        .to_string()
 }
 
 // Split "name.ext" into ("name", ".ext"); no extension → (name, ""). Used for collision renames.
@@ -920,11 +975,17 @@ where
     let mut buf = vec![0u8; 64 * 1024];
     let mut since_report: u64 = 0;
     loop {
-        let n = reader.read(&mut buf).await.map_err(|e| format!("read failed: {e}"))?;
+        let n = reader
+            .read(&mut buf)
+            .await
+            .map_err(|e| format!("read failed: {e}"))?;
         if n == 0 {
             break;
         }
-        writer.write_all(&buf[..n]).await.map_err(|e| format!("write failed: {e}"))?;
+        writer
+            .write_all(&buf[..n])
+            .await
+            .map_err(|e| format!("write failed: {e}"))?;
         let done = prog.done.fetch_add(n as u64, Ordering::Relaxed) + n as u64;
         since_report += n as u64;
         if since_report >= PROGRESS_STEP {
@@ -944,14 +1005,18 @@ async fn stream_to_remote(
     prog: &ProgressState<'_>,
 ) -> Result<(), String> {
     use tokio::io::AsyncWriteExt;
-    let mut src = tokio::fs::File::open(local).await.map_err(|e| e.to_string())?;
+    let mut src = tokio::fs::File::open(local)
+        .await
+        .map_err(|e| e.to_string())?;
     let mut dst = session
         .sftp
         .create(remote)
         .await
         .map_err(|e| format!("create failed: {e}"))?;
     copy_stream(&mut src, &mut dst, prog).await?;
-    dst.shutdown().await.map_err(|e| format!("upload flush failed: {e}"))?;
+    dst.shutdown()
+        .await
+        .map_err(|e| format!("upload flush failed: {e}"))?;
     Ok(())
 }
 
@@ -967,7 +1032,9 @@ async fn stream_from_remote(
         .open(remote)
         .await
         .map_err(|e| format!("open failed: {e}"))?;
-    let mut dst = tokio::fs::File::create(local).await.map_err(|e| e.to_string())?;
+    let mut dst = tokio::fs::File::create(local)
+        .await
+        .map_err(|e| e.to_string())?;
     copy_stream(&mut src, &mut dst, prog).await
 }
 
@@ -980,10 +1047,21 @@ async fn stream_remote_to_remote(
     prog: &ProgressState<'_>,
 ) -> Result<(), String> {
     use tokio::io::AsyncWriteExt;
-    let mut reader = src.sftp.open(from).await.map_err(|e| format!("open failed: {e}"))?;
-    let mut writer = dst.sftp.create(to).await.map_err(|e| format!("create failed: {e}"))?;
+    let mut reader = src
+        .sftp
+        .open(from)
+        .await
+        .map_err(|e| format!("open failed: {e}"))?;
+    let mut writer = dst
+        .sftp
+        .create(to)
+        .await
+        .map_err(|e| format!("create failed: {e}"))?;
     copy_stream(&mut reader, &mut writer, prog).await?;
-    writer.shutdown().await.map_err(|e| format!("copy flush failed: {e}"))?;
+    writer
+        .shutdown()
+        .await
+        .map_err(|e| format!("copy flush failed: {e}"))?;
     Ok(())
 }
 
@@ -1004,7 +1082,11 @@ fn upload<'a>(
                 .map_err(|e| format!("mkdir failed: {e}"))?;
             for entry in std::fs::read_dir(&local).map_err(|e| e.to_string())? {
                 let entry = entry.map_err(|e| e.to_string())?;
-                let child = format!("{}/{}", remote.trim_end_matches('/'), entry.file_name().to_string_lossy());
+                let child = format!(
+                    "{}/{}",
+                    remote.trim_end_matches('/'),
+                    entry.file_name().to_string_lossy()
+                );
                 upload(session, entry.path(), child, prog).await?;
             }
             Ok(())
@@ -1114,7 +1196,11 @@ async fn remote_tree_size(session: &RemoteSession, path: &str) -> u64 {
         };
         for entry in entries {
             if entry.file_type().is_dir() {
-                stack.push(format!("{}/{}", dir.trim_end_matches('/'), entry.file_name()));
+                stack.push(format!(
+                    "{}/{}",
+                    dir.trim_end_matches('/'),
+                    entry.file_name()
+                ));
             } else {
                 total += entry.metadata().size.unwrap_or(0);
             }
@@ -1150,7 +1236,11 @@ pub async fn transfer(
             let dest = unique_remote(&session, &path, &name).await?;
             eprintln!("[sftp] upload {local} → '{conn}':{dest}");
             let total = local_tree_size(Path::new(&local));
-            let prog = ProgressState { done: AtomicU64::new(0), total, report };
+            let prog = ProgressState {
+                done: AtomicU64::new(0),
+                total,
+                report,
+            };
             upload(&session, PathBuf::from(&local), dest.clone(), &prog).await?;
             report(total, total);
             if is_move {
@@ -1164,7 +1254,11 @@ pub async fn transfer(
             let dest = unique_local(&local_dir, &name);
             eprintln!("[sftp] download '{conn}':{path} → {}", dest.display());
             let total = remote_tree_size(&session, &path).await;
-            let prog = ProgressState { done: AtomicU64::new(0), total, report };
+            let prog = ProgressState {
+                done: AtomicU64::new(0),
+                total,
+                report,
+            };
             download_tree(&session, path.clone(), dest.clone(), &prog).await?;
             report(total, total);
             if is_move {
@@ -1188,7 +1282,11 @@ pub async fn transfer(
             }
             eprintln!("[sftp] copy '{sc}':{sp} → '{dc}':{dest}");
             let total = remote_tree_size(&src, &sp).await;
-            let prog = ProgressState { done: AtomicU64::new(0), total, report };
+            let prog = ProgressState {
+                done: AtomicU64::new(0),
+                total,
+                report,
+            };
             remote_copy(&src, &dst, sp.clone(), dest.clone(), &prog).await?;
             report(total, total);
             if is_move {
@@ -1206,7 +1304,10 @@ pub async fn transfer(
 // never cross to the frontend.
 #[tauri::command]
 pub fn sftp_list_connections(app: AppHandle) -> Vec<ConnectionInfo> {
-    load_connections(&app).into_iter().map(ConnectionInfo::from).collect()
+    load_connections(&app)
+        .into_iter()
+        .map(ConnectionInfo::from)
+        .collect()
 }
 
 // Add (or replace by id) a connection from the GUI. Secrets go to the OS keychain — never the toml;
@@ -1217,13 +1318,20 @@ pub fn sftp_list_connections(app: AppHandle) -> Vec<ConnectionInfo> {
 // keep secrets out of the plaintext toml. On macOS an entered secret goes to the keychain (an empty
 // field leaves any existing entry intact, so editing without re-typing keeps it). On platforms
 // without a keychain backend, secrets stay inline in the toml (phase-1 fallback).
-pub fn add_connection_with_secrets(config_dir: &Path, connection: Connection) -> Result<(), String> {
+pub fn add_connection_with_secrets(
+    config_dir: &Path,
+    connection: Connection,
+) -> Result<(), String> {
     #[cfg(target_os = "macos")]
     {
         if let Some(secret) = connection.password.as_deref().filter(|s| !s.is_empty()) {
             keychain::set(&connection.id, FIELD_PASSWORD, secret)?;
         }
-        if let Some(secret) = connection.key_passphrase.as_deref().filter(|s| !s.is_empty()) {
+        if let Some(secret) = connection
+            .key_passphrase
+            .as_deref()
+            .filter(|s| !s.is_empty())
+        {
             keychain::set(&connection.id, FIELD_KEY_PASSPHRASE, secret)?;
         }
         let stored = Connection {
