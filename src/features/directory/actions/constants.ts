@@ -6,6 +6,7 @@ export const ENTRY_ACTION = {
   OPEN_IN_TERMINAL: "open_in_terminal",
   PREVIEW: "preview",
   COPY: "copy",
+  COPY_PATH: "copy_path",
   CUT: "cut",
   PASTE: "paste",
   RENAME: "rename",

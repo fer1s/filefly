@@ -1,6 +1,7 @@
 // Named actions that can be bound to a key. Values match the table names in keymap.toml.
 export const KEYMAP_ACTION = {
   COPY: "copy",
+  COPY_PATH: "copy_path",
   CUT: "cut",
   PASTE: "paste",
   UNDO: "undo",

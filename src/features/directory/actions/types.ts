@@ -13,6 +13,7 @@ import type { EntryActionId } from "./constants";
 // the generic actions need). Kept narrow so actions don't depend on the whole hook.
 export type FileActions = {
   copy: (targets: string[]) => void;
+  copyPath: (targets: string[]) => void;
   cut: (targets: string[]) => void;
   paste: () => Promise<void>;
   remove: (targets: string[]) => Promise<void>;

@@ -308,6 +308,7 @@ const Directory = () => {
     enabled: !preview.visible && !properties.visible,
     selectedIDs,
     onCopy: fileOps.copy,
+    onCopyPath: fileOps.copyPath,
     onCut: fileOps.cut,
     onPaste: fileOps.paste,
     onUndo: fileOps.undo,

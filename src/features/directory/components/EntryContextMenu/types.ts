@@ -4,6 +4,7 @@ import type { EntryKind } from "@/features/directory/constants";
 
 export type FileOps = {
   copy: (targets: string[]) => void;
+  copyPath: (targets: string[]) => void;
   cut: (targets: string[]) => void;
   remove: (targets: string[]) => Promise<void>;
   removePermanently: (targets: string[]) => Promise<void>;

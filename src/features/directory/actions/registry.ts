@@ -6,6 +6,7 @@ import { openAction } from "./open";
 import { openInTerminalAction } from "./openInTerminal";
 import { previewAction } from "./preview";
 import { copyAction } from "./copy";
+import { copyPathAction } from "./copyPath";
 import { cutAction } from "./cut";
 import { pasteAction } from "./paste";
 import { renameAction } from "./rename";
@@ -26,6 +27,7 @@ export const ENTRY_ACTIONS: Record<EntryActionId, EntryAction> = {
   [ENTRY_ACTION.OPEN_IN_TERMINAL]: openInTerminalAction,
   [ENTRY_ACTION.PREVIEW]: previewAction,
   [ENTRY_ACTION.COPY]: copyAction,
+  [ENTRY_ACTION.COPY_PATH]: copyPathAction,
   [ENTRY_ACTION.CUT]: cutAction,
   [ENTRY_ACTION.PASTE]: pasteAction,
   [ENTRY_ACTION.RENAME]: renameAction,

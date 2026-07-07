@@ -70,6 +70,14 @@ export const useFileOperations = ({
     notify(t.directory.cut(entryLabel(targets)), TOAST_TYPE.SUCCESS);
   }, []);
 
+  // Copy the targets' filesystem path(s) to the OS clipboard (one per line), for pasting into a
+  // terminal or another app. Distinct from `copy`, which stages entries in the internal clipboard.
+  const copyPath = useCallback((targets: string[]) => {
+    if (!targets.length || !targets[0]) return;
+    navigator.clipboard.writeText(targets.join("\n"));
+    notify(t.directory.pathCopied(targets.length), TOAST_TYPE.SUCCESS);
+  }, []);
+
   // Trash (reversible) or permanent delete, sharing the confirm + progress + error handling.
   const deleteTargets = useCallback(
     async (targets: string[], permanent: boolean) => {
@@ -485,6 +493,7 @@ export const useFileOperations = ({
   return {
     clipboard,
     copy,
+    copyPath,
     cut,
     remove,
     removePermanently,

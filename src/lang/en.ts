@@ -50,6 +50,7 @@ export const en = {
     emptyTrash: "Empty Trash",
     eject: "Eject",
     copy: "Copy",
+    copyPath: "Copy Path",
     cut: "Cut",
     rename: "Rename",
     delete: "Move to trash",
@@ -228,6 +229,7 @@ export const en = {
     },
     actions: {
       copy: "Copy",
+      copyPath: "Copy path",
       cut: "Cut",
       paste: "Paste",
       undo: "Undo",
@@ -562,6 +564,7 @@ export const en = {
     showingHidden: "Showing hidden files",
     hidingHidden: "Hiding hidden files",
     copied: (label: string) => `Copied ${label}`,
+    pathCopied: (n: number) => (n === 1 ? "Path copied" : "Paths copied"),
     cut: (label: string) => `Cut ${label}`,
     pasted: (label: string) => `Pasted ${label}`,
     moved: (label: string) => `Moved ${label}`,
