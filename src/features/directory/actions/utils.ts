@@ -23,8 +23,11 @@ export const resolveActionIds = (
 };
 
 // Whether an action should be shown in the current context. Single-target actions (multiple
-// === false, e.g. rename) are hidden once more than one entry is selected.
+// === false, e.g. rename) are hidden once more than one entry is selected; an action's own
+// isVisible predicate (e.g. Preview when Open already previews) can hide it too.
 export const isActionVisible = (
   action: EntryAction,
   ctx: EntryActionContext,
-): boolean => action.multiple !== false || ctx.targets.length <= 1;
+): boolean =>
+  (action.multiple !== false || ctx.targets.length <= 1) &&
+  (action.isVisible ? action.isVisible(ctx) : true);

@@ -3,7 +3,7 @@ import { useKeymap, formatBinding } from "@/shared/keymap";
 import IconButton from "@/shared/components/elements/IconButton";
 import { extension } from "@/shared/utils";
 import { TRASH_DIR_NAME } from "@/shared/constants";
-import { ENTRY_KIND } from "@/features/directory/constants";
+import { ENTRY_KIND, opensInAppPreview } from "@/features/directory/constants";
 
 import { useDirectory } from "../../providers/DirectoryProvider";
 import { useContextMenuLayout } from "../../hooks/useContextMenuLayout";
@@ -24,7 +24,15 @@ import "@/styles/components/QuickActions.css";
 // the current selection — the folder's own actions when nothing is selected, the selected
 // entry's actions otherwise (applied to every selected entry).
 const QuickActions = () => {
-  const { fs, path, setPath, showHidden, toggleShowHidden } = useStateContext();
+  const {
+    fs,
+    path,
+    setPath,
+    showHidden,
+    toggleShowHidden,
+    previewImagesInApp,
+    previewMarkdownInApp,
+  } = useStateContext();
   const { keymap } = useKeymap();
   const layout = useContextMenuLayout();
   const {
@@ -75,6 +83,11 @@ const QuickActions = () => {
     onSort: handleSort,
     showHidden,
     toggleShowHidden,
+    opensInAppPreview: opensInAppPreview(
+      fileExtension.toLowerCase(),
+      previewImagesInApp,
+      previewMarkdownInApp,
+    ),
   };
 
   const actionIds = resolveActionIds(layout, {

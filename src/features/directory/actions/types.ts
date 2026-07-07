@@ -56,6 +56,9 @@ export type EntryActionContext = {
   // Global "show hidden entries" toggle (dotfiles), used by the toggle_hidden action.
   showHidden: boolean;
   toggleShowHidden: () => void;
+  // Whether opening the clicked entry already launches the in-app preview (per the preview-in-app
+  // settings + its type). Used to hide the redundant Preview action when Open == preview.
+  opensInAppPreview: boolean;
 };
 
 // One row inside an action's submenu (e.g. the sort keys under "Sort By"). A check marks the
@@ -86,6 +89,10 @@ export type EntryAction = {
   // Whether the action makes sense for more than one target. When false (e.g. rename), it is
   // hidden once multiple entries are selected. Defaults to true.
   multiple?: boolean;
+  // Context-dependent visibility: when it returns false the action is omitted entirely (not just
+  // disabled) from the menu and quick bar — e.g. Preview when Open already opens the in-app
+  // preview. Absent means always visible (subject to the `multiple` rule).
+  isVisible?: (ctx: EntryActionContext) => boolean;
   // Whether the action is runnable in the given context (e.g. paste needs a clipboard).
   // Absent means always enabled.
   isEnabled?: (ctx: EntryActionContext) => boolean;

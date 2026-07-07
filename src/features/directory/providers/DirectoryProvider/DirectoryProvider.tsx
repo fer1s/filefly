@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { useStateContext } from "@/shared/providers/StateProvider";
-import { openPreviewWindow } from "@/shared/services/api";
+import { openPreviewWindow, openPropertiesWindow } from "@/shared/services/api";
 import { notify, TOAST_TYPE } from "@/shared/toast";
+import { extension } from "@/shared/utils";
+import type { DirEntry } from "@/shared/models";
 import { t } from "@/lang";
 import { revealTargetFromUrl } from "@/features/tabs/utils";
+import { opensInAppPreview } from "@/features/directory/constants";
 
 import { useDirectoryEntries } from "../../hooks/useDirectoryEntries";
 import { useSelection } from "../../hooks/useSelection";
@@ -18,8 +21,17 @@ import type { DirectoryProviderProps } from "./types";
 // Owns the directory's domain state (entries, selection, clipboard ops, preview/properties,
 // inline rename) and provides it to the directory view and the quick-actions bar alike.
 export const DirectoryProvider = ({ children }: DirectoryProviderProps) => {
-  const { view, path, setPath, refreshDir, openPreviewInWindow } =
-    useStateContext();
+  const {
+    fs,
+    view,
+    path,
+    setPath,
+    refreshDir,
+    openPreviewInWindow,
+    openPropertiesInWindow,
+    previewImagesInApp,
+    previewMarkdownInApp,
+  } = useStateContext();
 
   const entries = useDirectoryEntries(view);
   const selection = useSelection(entries.sorted.map((entry) => entry.path));
@@ -104,6 +116,52 @@ export const DirectoryProvider = ({ children }: DirectoryProviderProps) => {
     [preview, openPreview],
   );
 
+  // Open a file like a double-click in the listing: images/markdown go to the in-app preview when
+  // their setting is on, everything else (and those when it's off) opens in the OS default app.
+  // Shared by the directory view (Enter/double-click) and the path bar (committing a file path).
+  const openFile = useCallback(
+    async (entry: DirEntry) => {
+      const ext = extension(entry.name);
+      // In-app preview keeps the real (possibly remote) path so prev/next works over the folder's
+      // entries; the Preview panel downloads a remote file to the cache itself. Opening in the OS
+      // app needs a local path now, so materialize first (read-only — see SSH_PLAN.md phase 3a).
+      if (opensInAppPreview(ext, previewImagesInApp, previewMarkdownInApp)) {
+        openPreview(entry.path);
+        return;
+      }
+      try {
+        // TODO(SSH_PLAN.md §9): opening a remote file in an external OS app edits only the local
+        // cache copy — changes are NOT pushed back to the server. Would need to watch the temp and
+        // re-upload on change. The in-app markdown editor does save back (see useMarkdownPreview).
+        await fs.open(await fs.materialize(entry.path));
+      } catch (err) {
+        notify(t.connections.openError(String(err)), TOAST_TYPE.ERROR);
+      }
+    },
+    [previewImagesInApp, previewMarkdownInApp, openPreview, fs],
+  );
+
+  // Same branch for properties: in-app dialog, or a detached window when openPropertiesInWindow is
+  // on. Centralised here so the context menu, quick bar and keyboard shortcut all honour the setting.
+  const openProperties = useCallback(
+    async (targetId: string, isCurrentDirectory: boolean) => {
+      if (openPropertiesInWindow) {
+        try {
+          await openPropertiesWindow(targetId);
+        } catch (err) {
+          notify(t.errors.properties(String(err)), TOAST_TYPE.ERROR);
+        }
+        return;
+      }
+      await properties.open(targetId, isCurrentDirectory);
+    },
+    [openPropertiesInWindow, properties],
+  );
+  const propertiesApi = useMemo(
+    () => ({ ...properties, open: openProperties }),
+    [properties, openProperties],
+  );
+
   return (
     <DirectoryContext.Provider
       value={{
@@ -113,9 +171,10 @@ export const DirectoryProvider = ({ children }: DirectoryProviderProps) => {
         setRenamingID,
         fileOps,
         preview: previewApi,
-        properties,
+        properties: propertiesApi,
         revealID,
         clearRevealID,
+        openFile,
       }}
     >
       {children}
