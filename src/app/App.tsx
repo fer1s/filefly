@@ -151,14 +151,24 @@ const App = () => {
   }, [settings.showToasts]);
 
   // Dialogs render outside the .App subtree (their providers wrap it), so the modal-surface opacity
-  // is set on the document root where they can inherit it (see Dialog.css). Mirrors the inline
-  // --context-menu-opacity used for menus, which do live inside .App.
+  // is set on the document root where they can inherit it (see Dialog.css).
   useEffect(() => {
     document.documentElement.style.setProperty(
       "--dialog-opacity",
       String(settings.dialogOpacity),
     );
   }, [settings.dialogOpacity]);
+
+  // Context-menu submenu flyouts are portaled to <body>, outside .App, so they don't inherit the
+  // inline --context-menu-opacity below. Mirror it onto the document root (like --dialog-opacity) so
+  // the flyout gets the exact same surface as the main menu — one class, one variable, both styled
+  // together by any future change.
+  useEffect(() => {
+    document.documentElement.style.setProperty(
+      "--context-menu-opacity",
+      String(settings.contextMenuOpacity),
+    );
+  }, [settings.contextMenuOpacity]);
 
   // Mirror the launch preference into localStorage so the next launch's (synchronous) tab
   // restoration can read it before settings.toml has finished loading.
