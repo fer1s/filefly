@@ -10,11 +10,11 @@ import type { TextInputProps } from "./types";
 // and dark mode (raw <input> falls back to the browser's white box). Forwards the ref + every native
 // attribute, so callers keep full control (value, onChange, placeholder, autoFocus, …).
 const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
-  ({ type = "text", className, ...props }, ref) => (
+  ({ type = "text", unstyled, className, ...props }, ref) => (
     <input
       ref={ref}
       type={type}
-      className={classNames("TextInput", className)}
+      className={classNames(!unstyled && "TextInput", className)}
       {...props}
     />
   ),

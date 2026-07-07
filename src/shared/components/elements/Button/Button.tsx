@@ -7,11 +7,11 @@ import "@/styles/components/Button.css";
 import type { ButtonProps } from "./types";
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ type = "button", className, ...props }, ref) => (
+  ({ type = "button", unstyled, className, ...props }, ref) => (
     <button
       ref={ref}
       type={type}
-      className={classNames("Button", className)}
+      className={classNames(!unstyled && "Button", className)}
       {...props}
     />
   ),

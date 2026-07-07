@@ -3,6 +3,7 @@ import {
   faMagnifyingGlass,
 } from "@fortawesome/free-solid-svg-icons";
 
+import Button from "@/shared/components/elements/Button";
 import Icon from "@/shared/components/elements/Icon";
 import { classNames, formatBytes } from "@/shared/utils";
 import { openSystemMonitor, openStorageSettings } from "@/shared/services/api";
@@ -102,16 +103,16 @@ const StatusBar = ({
       </div>
       {stats && (
         <div className="stats_row">
-          <button
-            type="button"
+          <Button
+            unstyled
             className="stat stat_button"
             onClick={showMonitor}
             title={t.directory.openSystemMonitor}
           >
             {t.directory.statCpu(Math.round(stats.cpuUsage))}
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            unstyled
             className="stat stat_button"
             onClick={showMonitor}
             title={t.directory.openSystemMonitor}
@@ -120,9 +121,9 @@ const StatusBar = ({
               formatBytes(stats.memUsed),
               formatBytes(stats.memTotal),
             )}
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            unstyled
             className="stat stat_button"
             onClick={showStorage}
             title={t.storage.title}
@@ -131,7 +132,7 @@ const StatusBar = ({
               formatBytes(stats.diskUsed),
               formatBytes(stats.diskTotal),
             )}
-          </button>
+          </Button>
         </div>
       )}
     </div>

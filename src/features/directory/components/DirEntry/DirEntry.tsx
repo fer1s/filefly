@@ -14,6 +14,7 @@ import {
   SVG_FORMAT,
 } from "@/features/directory/constants";
 import Tooltip from "@/shared/components/elements/Tooltip";
+import TextInput from "@/shared/components/elements/TextInput";
 import { SFTP_SCHEME } from "@/shared/constants";
 import { t } from "@/lang";
 
@@ -128,7 +129,8 @@ const DirEntryItemComponent = ({
   );
 
   const renameInput = (
-    <input
+    <TextInput
+      unstyled
       ref={renameInputRef}
       className="rename_input"
       defaultValue={entry.name}

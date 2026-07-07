@@ -1,5 +1,6 @@
 import type { MouseEvent } from "react";
 
+import Button from "@/shared/components/elements/Button";
 import Icon from "@/shared/components/elements/Icon";
 import { classNames } from "@/shared/utils";
 import { ENTRY_KIND, SORT_DIRECTION } from "@/features/directory/constants";
@@ -32,9 +33,9 @@ const ListHeader = ({
     <>
       <div className="list_header" onContextMenu={openMenu}>
         {COLUMNS.map((col) => (
-          <button
+          <Button
             key={col.key}
-            type="button"
+            unstyled
             className={classNames(col.key, sort.key === col.key && "active")}
             onClick={() => onSort(col.key)}
           >
@@ -48,7 +49,7 @@ const ListHeader = ({
                 }
               />
             )}
-          </button>
+          </Button>
         ))}
       </div>
 

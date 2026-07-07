@@ -1,3 +1,4 @@
+import Button from "@/shared/components/elements/Button";
 import { classNames } from "@/shared/utils";
 
 import { SETTINGS_SECTIONS } from "../../schema";
@@ -8,9 +9,9 @@ import type { SettingsNavProps } from "./types";
 const SettingsNav = ({ active, counts, onSelect }: SettingsNavProps) => (
   <nav className="settings_nav">
     {SETTINGS_SECTIONS.map((section) => (
-      <button
+      <Button
         key={section.id}
-        type="button"
+        unstyled
         className={classNames(
           "settings_nav_item",
           section.id === active && "active",
@@ -19,7 +20,7 @@ const SettingsNav = ({ active, counts, onSelect }: SettingsNavProps) => (
         onClick={() => onSelect(section.id)}
       >
         {section.label()}
-      </button>
+      </Button>
     ))}
   </nav>
 );
