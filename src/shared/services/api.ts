@@ -455,6 +455,10 @@ export const compressEntries = async (
 export const archiveEncrypted = async (archive: string): Promise<boolean> =>
   (await invoke("archive_encrypted", { archive })) as boolean;
 
+// True if a 7-Zip binary (7zz/7z/7za) is on PATH. Gates the "To 7z" compress option and .7z extract.
+export const sevenzipAvailable = async (): Promise<boolean> =>
+  (await invoke("sevenzip_available")) as boolean;
+
 // Extract a .zip into `destDir`. `password` decrypts an encrypted archive. `intoSubfolder` wraps
 // output in a new subfolder named after the archive ("Extract to Folder"); when false, the archive's
 // top-level entries land directly in `destDir` ("Extract Here"). Resolves to the created top-level

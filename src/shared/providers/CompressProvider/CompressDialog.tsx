@@ -23,6 +23,7 @@ const DEFAULT_LEVEL = 6;
 const CompressDialog = ({
   visible,
   defaultName,
+  ext,
   onSubmit,
   onClose,
 }: CompressDialogProps) => {
@@ -46,7 +47,11 @@ const CompressDialog = ({
 
   const submit = () => {
     if (!canSubmit) return;
-    const finalName = /\.zip$/i.test(trimmed) ? trimmed : `${trimmed}.zip`;
+    // Keep the name ending in the target extension (the backend picks the format from it).
+    const suffix = `.${ext}`;
+    const finalName = trimmed.toLowerCase().endsWith(suffix.toLowerCase())
+      ? trimmed
+      : `${trimmed}${suffix}`;
     onSubmit({ name: finalName, level, password: password || undefined });
   };
 

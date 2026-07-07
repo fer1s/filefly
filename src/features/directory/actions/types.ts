@@ -5,6 +5,7 @@ import type { EntryKind, SortKey } from "@/features/directory/constants";
 import type { FileSystemManager } from "@/shared/managers/FileSystemManager";
 import type { KeymapAction } from "@/shared/keymap";
 import type { Sort } from "@/features/directory/sort";
+import type { ArchiveFormat } from "@/shared/providers/CompressProvider";
 
 import type { EntryActionId } from "./constants";
 
@@ -38,8 +39,11 @@ export type EntryActionContext = {
     id: string,
     isCurrentDirectory: boolean,
   ) => void | Promise<void>;
-  // Compress the given targets into an archive (opens the compress-options dialog).
-  onCompress: (targets: string[]) => void;
+  // Compress the given targets into an archive in the given format (opens the compress-options
+  // dialog). Defaults to zip.
+  onCompress: (targets: string[], format?: ArchiveFormat) => void;
+  // Whether a 7-Zip binary is available (gates the "To 7z" submenu entry).
+  sevenzipAvailable: boolean;
   // Extract an archive's top-level entries directly beside it ("Extract Here").
   onExtract: (archivePath: string) => void;
   // Extract an archive into a new subfolder beside it, named after the archive ("Extract to Folder").

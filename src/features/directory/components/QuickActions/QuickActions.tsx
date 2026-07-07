@@ -8,6 +8,7 @@ import { ENTRY_KIND } from "@/features/directory/constants";
 import { useDirectory } from "../../providers/DirectoryProvider";
 import { useContextMenuLayout } from "../../hooks/useContextMenuLayout";
 import { useArchiveActions } from "../../hooks/useArchiveActions";
+import { useSevenzipAvailable } from "@/shared/hooks/useSevenzipAvailable";
 import {
   ENTRY_ACTIONS,
   ACTION_SEPARATOR,
@@ -38,6 +39,7 @@ const QuickActions = () => {
   } = useDirectory();
   const { onCompress, onExtract, onExtractToFolder } =
     useArchiveActions(fileOps);
+  const sevenzipAvailable = useSevenzipAvailable();
 
   const hasSelection = selectedIDs.length > 0;
   const elementId = hasSelection ? selectedIDs[0] : path;
@@ -68,6 +70,7 @@ const QuickActions = () => {
     onCompress,
     onExtract,
     onExtractToFolder,
+    sevenzipAvailable,
     sort,
     onSort: handleSort,
     showHidden,

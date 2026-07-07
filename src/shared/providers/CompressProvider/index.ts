@@ -1,3 +1,3 @@
 export { CompressProvider } from "./CompressProvider";
 export { useCompress } from "./CompressContext";
-export type { CompressContextValue } from "./types";
+export type { CompressContextValue, ArchiveFormat } from "./types";

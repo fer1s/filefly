@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 
 import { useCompress } from "@/shared/providers/CompressProvider";
+import type { ArchiveFormat } from "@/shared/providers/CompressProvider";
 import { archiveEncrypted } from "@/shared/services/api";
 
 // The subset of file operations the archive menu actions drive. compress/extract own the status-bar
@@ -25,8 +26,8 @@ export const useArchiveActions = (fileOps: ArchiveOps) => {
   const { requestOptions, requestPassword } = useCompress();
 
   const onCompress = useCallback(
-    async (targets: string[]) => {
-      const options = await requestOptions(targets);
+    async (targets: string[], format: ArchiveFormat = "zip") => {
+      const options = await requestOptions(targets, format);
       if (options) await fileOps.compress(targets, options);
     },
     [requestOptions, fileOps],

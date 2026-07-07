@@ -5,7 +5,7 @@ import { basename, dirname } from "@/shared/utils";
 import CompressDialog from "./CompressDialog";
 import PasswordDialog from "./PasswordDialog";
 import { CompressContext } from "./CompressContext";
-import type { CompressValues } from "./types";
+import type { ArchiveFormat, CompressValues } from "./types";
 
 // Owns only the compress-options dialog. `requestOptions(targets)` opens it and resolves the chosen
 // options (or null on cancel); the directory's file operations run the actual compression so it
@@ -13,6 +13,7 @@ import type { CompressValues } from "./types";
 // ConfirmProvider (promise + resolver ref that survives the fade-out).
 export const CompressProvider = ({ children }: { children: ReactNode }) => {
   const [defaultName, setDefaultName] = useState<string | null>(null);
+  const [ext, setExt] = useState<ArchiveFormat>("zip");
   // Held in a ref so settling doesn't depend on a stale render and survives the fade-out.
   const resolverRef = useRef<((value: CompressValues | null) => void) | null>(
     null,
@@ -25,19 +26,20 @@ export const CompressProvider = ({ children }: { children: ReactNode }) => {
   );
 
   const requestOptions = useCallback(
-    (targets: string[]) =>
+    (targets: string[], format: ArchiveFormat = "zip") =>
       new Promise<CompressValues | null>((resolve) => {
         if (!targets.length || !targets[0]) {
           resolve(null);
           return;
         }
         // One item → its own name; many → the parent folder's name (falling back to "Archive").
-        const name =
+        const stem =
           targets.length === 1
-            ? `${basename(targets[0])}.zip`
-            : `${basename(dirname(targets[0])) || "Archive"}.zip`;
+            ? basename(targets[0])
+            : basename(dirname(targets[0])) || "Archive";
         resolverRef.current = resolve;
-        setDefaultName(name);
+        setExt(format);
+        setDefaultName(`${stem}.${format}`);
       }),
     [],
   );
@@ -69,6 +71,7 @@ export const CompressProvider = ({ children }: { children: ReactNode }) => {
       <CompressDialog
         visible={defaultName !== null}
         defaultName={defaultName ?? ""}
+        ext={ext}
         onSubmit={(values) => settle(values)}
         onClose={() => settle(null)}
       />

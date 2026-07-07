@@ -68,6 +68,7 @@ export const en = {
   },
   archive: {
     toZip: "To ZIP (.zip)",
+    to7z: "To 7z (.7z)",
     compressTitle: "Compress",
     name: "Archive name",
     level: "Compression level",

@@ -161,7 +161,7 @@ actions = [
 # v1 extracts .zip; 7z/rar will be added here once the binary-backed path lands (the extra
 # extensions can be listed now, but extract only handles .zip today).
 [file_type.archive]
-extensions = ["zip"]
+extensions = ["zip", "7z"]
 actions = [
   "open",
   "extract",
