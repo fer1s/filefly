@@ -97,6 +97,7 @@ fn main() {
             filesystem::archive::compress_entries,
             filesystem::archive::extract_archive,
             filesystem::archive::archive_encrypted,
+            filesystem::archive::sevenzip_available,
             filesystem::tags::get_tags_for,
             filesystem::tags::set_file_tags,
             filesystem::tags::find_tagged,

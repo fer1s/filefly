@@ -7,10 +7,11 @@
 //! separate path that shells out to the system `7z`/`rar` binaries (detected on PATH).
 
 use std::collections::HashMap;
-use std::ffi::OsString;
+use std::ffi::{OsStr, OsString};
 use std::fs::{self, File};
 use std::io::{Read, Write};
 use std::path::{Component, Path, PathBuf};
+use std::process::{Command, Stdio};
 
 use serde::Serialize;
 use tauri::ipc::Channel;
@@ -170,6 +171,10 @@ pub fn compress_entries_core(
 // True if any entry in `archive` is encrypted, so the caller can prompt for a password before
 // extracting. Reads entry metadata only (no decryption), so it needs no password itself.
 pub fn archive_is_encrypted(archive: &str) -> Result<bool, String> {
+    // .7z goes through the 7-Zip binary; everything else is read as a zip.
+    if archive.to_lowercase().ends_with(".7z") {
+        return sevenzip_is_encrypted(archive);
+    }
     let file = File::open(archive).map_err(|e| e.to_string())?;
     let mut zip = ZipArchive::new(file).map_err(|e| e.to_string())?;
     for i in 0..zip.len() {
@@ -306,9 +311,191 @@ pub fn extract_archive_core(
     Ok(outputs)
 }
 
-// Compress the given entries into a zip inside `dest_dir`. Runs on a blocking thread so a large
-// tree doesn't freeze the webview; streams byte progress over the IPC Channel. Returns the archive
-// path (which may differ from dest_dir/archive_name if a collision forced a rename).
+// ---- 7z (shells out to the system 7-Zip binary) ---------------------------------------------
+//
+// Unlike the pure-Rust zip path, 7z support depends on a 7-Zip binary on PATH (7zz/7z/7za). When
+// absent the UI hides the "To 7z" option and extraction of .7z surfaces an install hint. Progress
+// is indeterminate (we don't parse the binary's stdout). Password uses -p plus -mhe (encrypt the
+// header/file names too).
+
+// First 7-Zip binary found on PATH, or None. `<bin> i` prints build info and exits 0, so a spawn
+// error means the binary is missing.
+pub fn sevenzip_bin() -> Option<String> {
+    for cand in ["7zz", "7z", "7za"] {
+        let ok = Command::new(cand)
+            .arg("i")
+            .stdin(Stdio::null())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .status()
+            .map(|s| s.success())
+            .unwrap_or(false);
+        if ok {
+            return Some(cand.to_string());
+        }
+    }
+    None
+}
+
+// True if the system has a usable 7-Zip binary (so the frontend can show/hide the 7z option).
+#[tauri::command]
+pub async fn sevenzip_available() -> bool {
+    tauri::async_runtime::spawn_blocking(|| sevenzip_bin().is_some())
+        .await
+        .unwrap_or(false)
+}
+
+// Compress `sources` into a new `.7z` `archive_name` inside `dest_dir` (collision-safe). `level` maps
+// to -mx=0..9; a non-empty `password` encrypts contents and headers. Sources share a parent (they're
+// a single-folder selection), so we run from that parent and pass base names — mirroring the zip
+// path's entry naming (a folder keeps its top dir, a file lands at the archive root).
+pub fn compress_7z_core(
+    sources: &[String],
+    dest_dir: &str,
+    archive_name: &str,
+    level: i64,
+    password: Option<&str>,
+) -> Result<String, String> {
+    let bin = sevenzip_bin().ok_or_else(|| "7-Zip not found (install p7zip / 7-Zip)".to_string())?;
+    if sources.is_empty() {
+        return Err("No entries to compress".to_string());
+    }
+    let dest = unique_dest(Path::new(dest_dir), OsStr::new(archive_name));
+    let parent = Path::new(&sources[0])
+        .parent()
+        .map(Path::to_path_buf)
+        .unwrap_or_else(|| PathBuf::from("."));
+
+    let mut args: Vec<String> = vec![
+        "a".to_string(),
+        dest.to_string_lossy().into_owned(),
+        format!("-mx={}", level.clamp(0, 9)),
+    ];
+    if let Some(pw) = password.filter(|p| !p.is_empty()) {
+        args.push(format!("-p{}", pw));
+        args.push("-mhe=on".to_string());
+    }
+    for s in sources {
+        let name = Path::new(s)
+            .file_name()
+            .ok_or_else(|| format!("Invalid source path: {}", s))?
+            .to_string_lossy()
+            .into_owned();
+        args.push(name);
+    }
+
+    let output = Command::new(&bin)
+        .current_dir(&parent)
+        .args(&args)
+        .stdin(Stdio::null())
+        .output()
+        .map_err(|e| e.to_string())?;
+    if !output.status.success() {
+        return Err(format!(
+            "7z failed: {}",
+            String::from_utf8_lossy(&output.stderr).trim()
+        ));
+    }
+    Ok(dest.to_string_lossy().into_owned())
+}
+
+// True if a .7z archive is encrypted. `l -slt` lists per-entry properties; an encrypted entry shows
+// "Encrypted = +". A header-encrypted archive can't be listed without the password, so the command
+// fails — which we treat as encrypted (the UI will then prompt).
+fn sevenzip_is_encrypted(archive: &str) -> Result<bool, String> {
+    let bin = match sevenzip_bin() {
+        Some(b) => b,
+        None => return Ok(false),
+    };
+    let output = Command::new(&bin)
+        .args(["l", "-slt", archive])
+        .stdin(Stdio::null())
+        .output()
+        .map_err(|e| e.to_string())?;
+    if !output.status.success() {
+        return Ok(true);
+    }
+    let text = String::from_utf8_lossy(&output.stdout);
+    Ok(text.lines().any(|l| l.trim() == "Encrypted = +"))
+}
+
+// Move the just-extracted temp tree into its final place, mirroring the zip layout choice:
+// `into_subfolder` renames the whole temp dir to the archive stem; otherwise each top-level entry is
+// moved into `dest` collision-safe. Returns the created top-level paths.
+fn relocate_extracted(
+    tmp: &Path,
+    dest: &Path,
+    stem: &OsStr,
+    into_subfolder: bool,
+) -> Result<Vec<String>, String> {
+    if into_subfolder {
+        let sub = unique_dest(dest, stem);
+        fs::rename(tmp, &sub).map_err(|e| e.to_string())?;
+        return Ok(vec![sub.to_string_lossy().into_owned()]);
+    }
+    let mut outputs = Vec::new();
+    for entry in fs::read_dir(tmp).map_err(|e| e.to_string())? {
+        let entry = entry.map_err(|e| e.to_string())?;
+        let target = unique_dest(dest, &entry.file_name());
+        fs::rename(entry.path(), &target).map_err(|e| e.to_string())?;
+        outputs.push(target.to_string_lossy().into_owned());
+    }
+    Ok(outputs)
+}
+
+// Extract a .7z (or any format 7-Zip reads) into `dest_dir`, with the same here/to-folder layout and
+// collision-safety as the zip path. Extracts into a temp dir first, then relocates. `-p` is always
+// passed (empty if no password) so an encrypted archive errors instead of blocking on a stdin prompt.
+pub fn extract_7z_core(
+    archive: &str,
+    dest_dir: &str,
+    password: Option<&str>,
+    into_subfolder: bool,
+) -> Result<Vec<String>, String> {
+    let bin = sevenzip_bin().ok_or_else(|| "7-Zip not found (install p7zip / 7-Zip)".to_string())?;
+    let dest = Path::new(dest_dir);
+    let stem = Path::new(archive)
+        .file_stem()
+        .ok_or_else(|| "Invalid archive path".to_string())?
+        .to_os_string();
+
+    let tmp = unique_dest(dest, OsStr::new(".sfb_7z_extract"));
+    fs::create_dir_all(&tmp).map_err(|e| e.to_string())?;
+
+    let mut args: Vec<String> = vec![
+        "x".to_string(),
+        archive.to_string(),
+        format!("-o{}", tmp.to_string_lossy()),
+        "-y".to_string(),
+        "-bd".to_string(),
+    ];
+    match password.filter(|p| !p.is_empty()) {
+        Some(pw) => args.push(format!("-p{}", pw)),
+        None => args.push("-p".to_string()),
+    }
+
+    let output = Command::new(&bin)
+        .args(&args)
+        .stdin(Stdio::null())
+        .output()
+        .map_err(|e| e.to_string())?;
+    if !output.status.success() {
+        fs::remove_dir_all(&tmp).ok();
+        return Err(format!(
+            "7z extract failed: {}",
+            String::from_utf8_lossy(&output.stderr).trim()
+        ));
+    }
+
+    let result = relocate_extracted(&tmp, dest, &stem, into_subfolder);
+    fs::remove_dir_all(&tmp).ok();
+    result
+}
+
+// Compress the given entries into `dest_dir`. Runs on a blocking thread so a large tree doesn't
+// freeze the webview. The archive format is chosen by `archive_name`'s extension: `.7z` shells out
+// to 7-Zip (indeterminate progress), anything else is a pure-Rust zip (streamed byte progress).
+// Returns the archive path (may differ from dest_dir/archive_name if a collision forced a rename).
 #[tauri::command]
 pub async fn compress_entries(
     sources: Vec<String>,
@@ -322,14 +509,18 @@ pub async fn compress_entries(
         let mut sink = |processed, total| {
             on_progress.send(ArchiveProgress { processed, total }).ok();
         };
-        compress_entries_core(
-            &sources,
-            &dest_dir,
-            &archive_name,
-            level,
-            password.as_deref(),
-            &mut sink,
-        )
+        if archive_name.to_lowercase().ends_with(".7z") {
+            compress_7z_core(&sources, &dest_dir, &archive_name, level, password.as_deref())
+        } else {
+            compress_entries_core(
+                &sources,
+                &dest_dir,
+                &archive_name,
+                level,
+                password.as_deref(),
+                &mut sink,
+            )
+        }
     })
     .await
     .map_err(|e| e.to_string())?
@@ -343,9 +534,10 @@ pub async fn archive_encrypted(archive: String) -> Result<bool, String> {
         .map_err(|e| e.to_string())?
 }
 
-// Extract a zip into `dest_dir`. Blocking thread + progress channel, like copy. `into_subfolder`
-// picks "Extract to Folder" (wrap in a subfolder) vs "Extract Here" (top-level entries loose in
-// dest). Returns the created top-level output paths.
+// Extract an archive into `dest_dir`. Blocking thread + progress channel, like copy. `.zip` uses the
+// pure-Rust path (streamed byte progress); anything else (`.7z`) shells out to 7-Zip (indeterminate).
+// `into_subfolder` picks "Extract to Folder" (wrap in a subfolder) vs "Extract Here" (top-level
+// entries loose in dest). Returns the created top-level output paths.
 #[tauri::command]
 pub async fn extract_archive(
     archive: String,
@@ -358,13 +550,17 @@ pub async fn extract_archive(
         let mut sink = |processed, total| {
             on_progress.send(ArchiveProgress { processed, total }).ok();
         };
-        extract_archive_core(
-            &archive,
-            &dest_dir,
-            password.as_deref(),
-            into_subfolder,
-            &mut sink,
-        )
+        if archive.to_lowercase().ends_with(".zip") {
+            extract_archive_core(
+                &archive,
+                &dest_dir,
+                password.as_deref(),
+                into_subfolder,
+                &mut sink,
+            )
+        } else {
+            extract_7z_core(&archive, &dest_dir, password.as_deref(), into_subfolder)
+        }
     })
     .await
     .map_err(|e| e.to_string())?

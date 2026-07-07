@@ -171,36 +171,48 @@ const COMMANDS: &[Command] = &[
                 ),
             };
             let level = a.opt("level").and_then(|l| l.parse::<i64>().ok()).unwrap_or(6);
-            let dest = archive::compress_entries_core(
-                &[source.to_string()],
-                dest_dir,
-                &name,
-                level,
-                a.opt("password"),
-                &mut noop,
-            )?;
+            // Format follows the archive name's extension: .7z shells out to 7-Zip, else pure-Rust zip.
+            let dest = if name.to_lowercase().ends_with(".7z") {
+                archive::compress_7z_core(&[source.to_string()], dest_dir, &name, level, a.opt("password"))?
+            } else {
+                archive::compress_entries_core(
+                    &[source.to_string()],
+                    dest_dir,
+                    &name,
+                    level,
+                    a.opt("password"),
+                    &mut noop,
+                )?
+            };
             Ok(json!({ "dest": dest }))
         },
     },
     Command {
         name: "extract",
         group: "write",
-        summary: "Extract a .zip into a destination directory.",
+        summary: "Extract a .zip or .7z into a destination directory.",
         args: &[
-            val("archive", true, "Zip archive to extract."),
+            val("archive", true, "Archive to extract (.zip or .7z)."),
             val("dest-dir", true, "Directory to extract into."),
             val("password", false, "Password for an encrypted archive."),
             flag("into-folder", "Wrap output in a new subfolder named after the archive (default: extract top-level entries directly into dest-dir)."),
         ],
         run: |a| {
             let mut noop = |_p, _t| {};
-            let outputs = archive::extract_archive_core(
-                a.require("archive")?,
-                a.require("dest-dir")?,
-                a.opt("password"),
-                a.has("into-folder"),
-                &mut noop,
-            )?;
+            let archive_path = a.require("archive")?;
+            let dest_dir = a.require("dest-dir")?;
+            // .zip uses the pure-Rust path; anything else (.7z) shells out to 7-Zip.
+            let outputs = if archive_path.to_lowercase().ends_with(".zip") {
+                archive::extract_archive_core(
+                    archive_path,
+                    dest_dir,
+                    a.opt("password"),
+                    a.has("into-folder"),
+                    &mut noop,
+                )?
+            } else {
+                archive::extract_7z_core(archive_path, dest_dir, a.opt("password"), a.has("into-folder"))?
+            };
             Ok(json!({ "outputs": outputs }))
         },
     },
