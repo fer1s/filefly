@@ -422,6 +422,20 @@ const COMMANDS: &[Command] = &[
         run: |_a| ui_call("get-state", json!({})),
     },
     Command {
+        name: "ui-windows",
+        group: "ui",
+        summary: "List every open window straight from Tauri (label, URL, visible, focused) — includes hidden windows and the detached preview panel.",
+        args: &[],
+        run: |_a| ui_call("windows", json!({})),
+    },
+    Command {
+        name: "ui-preview",
+        group: "ui",
+        summary: "Open the detached preview window for a file (the openPreviewInWindow flow).",
+        args: &[val("path", true, "File to preview.")],
+        run: |a| ui_call("preview", json!({ "path": a.require("path")? })),
+    },
+    Command {
         name: "ui-navigate",
         group: "ui",
         summary: "Navigate the focused window's active tab to a directory.",
