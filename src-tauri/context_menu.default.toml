@@ -7,6 +7,7 @@
 #   open_in_terminal   open a terminal at the folder (folders / a file's parent)
 #   preview            in-app preview (images, markdown, pdf, video, audio)
 #   copy               copy to the internal clipboard
+#   copy_path          copy the entry's filesystem path(s) to the OS clipboard
 #   cut                cut to the internal clipboard
 #   paste              paste the clipboard into the current directory
 #   rename             inline rename
@@ -42,11 +43,13 @@ actions = [
   "open",
   "open_in_terminal",
   "copy",
+  "copy_path",
   "cut",
   "rename",
-  "compress",
   "trash",
   "destroy",
+  "separator",
+  "compress",
   "separator",
   "properties",
 ]
@@ -56,11 +59,13 @@ actions = [
 actions = [
   "open",
   "copy",
+  "copy_path",
   "cut",
   "rename",
-  "compress",
   "trash",
   "destroy",
+  "separator",
+  "compress",
   "separator",
   "properties",
 ]
@@ -87,11 +92,13 @@ actions = [
   "open",
   "preview",
   "copy",
+  "copy_path",
   "cut",
   "rename",
-  "compress",
   "trash",
   "destroy",
+  "separator",
+  "compress",
   "separator",
   "properties",
 ]
@@ -102,11 +109,13 @@ actions = [
   "open",
   "preview",
   "copy",
+  "copy_path",
   "cut",
   "rename",
-  "compress",
   "trash",
   "destroy",
+  "separator",
+  "compress",
   "separator",
   "properties",
 ]
@@ -117,11 +126,13 @@ actions = [
   "open",
   "preview",
   "copy",
+  "copy_path",
   "cut",
   "rename",
-  "compress",
   "trash",
   "destroy",
+  "separator",
+  "compress",
   "separator",
   "properties",
 ]
@@ -133,11 +144,13 @@ extensions = ["mp4", "webm", "mov", "m4v", "ogv"]
 actions = [
   "open",
   "copy",
+  "copy_path",
   "cut",
   "rename",
-  "compress",
   "trash",
   "destroy",
+  "separator",
+  "compress",
   "separator",
   "properties",
 ]
@@ -148,11 +161,13 @@ actions = [
   "open",
   "preview",
   "copy",
+  "copy_path",
   "cut",
   "rename",
-  "compress",
   "trash",
   "destroy",
+  "separator",
+  "compress",
   "separator",
   "properties",
 ]
@@ -164,14 +179,16 @@ actions = [
 extensions = ["zip", "7z"]
 actions = [
   "open",
-  "extract",
-  "extract_to_folder",
   "copy",
+  "copy_path",
   "cut",
   "rename",
-  "compress",
   "trash",
   "destroy",
+  "separator",
+  "extract",
+  "extract_to_folder",
+  "compress",
   "separator",
   "properties",
 ]
