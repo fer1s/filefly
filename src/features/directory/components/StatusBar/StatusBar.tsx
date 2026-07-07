@@ -4,7 +4,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 import Icon from "@/shared/components/elements/Icon";
-import { formatBytes } from "@/shared/utils";
+import { classNames, formatBytes } from "@/shared/utils";
 import { openSystemMonitor, openStorageSettings } from "@/shared/services/api";
 import { notify, TOAST_TYPE } from "@/shared/toast";
 import { useSettings } from "@/features/settings";
@@ -88,8 +88,13 @@ const StatusBar = ({
             {progress.label}
             <span className="progress_track">
               <span
-                className="progress_bar"
-                style={{ width: `${progressPercent}%` }}
+                className={classNames(
+                  "progress_bar",
+                  !progress.total && "indeterminate",
+                )}
+                style={
+                  progress.total ? { width: `${progressPercent}%` } : undefined
+                }
               />
             </span>
           </span>
