@@ -337,7 +337,11 @@ const Preview = ({
               draggable header is only for the in-app floating panel. */}
           {!windowed && (
             <div
-              className={classNames("preview_header", "draggable", mac && "mac")}
+              className={classNames(
+                "preview_header",
+                "draggable",
+                mac && "mac",
+              )}
               onDoubleClick={toggleMaximize}
               {...dragBind()}
             >

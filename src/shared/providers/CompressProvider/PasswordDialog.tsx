@@ -16,7 +16,11 @@ const TITLE_ID = "extract-password-dialog-title";
 
 // Password prompt shown when extracting an encrypted archive. Enter submits, Escape/backdrop
 // cancels. The caller runs the actual extraction with the entered password.
-const PasswordDialog = ({ visible, onSubmit, onClose }: PasswordDialogProps) => {
+const PasswordDialog = ({
+  visible,
+  onSubmit,
+  onClose,
+}: PasswordDialogProps) => {
   useCloseOnEscape(visible, onClose);
 
   const [password, setPassword] = useState("");

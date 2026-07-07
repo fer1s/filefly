@@ -9,7 +9,12 @@ import { useTheme } from "@/app/hooks/useTheme";
 import { useAccent } from "@/app/hooks/useAccent";
 import { FileSystemManager } from "@/shared/managers/FileSystemManager";
 import { getSettings } from "@/shared/services/api";
-import { DEFAULT_SETTINGS, KEY, type Theme, type Accent } from "@/shared/constants";
+import {
+  DEFAULT_SETTINGS,
+  KEY,
+  type Theme,
+  type Accent,
+} from "@/shared/constants";
 import { notify, TOAST_TYPE } from "@/shared/toast";
 import { t } from "@/lang";
 import type { DirEntry } from "@/shared/models";
@@ -53,7 +58,9 @@ const PropertiesWindow = ({ target }: { target: string }) => {
     fs.getEntry(target)
       .then((resolved) => {
         setEntry(resolved);
-        void getCurrentWindow().setTitle(t.common.propertiesTitle(resolved.name));
+        void getCurrentWindow().setTitle(
+          t.common.propertiesTitle(resolved.name),
+        );
         const win = getCurrentWindow();
         void win.show();
         void win.setFocus();

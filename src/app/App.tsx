@@ -296,49 +296,49 @@ const App = () => {
                 {/* Archive compress/extract flows + options dialog. Inside ConfirmProvider so its
                     dialog shares the same modal/hotkey scope. */}
                 <CompressProvider>
-                {/* Custom folder picker (vs native Finder dialog); inside HotkeyProvider/ModalProvider
+                  {/* Custom folder picker (vs native Finder dialog); inside HotkeyProvider/ModalProvider
                   so its dialog gets MODAL-scope suppression and focus trapping like other dialogs. */}
-                <FolderPickerProvider
-                  useCustom={settings.useCustomFolderPicker}
-                >
-                  <FilePickerProvider
+                  <FolderPickerProvider
                     useCustom={settings.useCustomFolderPicker}
                   >
-                    <ShortcutHelpProvider>
-                      <SettingsProvider settings={settings} update={update}>
-                        <div
-                          className={classNames(
-                            "App",
-                            sidebar.collapsed && "collapsed",
-                          )}
-                          // Expanded-column width; the collapsed rule overrides it (see index.css).
-                          style={
-                            {
-                              "--sidebar-width": `${settings.sidebarWidth}px`,
-                              // Alpha of the context-menu background (see ContextMenu.css); menus are
-                              // descendants of .App, so they inherit this override.
-                              "--context-menu-opacity":
-                                settings.contextMenuOpacity,
-                              // Alpha of the preview controls pill (see Preview.css); the pill is a
-                              // descendant of .App, so it inherits this override.
-                              "--preview-controls-opacity":
-                                settings.previewControlsOpacity,
-                            } as CSSProperties
-                          }
-                        >
-                          <SideBar
-                            collapsed={sidebar.collapsed}
-                            onToggle={sidebar.toggle}
-                          />
-                          {!sidebar.collapsed && <SidebarResizeHandle />}
-                          <AppContent />
-                        </div>
-                      </SettingsProvider>
-                      <ShortcutsDialog />
-                      <ToastStack toasts={toasts} onDismiss={dismissToast} />
-                    </ShortcutHelpProvider>
-                  </FilePickerProvider>
-                </FolderPickerProvider>
+                    <FilePickerProvider
+                      useCustom={settings.useCustomFolderPicker}
+                    >
+                      <ShortcutHelpProvider>
+                        <SettingsProvider settings={settings} update={update}>
+                          <div
+                            className={classNames(
+                              "App",
+                              sidebar.collapsed && "collapsed",
+                            )}
+                            // Expanded-column width; the collapsed rule overrides it (see index.css).
+                            style={
+                              {
+                                "--sidebar-width": `${settings.sidebarWidth}px`,
+                                // Alpha of the context-menu background (see ContextMenu.css); menus are
+                                // descendants of .App, so they inherit this override.
+                                "--context-menu-opacity":
+                                  settings.contextMenuOpacity,
+                                // Alpha of the preview controls pill (see Preview.css); the pill is a
+                                // descendant of .App, so it inherits this override.
+                                "--preview-controls-opacity":
+                                  settings.previewControlsOpacity,
+                              } as CSSProperties
+                            }
+                          >
+                            <SideBar
+                              collapsed={sidebar.collapsed}
+                              onToggle={sidebar.toggle}
+                            />
+                            {!sidebar.collapsed && <SidebarResizeHandle />}
+                            <AppContent />
+                          </div>
+                        </SettingsProvider>
+                        <ShortcutsDialog />
+                        <ToastStack toasts={toasts} onDismiss={dismissToast} />
+                      </ShortcutHelpProvider>
+                    </FilePickerProvider>
+                  </FolderPickerProvider>
                 </CompressProvider>
               </ConfirmProvider>
             </HotkeyProvider>

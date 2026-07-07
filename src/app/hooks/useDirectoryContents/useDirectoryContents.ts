@@ -63,7 +63,11 @@ export const useDirectoryContents = ({
   const loadDirectory = useCallback(
     async (
       target: string,
-    ): Promise<{ files: DirEntry[]; denied: boolean; error: string | null }> => {
+    ): Promise<{
+      files: DirEntry[];
+      denied: boolean;
+      error: string | null;
+    }> => {
       try {
         // Recents and tag views are virtual listings (Finder-style), not real folders to read.
         const files =

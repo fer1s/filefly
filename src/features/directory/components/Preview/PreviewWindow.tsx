@@ -132,7 +132,10 @@ const PreviewWindow = ({ target }: { target: string }) => {
       await fs.trash(filePath);
       await loadSiblings();
     } catch (err) {
-      notify(t.errors.delete(basename(filePath), String(err)), TOAST_TYPE.ERROR);
+      notify(
+        t.errors.delete(basename(filePath), String(err)),
+        TOAST_TYPE.ERROR,
+      );
     }
   }, [fs, filePath, loadSiblings]);
 
