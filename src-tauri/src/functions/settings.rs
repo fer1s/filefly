@@ -139,8 +139,8 @@ impl Default for AppSettings {
 }
 
 // Default folder-size exclusions. On macOS, OS-generated junk (Finder metadata, AppleDouble forks,
-// Spotlight/Trash/Versions/FSEvents stores) that never holds user content and only inflates size
-// totals — so new users get sensible exclusions. Mirrors MACOS_SIZE_IGNORES in shared/constants.ts
+// Spotlight/Trash/Versions/FSEvents stores, WidgetKit timeline caches, localization markers,
+// Windows-share droppings) that never holds user content and only inflates size totals — so new users get sensible exclusions. Mirrors MACOS_SIZE_IGNORES in shared/constants.ts
 // (must stay in sync). Empty on other platforms.
 #[cfg(target_os = "macos")]
 fn default_size_ignores() -> Vec<String> {
@@ -152,6 +152,11 @@ fn default_size_ignores() -> Vec<String> {
         ".DocumentRevisions-V100",
         ".apdisk",
         ".fseventsd",
+        "com.apple.chrono",
+        ".localized",
+        ".AppleDouble",
+        "Thumbs.db",
+        "desktop.ini",
     ]
     .iter()
     .map(|s| s.to_string())
