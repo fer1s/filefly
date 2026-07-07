@@ -85,11 +85,12 @@ const DirEntryItemComponent = ({
     if (renaming) itemRef.current?.scrollIntoView({ block: "nearest" });
   }, [renaming]);
 
-  // Split extension from the file name.
-  const name = entry.metadata.isFile ? entry.name.split(".")[0] : entry.name;
-  const extension = entry.metadata.isFile
-    ? entry.name.split(".")[entry.name.split(".").length - 1]
-    : "";
+  // Split the extension off at the LAST dot, so "settings.toml copy.zip" keeps its full stem and
+  // only ".zip" is the extension. A leading dot (dotfile) or no dot means no extension.
+  const lastDot = entry.name.lastIndexOf(".");
+  const hasExtension = entry.metadata.isFile && lastDot > 0;
+  const name = hasExtension ? entry.name.slice(0, lastDot) : entry.name;
+  const extension = hasExtension ? entry.name.slice(lastDot + 1) : "";
 
   const ext = extension.toLowerCase().trim();
   const isImage = entry.metadata.isFile && IMAGE_FORMATS.includes(ext);
