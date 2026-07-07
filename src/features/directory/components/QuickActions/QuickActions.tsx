@@ -7,6 +7,7 @@ import { ENTRY_KIND } from "@/features/directory/constants";
 
 import { useDirectory } from "../../providers/DirectoryProvider";
 import { useContextMenuLayout } from "../../hooks/useContextMenuLayout";
+import { useArchiveActions } from "../../hooks/useArchiveActions";
 import {
   ENTRY_ACTIONS,
   ACTION_SEPARATOR,
@@ -35,6 +36,8 @@ const QuickActions = () => {
     sort,
     handleSort,
   } = useDirectory();
+  const { onCompress, onExtract, onExtractToFolder } =
+    useArchiveActions(fileOps);
 
   const hasSelection = selectedIDs.length > 0;
   const elementId = hasSelection ? selectedIDs[0] : path;
@@ -62,6 +65,9 @@ const QuickActions = () => {
     onStartRename: setRenamingID,
     onPreview: preview.open,
     onProperties: properties.open,
+    onCompress,
+    onExtract,
+    onExtractToFolder,
     sort,
     onSort: handleSort,
     showHidden,

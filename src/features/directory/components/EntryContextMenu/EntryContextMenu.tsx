@@ -18,6 +18,7 @@ import {
   type EntryActionId,
 } from "../../actions";
 import { useContextMenuLayout } from "../../hooks/useContextMenuLayout";
+import { useArchiveActions } from "../../hooks/useArchiveActions";
 import { useDirectory } from "../../providers/DirectoryProvider";
 
 import type { EntryContextMenuProps } from "./types";
@@ -41,6 +42,8 @@ const EntryContextMenu = ({
   onProperties,
 }: EntryContextMenuProps) => {
   const { fs, setPath, showHidden, toggleShowHidden } = useStateContext();
+  const { onCompress, onExtract, onExtractToFolder } =
+    useArchiveActions(fileOps);
   const { sort, handleSort } = useDirectory();
   const { keymap } = useKeymap();
   const layout = useContextMenuLayout();
@@ -62,6 +65,9 @@ const EntryContextMenu = ({
     onStartRename,
     onPreview,
     onProperties,
+    onCompress,
+    onExtract,
+    onExtractToFolder,
     sort,
     onSort: handleSort,
     showHidden,

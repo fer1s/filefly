@@ -428,6 +428,55 @@ export const moveEntry = async (
     onProgress: channel,
   })) as string;
 };
+// Compress the given entries into a new .zip inside `destDir`, at DEFLATE `level` (0..9). Streams
+// byte progress (input bytes read) over the same Channel as copy. Resolves to the created archive's
+// path, which differs from destDir/archiveName when a name collision forced a rename.
+export const compressEntries = async (
+  sources: string[],
+  destDir: string,
+  archiveName: string,
+  level: number,
+  password?: string,
+  onProgress?: (progress: CopyProgress) => void,
+): Promise<string> => {
+  const channel = new Channel<CopyProgress>();
+  if (onProgress) channel.onmessage = onProgress;
+  return (await invoke("compress_entries", {
+    sources,
+    destDir,
+    archiveName,
+    level,
+    password: password || null,
+    onProgress: channel,
+  })) as string;
+};
+
+// True if the zip has any encrypted entry, so the caller can prompt for a password before extract.
+export const archiveEncrypted = async (archive: string): Promise<boolean> =>
+  (await invoke("archive_encrypted", { archive })) as boolean;
+
+// Extract a .zip into `destDir`. `password` decrypts an encrypted archive. `intoSubfolder` wraps
+// output in a new subfolder named after the archive ("Extract to Folder"); when false, the archive's
+// top-level entries land directly in `destDir` ("Extract Here"). Resolves to the created top-level
+// output paths (for reveal/select).
+export const extractArchive = async (
+  archive: string,
+  destDir: string,
+  password?: string,
+  intoSubfolder = false,
+  onProgress?: (progress: CopyProgress) => void,
+): Promise<string[]> => {
+  const channel = new Channel<CopyProgress>();
+  if (onProgress) channel.onmessage = onProgress;
+  return (await invoke("extract_archive", {
+    archive,
+    destDir,
+    password: password || null,
+    intoSubfolder,
+    onProgress: channel,
+  })) as string[];
+};
+
 export const renameEntry = async (
   path: string,
   newName: string,

@@ -9,6 +9,11 @@ export type FileOps = {
   removePermanently: (targets: string[]) => Promise<void>;
   restore: (targets: string[]) => Promise<void>;
   paste: () => Promise<void>;
+  compress: (
+    targets: string[],
+    options: { name: string; level: number },
+  ) => Promise<void>;
+  extract: (archivePath: string) => Promise<void>;
 };
 
 export type EntryContextMenuProps = {

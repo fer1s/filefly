@@ -14,6 +14,9 @@
 #   restore            restore a trashed item to where it came from (or pick a folder)
 #   destroy            permanently delete (irreversible)
 #   properties         open the properties panel
+#   compress           submenu: compress the selection into an archive (.zip)
+#   extract            extract an archive's top-level entries directly beside it ("Extract Here")
+#   extract_to_folder  extract an archive into a new subfolder beside it, named after the archive
 #   sort_by            submenu: pick the sort key/direction (per folder)
 #   toggle_hidden      toggle showing hidden entries / dotfiles (global)
 #
@@ -41,6 +44,7 @@ actions = [
   "copy",
   "cut",
   "rename",
+  "compress",
   "trash",
   "destroy",
   "separator",
@@ -54,6 +58,7 @@ actions = [
   "copy",
   "cut",
   "rename",
+  "compress",
   "trash",
   "destroy",
   "separator",
@@ -84,6 +89,7 @@ actions = [
   "copy",
   "cut",
   "rename",
+  "compress",
   "trash",
   "destroy",
   "separator",
@@ -98,6 +104,7 @@ actions = [
   "copy",
   "cut",
   "rename",
+  "compress",
   "trash",
   "destroy",
   "separator",
@@ -112,6 +119,7 @@ actions = [
   "copy",
   "cut",
   "rename",
+  "compress",
   "trash",
   "destroy",
   "separator",
@@ -127,6 +135,7 @@ actions = [
   "copy",
   "cut",
   "rename",
+  "compress",
   "trash",
   "destroy",
   "separator",
@@ -141,6 +150,26 @@ actions = [
   "copy",
   "cut",
   "rename",
+  "compress",
+  "trash",
+  "destroy",
+  "separator",
+  "properties",
+]
+
+# Archive files: offer Extract (into a new subfolder beside the archive) in place of a preview.
+# v1 extracts .zip; 7z/rar will be added here once the binary-backed path lands (the extra
+# extensions can be listed now, but extract only handles .zip today).
+[file_type.archive]
+extensions = ["zip"]
+actions = [
+  "open",
+  "extract",
+  "extract_to_folder",
+  "copy",
+  "cut",
+  "rename",
+  "compress",
   "trash",
   "destroy",
   "separator",

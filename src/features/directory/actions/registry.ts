@@ -13,6 +13,9 @@ import { trashAction } from "./trash";
 import { restoreAction } from "./restore";
 import { destroyAction } from "./destroy";
 import { propertiesAction } from "./properties";
+import { compressAction } from "./compress";
+import { extractAction } from "./extract";
+import { extractToFolderAction } from "./extractToFolder";
 import { sortByAction } from "./sortBy";
 import { toggleHiddenAction } from "./toggleHidden";
 
@@ -30,6 +33,9 @@ export const ENTRY_ACTIONS: Record<EntryActionId, EntryAction> = {
   [ENTRY_ACTION.RESTORE]: restoreAction,
   [ENTRY_ACTION.DESTROY]: destroyAction,
   [ENTRY_ACTION.PROPERTIES]: propertiesAction,
+  [ENTRY_ACTION.COMPRESS]: compressAction,
+  [ENTRY_ACTION.EXTRACT]: extractAction,
+  [ENTRY_ACTION.EXTRACT_TO_FOLDER]: extractToFolderAction,
   [ENTRY_ACTION.SORT_BY]: sortByAction,
   [ENTRY_ACTION.TOGGLE_HIDDEN]: toggleHiddenAction,
 };

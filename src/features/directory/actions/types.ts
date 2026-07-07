@@ -38,6 +38,12 @@ export type EntryActionContext = {
     id: string,
     isCurrentDirectory: boolean,
   ) => void | Promise<void>;
+  // Compress the given targets into an archive (opens the compress-options dialog).
+  onCompress: (targets: string[]) => void;
+  // Extract an archive's top-level entries directly beside it ("Extract Here").
+  onExtract: (archivePath: string) => void;
+  // Extract an archive into a new subfolder beside it, named after the archive ("Extract to Folder").
+  onExtractToFolder: (archivePath: string) => void;
   // Current per-folder sort and the setter (toggles direction when the same key is chosen).
   // Used by the sort_by submenu action.
   sort: Sort;

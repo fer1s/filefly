@@ -13,6 +13,9 @@ export const ENTRY_ACTION = {
   RESTORE: "restore",
   DESTROY: "destroy",
   PROPERTIES: "properties",
+  COMPRESS: "compress",
+  EXTRACT: "extract",
+  EXTRACT_TO_FOLDER: "extract_to_folder",
   SORT_BY: "sort_by",
   TOGGLE_HIDDEN: "toggle_hidden",
 } as const;
