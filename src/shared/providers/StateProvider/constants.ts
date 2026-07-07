@@ -69,6 +69,7 @@ export const initialState: State = {
   toggleDragToExternalApps: () => {},
   previewImagesInApp: false,
   previewMarkdownInApp: false,
+  openPreviewInWindow: false,
   remoteThumbnails: false,
   savingSettings: false,
   search: "",

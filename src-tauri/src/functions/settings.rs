@@ -61,6 +61,9 @@ pub struct AppSettings {
     // Open markdown files in the app's built-in preview (on Enter/double-click) instead of the OS
     // default app.
     preview_markdown_in_app: bool,
+    // Open the built-in preview in its own detached window instead of the in-app overlay. A new
+    // window is spawned per open (see window::create_preview_window).
+    open_preview_in_window: bool,
     // On export, ask before replacing an existing settings.toml. When off (default), a unique
     // filename is used instead so nothing is overwritten silently.
     confirm_export_overwrite: bool,
@@ -120,6 +123,7 @@ impl Default for AppSettings {
             use_custom_folder_picker: false,
             preview_images_in_app: false,
             preview_markdown_in_app: false,
+            open_preview_in_window: false,
             confirm_export_overwrite: false,
             remote_thumbnails: false,
             show_system_stats: false,

@@ -1,6 +1,9 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { useStateContext } from "@/shared/providers/StateProvider";
+import { openPreviewWindow } from "@/shared/services/api";
+import { notify, TOAST_TYPE } from "@/shared/toast";
+import { t } from "@/lang";
 import { revealTargetFromUrl } from "@/features/tabs/utils";
 
 import { useDirectoryEntries } from "../../hooks/useDirectoryEntries";
@@ -15,7 +18,8 @@ import type { DirectoryProviderProps } from "./types";
 // Owns the directory's domain state (entries, selection, clipboard ops, preview/properties,
 // inline rename) and provides it to the directory view and the quick-actions bar alike.
 export const DirectoryProvider = ({ children }: DirectoryProviderProps) => {
-  const { view, path, setPath, refreshDir } = useStateContext();
+  const { view, path, setPath, refreshDir, openPreviewInWindow } =
+    useStateContext();
 
   const entries = useDirectoryEntries(view);
   const selection = useSelection(entries.sorted.map((entry) => entry.path));
@@ -79,6 +83,27 @@ export const DirectoryProvider = ({ children }: DirectoryProviderProps) => {
   const preview = usePreview(entries.previewables);
   const properties = useProperties();
 
+  // The preview opens either in the in-app overlay or, when openPreviewInWindow is on, its own
+  // detached window (a fresh window per open). Branch here — in the one place `preview.open` is
+  // created — so every trigger (Open/Preview in the context menu, the quick bar, keyboard) honours
+  // the setting without each caller re-checking it.
+  const openPreview = useCallback(
+    (path: string) => {
+      if (openPreviewInWindow) {
+        void openPreviewWindow(path).catch((err) =>
+          notify(t.errors.open(String(err)), TOAST_TYPE.ERROR),
+        );
+        return;
+      }
+      preview.open(path);
+    },
+    [openPreviewInWindow, preview],
+  );
+  const previewApi = useMemo(
+    () => ({ ...preview, open: openPreview }),
+    [preview, openPreview],
+  );
+
   return (
     <DirectoryContext.Provider
       value={{
@@ -87,7 +112,7 @@ export const DirectoryProvider = ({ children }: DirectoryProviderProps) => {
         renamingID,
         setRenamingID,
         fileOps,
-        preview,
+        preview: previewApi,
         properties,
         revealID,
         clearRevealID,

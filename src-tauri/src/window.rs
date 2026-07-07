@@ -92,6 +92,33 @@ fn build_window(app: &AppHandle, url: WebviewUrl) -> tauri::Result<WebviewWindow
     Ok(window)
 }
 
+// Open a detached preview window for a single file: loads `index.html?panel=preview&path=<file>`,
+// which the frontend detects at mount (see main.tsx) to render only the Preview surface. A fresh
+// window is spawned per call (unique `preview-N` label) so several previews can sit side by side.
+// Smaller than a browser window and starts hidden — the frontend reveals it once the file loads.
+pub fn create_preview_window(app: &AppHandle, file: &str) -> tauri::Result<WebviewWindow> {
+    let n = WINDOW_COUNTER.fetch_add(1, Ordering::Relaxed);
+    let label = format!("preview-{n}");
+    let url = WebviewUrl::App(
+        format!("index.html?panel=preview&path={}", encode_query(file)).into(),
+    );
+    // Opaque (unlike the browser windows' vibrancy): a content window framed by the native
+    // titlebar, not a translucent panel — otherwise the desktop/other windows show through.
+    let window = WebviewWindowBuilder::new(app, label, url)
+        .title("Preview")
+        .inner_size(820.0, 620.0)
+        .min_inner_size(420.0, 320.0)
+        .resizable(true)
+        .transparent(false)
+        .decorations(true)
+        .shadow(true)
+        .center()
+        .visible(false)
+        .build()?;
+    configure_window(&window);
+    Ok(window)
+}
+
 // The window tray/Dock actions should act on: the focused one if any, otherwise any open window.
 // Returns None only when every window has been closed (app living in the tray).
 pub fn target_window(app: &AppHandle) -> Option<WebviewWindow> {
@@ -115,6 +142,15 @@ pub fn open_new_window(app: AppHandle) -> Result<(), String> {
 #[tauri::command]
 pub fn open_path_in_new_window(app: AppHandle, path: String) -> Result<(), String> {
     create_window(&app, Some(&path))
+        .map(|_| ())
+        .map_err(|e| e.to_string())
+}
+
+// Open the built-in preview for `path` in its own window (used when the openPreviewInWindow
+// setting is on, in place of the in-app overlay).
+#[tauri::command]
+pub fn open_preview_window(app: AppHandle, path: String) -> Result<(), String> {
+    create_preview_window(&app, &path)
         .map(|_| ())
         .map_err(|e| e.to_string())
 }

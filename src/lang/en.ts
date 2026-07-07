@@ -474,6 +474,9 @@ export const en = {
     previewMarkdownInApp: "Open markdown in built-in preview",
     previewMarkdownInAppHint:
       "Opening a markdown file (Enter or double-click) shows it in the app's preview — where you can also edit it — instead of the system app.",
+    openPreviewInWindow: "Open preview in its own window",
+    openPreviewInWindowHint:
+      "The built-in preview opens as a separate, movable window instead of an overlay inside the current window. A new window opens each time, so you can compare several files side by side.",
     saving: "Saving settings…",
     storage: "Disk usage",
     storageHint: "Space the app's data uses on disk and where it's stored.",

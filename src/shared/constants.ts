@@ -191,6 +191,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   useCustomFolderPicker: false,
   previewImagesInApp: false,
   previewMarkdownInApp: false,
+  openPreviewInWindow: false,
   confirmExportOverwrite: false,
   remoteThumbnails: false,
   showSystemStats: false,

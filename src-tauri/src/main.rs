@@ -147,6 +147,7 @@ fn main() {
             dock_menu::clear_recent_folders,
             window::open_new_window,
             window::open_path_in_new_window,
+            window::open_preview_window,
         ])
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {

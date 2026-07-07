@@ -60,6 +60,9 @@ export type AppSettings = {
   // Open markdown files in the app's built-in preview (on Enter/double-click) instead of the OS
   // default app.
   previewMarkdownInApp: boolean;
+  // Open the built-in preview in its own detached window instead of the in-app overlay. A new
+  // window is spawned per open (see openPreviewWindow / window::create_preview_window).
+  openPreviewInWindow: boolean;
   // On export, ask before replacing an existing settings.toml. When off (default), a unique
   // filename is used instead so nothing is overwritten silently.
   confirmExportOverwrite: boolean;
@@ -563,6 +566,11 @@ export const openNewWindow = async (): Promise<void> =>
 // e.g. one of the app's data directories from the Storage settings).
 export const openPathInNewWindow = async (path: string): Promise<void> =>
   await invoke("open_path_in_new_window", { path });
+
+// Open the built-in preview for `path` in its own detached window (used when openPreviewInWindow is
+// on). A fresh window is spawned per call so several previews can sit side by side.
+export const openPreviewWindow = async (path: string): Promise<void> =>
+  await invoke("open_preview_window", { path });
 
 // One of the app's on-disk data locations, with its recursively-summed size in bytes. `kind` is a
 // stable id (see STORAGE_KIND) mapped to a localized label in the UI. Mirrors StorageLocation in

@@ -90,6 +90,9 @@ export type State = {
   // Whether opening a markdown file (Enter/double-click) shows it in the built-in preview instead
   // of the OS default app. Read by the directory open flow.
   previewMarkdownInApp: boolean;
+  // Whether the built-in preview opens in its own detached window instead of the in-app overlay.
+  // Read by the directory open flow, which spawns a preview window instead of the local preview.
+  openPreviewInWindow: boolean;
   // Whether to generate thumbnails for remote (SFTP) images (off by default — each downloads the
   // whole file). Gates the thumbnail request for remote entries.
   remoteThumbnails: boolean;
