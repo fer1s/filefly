@@ -34,6 +34,20 @@ body {
   box-shadow: var(--shadow-elevation);
 }
 
+/* Pressed-state feedback. @sito/ui only scales buttons carrying its .sito-ui-button class, which
+   bespoke controls (`unstyled` Button wrapper, raw <button>s) never get — mirror the same token
+   here so every real button control presses alike. Drag surfaces (dir entries, tabs, volume rows,
+   grips) are divs, so this cannot latch onto a drag gesture. */
+button:enabled:not([aria-disabled="true"]):active {
+  transform: scale(var(--sito-ui-button-active-scale));
+}
+
+/* Except while resizing list columns: the header button stays :active for the whole drag and a
+   held-down scale reads as a glitch, not feedback. */
+.list_header.resizing button:active {
+  transform: none;
+}
+
 /* Shared header for dialogs and side panels: title on the left, close button on the right. */
 .panel_header {
   flex-shrink: 0;

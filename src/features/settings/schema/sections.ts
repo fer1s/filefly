@@ -4,7 +4,9 @@ import { t } from "@/lang";
 // declarative: add an id here (+ its label under settings.sections in the dictionary) and tag
 // descriptors with it in schema.ts. Kept deliberately few — singleton sections were collapsed so
 // the nav doesn't overwhelm: General (behavior + startup + OS integration), Appearance (everything
-// visual), Files & Transfers (drag/drop), Notifications, and the read-only Storage panel.
+// visual), Files & Transfers (drag/drop, deletion, import/export), Notifications, Remote (SSH/SFTP
+// behavior — a singleton kept separate so remote-only settings don't read as local behavior), and
+// Storage (the app's disk footprint plus the user's cleanup watch list).
 export const SETTINGS_SECTION = {
   GENERAL: "general",
   APPEARANCE: "appearance",

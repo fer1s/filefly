@@ -1,4 +1,10 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import {
+  type KeyboardEvent as ReactKeyboardEvent,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { createPortal } from "react-dom";
 import { faCheck, faChevronRight } from "@fortawesome/free-solid-svg-icons";
 
@@ -9,9 +15,12 @@ import { KEY, UI_COLOR } from "@/shared/constants";
 
 import { SubItem } from "./SubItem";
 import {
+  MENU_ITEM_SELECTOR,
   MENU_ITEM_ROLE,
+  MENU_ROLE,
   SUBMENU_CLOSE_DELAY,
   SUBMENU_VIEWPORT_PADDING,
+  SUBMENU_POPUP_ROLE,
 } from "./constants";
 import type { ContextMenuItemProps } from "./types";
 
@@ -30,6 +39,7 @@ export const ContextMenuItem = ({
   const anchorRef = useRef<HTMLButtonElement>(null);
   const flyoutRef = useRef<HTMLDivElement>(null);
   const closeTimer = useRef<number | undefined>(undefined);
+  const focusSubmenuOnOpenRef = useRef(false);
 
   const openSubmenu = () => {
     window.clearTimeout(closeTimer.current);
@@ -63,6 +73,11 @@ export const ContextMenuItem = ({
 
     el.style.left = `${left}px`;
     el.style.top = `${top}px`;
+
+    if (focusSubmenuOnOpenRef.current) {
+      focusSubmenuOnOpenRef.current = false;
+      el.querySelector<HTMLElement>(MENU_ITEM_SELECTOR)?.focus();
+    }
   }, [open]);
 
   // The flyout is detached (portaled to <body>), so mouse-out alone can't cover every close: an
@@ -97,6 +112,61 @@ export const ContextMenuItem = ({
   // handler; other rows default to disabled when no handler is given.
   const isDisabled = submenu ? false : (disabled ?? !onClick);
 
+  const handleParentKeyDown = (
+    event: ReactKeyboardEvent<HTMLButtonElement>,
+  ) => {
+    if (!submenu || event.key !== KEY.ARROW_RIGHT) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    window.clearTimeout(closeTimer.current);
+
+    const firstItem =
+      flyoutRef.current?.querySelector<HTMLElement>(MENU_ITEM_SELECTOR);
+    if (firstItem) {
+      firstItem.focus();
+      return;
+    }
+
+    focusSubmenuOnOpenRef.current = true;
+    setOpen(true);
+  };
+
+  const handleSubmenuKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+    if (event.key === KEY.ARROW_LEFT) {
+      event.preventDefault();
+      event.stopPropagation();
+      window.clearTimeout(closeTimer.current);
+      setOpen(false);
+      anchorRef.current?.focus();
+      return;
+    }
+
+    const items = Array.from(
+      flyoutRef.current?.querySelectorAll<HTMLElement>(MENU_ITEM_SELECTOR) ??
+        [],
+    );
+    if (!items.length) return;
+
+    const currentIndex = items.indexOf(document.activeElement as HTMLElement);
+    let nextIndex: number | null = null;
+
+    if (event.key === KEY.ARROW_DOWN) {
+      nextIndex = (currentIndex + 1 + items.length) % items.length;
+    } else if (event.key === KEY.ARROW_UP) {
+      nextIndex = (currentIndex - 1 + items.length) % items.length;
+    } else if (event.key === KEY.HOME) {
+      nextIndex = 0;
+    } else if (event.key === KEY.END) {
+      nextIndex = items.length - 1;
+    }
+
+    if (nextIndex === null) return;
+    event.preventDefault();
+    event.stopPropagation();
+    items[nextIndex]?.focus();
+  };
+
   const row = (
     <Button
       ref={submenu ? anchorRef : undefined}
@@ -109,7 +179,10 @@ export const ContextMenuItem = ({
       // Roving focus: items aren't individual Tab stops; arrow keys move focus (see ContextMenu).
       tabIndex={-1}
       onClick={onClick}
+      onKeyDown={handleParentKeyDown}
       disabled={isDisabled}
+      aria-haspopup={submenu ? SUBMENU_POPUP_ROLE : undefined}
+      aria-expanded={submenu ? open : undefined}
     >
       <span className="ctx_icon">{icon}</span>
       <span className="ctx_text">{text}</span>
@@ -141,8 +214,9 @@ export const ContextMenuItem = ({
           <div
             ref={flyoutRef}
             className="context_menu context_menu_submenu visible"
-            role="menu"
+            role={MENU_ROLE}
             aria-orientation="vertical"
+            onKeyDown={handleSubmenuKeyDown}
             onMouseEnter={openSubmenu}
             onMouseLeave={closeSubmenu}
           >

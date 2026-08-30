@@ -6,12 +6,13 @@ import {
   useRef,
   type CSSProperties,
 } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 
 import { StateProvider } from "@/shared/providers/StateProvider";
 import { ModalProvider } from "@/shared/providers/ModalProvider";
 import { ConfirmProvider } from "@/shared/providers/ConfirmProvider";
+import { CompressProvider } from "@/shared/providers/CompressProvider";
 import { FolderPickerProvider } from "@/shared/providers/FolderPickerProvider";
 import { FilePickerProvider } from "@/shared/providers/FilePickerProvider";
 import { TagsProvider } from "@/shared/providers/TagsProvider";
@@ -22,6 +23,8 @@ import {
 } from "@/shared/keymap";
 
 import SideBar, { SidebarResizeHandle } from "@/features/sidebar";
+import { OnboardingProvider, OnboardingDialog } from "@/features/onboarding";
+import { ChangelogProvider, ChangelogDialog } from "@/features/changelog";
 import ShortcutsDialog from "@/features/shortcuts";
 import { SettingsProvider } from "@/features/settings";
 import { useTabs, saveStartupConfig } from "@/features/tabs";
@@ -31,7 +34,9 @@ import AppContent from "./AppContent";
 import { useToasts } from "./hooks/useToasts";
 import { useZoom } from "./hooks/useZoom";
 import { useDirectoryContents } from "./hooks/useDirectoryContents";
+import { useStaleMountRedirect } from "./hooks/useStaleMountRedirect";
 import { useSidebarCollapsed } from "./hooks/useSidebarCollapsed";
+import { useUpdateCheck } from "./hooks/useUpdateCheck";
 import { useAppSettings } from "./hooks/useAppSettings";
 import { useDockMenu } from "./hooks/useDockMenu";
 import { useTheme } from "./hooks/useTheme";
@@ -61,9 +66,6 @@ const App = () => {
   // Single domain manager instance for the whole app, provided through context.
   const fs = useMemo(() => new FileSystemManager(), []);
 
-  // Each concern owns its own state and side effects; the composition root just wires them
-  // together into the shared context (see ARCHITECTURE_RULES §6, §4).
-  const tabs = useTabs();
   // App-wide settings persisted in settings.toml; hydrated on launch.
   const {
     settings,
@@ -71,18 +73,39 @@ const App = () => {
     saving: savingSettings,
     ready: settingsReady,
   } = useAppSettings();
+  // Each concern owns its own state and side effects; the composition root just wires them
+  // together into the shared context (see ARCHITECTURE_RULES §6, §4).
+  const tabs = useTabs(settings.activateNewTabs, settings.rememberScrollOnUp);
+  // A denied system folder must never strand the active tab. Prefer the real history transition
+  // so Back/Forward semantics stay intact; a restored/direct path has no previous entry, so the
+  // Volumes view is its safe fallback. The bounce must never be silent — the toast says why and
+  // clicking it opens the Full Disk Access pane (always clickable: it's the fix, not a nicety).
+  const { canGoBack, goBack, setPath } = tabs;
+  const leaveAccessDeniedPath = useCallback(() => {
+    if (canGoBack) goBack();
+    else setPath("");
+    notify(t.directory.accessDenied.bounced, TOAST_TYPE.ERROR, () =>
+      fs.openFullDiskAccessSettings(),
+    );
+  }, [canGoBack, goBack, setPath, fs]);
   const directory = useDirectoryContents({
     fs,
     path: tabs.path,
     navigate,
     locationPathname: location.pathname,
     hideSystemRecents: settings.hideSystemRecents,
+    onAccessDenied: leaveAccessDeniedPath,
   });
+  // Bounce out of a folder whose mount vanished (SMB server shut down, disk ejected) instead of
+  // stranding the user in a dead, empty directory.
+  useStaleMountRedirect(tabs.path, directory.volumes, tabs.setPath);
   useTheme(settings.theme as Theme);
   useAccent(settings.accentColor as Accent);
   const zoom = useZoom(fs, tabs.path, settings.defaultZoom);
   const { toasts, dismissToast } = useToasts();
   const sidebar = useSidebarCollapsed();
+  // Launch-time check for a newer GitHub release (toast on hit); off via Settings › Updates.
+  useUpdateCheck(settings.checkForUpdates, settingsReady);
 
   // Feed the macOS Dock right-click menu (recent folders + quick actions) and handle its clicks.
   useDockMenu({
@@ -150,14 +173,24 @@ const App = () => {
   }, [settings.showToasts]);
 
   // Dialogs render outside the .App subtree (their providers wrap it), so the modal-surface opacity
-  // is set on the document root where they can inherit it (see Dialog.css). Mirrors the inline
-  // --context-menu-opacity used for menus, which do live inside .App.
+  // is set on the document root where they can inherit it (see Dialog.css).
   useEffect(() => {
     document.documentElement.style.setProperty(
       "--dialog-opacity",
       String(settings.dialogOpacity),
     );
   }, [settings.dialogOpacity]);
+
+  // Context-menu submenu flyouts are portaled to <body>, outside .App, so they don't inherit the
+  // inline --context-menu-opacity below. Mirror it onto the document root (like --dialog-opacity) so
+  // the flyout gets the exact same surface as the main menu — one class, one variable, both styled
+  // together by any future change.
+  useEffect(() => {
+    document.documentElement.style.setProperty(
+      "--context-menu-opacity",
+      String(settings.contextMenuOpacity),
+    );
+  }, [settings.contextMenuOpacity]);
 
   // Mirror the launch preference into localStorage so the next launch's (synchronous) tab
   // restoration can read it before settings.toml has finished loading.
@@ -222,10 +255,15 @@ const App = () => {
         canGoForward: tabs.canGoForward,
         goBack: tabs.goBack,
         goForward: tabs.goForward,
+        scrollRestoreKey: tabs.scrollRestoreKey,
+        scrollPosition: tabs.scrollPosition,
+        reportScrollPosition: tabs.reportScrollPosition,
         dirContent: directory.dirContent,
         setDirContent: directory.setDirContent,
         accessDenied: directory.accessDenied,
+        loadError: directory.loadError,
         loadingDir: directory.loadingDir,
+        stalled: directory.stalled,
         view,
         setView,
         showHidden: settings.showHidden,
@@ -240,6 +278,7 @@ const App = () => {
         setZoomTo: zoom.setZoomTo,
         defaultZoom: settings.defaultZoom,
         setDefaultZoom: (defaultZoom) => update({ defaultZoom }),
+        gridIconSize: settings.gridIconSize,
         dateFormat: settings.dateFormat,
         setDateFormat: (dateFormat) => update({ dateFormat }),
         sidebarOpacity: settings.sidebarOpacity,
@@ -261,6 +300,8 @@ const App = () => {
         toggleDragToExternalApps,
         previewImagesInApp: settings.previewImagesInApp,
         previewMarkdownInApp: settings.previewMarkdownInApp,
+        openPreviewInWindow: settings.openPreviewInWindow,
+        openPropertiesInWindow: settings.openPropertiesInWindow,
         remoteThumbnails: settings.remoteThumbnails,
         savingSettings,
         search: tabs.search,
@@ -279,49 +320,65 @@ const App = () => {
               {/* Inside HotkeyProvider so the confirm dialog's Escape-to-close (a MODAL-scope
                   hotkey) and modal-scope suppression actually register. */}
               <ConfirmProvider>
-                {/* Custom folder picker (vs native Finder dialog); inside HotkeyProvider/ModalProvider
+                {/* Archive compress/extract flows + options dialog. Inside ConfirmProvider so its
+                    dialog shares the same modal/hotkey scope. */}
+                <CompressProvider>
+                  {/* Custom folder picker (vs native Finder dialog); inside HotkeyProvider/ModalProvider
                   so its dialog gets MODAL-scope suppression and focus trapping like other dialogs. */}
-                <FolderPickerProvider
-                  useCustom={settings.useCustomFolderPicker}
-                >
-                  <FilePickerProvider
+                  <FolderPickerProvider
                     useCustom={settings.useCustomFolderPicker}
                   >
-                    <ShortcutHelpProvider>
-                      <SettingsProvider settings={settings} update={update}>
-                        <div
-                          className={classNames(
-                            "App",
-                            sidebar.collapsed && "collapsed",
-                          )}
-                          // Expanded-column width; the collapsed rule overrides it (see index.css).
-                          style={
-                            {
-                              "--sidebar-width": `${settings.sidebarWidth}px`,
-                              // Alpha of the context-menu background (see ContextMenu.css); menus are
-                              // descendants of .App, so they inherit this override.
-                              "--context-menu-opacity":
-                                settings.contextMenuOpacity,
-                              // Alpha of the preview controls pill (see Preview.css); the pill is a
-                              // descendant of .App, so it inherits this override.
-                              "--preview-controls-opacity":
-                                settings.previewControlsOpacity,
-                            } as CSSProperties
-                          }
-                        >
-                          <SideBar
-                            collapsed={sidebar.collapsed}
-                            onToggle={sidebar.toggle}
-                          />
-                          {!sidebar.collapsed && <SidebarResizeHandle />}
-                          <AppContent />
-                        </div>
-                      </SettingsProvider>
-                      <ShortcutsDialog />
-                      <ToastStack toasts={toasts} onDismiss={dismissToast} />
-                    </ShortcutHelpProvider>
-                  </FilePickerProvider>
-                </FolderPickerProvider>
+                    <FilePickerProvider
+                      useCustom={settings.useCustomFolderPicker}
+                    >
+                      <ShortcutHelpProvider>
+                        <OnboardingProvider>
+                          <ChangelogProvider>
+                            <SettingsProvider
+                              settings={settings}
+                              update={update}
+                            >
+                              <div
+                                className={classNames(
+                                  "App",
+                                  sidebar.collapsed && "collapsed",
+                                )}
+                                // Expanded-column width; the collapsed rule overrides it (see index.css).
+                                style={
+                                  {
+                                    "--sidebar-width": `${settings.sidebarWidth}px`,
+                                    // Alpha of the context-menu background (see ContextMenu.css); menus are
+                                    // descendants of .App, so they inherit this override.
+                                    "--context-menu-opacity":
+                                      settings.contextMenuOpacity,
+                                    // Alpha of the preview controls pill (see Preview.css); the pill is a
+                                    // descendant of .App, so it inherits this override.
+                                    "--preview-controls-opacity":
+                                      settings.previewControlsOpacity,
+                                  } as CSSProperties
+                                }
+                              >
+                                <SideBar
+                                  collapsed={sidebar.collapsed}
+                                  onToggle={sidebar.toggle}
+                                />
+                                {!sidebar.collapsed && <SidebarResizeHandle />}
+                                <AppContent />
+                              </div>
+                              {/* Welcome guide; inside SettingsProvider because its steps reuse the
+                              settings controls, and it auto-opens once settings are hydrated. */}
+                              <OnboardingDialog settingsReady={settingsReady} />
+                              {/* Post-update "what's new" toast + changelog dialog. */}
+                              <ChangelogDialog settingsReady={settingsReady} />
+                            </SettingsProvider>
+                          </ChangelogProvider>
+                        </OnboardingProvider>
+                        <ShortcutsDialog />
+                        <ToastStack toasts={toasts} onDismiss={dismissToast} />
+                      </ShortcutHelpProvider>
+                    </FilePickerProvider>
+                  </FolderPickerProvider>
+                </CompressProvider>
               </ConfirmProvider>
             </HotkeyProvider>
           </KeymapProvider>

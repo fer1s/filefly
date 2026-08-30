@@ -2,6 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+  <!-- Empty Trash delegates to Finder so macOS can present its native progress UI. Automation
+       permission is requested the first time the app sends this Apple Event. -->
+  <key>NSAppleEventsUsageDescription</key>
+  <string>Sito File Browser uses Finder to empty the Trash with macOS native progress.</string>
   <!-- Declares that this app can open folders, so Launch Services will let it become the default
        folder handler (see functions/handler.rs). LSHandlerRank "Alternate" means Finder stays the
        owner unless the user opts in via the Settings toggle. Merged into the generated Info.plist

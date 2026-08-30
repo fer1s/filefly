@@ -1,0 +1,32 @@
+.RemoteErrorNotice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  margin: auto;
+  padding: var(--space-8);
+  max-width: var(--size-toast-max-width);
+  text-align: center;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.RemoteErrorNotice .remote_error_icon {
+  font-size: var(--font-size-icon-large);
+  color: var(--color-text-muted);
+}
+
+.RemoteErrorNotice .remote_error_title {
+  margin: 0;
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.RemoteErrorNotice .remote_error_description {
+  margin: 0;
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+  overflow-wrap: anywhere;
+}

@@ -1,8 +1,12 @@
-import React from "react";
+import "@sito/ui/styles.css";
+
+import React, { Suspense } from "react";
 import ReactDOM from "react-dom/client";
-import { BrowserRouter } from "react-router-dom";
+import { BrowserRouter } from "react-router";
 import { config } from "@fortawesome/fontawesome-svg-core";
 import App from "./App";
+import { PreviewWindow, PropertiesWindow } from "./panelWindows";
+import { ConnectionsProvider } from "@/features/connections";
 
 // FontAwesome injects its sizing CSS at runtime by default. The production CSP
 // (default-src 'self', no inline styles) blocks that injection, so icons render
@@ -19,10 +23,35 @@ import { installDevErrorOverlay } from "./devErrorOverlay";
 // Dev-only full-screen error overlay (see devErrorOverlay); no-op in production builds.
 installDevErrorOverlay();
 
-ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
+// A `panel` query param marks a detached panel window (see window::create_preview_window /
+// create_properties_window): it renders only that surface for the file in `path` instead of the
+// full browser. Everything else is a normal browser window.
+const params = new URLSearchParams(window.location.search);
+const panel = params.get("panel");
+const panelTarget = params.get("path") ?? "";
+
+const panelApp =
+  panel === "preview" ? (
+    <Suspense fallback={null}>
+      <PreviewWindow target={panelTarget} />
+    </Suspense>
+  ) : panel === "properties" ? (
+    <Suspense fallback={null}>
+      <PropertiesWindow target={panelTarget} />
+    </Suspense>
+  ) : null;
+
+const root = ReactDOM.createRoot(
+  document.getElementById("root") as HTMLElement,
+);
+root.render(
   <React.StrictMode>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
+    {panelApp ?? (
+      <BrowserRouter>
+        <ConnectionsProvider>
+          <App />
+        </ConnectionsProvider>
+      </BrowserRouter>
+    )}
   </React.StrictMode>,
 );

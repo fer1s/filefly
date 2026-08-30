@@ -1,0 +1,28 @@
+/* Base text input. Theme-aware fill/border/text (never the browser's default white box), accent ring
+   on focus. Shared by every dialog/field so the look — and any future change — lives in one place. */
+.TextInput {
+  font: inherit;
+  font-size: var(--font-size-base);
+  width: 100%;
+  box-sizing: border-box;
+  padding: var(--space-1-5) var(--space-2);
+  background-color: var(--color-surface-input);
+  border: var(--border-width-default) solid var(--color-border-default);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-primary);
+  transition: border-color 0.15s ease-in-out;
+}
+
+.TextInput::placeholder {
+  color: var(--color-text-dim);
+}
+
+.TextInput:focus {
+  outline: none;
+  border-color: var(--color-selection-indicator);
+}
+
+.TextInput:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}

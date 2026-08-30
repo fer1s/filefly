@@ -86,7 +86,7 @@ pub fn clear_recent_folders() {
 /// (not broadcast) so multiple windows don't each react.
 fn emit_navigate(path: &str) {
     let Some(state) = DOCK.get() else { return };
-    if let Some(window) = focus_target_window(&state.app) {
+    if let Some(window) = crate::window::focus_or_create_window(&state.app) {
         use tauri::Emitter;
         let _ = window.emit("dock://navigate", path.to_string());
     }
@@ -99,21 +99,10 @@ fn emit_action(id: &str) {
         let _ = crate::window::create_window(&state.app, None);
         return;
     }
-    if let Some(window) = focus_target_window(&state.app) {
+    if let Some(window) = crate::window::focus_or_create_window(&state.app) {
         use tauri::Emitter;
         let _ = window.emit("dock://action", id.to_string());
     }
-}
-
-/// Focus the window a Dock click should act on (the frontmost, else any) and return it. Opens a
-/// fresh window if the app is running with all windows closed (living in the tray).
-fn focus_target_window(app: &AppHandle) -> Option<tauri::WebviewWindow> {
-    let window = crate::window::target_window(app)
-        .or_else(|| crate::window::create_window(app, None).ok())?;
-    let _ = window.unminimize();
-    let _ = window.show();
-    let _ = window.set_focus();
-    Some(window)
 }
 
 // ---------------------------------------------------------------------------
@@ -201,7 +190,8 @@ mod imp {
     /// time), so it always reflects the current recents.
     fn build_menu(mtm: MainThreadMarker) -> Retained<NSMenu> {
         let state = DOCK.get().unwrap();
-        let handler: &DockHandler = unsafe { &*(HANDLER_PTR.get().copied().unwrap_or(0) as *const DockHandler) };
+        let handler: &DockHandler =
+            unsafe { &*(HANDLER_PTR.get().copied().unwrap_or(0) as *const DockHandler) };
         let menu = NSMenu::new(mtm);
 
         let recents = state.recents.lock().unwrap().clone();
@@ -266,7 +256,10 @@ mod imp {
 
         unsafe {
             let obj = Retained::as_ptr(&delegate) as *mut AnyObject;
-            objc2::ffi::object_setClass(obj.cast(), (new_class as *const objc2::runtime::AnyClass).cast());
+            objc2::ffi::object_setClass(
+                obj.cast(),
+                (new_class as *const objc2::runtime::AnyClass).cast(),
+            );
         }
     }
 

@@ -18,6 +18,7 @@ import type { EntriesViewProps } from "./types";
 const EntriesView = ({
   entries,
   view,
+  showFolderThumbnails,
   selectedIDs,
   cutPaths,
   renamingID,
@@ -29,23 +30,57 @@ const EntriesView = ({
   menu,
   bindDrag,
   metadataTooltipDisabled,
+  typeaheadQuery,
+  scrollRestoreKey,
+  scrollPosition,
   revealID,
   clearRevealID,
 }: EntriesViewProps) => {
   const { fs, setPath, dateFormat, remoteThumbnails } = useStateContext();
   const { tags: tagsByPath, loadTags } = useTags();
   const [renderCount, setRenderCount] = useState(RENDER_BATCH_SIZE);
+  const viewRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const restoredScrollKeyRef = useRef<string | null>(null);
 
   const hasMore = renderCount < entries.length;
+  const typeaheadRevealID =
+    typeaheadQuery && selectedIDs.length === 1 ? selectedIDs[0] : null;
+  const scrollTargetID = revealID ?? typeaheadRevealID;
 
-  // Scroll a revealed entry into view. If it sits past the current render batch, grow the slice to
-  // include it first (this effect re-runs once it's mounted), then scroll and clear the request.
+  // Restore this exact history entry's viewport. A deep position may be beyond the height of the
+  // initial lazy-render batch; grow one batch at a time until the container can reach it, then set
+  // the final scrollTop. The ref prevents ordinary rerenders from snapping the user back.
   useEffect(() => {
-    if (!revealID) return;
-    const index = entries.findIndex((entry) => entry.path === revealID);
+    if (restoredScrollKeyRef.current === scrollRestoreKey) return;
+    const container =
+      viewRef.current?.closest<HTMLElement>(".directory_content");
+    if (!container) return;
+    const maxScrollTop = Math.max(
+      0,
+      container.scrollHeight - container.clientHeight,
+    );
+    if (scrollPosition > maxScrollTop && hasMore) {
+      setRenderCount((count) =>
+        Math.min(count + RENDER_BATCH_SIZE, entries.length),
+      );
+      return;
+    }
+    const raf = requestAnimationFrame(() => {
+      container.scrollTop = Math.min(scrollPosition, maxScrollTop);
+      restoredScrollKeyRef.current = scrollRestoreKey;
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [scrollRestoreKey, scrollPosition, hasMore, entries.length, renderCount]);
+
+  // Scroll a revealed or type-to-find entry into view. If it sits past the current render batch,
+  // grow the slice to include it first (this effect re-runs once it's mounted), then scroll. An
+  // external reveal is cleared after handling; a type-to-find target follows the active query.
+  useEffect(() => {
+    if (!scrollTargetID) return;
+    const index = entries.findIndex((entry) => entry.path === scrollTargetID);
     if (index === -1) {
-      clearRevealID(); // not in this folder (e.g. wrong window) — drop the request
+      if (revealID) clearRevealID(); // wrong folder/window — drop external reveals
       return;
     }
     if (index >= renderCount) {
@@ -55,12 +90,12 @@ const EntriesView = ({
     }
     const raf = requestAnimationFrame(() => {
       document
-        .getElementById(revealID)
+        .getElementById(scrollTargetID)
         ?.scrollIntoView({ block: "center", inline: "nearest" });
-      clearRevealID();
+      if (revealID) clearRevealID();
     });
     return () => cancelAnimationFrame(raf);
-  }, [revealID, entries, renderCount, clearRevealID]);
+  }, [scrollTargetID, revealID, entries, renderCount, clearRevealID]);
 
   // Finder tags for the rows currently rendered (lazy — grows with the slice, never reads twice).
   const renderedPaths = useMemo(
@@ -97,6 +132,7 @@ const EntriesView = ({
 
   return (
     <div
+      ref={viewRef}
       className={view}
       role="listbox"
       aria-multiselectable="true"
@@ -129,6 +165,7 @@ const EntriesView = ({
             bindDrag={bindDrag}
             metadataTooltipDisabled={metadataTooltipDisabled}
             remoteThumbnails={remoteThumbnails}
+            showFolderThumbnails={showFolderThumbnails}
           />
         );
       })}

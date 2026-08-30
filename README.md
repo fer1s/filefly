@@ -56,15 +56,29 @@ This installs the Rust packages if they are not on disk yet; this happens only o
 
 The app ships an AI-friendly CLI, **`sfb`**, that drives the same file operations the GUI does
 (list, search, copy, move, trash, tags, …). It prints a JSON envelope on stdout and uses exit codes,
-so agents and scripts can call it directly. Run `sfb schema` for a machine-readable list of every
-command and its arguments, or `sfb help` for human-readable help.
+so agents and scripts can call it directly. Its canonical grammar is resource-oriented:
+
+```text
+sfb <verb> <resource> [target ...] [--option value ...]
+```
+
+Run `sfb api-resources` to discover resources and supported verbs, `sfb explain <resource>` for
+their operations, `sfb schema` for the complete machine-readable contract, or `sfb help` for
+human-readable help.
 
 ```bash
-sfb list --path ~/Documents
-sfb search --path ~ --query invoice
-sfb tags-set --path report.pdf --tags '[{"name":"Work","color":4}]'
-sfb delete --path old.log --force   # destructive ops require --force
+sfb get entries ~/Documents
+sfb find entries ~ --name invoice
+sfb set entry-tags report.pdf --values '[{"name":"Work","color":4}]'
+sfb diagnose share 192.168.1.50 Shared
+sfb connect share 192.168.1.50 Shared
+sfb get mounts
+sfb delete entry old.log --force   # permanent deletion requires --force
 ```
+
+Existing flat names remain compatibility aliases and execute the same registered operation:
+`sfb list --path ~/Documents`, `sfb tags-get --path report.pdf`, `sfb smb-mounts`, `sfb ui-state`,
+etc. They are not separate implementations.
 
 `sfb` is embedded inside the app bundle at `Sito File Browser.app/Contents/MacOS/sfb`. How it lands
 on your `PATH` depends on how you installed the app:

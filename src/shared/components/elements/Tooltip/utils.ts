@@ -5,6 +5,32 @@ import {
 } from "./constants";
 import type { TooltipCoords } from "./types";
 
+// `display: contents` wrappers have no box, so their first child is the visual trigger.
+export const getTooltipTriggerRect = (
+  trigger: HTMLElement,
+): DOMRect | undefined => {
+  const wrapperRect = trigger.getBoundingClientRect();
+  return wrapperRect.width || wrapperRect.height
+    ? wrapperRect
+    : trigger.firstElementChild?.getBoundingClientRect();
+};
+
+// A portal keeps its viewport coordinates when its trigger is moved by a layout update. Detect
+// any geometry change so the tooltip can close instead of remaining detached from its trigger.
+export const hasTooltipTriggerMoved = (
+  trigger: HTMLElement,
+  initialRect: DOMRect,
+): boolean => {
+  const currentRect = getTooltipTriggerRect(trigger);
+  return (
+    !currentRect ||
+    currentRect.top !== initialRect.top ||
+    currentRect.right !== initialRect.right ||
+    currentRect.bottom !== initialRect.bottom ||
+    currentRect.left !== initialRect.left
+  );
+};
+
 // Final viewport (position: fixed) top-left for the bubble, given the trigger and bubble
 // rects and placement, clamped so it never spills past the viewport edges.
 export const computeTooltipPosition = (

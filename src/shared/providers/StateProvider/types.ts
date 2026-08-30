@@ -26,14 +26,25 @@ export type State = {
   canGoForward: boolean;
   goBack: () => void;
   goForward: () => void;
+  // Current history entry's saved directory viewport. The key changes for each tab/history visit,
+  // including two visits to the same path, so Directory knows exactly when to restore it.
+  scrollRestoreKey: string;
+  scrollPosition: number;
+  reportScrollPosition: (position: number) => void;
   dirContent: DirEntry[];
   setDirContent: (dirContent: DirEntry[]) => void;
   // True when the current directory could not be read due to OS privacy protection
   // (e.g. macOS Full Disk Access required for the Trash).
   accessDenied: boolean;
+  // Why the current listing failed (remote connect/auth errors), or null. Drives the persistent
+  // error notice in the directory view.
+  loadError: string | null;
   // True while a navigation is still fetching the new folder's listing (after a short delay, so
   // fast local reads don't flash). The directory view shows a spinner instead of the stale entries.
   loadingDir: boolean;
+  // True when a read (navigation or background refresh) has hung well past normal — typically a
+  // dead SMB mount. Drives a non-blocking overlay offering a way out to the Volumes view.
+  stalled: boolean;
   view: ViewMode;
   setView: (view: ViewMode) => void;
   // Whether hidden entries (dotfiles) are shown in the listing. Toggled via the keymap.
@@ -54,6 +65,8 @@ export type State = {
   // Configurable default zoom for folders without their own saved zoom.
   defaultZoom: number;
   setDefaultZoom: (zoom: number) => void;
+  // Grid tile/icon size multiplier (1 = default tile), independent of the per-folder zoom.
+  gridIconSize: number;
   // The date format used wherever dates are shown (a token pattern or the locale sentinel).
   dateFormat: string;
   setDateFormat: (format: string) => void;
@@ -90,6 +103,12 @@ export type State = {
   // Whether opening a markdown file (Enter/double-click) shows it in the built-in preview instead
   // of the OS default app. Read by the directory open flow.
   previewMarkdownInApp: boolean;
+  // Whether the built-in preview opens in its own detached window instead of the in-app overlay.
+  // Read by the directory open flow, which spawns a preview window instead of the local preview.
+  openPreviewInWindow: boolean;
+  // Whether the properties open in their own detached window instead of the in-app dialog. Read by
+  // the properties flow (useProperties via DirectoryProvider), which spawns a properties window.
+  openPropertiesInWindow: boolean;
   // Whether to generate thumbnails for remote (SFTP) images (off by default — each downloads the
   // whole file). Gates the thumbnail request for remote entries.
   remoteThumbnails: boolean;

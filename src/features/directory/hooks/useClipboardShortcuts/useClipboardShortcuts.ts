@@ -9,6 +9,7 @@ export const useClipboardShortcuts = ({
   enabled,
   selectedIDs,
   onCopy,
+  onCopyPath,
   onCut,
   onPaste,
   onUndo,
@@ -28,6 +29,9 @@ export const useClipboardShortcuts = ({
   });
 
   useHotkey(KEYMAP_ACTION.COPY, () => onCopy(selectedIDs), { when: enabled });
+  useHotkey(KEYMAP_ACTION.COPY_PATH, () => onCopyPath(selectedIDs), {
+    when: enabled,
+  });
   useHotkey(KEYMAP_ACTION.CUT, () => onCut(selectedIDs), { when: enabled });
   useHotkey(KEYMAP_ACTION.PASTE, () => onPaste(), { when: enabled });
   useHotkey(KEYMAP_ACTION.UNDO, () => onUndo(), { when: enabled });

@@ -1,7 +1,14 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { useStateContext } from "@/shared/providers/StateProvider";
-import { revealTargetFromUrl } from "@/features/tabs/utils";
+import { openPreviewWindow, openPropertiesWindow } from "@/shared/services/api";
+import { notify, TOAST_TYPE } from "@/shared/toast";
+import { extension } from "@/shared/utils";
+import type { DirEntry } from "@/shared/models";
+import { t } from "@/lang";
+import { revealTargetFromUrl } from "@/features/tabs";
+import { opensInAppPreview } from "../../constants";
+import { DEFAULT_FILTERS } from "@/shared/search/filters";
 
 import { useDirectoryEntries } from "../../hooks/useDirectoryEntries";
 import { useSelection } from "../../hooks/useSelection";
@@ -15,7 +22,19 @@ import type { DirectoryProviderProps } from "./types";
 // Owns the directory's domain state (entries, selection, clipboard ops, preview/properties,
 // inline rename) and provides it to the directory view and the quick-actions bar alike.
 export const DirectoryProvider = ({ children }: DirectoryProviderProps) => {
-  const { view, path, setPath, refreshDir } = useStateContext();
+  const {
+    fs,
+    view,
+    path,
+    setPath,
+    setSearch,
+    setFilters,
+    refreshDir,
+    openPreviewInWindow,
+    openPropertiesInWindow,
+    previewImagesInApp,
+    previewMarkdownInApp,
+  } = useStateContext();
 
   const entries = useDirectoryEntries(view);
   const selection = useSelection(entries.sorted.map((entry) => entry.path));
@@ -27,6 +46,7 @@ export const DirectoryProvider = ({ children }: DirectoryProviderProps) => {
   const [revealTarget, setRevealTarget] = useState<{
     path: string;
     paths: string[];
+    rename?: boolean;
   } | null>(revealTargetFromUrl);
 
   // The single entry to scroll into view once selected (the revealed file). Consumed by the view,
@@ -51,6 +71,22 @@ export const DirectoryProvider = ({ children }: DirectoryProviderProps) => {
     [setPath],
   );
 
+  // A newly created child must become visible immediately. Refresh when it belongs to the open
+  // folder, or navigate into its parent otherwise; the reveal effect below waits for the listing,
+  // selects and scrolls to it, then starts inline rename (which takes keyboard focus).
+  const focusCreatedEntry = useCallback(
+    (parent: string, created: string) => {
+      setRevealTarget({ path: parent, paths: [created], rename: true });
+      if (parent === path) {
+        // A search replaces the normal listing, so leave it before revealing the new file.
+        setSearch("");
+        setFilters(DEFAULT_FILTERS);
+        refreshDir();
+      } else setPath(parent);
+    },
+    [path, refreshDir, setFilters, setPath, setSearch],
+  );
+
   // Once we're in the reveal target's folder and its entries include the target paths, select
   // them (this wins over the clear-on-navigate above, which runs earlier). Tolerates misses:
   // conflict-renamed items simply aren't selected, but navigation still happened.
@@ -66,6 +102,9 @@ export const DirectoryProvider = ({ children }: DirectoryProviderProps) => {
       // batch, then scrolls). One-shot: clear the request so a later refresh doesn't repeat this.
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setRevealID(present[0]);
+      if (revealTarget.rename && present.length === 1) {
+        setRenamingID(present[0]);
+      }
       setRevealTarget(null);
     }
   }, [revealTarget, path, sorted, setSelectedIDs]);
@@ -79,6 +118,73 @@ export const DirectoryProvider = ({ children }: DirectoryProviderProps) => {
   const preview = usePreview(entries.previewables);
   const properties = useProperties();
 
+  // The preview opens either in the in-app overlay or, when openPreviewInWindow is on, its own
+  // detached window (a fresh window per open). Branch here — in the one place `preview.open` is
+  // created — so every trigger (Open/Preview in the context menu, the quick bar, keyboard) honours
+  // the setting without each caller re-checking it.
+  const openPreview = useCallback(
+    (path: string) => {
+      if (openPreviewInWindow) {
+        void openPreviewWindow(path).catch((err) =>
+          notify(t.errors.open(String(err)), TOAST_TYPE.ERROR),
+        );
+        return;
+      }
+      preview.open(path);
+    },
+    [openPreviewInWindow, preview],
+  );
+  const previewApi = useMemo(
+    () => ({ ...preview, open: openPreview }),
+    [preview, openPreview],
+  );
+
+  // Open a file like a double-click in the listing: images/markdown go to the in-app preview when
+  // their setting is on, everything else (and those when it's off) opens in the OS default app.
+  // Shared by the directory view (Enter/double-click) and the path bar (committing a file path).
+  const openFile = useCallback(
+    async (entry: DirEntry) => {
+      const ext = extension(entry.name);
+      // In-app preview keeps the real (possibly remote) path so prev/next works over the folder's
+      // entries; the Preview panel downloads a remote file to the cache itself. Opening in the OS
+      // app needs a local path now, so materialize first (read-only — see SSH_PLAN.md phase 3a).
+      if (opensInAppPreview(ext, previewImagesInApp, previewMarkdownInApp)) {
+        openPreview(entry.path);
+        return;
+      }
+      try {
+        // TODO(SSH_PLAN.md §9): opening a remote file in an external OS app edits only the local
+        // cache copy — changes are NOT pushed back to the server. Would need to watch the temp and
+        // re-upload on change. The in-app markdown editor does save back (see useMarkdownPreview).
+        await fs.open(await fs.materialize(entry.path));
+      } catch (err) {
+        notify(t.connections.openError(String(err)), TOAST_TYPE.ERROR);
+      }
+    },
+    [previewImagesInApp, previewMarkdownInApp, openPreview, fs],
+  );
+
+  // Same branch for properties: in-app dialog, or a detached window when openPropertiesInWindow is
+  // on. Centralised here so the context menu, quick bar and keyboard shortcut all honour the setting.
+  const openProperties = useCallback(
+    async (targetId: string, isCurrentDirectory: boolean) => {
+      if (openPropertiesInWindow) {
+        try {
+          await openPropertiesWindow(targetId);
+        } catch (err) {
+          notify(t.errors.properties(String(err)), TOAST_TYPE.ERROR);
+        }
+        return;
+      }
+      await properties.open(targetId, isCurrentDirectory);
+    },
+    [openPropertiesInWindow, properties],
+  );
+  const propertiesApi = useMemo(
+    () => ({ ...properties, open: openProperties }),
+    [properties, openProperties],
+  );
+
   return (
     <DirectoryContext.Provider
       value={{
@@ -87,10 +193,13 @@ export const DirectoryProvider = ({ children }: DirectoryProviderProps) => {
         renamingID,
         setRenamingID,
         fileOps,
-        preview,
-        properties,
+        preview: previewApi,
+        properties: propertiesApi,
         revealID,
         clearRevealID,
+        revealEntries,
+        focusCreatedEntry,
+        openFile,
       }}
     >
       {children}

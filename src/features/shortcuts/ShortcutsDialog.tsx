@@ -17,9 +17,9 @@ const ShortcutsDialog = () => {
   return (
     <Dialog
       visible={active}
+      title={t.shortcuts.title}
       onClose={exit}
       className="shortcuts_modal"
-      labelledBy={SHORTCUTS_TITLE_ID}
     >
       <DialogHeader
         title={t.shortcuts.title}

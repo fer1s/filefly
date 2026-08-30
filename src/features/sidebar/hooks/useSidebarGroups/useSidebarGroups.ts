@@ -131,6 +131,27 @@ export const useSidebarGroups = () => {
     [groups],
   );
 
+  // Replace one item path with another in place (keeping its position), reflecting it immediately
+  // and persisting. Used to update a saved location whose address changed (e.g. an SMB share whose
+  // IP moved with the network). No-ops when the old path isn't present; reverts from disk on a
+  // write failure.
+  const replaceItem = useCallback(
+    (id: string, oldPath: string, newPath: string) => {
+      const current = groups[id]?.items ?? [];
+      if (!current.includes(oldPath) || oldPath === newPath) return;
+      const next = current.map((p) => (p === oldPath ? newPath : p));
+      setGroups((prev) => ({ ...prev, [id]: { ...prev[id], items: next } }));
+      setSidebarItems(id, next).catch((error) => {
+        console.error("Failed to replace sidebar item:\n" + error);
+        notify(t.sidebar.itemAddFailed, TOAST_TYPE.ERROR);
+        getSidebarGroups()
+          .then(setGroups)
+          .catch(() => {});
+      });
+    },
+    [groups],
+  );
+
   // The stable ids of built-in presets the user has hidden in a group.
   const hiddenPresets = useCallback(
     (id: string) => groups[id]?.hiddenPresets ?? [],
@@ -220,6 +241,7 @@ export const useSidebarGroups = () => {
     items,
     addItem,
     removeItem,
+    replaceItem,
     hiddenPresets,
     toggleHiddenPreset,
     isCustom,
