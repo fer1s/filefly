@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { Routes, Route, useLocation } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router";
 
 import { useStateContext } from "@/shared/providers/StateProvider";
 import { TabBar, useTabsShortcuts } from "@/features/tabs";

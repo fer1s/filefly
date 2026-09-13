@@ -12,6 +12,7 @@ import { Volume, DirEntry, ContextMenuLayout, Tag } from "@/shared/models";
 import {
   ACCESS_DENIED_ERROR,
   SFTP_SCHEME,
+  type CleanupMode,
   type DragDropAction,
   type StorageKind,
 } from "@/shared/constants";
@@ -26,6 +27,10 @@ export type AppSettings = {
   // Accent hue driving selection/focus/links: "blue" | "navy" | "red" | "teal" | "gold" (see ACCENT).
   accentColor: string;
   defaultZoom: number;
+  // Grid tile/icon size multiplier (1 = default tile), independent of the per-folder zoom.
+  gridIconSize: number;
+  // Zoom folders with Command/Ctrl + scroll wheel.
+  zoomWithModifierWheel: boolean;
   dateFormat: string;
   sidebarOpacity: number;
   // Context-menu background opacity (alpha of the popover surface), 0..1.
@@ -42,6 +47,11 @@ export type AppSettings = {
   startupMode: string;
   // Folder opened on launch when startupMode is "home" (empty = Volumes view).
   homePath: string;
+  // Switch to a tab immediately when a folder/location is opened in a new tab.
+  activateNewTabs: boolean;
+  // Restore a parent's last known scroll position when navigating Up. Back/Forward always restore
+  // their own history entry regardless of this setting.
+  rememberScrollOnUp: boolean;
   // What dragging entries onto a folder does: "move" | "copy" (see DRAG_DROP_ACTION).
   dragDropAction: string;
   // Whether a confirmation dialog is shown before a drag-and-drop move/copy.
@@ -60,6 +70,12 @@ export type AppSettings = {
   // Open markdown files in the app's built-in preview (on Enter/double-click) instead of the OS
   // default app.
   previewMarkdownInApp: boolean;
+  // Open the built-in preview in its own detached window instead of the in-app overlay. A new
+  // window is spawned per open (see openPreviewWindow / window::create_preview_window).
+  openPreviewInWindow: boolean;
+  // Open the properties in their own detached window instead of the in-app dialog. A new window is
+  // spawned per open (see openPropertiesWindow / window::create_properties_window).
+  openPropertiesInWindow: boolean;
   // On export, ask before replacing an existing settings.toml. When off (default), a unique
   // filename is used instead so nothing is overwritten silently.
   confirmExportOverwrite: boolean;
@@ -76,6 +92,20 @@ export type AppSettings = {
   // Glob patterns (matched against an entry's file name) excluded from recursive folder-size
   // calculation, e.g. ".DS_Store", "*.tmp", "node_modules". Applied live on save.
   sizeIgnores: string[];
+  // Show the welcome guide (onboarding wizard) on launch until it has been completed. Exposed in
+  // Settings so the user can stop it from ever reappearing (or bring it back).
+  showOnboarding: boolean;
+  // Whether the welcome guide has been completed or dismissed at least once. Internal marker, not
+  // shown in Settings; "Open the welcome guide" clears it and reopens the wizard.
+  onboardingSeen: boolean;
+  // Check GitHub Releases for a newer version on launch and surface a notification. Only a read of
+  // the public releases API — nothing is downloaded or installed.
+  checkForUpdates: boolean;
+  // The app version that last ran. Empty on a fresh install (→ welcome guide); when the running
+  // version is newer (→ "what's new" toast). Always rewritten to the current version on launch.
+  lastSeenVersion: string;
+  // After an update, show a clickable toast that opens the changelog for the new version.
+  showChangelogAfterUpdate: boolean;
 };
 
 // Load the persisted app settings (falls back to defaults when settings.toml is absent).
@@ -217,6 +247,42 @@ export const listAllTags = async (): Promise<Tag[]> =>
 export const getContextMenu = async (): Promise<ContextMenuLayout> =>
   (await invoke("get_context_menu")) as ContextMenuLayout;
 
+const CONTEXT_MENU_CHANGED_EVENT = "context-menu-changed";
+
+// Persist the complete context-menu layout, including user-defined process actions. The backend
+// validates and normalizes it, then broadcasts context-menu-changed to every open window.
+export const setContextMenu = async (
+  menu: ContextMenuLayout,
+): Promise<ContextMenuLayout> =>
+  (await invoke("set_context_menu", { menu })) as ContextMenuLayout;
+
+export const onContextMenuChanged = async (
+  onChange: (menu: ContextMenuLayout) => void,
+): Promise<() => void> =>
+  await listen<ContextMenuLayout>(CONTEXT_MENU_CHANGED_EVENT, (event) =>
+    onChange(event.payload),
+  );
+
+// Run a saved custom action by id. The backend reloads its command from context_menu.toml and
+// expands placeholders into direct argv items; the WebView never supplies an executable.
+export const runContextAction = async (
+  actionId: string,
+  clickedPath: string,
+  paths: string[],
+): Promise<void> => {
+  try {
+    await invoke("run_context_action", { actionId, clickedPath, paths });
+  } catch (error) {
+    notify(t.errors.customAction(String(error)), TOAST_TYPE.ERROR);
+  }
+};
+
+// Mirror a Copy to the OS clipboard with Finder-style multi-flavor data: the entries paste as
+// real files into file-aware apps (Finder, Mail) and as their name (+ ext) into text fields.
+// Best-effort — callers ignore failures so the in-app clipboard still works.
+export const copyFilesToClipboard = async (paths: string[]): Promise<void> =>
+  await invoke("copy_files_to_clipboard", { paths });
+
 // Visible list columns for a folder (saved preference, or a well-known-folder default).
 export const getFolderColumns = async (path: string): Promise<string[]> =>
   (await invoke("get_folder_columns", { path })) as string[];
@@ -293,12 +359,15 @@ export const ejectVolume = async (mountPoint: string): Promise<void> =>
   await invoke("eject_volume", { mountPoint });
 
 // Read directory invokement method. Rethrows ACCESS_DENIED_ERROR so the UI can prompt for Full
-// Disk Access; any other failure (invalid/missing path) resolves to an empty listing.
+// Disk Access, and any remote (SFTP) failure so the directory view can show the connect/auth error
+// — swallowing those would render an unreachable server as an empty folder. Other local failures
+// (invalid/missing path) resolve to an empty listing.
 export const readDirectory = async (path: string): Promise<DirEntry[]> => {
   try {
     return (await invoke("read_directory", { path })) as DirEntry[];
   } catch (err) {
     if (String(err).includes(ACCESS_DENIED_ERROR)) throw err;
+    if (path.startsWith(SFTP_SCHEME)) throw err;
     console.error("Path is either not valid or does not exist:\n" + err);
     return [];
   }
@@ -428,6 +497,59 @@ export const moveEntry = async (
     onProgress: channel,
   })) as string;
 };
+// Compress the given entries into a new .zip inside `destDir`, at DEFLATE `level` (0..9). Streams
+// byte progress (input bytes read) over the same Channel as copy. Resolves to the created archive's
+// path, which differs from destDir/archiveName when a name collision forced a rename.
+export const compressEntries = async (
+  sources: string[],
+  destDir: string,
+  archiveName: string,
+  level: number,
+  password?: string,
+  onProgress?: (progress: CopyProgress) => void,
+): Promise<string> => {
+  const channel = new Channel<CopyProgress>();
+  if (onProgress) channel.onmessage = onProgress;
+  return (await invoke("compress_entries", {
+    sources,
+    destDir,
+    archiveName,
+    level,
+    password: password || null,
+    onProgress: channel,
+  })) as string;
+};
+
+// True if the zip has any encrypted entry, so the caller can prompt for a password before extract.
+export const archiveEncrypted = async (archive: string): Promise<boolean> =>
+  (await invoke("archive_encrypted", { archive })) as boolean;
+
+// True if a 7-Zip binary (7zz/7z/7za) is on PATH. Gates the "To 7z" compress option and .7z extract.
+export const sevenzipAvailable = async (): Promise<boolean> =>
+  (await invoke("sevenzip_available")) as boolean;
+
+// Extract a .zip into `destDir`. `password` decrypts an encrypted archive. `intoSubfolder` wraps
+// output in a new subfolder named after the archive ("Extract to Folder"); when false, the archive's
+// top-level entries land directly in `destDir` ("Extract Here"). Resolves to the created top-level
+// output paths (for reveal/select).
+export const extractArchive = async (
+  archive: string,
+  destDir: string,
+  password?: string,
+  intoSubfolder = false,
+  onProgress?: (progress: CopyProgress) => void,
+): Promise<string[]> => {
+  const channel = new Channel<CopyProgress>();
+  if (onProgress) channel.onmessage = onProgress;
+  return (await invoke("extract_archive", {
+    archive,
+    destDir,
+    password: password || null,
+    intoSubfolder,
+    onProgress: channel,
+  })) as string[];
+};
+
 export const renameEntry = async (
   path: string,
   newName: string,
@@ -435,6 +557,9 @@ export const renameEntry = async (
 // Create a new folder in `parent`; returns the created folder's path.
 export const createFolder = async (parent: string): Promise<string> =>
   (await invoke("create_folder", { parent })) as string;
+// Create a uniquely named empty .txt file in `parent`; returns the created file's path.
+export const createTextFile = async (parent: string): Promise<string> =>
+  (await invoke("create_text_file", { parent })) as string;
 // Copy an image file to the system clipboard as a bitmap.
 export const copyImage = async (path: string): Promise<void> =>
   await invoke("copy_image", { path });
@@ -489,7 +614,17 @@ export const startNativeDrag = (
 ): void => {
   const image = icon || bundledDragIcon;
   if (!paths.length || !image) return;
-  void startDrag({ item: paths, icon: image, mode });
+  // The native plugin accepts real local filesystem paths only. A remote SFTP URL must be
+  // downloaded first, but doing that here would add an await before startDrag and lose the native
+  // drag gesture. Refuse the unsupported handoff instead of sending an invalid path into native
+  // code; remote entries can still be copied into a local folder from inside the app.
+  if (paths.some((path) => path.startsWith(SFTP_SCHEME))) {
+    notify(t.connections.dragOutRequiresLocalCopy, TOAST_TYPE.ERROR);
+    return;
+  }
+  void startDrag({ item: paths, icon: image, mode }).catch((error) =>
+    notify(t.errors.dragOut(String(error)), TOAST_TYPE.ERROR),
+  );
 };
 
 // Record a folder the user navigated to in the app's own recent-folders list (backs the macOS
@@ -511,6 +646,16 @@ export const openNewWindow = async (): Promise<void> =>
 export const openPathInNewWindow = async (path: string): Promise<void> =>
   await invoke("open_path_in_new_window", { path });
 
+// Open the built-in preview for `path` in its own detached window (used when openPreviewInWindow is
+// on). A fresh window is spawned per call so several previews can sit side by side.
+export const openPreviewWindow = async (path: string): Promise<void> =>
+  await invoke("open_preview_window", { path });
+
+// Open the properties for `path` in its own detached window (used when openPropertiesInWindow is
+// on). A fresh window is spawned per call.
+export const openPropertiesWindow = async (path: string): Promise<void> =>
+  await invoke("open_properties_window", { path });
+
 // One of the app's on-disk data locations, with its recursively-summed size in bytes. `kind` is a
 // stable id (see STORAGE_KIND) mapped to a localized label in the UI. Mirrors StorageLocation in
 // functions/storage.rs.
@@ -531,14 +676,68 @@ export const getAppStorage = async (): Promise<AppStorageLocation[]> =>
 export const clearAppCache = async (): Promise<void> =>
   await invoke("clear_app_cache");
 
+// A folder the user registered to watch and periodically reclaim (dependency caches, build output,
+// launcher leftovers), with its live recursive size. `mode` decides what a cleanup removes (see
+// CLEANUP_MODE); `exists` is false when the folder is no longer on disk, and the row stays listed so
+// unregistering it is deliberate. Mirrors CleanupTargetInfo in functions/cleanup.rs.
+export type CleanupTarget = {
+  path: string;
+  mode: CleanupMode;
+  size: number;
+  exists: boolean;
+};
+
+// What one cleanup actually did. A contents cleanup can partially fail (a locked or in-use child)
+// while the rest is reclaimed, so the panel reports freed bytes and failures instead of a bare
+// success. Mirrors CleanupResult in functions/cleanup.rs.
+export type CleanupResult = {
+  freed: number;
+  removed: number;
+  failed: number;
+  firstError: string | null;
+};
+
+// Every registered cleanup target with its recursively-summed size. The walk runs off the UI thread
+// in Rust because these folders routinely hold hundreds of thousands of files.
+export const getCleanupTargets = async (): Promise<CleanupTarget[]> =>
+  (await invoke("get_cleanup_targets")) as CleanupTarget[];
+
+// Register a folder to watch. The backend canonicalizes the path, refuses unsafe targets (OS trees,
+// volume roots, the home dir, the app's own config dir) and rejects duplicates, throwing a
+// CLEANUP_ERROR code the caller maps to localized copy.
+export const addCleanupTarget = async (
+  path: string,
+  mode: CleanupMode,
+): Promise<void> => await invoke("add_cleanup_target", { path, mode });
+
+// Forget a registered folder. Nothing on disk is touched.
+export const removeCleanupTarget = async (path: string): Promise<void> =>
+  await invoke("remove_cleanup_target", { path });
+
+// Switch what a cleanup removes for one target (empty its contents vs trash the folder itself).
+export const setCleanupTargetMode = async (
+  path: string,
+  mode: CleanupMode,
+): Promise<void> => await invoke("set_cleanup_target_mode", { path, mode });
+
+// Reclaim one registered target by moving it (or its children) to the system Trash — reversible by
+// design, nothing is deleted permanently. The mode comes from the persisted config, not from here,
+// and the backend re-runs its safety checks before touching anything.
+export const cleanCleanupTarget = async (
+  path: string,
+): Promise<CleanupResult> =>
+  (await invoke("clean_cleanup_target", { path })) as CleanupResult;
+
 // A saved SSH/SFTP connection. Secrets (password/passphrase) are never sent to the frontend — the
-// backend strips them. Mirrors the Connection struct in filesystem/sftp.rs. See SSH_PLAN.md.
+// backend strips them; the key path is not a secret and rehydrates the edit dialog's auth fields.
+// Mirrors ConnectionInfo in filesystem/sftp.rs. See SSH_PLAN.md.
 export type Connection = {
   id: string;
   name: string;
   host: string;
   port: number;
   user: string;
+  keyPath?: string;
 };
 
 // The saved SSH connections, surfaced as rows in the sidebar's Network group. Read from
@@ -591,6 +790,75 @@ export const materializePath = async (path: string): Promise<string> => {
   const remote = slash === -1 ? "/" : rest.slice(slash);
   return sftpDownload(conn, remote);
 };
+
+// One resolved address probed on TCP 445 while diagnosing an SMB host. Mirrors SmbAttempt in
+// filesystem/smb.rs.
+export type SmbAttempt = {
+  address: string;
+  reachable: boolean;
+  error?: string;
+};
+
+// The result of resolving + probing an SMB host without authenticating. `reachable` is true when
+// any resolved address accepted a TCP 445 connection. Mirrors SmbDiagnostic in filesystem/smb.rs.
+export type SmbDiagnostic = {
+  host: string;
+  share?: string;
+  url: string;
+  port: number;
+  resolved: boolean;
+  reachable: boolean;
+  resolutionError?: string;
+  attempts: SmbAttempt[];
+};
+
+// A native SMB mount and its local /Volumes path. Mirrors SmbMount in filesystem/smb.rs.
+export type SmbMount = {
+  source: string;
+  mountPoint: string;
+  options: string[];
+};
+
+// Resolve an SMB host and probe TCP 445 without authenticating — used to tell the user why a saved
+// Windows share is unreachable (host down, firewall) before trying to mount it.
+export const smbDiagnose = async (
+  host: string,
+  share?: string,
+  timeoutMs?: number,
+): Promise<SmbDiagnostic> =>
+  (await invoke("smb_diagnose", { host, share, timeoutMs })) as SmbDiagnostic;
+
+// The SMB shares macOS currently has mounted, with their local /Volumes paths.
+export const smbMounts = async (): Promise<SmbMount[]> =>
+  (await invoke("smb_mounts")) as SmbMount[];
+
+// A disk share a host exposes. Mirrors SmbShare in filesystem/smb.rs.
+export type SmbShare = {
+  name: string;
+  // Windows admin share (C$, ADMIN$) — needs an administrator account.
+  admin: boolean;
+};
+
+// List the disk shares a host exposes, via macOS `smbutil view`. Works only after a prior sign-in
+// (macOS caches the credentials in the Keychain); rejects otherwise, so callers should treat a
+// failure as "not available yet" and fall back to manual share entry.
+export const smbShares = async (host: string): Promise<SmbShare[]> =>
+  (await invoke("smb_shares", { host })) as SmbShare[];
+
+// Ask macOS to connect to a share via its native credential UI (Finder owns auth + Keychain). No
+// password crosses this boundary. Returns the smb:// URL macOS was asked to open.
+export const smbConnect = async (
+  host: string,
+  share: string,
+): Promise<string> => (await invoke("smb_connect", { host, share })) as string;
+
+// The local /Volumes path a host/share is mounted at, or null when it isn't mounted yet. Poll this
+// after smbConnect until macOS finishes mounting, then navigate to the returned path.
+export const smbMountPoint = async (
+  host: string,
+  share: string,
+): Promise<string | null> =>
+  (await invoke("smb_mount_point", { host, share })) as string | null;
 
 // Mirror this window's live UI state (current path, view, tabs) to Rust so the headless control
 // socket (`sfb ui get-state`) can report it without a round-trip to the webview. Called on every

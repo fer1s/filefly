@@ -17,21 +17,14 @@ import {
 import {
   ENTRY_KIND,
   CLIPBOARD_MODE,
-  IMAGE_FORMATS,
-  MARKDOWN_FORMAT,
+  FOLDER_THUMBNAIL_MIN_ZOOM,
 } from "@/features/directory/constants";
-import {
-  classNames,
-  isTagsPath,
-  basename,
-  dirname,
-  extension,
-} from "@/shared/utils";
+import { classNames, isTagsPath, basename, dirname } from "@/shared/utils";
 import { notify, TOAST_TYPE } from "@/shared/toast";
 import { t } from "@/lang";
 import { DirEntry } from "@/shared/models";
 
-import { COLUMN_KEYS, buildListGrid } from "./columns";
+import { COLUMN_KEYS, buildListGrid, type ColumnWidths } from "./columns";
 import type { PendingDrop } from "./types";
 import { useColumnVisibility } from "./hooks/useColumnVisibility";
 import { useFolderView } from "./hooks/useFolderView";
@@ -41,6 +34,7 @@ import { useNativeDropTarget } from "./hooks/useNativeDropTarget";
 import { useKeyboardNav } from "./hooks/useKeyboardNav";
 import { useClipboardShortcuts } from "./hooks/useClipboardShortcuts";
 import { useZoomShortcuts } from "./hooks/useZoomShortcuts";
+import { useZoomWheel } from "./hooks/useZoomWheel";
 import { useContextMenu } from "./hooks/useContextMenu";
 import { useWritability } from "./hooks/useWritability";
 import { useDirectory } from "./providers/DirectoryProvider";
@@ -50,6 +44,8 @@ import Switcher from "@/shared/components/elements/Switcher";
 import ListHeader from "./components/ListHeader";
 import EntriesView from "./components/EntriesView";
 import AccessDeniedNotice from "./components/AccessDeniedNotice";
+import RemoteErrorNotice from "./components/RemoteErrorNotice";
+import StalledNotice from "./components/StalledNotice";
 import EntryContextMenu from "./components/EntryContextMenu";
 import StatusBar from "./components/StatusBar";
 import TypeaheadPopup from "./components/TypeaheadPopup";
@@ -69,16 +65,20 @@ const Directory = () => {
     view,
     search,
     accessDenied,
+    loadError,
     loadingDir,
+    stalled,
     zoom,
+    gridIconSize,
     savingSettings,
     dragDropAction,
     confirmDragDrop,
     toggleConfirmDragDrop,
     dragToExternalApps,
-    previewImagesInApp,
-    previewMarkdownInApp,
     infoPanelOpen,
+    scrollRestoreKey,
+    scrollPosition,
+    reportScrollPosition,
   } = useStateContext();
 
   const [typeaheadQuery, setTypeaheadQuery] = useState("");
@@ -106,6 +106,7 @@ const Directory = () => {
     searching,
     revealID,
     clearRevealID,
+    openFile,
   } = useDirectory();
 
   // A modal dialog owns the keyboard while open. Keymap actions are already suppressed by the
@@ -190,6 +191,20 @@ const Directory = () => {
 
   const { visible: visibleColumns, toggle: toggleColumn } =
     useColumnVisibility(path);
+  const visibleColumnsKey = visibleColumns.join(":");
+  const [columnLayout, setColumnLayout] = useState<{
+    key: string;
+    widths: ColumnWidths;
+  }>({ key: "", widths: {} });
+  // A different visible-column set starts from its canonical tracks. Keeping the key beside the
+  // widths avoids a reset effect (and its extra paint); resizing this layout replaces the record.
+  const columnWidths =
+    columnLayout.key === visibleColumnsKey ? columnLayout.widths : {};
+  const handleColumnWidthsChange = useCallback(
+    (widths: ColumnWidths) =>
+      setColumnLayout({ key: visibleColumnsKey, widths }),
+    [visibleColumnsKey],
+  );
   const hiddenColumns = COLUMN_KEYS.filter(
     (key) => !visibleColumns.includes(key),
   );
@@ -205,34 +220,6 @@ const Directory = () => {
     anyModalOpen || menu.visible || preview.visible || infoPanelOpen;
   // Browsing the system Trash (~/.Trash): entries offer Restore instead of Move-to-Trash.
   const inTrash = path.endsWith(`/${TRASH_DIR_NAME}`);
-
-  // Open a file: images/markdown go to the in-app preview when their setting is on, everything
-  // else (and those when it's off) opens in the OS default app. Shared by Enter (below) and
-  // double-click (DirEntry via onOpenFile) so both honour the setting.
-  const openFile = useCallback(
-    async (entry: DirEntry) => {
-      const ext = extension(entry.name);
-      const inApp =
-        (previewImagesInApp && IMAGE_FORMATS.includes(ext)) ||
-        (previewMarkdownInApp && ext === MARKDOWN_FORMAT);
-      // In-app preview keeps the real (possibly remote) path so prev/next works over the folder's
-      // entries; the Preview panel downloads a remote file to the cache itself. Opening in the OS
-      // app needs a local path now, so materialize first (read-only — see SSH_PLAN.md phase 3a).
-      if (inApp) {
-        preview.open(entry.path);
-        return;
-      }
-      try {
-        // TODO(SSH_PLAN.md §9): opening a remote file in an external OS app edits only the local
-        // cache copy — changes are NOT pushed back to the server. Would need to watch the temp and
-        // re-upload on change. The in-app markdown editor does save back (see useMarkdownPreview).
-        fs.open(await fs.materialize(entry.path));
-      } catch (err) {
-        notify(t.connections.openError(String(err)), TOAST_TYPE.ERROR);
-      }
-    },
-    [previewImagesInApp, previewMarkdownInApp, preview, fs],
-  );
 
   const handleKeyboardOpen = useCallback(
     (entry: DirEntry) =>
@@ -308,6 +295,7 @@ const Directory = () => {
     enabled: !preview.visible && !properties.visible,
     selectedIDs,
     onCopy: fileOps.copy,
+    onCopyPath: fileOps.copyPath,
     onCut: fileOps.cut,
     onPaste: fileOps.paste,
     onUndo: fileOps.undo,
@@ -326,6 +314,11 @@ const Directory = () => {
 
   useZoomShortcuts(!preview.visible && !properties.visible);
 
+  useZoomWheel(directoryRef, {
+    enabled:
+      !preview.visible && !properties.visible && !anyModalOpen && !menu.visible,
+  });
+
   // The empty floor of the entries area represents the directory currently being viewed.
   // Restrict the menu to that area: not the list header, the status bar, or an entry row.
   const handleEmptyContextMenu = (e: React.MouseEvent) => {
@@ -338,11 +331,23 @@ const Directory = () => {
     menu.openAt(e.clientX, e.clientY, path, ENTRY_KIND.DIRECTORY);
   };
 
+  // A read that hung far past normal (dead network share) swaps the listing for a non-blocking
+  // "still loading / leave" notice — the app stays alive and the user can bail out. Wins over the
+  // bare spinner and the listing.
+  const showStalled = !accessDenied && stalled;
+
   // Show a spinner instead of the listing while a navigation loads the new folder (matters for
   // slow SFTP), or while a search hasn't returned its first result yet. Both hide the (stale or
   // empty) directory content underneath rather than flashing it.
   const showLoader =
-    !accessDenied && (loadingDir || (searching && sorted.length === 0));
+    !accessDenied &&
+    !showStalled &&
+    (loadingDir || (searching && sorted.length === 0));
+
+  // A failed remote load shows a persistent notice instead of a deceptively empty listing. The
+  // loader wins while a retry is in flight.
+  const showLoadError =
+    !accessDenied && !showStalled && !showLoader && !!loadError;
 
   return (
     <div
@@ -375,20 +380,32 @@ const Directory = () => {
         )}
         style={
           {
-            "--list-grid": buildListGrid(visibleColumns),
+            "--list-grid": buildListGrid(visibleColumns, columnWidths),
             "--zoom": zoom,
+            "--tile-scale": gridIconSize,
           } as CSSProperties
         }
+        onScroll={(event) => {
+          if (!searchActive && !showLoader)
+            reportScrollPosition(event.currentTarget.scrollTop);
+        }}
       >
         {accessDenied && <AccessDeniedNotice />}
 
-        {!accessDenied && isNtfsReadOnly && (
+        {showLoadError && (
+          <RemoteErrorNotice error={loadError!} retry={refreshDir} />
+        )}
+
+        {showStalled && <StalledNotice onLeave={() => setPath("")} />}
+
+        {!accessDenied && !showStalled && isNtfsReadOnly && (
           <NtfsNotice recheck={recheckWritability} />
         )}
 
         {!accessDenied &&
           !searchActive &&
           !showLoader &&
+          !showStalled &&
           view === VIEW_MODE.LIST &&
           sorted.length > 0 && (
             <ListHeader
@@ -397,6 +414,7 @@ const Directory = () => {
               onSort={handleSort}
               visibleColumns={visibleColumns}
               onToggleColumn={toggleColumn}
+              onColumnWidthsChange={handleColumnWidthsChange}
             />
           )}
 
@@ -408,11 +426,14 @@ const Directory = () => {
           </div>
         )}
 
-        {!accessDenied && !showLoader && (
+        {!accessDenied && !showLoader && !showLoadError && !showStalled && (
           <EntriesView
             key={searchActive ? "search" : path}
             entries={sorted}
             view={view}
+            showFolderThumbnails={
+              view === VIEW_MODE.GRID && zoom >= FOLDER_THUMBNAIL_MIN_ZOOM
+            }
             selectedIDs={selectedIDs}
             cutPaths={cutPaths}
             renamingID={renamingID}
@@ -428,6 +449,9 @@ const Directory = () => {
             }}
             bindDrag={bindDrag}
             metadataTooltipDisabled={metadataTooltipDisabled}
+            typeaheadQuery={typeaheadQuery}
+            scrollRestoreKey={scrollRestoreKey}
+            scrollPosition={searchActive ? 0 : scrollPosition}
             revealID={revealID}
             clearRevealID={clearRevealID}
           />

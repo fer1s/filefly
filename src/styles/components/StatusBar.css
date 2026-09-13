@@ -96,3 +96,20 @@
   background-color: var(--color-progress-fill);
   transition: width 0.2s ease-in-out;
 }
+
+/* Indeterminate (no byte total, e.g. the 7z path): a segment slides back and forth instead of
+   filling by percentage. */
+.directory_page .status_bar .progress .progress_bar.indeterminate {
+  width: 40% !important;
+  transition: none;
+  animation: progress_indeterminate 1.1s ease-in-out infinite;
+}
+
+@keyframes progress_indeterminate {
+  0% {
+    transform: translateX(-110%);
+  }
+  100% {
+    transform: translateX(275%);
+  }
+}

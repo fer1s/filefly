@@ -7,6 +7,7 @@ import IconButton, {
 } from "@/shared/components/elements/IconButton";
 import Spinner from "@/shared/components/elements/Spinner";
 import Icon from "@/shared/components/elements/Icon";
+import TextArea from "@/shared/components/elements/TextArea";
 import CloseButton from "@/shared/components/patterns/CloseButton";
 import ZoomControl from "@/shared/components/patterns/ZoomControl";
 import {
@@ -75,6 +76,7 @@ const Preview = ({
   hasPrev,
   hasNext,
   onDelete,
+  windowed = false,
 }: PreviewProps) => {
   const { fs } = useStateContext();
   const { keymap } = useKeymap();
@@ -300,10 +302,16 @@ const Preview = ({
 
   return (
     <>
-      <div
-        className={classNames("preview_backdrop", previewVisible && "visible")}
-        onClick={requestClose}
-      ></div>
+      {/* In-app overlay dims the app behind it; a dedicated window has nothing behind to dim. */}
+      {!windowed && (
+        <div
+          className={classNames(
+            "preview_backdrop",
+            previewVisible && "visible",
+          )}
+          onClick={requestClose}
+        ></div>
+      )}
       {AUDIO_FORMATS.includes(fileType) ? (
         <AudioPreview
           key={`${filePath}:${previewVisible}`}
@@ -314,28 +322,39 @@ const Preview = ({
         <div
           className={classNames(
             "preview_container",
-            "shadow",
+            !windowed && "shadow",
             isBig && "image",
-            previewVisible && "visible",
+            (previewVisible || windowed) && "visible",
             interacting && "interacting",
             maximized && "maximized",
+            windowed && "windowed",
           )}
-          style={panelStyle}
+          // Windowed mode fills the native window (positioned by CSS); only the in-app panel is
+          // free-floating and driven by the geometry hook.
+          style={windowed ? undefined : panelStyle}
         >
-          <div
-            className={classNames("preview_header", "draggable", mac && "mac")}
-            onDoubleClick={toggleMaximize}
-            {...dragBind()}
-          >
-            {mac && <CloseButton onClose={requestClose} />}
-            <h4>
-              {dirty && <span className="preview_dirty_dot" aria-hidden />}
-              {editMode
-                ? t.common.editTitle(fileName)
-                : t.common.previewTitle(fileName)}
-            </h4>
-            {!mac && <CloseButton onClose={requestClose} />}
-          </div>
+          {/* The native window titlebar is the header in windowed mode (title + close); the custom
+              draggable header is only for the in-app floating panel. */}
+          {!windowed && (
+            <div
+              className={classNames(
+                "preview_header",
+                "draggable",
+                mac && "mac",
+              )}
+              onDoubleClick={toggleMaximize}
+              {...dragBind()}
+            >
+              {mac && <CloseButton onClose={requestClose} />}
+              <h4>
+                {dirty && <span className="preview_dirty_dot" aria-hidden />}
+                {editMode
+                  ? t.common.editTitle(fileName)
+                  : t.common.previewTitle(fileName)}
+              </h4>
+              {!mac && <CloseButton onClose={requestClose} />}
+            </div>
+          )}
 
           {isMarkdown && docReady && findOpen && (
             <PreviewFindBar
@@ -364,7 +383,7 @@ const Preview = ({
             {isReady ? (
               isMarkdown ? (
                 editMode ? (
-                  <textarea
+                  <TextArea
                     ref={editorRef}
                     className="preview_md_editor"
                     value={doc?.draft ?? ""}
@@ -480,7 +499,7 @@ const Preview = ({
             />
           </div>
 
-          <PreviewResizeHandles bind={resizeBind} />
+          {!windowed && <PreviewResizeHandles bind={resizeBind} />}
         </div>
       )}
 

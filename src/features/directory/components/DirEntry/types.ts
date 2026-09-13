@@ -5,6 +5,11 @@ import type { EntryDragBinder } from "@/features/directory/hooks/useEntryDragMov
 import { FileSystemManager } from "@/shared/managers/FileSystemManager";
 import { type EntryKind } from "@/features/directory/constants";
 
+export type FolderThumbnail = {
+  src: string;
+  isSvg: boolean;
+};
+
 export type EntryIconProps = {
   isDir: boolean;
   // File extension (lowercased or not) used to pick a type-specific glyph; "" for folders.
@@ -14,6 +19,8 @@ export type EntryIconProps = {
   imgRef: RefObject<HTMLImageElement | null>;
   // Fires on both load and error so the placeholder is cleared either way.
   finishLoad: () => void;
+  // Cached previews of direct image children, rendered as a mosaic over the folder glyph.
+  folderThumbnails: FolderThumbnail[];
 };
 
 export type EntryMetadataProps = {
@@ -64,4 +71,6 @@ export type DirEntryItemProps = {
   // Whether remote (SFTP) entries may load thumbnails (setting, off by default). A remote image
   // skips its thumbnail unless this is on — each would download the whole file.
   remoteThumbnails: boolean;
+  // Whether this grid zoom is large enough to inspect and preview a folder's image children.
+  showFolderThumbnails: boolean;
 };

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 
+import TextInput from "@/shared/components/elements/TextInput";
 import { KEY } from "@/shared/constants";
 import { t } from "@/lang";
 
@@ -31,9 +32,9 @@ const PathInput = ({ path, onCommit, autoFocus, onExit }: PathInputProps) => {
   };
 
   return (
-    <input
+    <TextInput
+      unstyled
       ref={inputRef}
-      type="text"
       value={draft}
       onChange={(event) => setDraft(event.target.value)}
       onKeyDown={handleKeyDown}

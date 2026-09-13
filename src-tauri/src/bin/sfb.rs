@@ -7,17 +7,18 @@
 //!   { "ok": true,  "data": <result> }   → exit 0
 //!   { "ok": false, "error": "<msg>" }   → exit 1
 //!
-//! An agent discovers the full surface without docs via `sfb schema`, which emits every command
-//! and its arguments as JSON. The command table below is declarative: add a row, get a command,
-//! its help, and its schema entry for free.
+//! An agent discovers the full surface without docs via `sfb api-resources`, `sfb explain`, or
+//! `sfb schema`. The execution table and its resource-operation map are declarative; every legacy
+//! command has exactly one canonical `verb + resource` form and both call the same closure.
 
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::path::{Component, Path, PathBuf};
 use std::process::exit;
 
 use serde_json::{json, Value};
 
-use sito_file_browser_lib::filesystem::{fs, sftp, tags};
+use sito_file_browser_lib::filesystem::{actions, archive, fs, sftp, smb, tags};
+use sito_file_browser_lib::functions::sidebar;
 
 // ---- Command table (declarative registry) ----------------------------------------------------
 
@@ -29,8 +30,8 @@ struct ArgSpec {
     description: &'static str,
 }
 
-// One CLI command. `run` receives the parsed args and returns the JSON payload (or an error string
-// that becomes the `error` field). Grouped only for the help listing.
+// One legacy CLI command/executor. `run` receives the parsed args and returns the JSON payload (or
+// an error string that becomes the `error` field). `group` remains in schema for compatibility.
 struct Command {
     name: &'static str,
     group: &'static str,
@@ -39,12 +40,44 @@ struct Command {
     run: fn(&Parsed) -> Result<Value, String>,
 }
 
+// Canonical resource-oriented form for one existing command. `command` points back to COMMANDS,
+// so both syntaxes always execute the same closure and filesystem/UI core.
+struct OperationSpec {
+    verb: &'static str,
+    resource: &'static str,
+    resource_aliases: &'static [&'static str],
+    command: &'static str,
+    positional_args: &'static [&'static str],
+    scope: &'static str,
+    destructive: bool,
+    reversible: bool,
+    requires_app: bool,
+    platforms: &'static [&'static str],
+}
+
+// Friendly flag aliases accepted by the resource-oriented syntax and legacy commands alike.
+struct ArgAlias {
+    command: &'static str,
+    alias: &'static str,
+    canonical: &'static str,
+}
+
 // Shorthands to keep the table readable.
 const fn val(name: &'static str, required: bool, description: &'static str) -> ArgSpec {
-    ArgSpec { name, required, takes_value: true, description }
+    ArgSpec {
+        name,
+        required,
+        takes_value: true,
+        description,
+    }
 }
 const fn flag(name: &'static str, description: &'static str) -> ArgSpec {
-    ArgSpec { name, required: false, takes_value: false, description }
+    ArgSpec {
+        name,
+        required: false,
+        takes_value: false,
+        description,
+    }
 }
 
 const COMMANDS: &[Command] = &[
@@ -133,6 +166,77 @@ const COMMANDS: &[Command] = &[
             let mut noop = |_p, _t| {};
             let dest = fs::copy_entry_core(a.require("source")?, a.require("dest-dir")?, &mut noop)?;
             Ok(json!({ "dest": dest }))
+        },
+    },
+    Command {
+        name: "compress",
+        group: "write",
+        summary: "Compress a file or directory into a new .zip in a destination directory (collision-safe).",
+        args: &[
+            val("source", true, "File or directory to compress."),
+            val("dest-dir", true, "Directory to write the archive into."),
+            val("name", false, "Archive file name (default: <source>.zip)."),
+            val("level", false, "DEFLATE compression level 0-9 (default 6)."),
+            val("password", false, "Encrypt entries with AES-256 using this password."),
+        ],
+        run: |a| {
+            let mut noop = |_p, _t| {};
+            let source = a.require("source")?;
+            let dest_dir = a.require("dest-dir")?;
+            let name = match a.opt("name") {
+                Some(n) => n.to_string(),
+                None => format!(
+                    "{}.zip",
+                    Path::new(source)
+                        .file_name()
+                        .map(|n| n.to_string_lossy().into_owned())
+                        .unwrap_or_else(|| "archive".to_string())
+                ),
+            };
+            let level = a.opt("level").and_then(|l| l.parse::<i64>().ok()).unwrap_or(6);
+            // Format follows the archive name's extension: .7z shells out to 7-Zip, else pure-Rust zip.
+            let dest = if name.to_lowercase().ends_with(".7z") {
+                archive::compress_7z_core(&[source.to_string()], dest_dir, &name, level, a.opt("password"))?
+            } else {
+                archive::compress_entries_core(
+                    &[source.to_string()],
+                    dest_dir,
+                    &name,
+                    level,
+                    a.opt("password"),
+                    &mut noop,
+                )?
+            };
+            Ok(json!({ "dest": dest }))
+        },
+    },
+    Command {
+        name: "extract",
+        group: "write",
+        summary: "Extract a .zip or .7z into a destination directory.",
+        args: &[
+            val("archive", true, "Archive to extract (.zip or .7z)."),
+            val("dest-dir", true, "Directory to extract into."),
+            val("password", false, "Password for an encrypted archive."),
+            flag("into-folder", "Wrap output in a new subfolder named after the archive (default: extract top-level entries directly into dest-dir)."),
+        ],
+        run: |a| {
+            let mut noop = |_p, _t| {};
+            let archive_path = a.require("archive")?;
+            let dest_dir = a.require("dest-dir")?;
+            // .zip uses the pure-Rust path; anything else (.7z) shells out to 7-Zip.
+            let outputs = if archive_path.to_lowercase().ends_with(".zip") {
+                archive::extract_archive_core(
+                    archive_path,
+                    dest_dir,
+                    a.opt("password"),
+                    a.has("into-folder"),
+                    &mut noop,
+                )?
+            } else {
+                archive::extract_7z_core(archive_path, dest_dir, a.opt("password"), a.has("into-folder"))?
+            };
+            Ok(json!({ "outputs": outputs }))
         },
     },
     Command {
@@ -332,6 +436,150 @@ const COMMANDS: &[Command] = &[
             Ok(json!({ "id": a.require("id")?, "removed": removed }))
         },
     },
+    // -- SMB diagnostics (native macOS mounting; no credentials accepted by the CLI) --------
+    Command {
+        name: "smb-diagnose",
+        group: "smb",
+        summary: "Resolve an SMB host and probe TCP port 445 without authenticating.",
+        args: &[
+            val("host", true, "Windows hostname or IP address."),
+            val(
+                "share",
+                false,
+                "Optional Windows share name, included in the reported URL.",
+            ),
+            val(
+                "timeout-ms",
+                false,
+                "Timeout per resolved address in milliseconds (default 2000).",
+            ),
+        ],
+        run: |a| {
+            let timeout_ms = match a.opt("timeout-ms") {
+                Some(raw) => raw
+                    .parse::<u64>()
+                    .map_err(|_| format!("invalid --timeout-ms: {raw}"))?,
+                None => 2_000,
+            };
+            if timeout_ms == 0 || timeout_ms > 60_000 {
+                return Err("--timeout-ms must be between 1 and 60000".to_string());
+            }
+            let result = smb::diagnose(
+                a.require("host")?,
+                a.opt("share"),
+                std::time::Duration::from_millis(timeout_ms),
+            )?;
+            to_value(&result)
+        },
+    },
+    Command {
+        name: "smb-mounts",
+        group: "smb",
+        summary: "List native SMB mounts and their local filesystem paths.",
+        args: &[],
+        run: |_a| to_value(&smb::mounts()?),
+    },
+    Command {
+        name: "smb-shares",
+        group: "smb",
+        summary: "List the disk shares a host exposes (needs a prior macOS sign-in; Keychain-backed).",
+        args: &[val("host", true, "Windows hostname or IP address.")],
+        run: |a| to_value(&smb::shares(a.require("host")?)?),
+    },
+    Command {
+        name: "smb-connect",
+        group: "smb",
+        summary: "Ask macOS to connect to an SMB share using its native credential UI.",
+        args: &[
+            val("host", true, "Windows hostname or IP address."),
+            val("share", true, "Windows share name."),
+        ],
+        run: |a| {
+            let url = smb::connect(a.require("host")?, a.require("share")?)?;
+            Ok(json!({ "url": url, "launched": true }))
+        },
+    },
+    Command {
+        name: "smb-save",
+        group: "smb",
+        summary: "Save a Windows share as a sidebar location in the Network group (sidebar.toml).",
+        args: &[
+            val("host", true, "Windows hostname or IP address."),
+            val("share", true, "Windows share name."),
+            val(
+                "name",
+                false,
+                "Optional display name (defaults to the share name).",
+            ),
+        ],
+        run: |a| {
+            let host = a.require("host")?;
+            let share = a.require("share")?;
+            // Validate host/share the same way the mount URL builder does (rejects slashes in the
+            // share, whitespace in the host, etc.) before persisting the location.
+            smb::url(host, Some(share))?;
+            let path = smb::location_path(host, share, a.opt("name"));
+            let added = sidebar::add_item_to(&app_config_dir()?, "network", path.clone())?;
+            Ok(json!({ "path": path, "added": added, "group": "network" }))
+        },
+    },
+    // -- Custom context actions (the same context_menu.toml the GUI edits) ------------------
+    Command {
+        name: "actions-list",
+        group: "actions",
+        summary: "List the user's custom context-menu actions (id, label, targets, extensions, enabled).",
+        args: &[],
+        run: |_a| {
+            let menu = actions::load_core(&app_config_dir()?)?;
+            let rows: Vec<Value> = menu
+                .custom_action
+                .iter()
+                .map(|action| {
+                    json!({
+                        "id": action.id,
+                        "label": action.label,
+                        "targets": action.targets,
+                        "extensions": action.extensions,
+                        "enabled": action.enabled,
+                    })
+                })
+                .collect();
+            Ok(json!({ "actions": rows }))
+        },
+    },
+    Command {
+        name: "actions-run",
+        group: "actions",
+        summary: "Run a custom context-menu action on a path, exactly as the GUI would. Requires --force.",
+        args: &[
+            val("id", true, "Id of the action to run (see `sfb get actions`)."),
+            val("path", true, "Path the action acts on (the clicked entry)."),
+            val(
+                "paths",
+                false,
+                r#"JSON array of paths for the {paths} token, e.g. ["/tmp/a","/tmp/b"] (default: just --path)."#,
+            ),
+            flag("force", "Required acknowledgement: this launches a user-defined command."),
+        ],
+        run: |a| {
+            if !a.has("force") {
+                return Err("Refusing to run a custom action without --force.".to_string());
+            }
+            let paths: Vec<String> = match a.opt("paths") {
+                Some(raw) => serde_json::from_str(raw)
+                    .map_err(|e| format!("Invalid --paths JSON: {}", e))?,
+                None => Vec::new(),
+            };
+            let spawned = actions::run_action_core(
+                &app_config_dir()?,
+                &home()?,
+                a.require("id")?,
+                a.require("path")?,
+                &paths,
+            )?;
+            to_value(&spawned)
+        },
+    },
     // -- UI (drive the running GUI over the control socket) ---------------------------------
     Command {
         name: "ui-state",
@@ -339,6 +587,27 @@ const COMMANDS: &[Command] = &[
         summary: "Report the running app's live UI (open windows, tabs, current path, view).",
         args: &[],
         run: |_a| ui_call("get-state", json!({})),
+    },
+    Command {
+        name: "ui-windows",
+        group: "ui",
+        summary: "List every open window straight from Tauri (label, URL, visible, focused) — includes hidden windows and the detached preview panel.",
+        args: &[],
+        run: |_a| ui_call("windows", json!({})),
+    },
+    Command {
+        name: "ui-preview",
+        group: "ui",
+        summary: "Open the detached preview window for a file (the openPreviewInWindow flow).",
+        args: &[val("path", true, "File to preview.")],
+        run: |a| ui_call("preview", json!({ "path": a.require("path")? })),
+    },
+    Command {
+        name: "ui-properties",
+        group: "ui",
+        summary: "Open the detached properties window for an entry (the openPropertiesInWindow flow).",
+        args: &[val("path", true, "File or folder to inspect.")],
+        run: |a| ui_call("properties", json!({ "path": a.require("path")? })),
     },
     Command {
         name: "ui-navigate",
@@ -440,6 +709,555 @@ const COMMANDS: &[Command] = &[
     },
 ];
 
+const FILESYSTEM_SCOPE: &str = "filesystem";
+const CONNECTIONS_SCOPE: &str = "connections";
+const UI_SCOPE: &str = "ui";
+const ALL_PLATFORMS: &[&str] = &["macos", "windows", "linux"];
+const MACOS_ONLY: &[&str] = &["macos"];
+
+const fn op(
+    verb: &'static str,
+    resource: &'static str,
+    resource_aliases: &'static [&'static str],
+    command: &'static str,
+    positional_args: &'static [&'static str],
+    scope: &'static str,
+    destructive: bool,
+    reversible: bool,
+    requires_app: bool,
+    platforms: &'static [&'static str],
+) -> OperationSpec {
+    OperationSpec {
+        verb,
+        resource,
+        resource_aliases,
+        command,
+        positional_args,
+        scope,
+        destructive,
+        reversible,
+        requires_app,
+        platforms,
+    }
+}
+
+// Resource-oriented public API. Each row delegates to one existing COMMANDS entry.
+const OPERATIONS: &[OperationSpec] = &[
+    op(
+        "get",
+        "entries",
+        &["files", "directory-entries"],
+        "list",
+        &["path"],
+        FILESYSTEM_SCOPE,
+        false,
+        false,
+        false,
+        ALL_PLATFORMS,
+    ),
+    op(
+        "get",
+        "entry",
+        &["file", "path"],
+        "info",
+        &["path"],
+        FILESYSTEM_SCOPE,
+        false,
+        false,
+        false,
+        ALL_PLATFORMS,
+    ),
+    op(
+        "find",
+        "entries",
+        &["files", "directory-entries"],
+        "search",
+        &["path"],
+        FILESYSTEM_SCOPE,
+        false,
+        false,
+        false,
+        ALL_PLATFORMS,
+    ),
+    op(
+        "match",
+        "entry",
+        &["file", "path"],
+        "typeahead",
+        &["path"],
+        FILESYSTEM_SCOPE,
+        false,
+        false,
+        false,
+        ALL_PLATFORMS,
+    ),
+    op(
+        "get",
+        "size",
+        &["dir-size"],
+        "dir-size",
+        &["path"],
+        FILESYSTEM_SCOPE,
+        false,
+        false,
+        false,
+        ALL_PLATFORMS,
+    ),
+    op(
+        "get",
+        "recent",
+        &["recents"],
+        "recents",
+        &[],
+        FILESYSTEM_SCOPE,
+        false,
+        false,
+        false,
+        MACOS_ONLY,
+    ),
+    op(
+        "copy",
+        "entry",
+        &["file", "path"],
+        "copy",
+        &["source"],
+        FILESYSTEM_SCOPE,
+        false,
+        false,
+        false,
+        ALL_PLATFORMS,
+    ),
+    op(
+        "create",
+        "archive",
+        &["archives"],
+        "compress",
+        &["source"],
+        FILESYSTEM_SCOPE,
+        false,
+        false,
+        false,
+        ALL_PLATFORMS,
+    ),
+    op(
+        "extract",
+        "archive",
+        &["archives"],
+        "extract",
+        &["archive"],
+        FILESYSTEM_SCOPE,
+        false,
+        false,
+        false,
+        ALL_PLATFORMS,
+    ),
+    op(
+        "move",
+        "entry",
+        &["file", "path"],
+        "move",
+        &["source"],
+        FILESYSTEM_SCOPE,
+        false,
+        false,
+        false,
+        ALL_PLATFORMS,
+    ),
+    op(
+        "rename",
+        "entry",
+        &["file", "path"],
+        "rename",
+        &["path"],
+        FILESYSTEM_SCOPE,
+        false,
+        false,
+        false,
+        ALL_PLATFORMS,
+    ),
+    op(
+        "create",
+        "directory",
+        &["dir", "folder"],
+        "mkdir",
+        &["parent"],
+        FILESYSTEM_SCOPE,
+        false,
+        false,
+        false,
+        ALL_PLATFORMS,
+    ),
+    op(
+        "trash",
+        "entry",
+        &["file", "path"],
+        "trash",
+        &["path"],
+        FILESYSTEM_SCOPE,
+        true,
+        true,
+        false,
+        ALL_PLATFORMS,
+    ),
+    op(
+        "restore",
+        "entry",
+        &["file", "path"],
+        "restore",
+        &["path"],
+        FILESYSTEM_SCOPE,
+        false,
+        false,
+        false,
+        ALL_PLATFORMS,
+    ),
+    op(
+        "delete",
+        "entry",
+        &["file", "path"],
+        "delete",
+        &["path"],
+        FILESYSTEM_SCOPE,
+        true,
+        false,
+        false,
+        ALL_PLATFORMS,
+    ),
+    op(
+        "empty",
+        "trash",
+        &["bin"],
+        "empty-trash",
+        &[],
+        FILESYSTEM_SCOPE,
+        true,
+        false,
+        false,
+        ALL_PLATFORMS,
+    ),
+    op(
+        "get",
+        "entry-tags",
+        &["file-tags"],
+        "tags-get",
+        &["path"],
+        FILESYSTEM_SCOPE,
+        false,
+        false,
+        false,
+        MACOS_ONLY,
+    ),
+    op(
+        "set",
+        "entry-tags",
+        &["file-tags"],
+        "tags-set",
+        &["path"],
+        FILESYSTEM_SCOPE,
+        false,
+        false,
+        false,
+        MACOS_ONLY,
+    ),
+    op(
+        "find",
+        "tagged",
+        &["tagged-entries"],
+        "tags-find",
+        &["tag"],
+        FILESYSTEM_SCOPE,
+        false,
+        false,
+        false,
+        MACOS_ONLY,
+    ),
+    op(
+        "get",
+        "tag",
+        &["tags", "tag-catalog"],
+        "tags-list",
+        &[],
+        FILESYSTEM_SCOPE,
+        false,
+        false,
+        false,
+        MACOS_ONLY,
+    ),
+    op(
+        "get",
+        "connection",
+        &["connections", "sftp", "sftp-connections"],
+        "sftp-list",
+        &[],
+        CONNECTIONS_SCOPE,
+        false,
+        false,
+        false,
+        MACOS_ONLY,
+    ),
+    op(
+        "create",
+        "connection",
+        &["connections", "sftp", "sftp-connections"],
+        "sftp-add",
+        &["id"],
+        CONNECTIONS_SCOPE,
+        false,
+        false,
+        false,
+        MACOS_ONLY,
+    ),
+    op(
+        "delete",
+        "connection",
+        &["connections", "sftp", "sftp-connections"],
+        "sftp-remove",
+        &["id"],
+        CONNECTIONS_SCOPE,
+        true,
+        false,
+        false,
+        MACOS_ONLY,
+    ),
+    op(
+        "diagnose",
+        "share",
+        &["shares", "smb-share"],
+        "smb-diagnose",
+        &["host", "share"],
+        CONNECTIONS_SCOPE,
+        false,
+        false,
+        false,
+        MACOS_ONLY,
+    ),
+    op(
+        "get",
+        "mount",
+        &["mounts", "smb-mounts"],
+        "smb-mounts",
+        &[],
+        CONNECTIONS_SCOPE,
+        false,
+        false,
+        false,
+        MACOS_ONLY,
+    ),
+    op(
+        "get",
+        "share",
+        &["shares", "smb-shares"],
+        "smb-shares",
+        &["host"],
+        CONNECTIONS_SCOPE,
+        false,
+        false,
+        false,
+        MACOS_ONLY,
+    ),
+    op(
+        "connect",
+        "share",
+        &["shares", "smb-share"],
+        "smb-connect",
+        &["host", "share"],
+        CONNECTIONS_SCOPE,
+        false,
+        false,
+        false,
+        MACOS_ONLY,
+    ),
+    op(
+        "create",
+        "share",
+        &["shares", "smb-share"],
+        "smb-save",
+        &["host", "share"],
+        CONNECTIONS_SCOPE,
+        false,
+        false,
+        false,
+        MACOS_ONLY,
+    ),
+    op(
+        "get",
+        "app",
+        &["state", "app-state"],
+        "ui-state",
+        &[],
+        UI_SCOPE,
+        false,
+        false,
+        true,
+        MACOS_ONLY,
+    ),
+    op(
+        "get",
+        "window",
+        &["windows"],
+        "ui-windows",
+        &[],
+        UI_SCOPE,
+        false,
+        false,
+        true,
+        MACOS_ONLY,
+    ),
+    op(
+        "open",
+        "preview",
+        &["previews"],
+        "ui-preview",
+        &["path"],
+        UI_SCOPE,
+        false,
+        false,
+        true,
+        MACOS_ONLY,
+    ),
+    op(
+        "open",
+        "properties",
+        &[],
+        "ui-properties",
+        &["path"],
+        UI_SCOPE,
+        false,
+        false,
+        true,
+        MACOS_ONLY,
+    ),
+    op(
+        "navigate",
+        "current-tab",
+        &["active-tab", "focused-tab"],
+        "ui-navigate",
+        &["path"],
+        UI_SCOPE,
+        false,
+        false,
+        true,
+        MACOS_ONLY,
+    ),
+    op(
+        "create",
+        "window",
+        &["windows"],
+        "ui-open-window",
+        &["path"],
+        UI_SCOPE,
+        false,
+        false,
+        true,
+        MACOS_ONLY,
+    ),
+    op(
+        "create",
+        "tab",
+        &["tabs"],
+        "ui-new-tab",
+        &["path"],
+        UI_SCOPE,
+        false,
+        false,
+        true,
+        MACOS_ONLY,
+    ),
+    op(
+        "close",
+        "tab",
+        &["tabs"],
+        "ui-close-tab",
+        &[],
+        UI_SCOPE,
+        false,
+        false,
+        true,
+        MACOS_ONLY,
+    ),
+    op(
+        "move",
+        "tab",
+        &["tabs"],
+        "ui-move-tab",
+        &[],
+        UI_SCOPE,
+        false,
+        false,
+        true,
+        MACOS_ONLY,
+    ),
+    op(
+        "diagnose",
+        "ui",
+        &["probe"],
+        "ui-probe",
+        &[],
+        UI_SCOPE,
+        false,
+        false,
+        true,
+        MACOS_ONLY,
+    ),
+    op(
+        "get",
+        "actions",
+        &["custom-actions", "context-actions"],
+        "actions-list",
+        &[],
+        FILESYSTEM_SCOPE,
+        false,
+        false,
+        false,
+        ALL_PLATFORMS,
+    ),
+    op(
+        "run",
+        "action",
+        &["custom-action", "context-action"],
+        "actions-run",
+        &["id"],
+        FILESYSTEM_SCOPE,
+        true,
+        false,
+        false,
+        ALL_PLATFORMS,
+    ),
+];
+
+const ARG_ALIASES: &[ArgAlias] = &[
+    ArgAlias {
+        command: "search",
+        alias: "name",
+        canonical: "query",
+    },
+    ArgAlias {
+        command: "copy",
+        alias: "to",
+        canonical: "dest-dir",
+    },
+    ArgAlias {
+        command: "compress",
+        alias: "to",
+        canonical: "dest-dir",
+    },
+    ArgAlias {
+        command: "extract",
+        alias: "to",
+        canonical: "dest-dir",
+    },
+    ArgAlias {
+        command: "move",
+        alias: "to",
+        canonical: "dest-dir",
+    },
+    ArgAlias {
+        command: "tags-set",
+        alias: "values",
+        canonical: "tags",
+    },
+];
+
 // ---- Argument parsing -------------------------------------------------------------------------
 
 // Parsed `--key value` pairs and `--flag` presence for one invocation, validated against the
@@ -464,6 +1282,16 @@ impl Parsed {
     }
 }
 
+fn canonical_arg_name<'a>(command: &str, key: &'a str) -> &'a str {
+    match ARG_ALIASES
+        .iter()
+        .find(|alias| alias.command == command && alias.alias == key)
+    {
+        Some(alias) => alias.canonical,
+        None => key,
+    }
+}
+
 // Parse the tokens after the command name using the command's spec: `--value-arg X` consumes the
 // next token; `--flag` stands alone. Rejects unknown flags, missing values, and absent required
 // args so a mistyped call fails loudly instead of silently doing the wrong thing.
@@ -474,23 +1302,29 @@ fn parse_args(cmd: &Command, tokens: &[String]) -> Result<Parsed, String> {
     let mut i = 0;
     while i < tokens.len() {
         let token = &tokens[i];
-        let key = token
+        let requested_key = token
             .strip_prefix("--")
             .ok_or_else(|| format!("Expected a --flag but got '{}'", token))?;
+        let key = canonical_arg_name(cmd.name, requested_key);
         let spec = cmd
             .args
             .iter()
             .find(|a| a.name == key)
-            .ok_or_else(|| format!("Unknown argument --{} for command '{}'", key, cmd.name))?;
+            .ok_or_else(|| {
+                format!(
+                    "Unknown argument --{} for command '{}'",
+                    requested_key, cmd.name
+                )
+            })?;
 
         if spec.takes_value {
             let value = tokens
                 .get(i + 1)
-                .ok_or_else(|| format!("--{} needs a value", key))?;
-            values.insert(key.to_string(), value.clone());
+                .ok_or_else(|| format!("--{} needs a value", requested_key))?;
+            values.insert(spec.name.to_string(), value.clone());
             i += 2;
         } else {
-            flags.push(key.to_string());
+            flags.push(spec.name.to_string());
             i += 1;
         }
     }
@@ -502,6 +1336,118 @@ fn parse_args(cmd: &Command, tokens: &[String]) -> Result<Parsed, String> {
     }
 
     Ok(Parsed { values, flags })
+}
+
+fn command_named(name: &str) -> Option<&'static Command> {
+    COMMANDS.iter().find(|command| command.name == name)
+}
+
+fn resource_matches(operation: &OperationSpec, resource: &str) -> bool {
+    operation.resource == resource
+        || operation
+            .resource_aliases
+            .iter()
+            .any(|alias| *alias == resource)
+}
+
+fn operation_for(verb: &str, resource: &str) -> Option<&'static OperationSpec> {
+    OPERATIONS
+        .iter()
+        .find(|operation| operation.verb == verb && resource_matches(operation, resource))
+}
+
+fn operation_for_command(command: &str) -> Option<&'static OperationSpec> {
+    OPERATIONS
+        .iter()
+        .find(|operation| operation.command == command)
+}
+
+fn is_operation_verb(value: &str) -> bool {
+    OPERATIONS.iter().any(|operation| operation.verb == value)
+}
+
+fn rewrite_resource_args(
+    operation: &OperationSpec,
+    tokens: &[String],
+) -> Result<Vec<String>, String> {
+    let command = command_named(operation.command)
+        .ok_or_else(|| format!("CLI registry error: missing command '{}'", operation.command))?;
+    let mut rewritten = vec![operation.command.to_string()];
+    let mut positional_index = 0;
+    let mut index = 0;
+
+    while index < tokens.len() {
+        let token = &tokens[index];
+        if let Some(requested_key) = token.strip_prefix("--") {
+            let key = canonical_arg_name(command.name, requested_key);
+            let Some(spec) = command.args.iter().find(|arg| arg.name == key) else {
+                // Preserve the remaining input so the normal parser reports the unknown option
+                // with the same contract used by legacy commands.
+                rewritten.extend_from_slice(&tokens[index..]);
+                break;
+            };
+            rewritten.push(token.clone());
+            if spec.takes_value {
+                let value = tokens
+                    .get(index + 1)
+                    .ok_or_else(|| format!("--{} needs a value", requested_key))?;
+                rewritten.push(value.clone());
+                index += 2;
+            } else {
+                index += 1;
+            }
+            continue;
+        }
+
+        let arg_name = operation
+            .positional_args
+            .get(positional_index)
+            .ok_or_else(|| {
+                format!(
+                    "Unexpected positional argument '{}' for `sfb {} {}`",
+                    token, operation.verb, operation.resource
+                )
+            })?;
+        rewritten.push(format!("--{}", arg_name));
+        rewritten.push(token.clone());
+        positional_index += 1;
+        index += 1;
+    }
+
+    Ok(rewritten)
+}
+
+// Resolve `sfb <verb> <resource> ...` to an existing flat command. A legacy command whose name is
+// also a verb (`copy`, `move`, `delete`, etc.) remains untouched when no resource follows.
+fn desugar_resource_command(argv: Vec<String>) -> Result<Vec<String>, String> {
+    let Some(verb) = argv.first().map(String::as_str) else {
+        return Ok(argv);
+    };
+    if !is_operation_verb(verb) {
+        return Ok(argv);
+    }
+
+    let resource = argv.get(1).map(String::as_str);
+    if let Some(resource) = resource {
+        if let Some(operation) = operation_for(verb, resource) {
+            return rewrite_resource_args(operation, &argv[2..]);
+        }
+    }
+
+    if command_named(verb).is_some() {
+        return Ok(argv);
+    }
+
+    match resource {
+        Some(resource) => Err(format!(
+            "Unknown resource '{}' for verb '{}'. Try `sfb api-resources`.",
+            resource, verb
+        )),
+        None => Err(format!(
+            "Verb '{}' needs a resource. Try `sfb api-resources`.",
+            verb
+        )),
+    }
 }
 
 // ---- App directories (must mirror Tauri's paths for the running identifier) -------------------
@@ -520,7 +1466,9 @@ fn app_config_dir() -> Result<PathBuf, String> {
         .join("com.sito8943.file-browser"))
 }
 fn app_cache_dir() -> Result<PathBuf, String> {
-    Ok(home()?.join("Library/Caches").join("com.sito8943.file-browser"))
+    Ok(home()?
+        .join("Library/Caches")
+        .join("com.sito8943.file-browser"))
 }
 
 // ---- UI control socket (drive the running GUI) ------------------------------------------------
@@ -573,7 +1521,9 @@ fn absolutize(input: &str) -> Result<PathBuf, String> {
     let base = if raw.is_absolute() {
         raw.to_path_buf()
     } else {
-        std::env::current_dir().map_err(|e| e.to_string())?.join(raw)
+        std::env::current_dir()
+            .map_err(|e| e.to_string())?
+            .join(raw)
     };
     let mut out = PathBuf::new();
     for comp in base.components() {
@@ -670,65 +1620,287 @@ fn emit_err(msg: String) -> ! {
     exit(1);
 }
 
-// Machine-readable description of every command, for `sfb schema`.
-fn schema() -> Value {
-    let commands: Vec<Value> = COMMANDS
+fn arg_aliases(command: &str, canonical: &str) -> Vec<&'static str> {
+    ARG_ALIASES
         .iter()
-        .map(|cmd| {
-            let args: Vec<Value> = cmd
-                .args
-                .iter()
-                .map(|a| {
-                    json!({
-                        "name": a.name,
-                        "required": a.required,
-                        "takesValue": a.takes_value,
-                        "description": a.description,
-                    })
-                })
-                .collect();
+        .filter(|alias| alias.command == command && alias.canonical == canonical)
+        .map(|alias| alias.alias)
+        .collect()
+}
+
+fn operation_syntax(operation: &OperationSpec) -> Result<String, String> {
+    let command = command_named(operation.command)
+        .ok_or_else(|| format!("CLI registry error: missing command '{}'", operation.command))?;
+    let mut syntax = format!("sfb {} {}", operation.verb, operation.resource);
+    for positional in operation.positional_args {
+        let arg = command
+            .args
+            .iter()
+            .find(|arg| arg.name == *positional)
+            .ok_or_else(|| {
+                format!(
+                    "CLI registry error: '{}' has no --{} argument",
+                    operation.command, positional
+                )
+            })?;
+        if arg.required {
+            syntax.push_str(&format!(" <{}>", positional));
+        } else {
+            syntax.push_str(&format!(" [<{}>]", positional));
+        }
+    }
+    for arg in command.args.iter().filter(|arg| {
+        !operation
+            .positional_args
+            .iter()
+            .any(|positional| *positional == arg.name)
+    }) {
+        let aliases = arg_aliases(command.name, arg.name);
+        let display_name = aliases.first().copied().unwrap_or(arg.name);
+        let option = if arg.takes_value {
+            format!("--{} <{}>", display_name, arg.name)
+        } else {
+            format!("--{}", display_name)
+        };
+        if arg.required {
+            syntax.push_str(&format!(" {}", option));
+        } else {
+            syntax.push_str(&format!(" [{}]", option));
+        }
+    }
+    Ok(syntax)
+}
+
+fn operation_value(operation: &OperationSpec) -> Result<Value, String> {
+    let command = command_named(operation.command)
+        .ok_or_else(|| format!("CLI registry error: missing command '{}'", operation.command))?;
+    let args: Vec<Value> = command
+        .args
+        .iter()
+        .map(|arg| {
             json!({
-                "name": cmd.name,
-                "group": cmd.group,
-                "summary": cmd.summary,
-                "args": args,
+                "name": arg.name,
+                "aliases": arg_aliases(command.name, arg.name),
+                "required": arg.required,
+                "takesValue": arg.takes_value,
+                "positional": operation
+                    .positional_args
+                    .iter()
+                    .position(|name| *name == arg.name),
+                "description": arg.description,
             })
         })
         .collect();
+    Ok(json!({
+        "verb": operation.verb,
+        "resource": operation.resource,
+        "resourceAliases": operation.resource_aliases,
+        "syntax": operation_syntax(operation)?,
+        "summary": command.summary,
+        "legacyName": command.name,
+        "scope": operation.scope,
+        "destructive": operation.destructive,
+        "reversible": operation.reversible,
+        "requiresApp": operation.requires_app,
+        "platforms": operation.platforms,
+        "args": args,
+    }))
+}
+
+struct ResourceSummary {
+    aliases: Vec<&'static str>,
+    verbs: Vec<&'static str>,
+    scopes: Vec<&'static str>,
+    requires_app: bool,
+    platforms: Vec<&'static str>,
+}
+
+fn push_unique(values: &mut Vec<&'static str>, value: &'static str) {
+    if !values.contains(&value) {
+        values.push(value);
+    }
+}
+
+fn resource_values() -> Vec<Value> {
+    let mut resources: BTreeMap<&'static str, ResourceSummary> = BTreeMap::new();
+    for operation in OPERATIONS {
+        let summary = resources
+            .entry(operation.resource)
+            .or_insert_with(|| ResourceSummary {
+                aliases: Vec::new(),
+                verbs: Vec::new(),
+                scopes: Vec::new(),
+                requires_app: false,
+                platforms: Vec::new(),
+            });
+        for alias in operation.resource_aliases {
+            push_unique(&mut summary.aliases, *alias);
+        }
+        push_unique(&mut summary.verbs, operation.verb);
+        push_unique(&mut summary.scopes, operation.scope);
+        summary.requires_app |= operation.requires_app;
+        for platform in operation.platforms {
+            push_unique(&mut summary.platforms, *platform);
+        }
+    }
+
+    resources
+        .into_iter()
+        .map(|(name, summary)| {
+            json!({
+                "name": name,
+                "aliases": summary.aliases,
+                "verbs": summary.verbs,
+                "scopes": summary.scopes,
+                "requiresApp": summary.requires_app,
+                "platforms": summary.platforms,
+            })
+        })
+        .collect()
+}
+
+fn api_resources() -> Value {
     json!({
-        "tool": "sfb",
-        "envelope": { "ok": "bool", "data": "present when ok", "error": "present when !ok" },
-        "commands": commands,
+        "apiVersion": "sfb/v1alpha1",
+        "resources": resource_values(),
     })
 }
 
-// Human-readable help, grouped like the registry.
-fn help_text() -> String {
-    let mut out = String::from(
-        "sfb — headless file-browser CLI (JSON out).\n\nUsage: sfb <command> [--arg value ...]\n       sfb <path>   open a folder, or reveal a file, in the app (e.g. `sfb .`, `sfb x.pdf`)\n\n",
-    );
-    for group in ["read", "write", "delete", "tags", "ui"] {
-        out.push_str(&format!("{}:\n", group));
-        for cmd in COMMANDS.iter().filter(|c| c.group == group) {
-            let names: Vec<String> = cmd
+fn explain(tokens: &[String]) -> Result<Value, String> {
+    if tokens.is_empty() || tokens.len() > 2 {
+        return Err(
+            "Usage: sfb explain <resource> | sfb explain <verb> <resource>".to_string(),
+        );
+    }
+
+    let operations: Vec<&OperationSpec> = if tokens.len() == 1 {
+        OPERATIONS
+            .iter()
+            .filter(|operation| resource_matches(operation, &tokens[0]))
+            .collect()
+    } else {
+        operation_for(&tokens[0], &tokens[1]).into_iter().collect()
+    };
+    if operations.is_empty() {
+        return Err(format!(
+            "No resource operation matches '{}'. Try `sfb api-resources`.",
+            tokens.join(" ")
+        ));
+    }
+
+    let values: Result<Vec<Value>, String> =
+        operations.into_iter().map(operation_value).collect();
+    Ok(json!({
+        "apiVersion": "sfb/v1alpha1",
+        "query": tokens,
+        "operations": values?,
+    }))
+}
+
+// Machine-readable description of every command, for `sfb schema`. The legacy command fields stay
+// in place while canonical resource metadata is added alongside them.
+fn schema() -> Result<Value, String> {
+    let commands: Result<Vec<Value>, String> = COMMANDS
+        .iter()
+        .map(|command| {
+            let operation = operation_for_command(command.name).ok_or_else(|| {
+                format!(
+                    "CLI registry error: command '{}' has no resource operation",
+                    command.name
+                )
+            })?;
+            let args: Vec<Value> = command
                 .args
                 .iter()
-                .map(|a| {
-                    if a.takes_value {
-                        format!("--{} <v>", a.name)
-                    } else {
-                        format!("--{}", a.name)
-                    }
+                .map(|arg| {
+                    json!({
+                        "name": arg.name,
+                        "aliases": arg_aliases(command.name, arg.name),
+                        "required": arg.required,
+                        "takesValue": arg.takes_value,
+                        "description": arg.description,
+                    })
                 })
                 .collect();
-            out.push_str(&format!("  {:<14} {}\n", cmd.name, cmd.summary));
-            if !names.is_empty() {
-                out.push_str(&format!("  {:<14} args: {}\n", "", names.join(" ")));
-            }
+            Ok(json!({
+                "name": command.name,
+                "group": command.group,
+                "summary": command.summary,
+                "args": args,
+                "canonical": operation_value(operation)?,
+            }))
+        })
+        .collect();
+    Ok(json!({
+        "apiVersion": "sfb/v1alpha1",
+        "tool": "sfb",
+        "envelope": { "ok": "bool", "data": "present when ok", "error": "present when !ok" },
+        "resources": resource_values(),
+        "commands": commands?,
+    }))
+}
+
+fn operation_help_text(operation: &OperationSpec) -> Result<String, String> {
+    let command = command_named(operation.command)
+        .ok_or_else(|| format!("CLI registry error: missing command '{}'", operation.command))?;
+    let mut out = format!(
+        "{}\n\nUsage: {}\nLegacy alias: sfb {}\n\n",
+        command.summary,
+        operation_syntax(operation)?,
+        command.name
+    );
+    if !command.args.is_empty() {
+        out.push_str("Arguments:\n");
+        for arg in command.args {
+            let aliases = arg_aliases(command.name, arg.name);
+            let alias_text = if aliases.is_empty() {
+                String::new()
+            } else {
+                format!(
+                    " (aliases: {})",
+                    aliases
+                        .iter()
+                        .map(|alias| format!("--{}", alias))
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                )
+            };
+            out.push_str(&format!(
+                "  --{:<18} {}{}\n",
+                arg.name, arg.description, alias_text
+            ));
+        }
+    }
+    Ok(out)
+}
+
+// Human-readable help presents the canonical resource grammar first. Flat names remain listed as
+// legacy aliases so existing scripts stay discoverable.
+fn help_text() -> String {
+    let mut out = String::from(
+        "sfb — resource-oriented file-browser CLI (JSON out).\n\nUsage: sfb <verb> <resource> [target ...] [--option value ...]\n       sfb <legacy-command> [--arg value ...]\n       sfb <path>   open a folder, or reveal a file, in the app\n\n",
+    );
+    for scope in [FILESYSTEM_SCOPE, CONNECTIONS_SCOPE, UI_SCOPE] {
+        out.push_str(&format!("{}:\n", scope));
+        for operation in OPERATIONS.iter().filter(|operation| operation.scope == scope) {
+            let command = match command_named(operation.command) {
+                Some(command) => command,
+                None => continue,
+            };
+            let syntax = match operation_syntax(operation) {
+                Ok(syntax) => syntax.trim_start_matches("sfb ").to_string(),
+                Err(_) => continue,
+            };
+            out.push_str(&format!(
+                "  {:<34} {} (legacy: {})\n",
+                syntax, command.summary, command.name
+            ));
         }
         out.push('\n');
     }
-    out.push_str("meta:\n  schema         Emit all commands and args as JSON (for agents).\n  help           Show this help.\n");
+    out.push_str(
+        "discovery:\n  api-resources                  List resources, verbs, scopes and platforms as JSON.\n  explain <resource>             Describe every operation for a resource as JSON.\n  explain <verb> <resource>      Describe one canonical operation as JSON.\n  schema                         Emit the complete machine-readable CLI schema.\n  help                           Show this help.\n",
+    );
     out
 }
 
@@ -748,33 +1920,70 @@ fn main() {
     let argv: Vec<String> = std::env::args().skip(1).collect();
     let argv = desugar_ui(argv);
 
-    let name = match argv.first() {
-        Some(n) => n.as_str(),
-        None => {
-            print!("{}", help_text());
-            exit(0);
-        }
+    let Some(initial_name) = argv.first().cloned() else {
+        print!("{}", help_text());
+        exit(0);
     };
 
-    match name {
+    match initial_name.as_str() {
         "help" | "--help" | "-h" => {
             print!("{}", help_text());
             exit(0);
         }
-        "schema" | "--schema" => emit_ok(schema()),
+        "schema" | "--schema" => match schema() {
+            Ok(value) => emit_ok(value),
+            Err(error) => emit_err(error),
+        },
+        "api-resources" => emit_ok(api_resources()),
+        "explain" => match explain(&argv[1..]) {
+            Ok(value) => emit_ok(value),
+            Err(error) => emit_err(error),
+        },
         _ => {}
     }
+
+    let operation_help_requested = argv
+        .iter()
+        .skip(1)
+        .any(|token| token == "--help" || token == "-h");
+    if operation_help_requested {
+        let operation = argv
+            .get(1)
+            .and_then(|resource| operation_for(&initial_name, resource))
+            .or_else(|| operation_for_command(&initial_name));
+        if let Some(operation) = operation {
+            match operation_help_text(operation) {
+                Ok(help) => {
+                    print!("{}", help);
+                    exit(0);
+                }
+                Err(error) => emit_err(error),
+            }
+        }
+    }
+
+    let argv = match desugar_resource_command(argv) {
+        Ok(argv) => argv,
+        Err(error) => emit_err(error),
+    };
+    let name = argv
+        .first()
+        .map(String::as_str)
+        .unwrap_or(initial_name.as_str());
 
     // `sfb <path>` — no subcommand: open a folder or reveal a file in the running GUI. Only when the
     // first token names an existing/path-like target, so a mistyped command still falls through to
     // the unknown-command help below.
-    if !COMMANDS.iter().any(|c| c.name == name) && looks_like_path(name) {
+    if command_named(name).is_none() && looks_like_path(name) {
         open_or_reveal(name);
     }
 
-    let cmd = match COMMANDS.iter().find(|c| c.name == name) {
+    let cmd = match command_named(name) {
         Some(c) => c,
-        None => emit_err(format!("Unknown command '{}'. Try `sfb help`.", name)),
+        None => emit_err(format!(
+            "Unknown command '{}'. Try `sfb help` or `sfb api-resources`.",
+            name
+        )),
     };
 
     let parsed = match parse_args(cmd, &argv[1..]) {
@@ -785,5 +1994,81 @@ fn main() {
     match (cmd.run)(&parsed) {
         Ok(data) => emit_ok(data),
         Err(e) => emit_err(e),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn argv(values: &[&str]) -> Vec<String> {
+        values.iter().map(|value| value.to_string()).collect()
+    }
+
+    #[test]
+    fn resource_command_rewrites_positionals_and_flag_aliases() {
+        let rewritten = desugar_resource_command(argv(&[
+            "find", "entries", "/tmp", "--name", "invoice",
+        ]))
+        .expect("resource syntax should resolve");
+        assert_eq!(
+            rewritten,
+            argv(&["search", "--path", "/tmp", "--name", "invoice"])
+        );
+
+        let parsed =
+            parse_args(command_named("search").expect("search command"), &rewritten[1..])
+                .expect("rewritten arguments should parse");
+        assert_eq!(parsed.require("path"), Ok("/tmp"));
+        assert_eq!(parsed.require("query"), Ok("invoice"));
+    }
+
+    #[test]
+    fn legacy_command_with_a_verb_name_stays_compatible() {
+        let legacy = argv(&[
+            "copy",
+            "--source",
+            "/tmp/report.pdf",
+            "--dest-dir",
+            "/tmp/archive",
+        ]);
+        assert_eq!(
+            desugar_resource_command(legacy.clone()).expect("legacy syntax should resolve"),
+            legacy
+        );
+    }
+
+    #[test]
+    fn every_command_has_exactly_one_canonical_operation() {
+        assert_eq!(COMMANDS.len(), OPERATIONS.len());
+        for command in COMMANDS {
+            assert_eq!(
+                OPERATIONS
+                    .iter()
+                    .filter(|operation| operation.command == command.name)
+                    .count(),
+                1,
+                "{} must have exactly one canonical operation",
+                command.name
+            );
+        }
+    }
+
+    #[test]
+    fn resource_aliases_do_not_point_to_different_resources() {
+        let mut resources = HashMap::new();
+        for operation in OPERATIONS {
+            for name in std::iter::once(operation.resource)
+                .chain(operation.resource_aliases.iter().copied())
+            {
+                if let Some(existing) = resources.insert(name, operation.resource) {
+                    assert_eq!(
+                        existing, operation.resource,
+                        "resource name or alias '{}' is ambiguous",
+                        name
+                    );
+                }
+            }
+        }
     }
 }

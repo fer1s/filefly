@@ -11,10 +11,18 @@ export type {
 } from "./types";
 
 export { ENTRY_ACTIONS } from "./registry";
-export { resolveActionIds, isActionVisible } from "./utils";
+export {
+  resolveActionIds,
+  resolveCustomActions,
+  isActionVisible,
+  resolveActionIcon,
+} from "./utils";
 
 export { newFolderAction } from "./newFolder";
+export { createFileAction } from "./createFile";
 export { openAction } from "./open";
+export { openInNewTabAction } from "./openInNewTab";
+export { openContainingFolderAction } from "./openContainingFolder";
 export { openInTerminalAction } from "./openInTerminal";
 export { previewAction } from "./preview";
 export { copyAction } from "./copy";
@@ -25,5 +33,7 @@ export { trashAction } from "./trash";
 export { restoreAction } from "./restore";
 export { destroyAction } from "./destroy";
 export { propertiesAction } from "./properties";
+export { compressAction } from "./compress";
+export { extractAction } from "./extract";
 export { sortByAction } from "./sortBy";
 export { toggleHiddenAction } from "./toggleHidden";

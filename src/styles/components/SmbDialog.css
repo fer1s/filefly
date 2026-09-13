@@ -1,0 +1,65 @@
+/* Inline "reachable" line under the Test button — success-tinted counterpart of the shared
+   connection error treatment. */
+.SmbDialog .smb_reachable {
+  color: var(--color-success);
+}
+
+/* Share discovery: the "List shared folders" header + the clickable share rows. */
+.SmbDialog .smb_shares_header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.SmbDialog .smb_shares_list_button {
+  font-size: var(--font-size-sm);
+}
+
+.SmbDialog .smb_shares_list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  max-height: var(--size-smb-shares-max-height);
+  overflow-y: auto;
+}
+
+.SmbDialog .smb_share_option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  text-align: left;
+  border: var(--border-width-default) solid var(--color-border-default);
+  border-radius: var(--radius-md);
+}
+
+.SmbDialog .smb_share_option:hover,
+.SmbDialog .smb_share_option.selected {
+  border-color: var(--color-accent);
+  background: var(--color-selection-hover);
+}
+
+.SmbDialog .smb_share_option > .Icon,
+.SmbDialog .smb_share_option > svg {
+  color: var(--color-text-dim);
+}
+
+.SmbDialog .smb_share_name {
+  flex: 1;
+  color: var(--color-text-primary);
+}
+
+.SmbDialog .smb_share_admin {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-dim);
+}
+
+/* Admin ($) shares: de-emphasized since they need an administrator account. */
+.SmbDialog .smb_share_option.admin .smb_share_name {
+  color: var(--color-text-dim);
+}

@@ -2,6 +2,7 @@ import { useState, type KeyboardEvent } from "react";
 import { faPlus } from "@fortawesome/free-solid-svg-icons";
 
 import DeletableChip from "@/shared/components/elements/DeletableChip";
+import TextInput from "@/shared/components/elements/TextInput";
 import IconButton, {
   ICON_BUTTON_SIZE,
   ICON_BUTTON_VARIANT,
@@ -41,15 +42,16 @@ const SizeIgnoresBelow = ({ settings, update }: CustomControlProps) => {
   return (
     <div className="settings_ignores">
       <div className="settings_ignores_input">
-        <input
-          type="text"
+        <TextInput
           className="settings_input"
           value={draft}
           placeholder={t.settings.sizeIgnoresPlaceholder}
           onChange={(event) => setDraft(event.target.value)}
           onKeyDown={onKeyDown}
           spellCheck={false}
+          // eslint-disable-next-line i18next/no-literal-string -- HTML input attribute value
           autoCapitalize="off"
+          // eslint-disable-next-line i18next/no-literal-string -- HTML input attribute value
           autoCorrect="off"
         />
         <IconButton

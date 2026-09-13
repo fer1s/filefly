@@ -3,8 +3,8 @@ import { isMacPlatform } from "@/shared/keymap/utils";
 import type { AppSettings } from "@/shared/services/api";
 
 // Recommended folder-size exclusions on macOS: OS-generated junk (Finder metadata, AppleDouble
-// forks, Spotlight/Trash/Versions/FSEvents stores) that never holds user content and only inflates
-// size totals. Seeded as the default so new users get sensible exclusions out of the box. Mirrors
+// forks, Spotlight/Trash/Versions/FSEvents stores, WidgetKit timeline caches, localization
+// markers, Windows-share droppings) that never holds user content and only inflates size totals. Seeded as the default so new users get sensible exclusions out of the box. Mirrors
 // default_size_ignores() in functions/settings.rs (must stay in sync). Empty on other platforms.
 export const MACOS_SIZE_IGNORES = [
   ".DS_Store",
@@ -14,6 +14,11 @@ export const MACOS_SIZE_IGNORES = [
   ".DocumentRevisions-V100",
   ".apdisk",
   ".fseventsd",
+  "com.apple.chrono",
+  ".localized",
+  ".AppleDouble",
+  "Thumbs.db",
+  "desktop.ini",
 ];
 
 export const VIEW_MODE = {
@@ -69,6 +74,13 @@ export const ZOOM_MIN = 0.75;
 export const ZOOM_MAX = 5;
 export const ZOOM_STEP = 0.25;
 export const ZOOM_DEFAULT = 1;
+
+// Grid icon size: a multiplier on the grid tile (and its icon), independent of the per-folder
+// zoom — the Finder "Icon size" slider (View Options). 1 = the default 76px tile.
+export const GRID_ICON_SIZE_MIN = 0.5;
+export const GRID_ICON_SIZE_MAX = 4;
+export const GRID_ICON_SIZE_STEP = 0.05;
+export const DEFAULT_GRID_ICON_SIZE = 1;
 
 // User-adjustable sidebar background opacity (alpha of --color-background-sidebar). 0 = fully
 // transparent (the window/material shows through), 1 = opaque.
@@ -166,6 +178,34 @@ export type DragDropAction =
 // Default: move (matches most file managers).
 export const DEFAULT_DRAG_DROP_ACTION: DragDropAction = DRAG_DROP_ACTION.MOVE;
 
+// Where a user-defined context-menu process action is eligible to appear. DIRECTORY is the empty
+// floor/current folder, FOLDER is a child folder entry, and FILE can additionally be filtered by
+// extension. These values persist in context_menu.toml and mirror context_menu.rs.
+export const CUSTOM_ACTION_TARGET = {
+  DIRECTORY: "directory",
+  FOLDER: "folder",
+  FILE: "file",
+} as const;
+
+export type CustomActionTarget =
+  (typeof CUSTOM_ACTION_TARGET)[keyof typeof CUSTOM_ACTION_TARGET];
+
+// Curated Font Awesome keys available to user-defined actions. Font Awesome icons are compile-time
+// objects, so persisted config stores one of these stable names rather than arbitrary icon data.
+export const CUSTOM_ACTION_ICON = {
+  BOLT: "bolt",
+  CODE: "code",
+  TERMINAL: "terminal",
+  APP: "app",
+  PLAY: "play",
+  GEAR: "gear",
+  FILE: "file",
+  FOLDER: "folder",
+} as const;
+
+export type CustomActionIcon =
+  (typeof CUSTOM_ACTION_ICON)[keyof typeof CUSTOM_ACTION_ICON];
+
 // Seed settings used before settings.toml is hydrated and as the reset-to-default baseline in the
 // settings dialog. Must match the Rust defaults (functions/settings.rs).
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -173,6 +213,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   theme: DEFAULT_THEME,
   accentColor: DEFAULT_ACCENT,
   defaultZoom: ZOOM_DEFAULT,
+  gridIconSize: DEFAULT_GRID_ICON_SIZE,
+  zoomWithModifierWheel: true,
   dateFormat: DEFAULT_DATE_FORMAT,
   sidebarOpacity: DEFAULT_SIDEBAR_OPACITY,
   contextMenuOpacity: DEFAULT_CONTEXT_MENU_OPACITY,
@@ -183,6 +225,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   showToasts: true,
   startupMode: DEFAULT_STARTUP_MODE,
   homePath: "",
+  activateNewTabs: true,
+  rememberScrollOnUp: false,
   dragDropAction: DEFAULT_DRAG_DROP_ACTION,
   confirmDragDrop: true,
   confirmDelete: true,
@@ -191,12 +235,19 @@ export const DEFAULT_SETTINGS: AppSettings = {
   useCustomFolderPicker: false,
   previewImagesInApp: false,
   previewMarkdownInApp: false,
+  openPreviewInWindow: false,
+  openPropertiesInWindow: false,
   confirmExportOverwrite: false,
   remoteThumbnails: false,
   showSystemStats: false,
   showFolderSizes: false,
   showVolumeSize: false,
   sizeIgnores: isMacPlatform() ? [...MACOS_SIZE_IGNORES] : [],
+  showOnboarding: true,
+  onboardingSeen: false,
+  checkForUpdates: true,
+  lastSeenVersion: "",
+  showChangelogAfterUpdate: true,
 };
 
 // DOM KeyboardEvent.key names used in non-configurable key handling (navigation, input
@@ -235,10 +286,42 @@ export const STORAGE_KIND = {
 
 export type StorageKind = (typeof STORAGE_KIND)[keyof typeof STORAGE_KIND];
 
+// What a cleanup removes from a registered folder (see CleanupTarget / functions/cleanup.rs).
+// CONTENTS empties the folder but keeps it — required for caches whose parent directory must
+// survive (e.g. ~/.gradle/caches). FOLDER trashes the registered folder itself, for whole obsolete
+// directories. Every cleanup goes to the system Trash, so both modes stay reversible.
+export const CLEANUP_MODE = {
+  CONTENTS: "contents",
+  FOLDER: "folder",
+} as const;
+
+export type CleanupMode = (typeof CLEANUP_MODE)[keyof typeof CLEANUP_MODE];
+
+// Stable error codes the cleanup commands return instead of prose, so the message shown to the user
+// comes from the translation dictionary. Mirrors the ERROR_* constants in functions/cleanup.rs; any
+// other value is a raw backend error and is surfaced as-is.
+export const CLEANUP_ERROR = {
+  NOT_ABSOLUTE: "CLEANUP_NOT_ABSOLUTE",
+  NOT_A_DIR: "CLEANUP_NOT_A_DIR",
+  PROTECTED_PATH: "CLEANUP_PROTECTED_PATH",
+  DUPLICATE: "CLEANUP_DUPLICATE",
+  UNKNOWN_TARGET: "CLEANUP_UNKNOWN_TARGET",
+  INVALID_MODE: "CLEANUP_INVALID_MODE",
+} as const;
+
+export type CleanupError = (typeof CLEANUP_ERROR)[keyof typeof CLEANUP_ERROR];
+
 // Path scheme marking a remote (SSH/SFTP) location: `sftp://<connId>/absolute/remote/path`. The
 // backend routes these to the SFTP backend; every other path is local. Mirrors SFTP_SCHEME in
 // src-tauri/src/filesystem/sftp.rs. See SSH_PLAN.md.
 export const SFTP_SCHEME = "sftp://";
+
+// Path scheme marking a saved SMB (Windows share) location: `smb://<host>/<share>`. Unlike SFTP,
+// these are not browsed through a virtual backend — macOS mounts the share under /Volumes and the
+// local filesystem cores browse it there. The scheme is only how the location is stored/identified
+// in the sidebar; clicking it resolves (mounting if needed) to the real /Volumes path. Mirrors
+// SMB_SCHEME in src-tauri/src/filesystem/smb.rs.
+export const SMB_SCHEME = "smb://";
 
 // Prefix the SFTP backend puts on an authentication-failure error (vs network/other), so the UI can
 // prompt for a password/passphrase instead of a generic error. Mirrors AUTH_FAILED_MARKER in

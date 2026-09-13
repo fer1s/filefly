@@ -6,6 +6,8 @@ import IconButton, {
   ICON_BUTTON_VARIANT,
   ICON_BUTTON_SIZE,
 } from "@/shared/components/elements/IconButton";
+import Button from "@/shared/components/elements/Button";
+import Checkbox from "@/shared/components/elements/Checkbox";
 import ToggleableChip from "@/shared/components/elements/ToggleableChip";
 import { CHIP_SIZE } from "@/shared/components/elements/Chip";
 import { useStateContext } from "@/shared/providers/StateProvider";
@@ -96,13 +98,13 @@ const SearchFilters = () => {
             <div className="filters_panel_head">
               <span className="filters_panel_title">{t.filters.title}</span>
               {count > 0 && (
-                <button
-                  type="button"
+                <Button
+                  unstyled
                   className="filters_clear"
                   onClick={() => setFilters(DEFAULT_FILTERS)}
                 >
                   {t.filters.clear}
-                </button>
+                </Button>
               )}
             </div>
 
@@ -155,8 +157,7 @@ const SearchFilters = () => {
             </div>
 
             <label className="filters_scope">
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={filters.currentFolderOnly}
                 onChange={(e) =>
                   setFilters({

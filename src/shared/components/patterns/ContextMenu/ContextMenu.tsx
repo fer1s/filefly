@@ -1,61 +1,83 @@
-import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
-import type { KeyboardEvent } from "react";
+import {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
+import {
+  ContextMenu as SitoContextMenu,
+  type ContextMenuPosition,
+} from "@sito/ui";
 
-import { classNames } from "@/shared/utils";
-import { KEY } from "@/shared/constants";
+import { t } from "@/lang";
 import "@/styles/components/ContextMenu.css";
 
-import { MENU_ITEM_SELECTOR } from "./constants";
+import { CONTEXT_MENU_INITIAL_POSITION, MENU_ITEM_SELECTOR } from "./constants";
 import type { ContextMenuProps } from "./types";
+
+const ignoreDismissal = () => undefined;
 
 export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
   ({ children, contextMenuVisible }, ref) => {
-    // The parent needs the DOM node (positioning + outside-click), and so does the focus/arrow
-    // logic here — expose the inner node through the forwarded ref.
-    const innerRef = useRef<HTMLDivElement>(null);
-    useImperativeHandle(ref, () => innerRef.current as HTMLDivElement, []);
+    // Existing menu hooks position through a ref before opening. Keep a mounted bridge while
+    // closed, then expose the shared menu element for containment and viewport measurements.
+    const positionRef = useRef<HTMLDivElement>(null);
+    const menuRef = useRef<HTMLDivElement>(null);
+    const [position, setPosition] = useState<ContextMenuPosition>(
+      CONTEXT_MENU_INITIAL_POSITION,
+    );
+    useImperativeHandle(
+      ref,
+      () =>
+        (contextMenuVisible
+          ? menuRef.current
+          : positionRef.current) as HTMLDivElement,
+      [contextMenuVisible],
+    );
 
-    // Move keyboard focus into the menu when it opens so the arrow keys work immediately.
-    useEffect(() => {
+    useLayoutEffect(() => {
       if (!contextMenuVisible) return;
-      innerRef.current?.querySelector<HTMLElement>(MENU_ITEM_SELECTOR)?.focus();
+      // Transfer the coordinates written by the legacy hook into the controlled shared primitive.
+      setPosition({
+        x:
+          Number.parseFloat(positionRef.current?.style.left ?? "") ||
+          CONTEXT_MENU_INITIAL_POSITION.x,
+        y:
+          Number.parseFloat(positionRef.current?.style.top ?? "") ||
+          CONTEXT_MENU_INITIAL_POSITION.y,
+      });
     }, [contextMenuVisible]);
 
-    // Arrow keys roam between items (wrapping); Home/End jump to the ends.
-    const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-      // Only roam visible rows: collapsed submenu flyouts also carry role=menuitem, but
-      // focusing a display:none element is a dead step. offsetParent is null when hidden.
-      const items = Array.from(
-        innerRef.current?.querySelectorAll<HTMLElement>(MENU_ITEM_SELECTOR) ??
-          [],
-      ).filter((el) => el.offsetParent !== null);
-      if (!items.length) return;
+    useEffect(() => {
+      if (!contextMenuVisible) return;
 
-      const current = items.indexOf(document.activeElement as HTMLElement);
-      let next: number | null = null;
-      if (event.key === KEY.ARROW_DOWN)
-        next = (current + 1 + items.length) % items.length;
-      else if (event.key === KEY.ARROW_UP)
-        next = (current - 1 + items.length) % items.length;
-      else if (event.key === KEY.HOME) next = 0;
-      else if (event.key === KEY.END) next = items.length - 1;
-
-      if (next !== null) {
-        event.preventDefault();
-        items[next].focus();
-      }
-    };
+      // Selecting an entry from its context-menu gesture focuses that row in a passive effect.
+      // Reclaim focus after those selection effects so arrow keys stay inside the open menu.
+      const menu = menuRef.current;
+      const firstItem = menu?.querySelector<HTMLElement>(MENU_ITEM_SELECTOR);
+      (firstItem ?? menu)?.focus();
+    }, [contextMenuVisible]);
 
     return (
-      <div
-        className={classNames("context_menu", contextMenuVisible && "visible")}
-        role="menu"
-        aria-orientation="vertical"
-        ref={innerRef}
-        onKeyDown={handleKeyDown}
-      >
-        {children}
-      </div>
+      <>
+        <div ref={positionRef} hidden aria-hidden="true" />
+        <SitoContextMenu
+          ref={menuRef}
+          open={contextMenuVisible}
+          position={position}
+          onClose={ignoreDismissal}
+          ariaLabel={t.contextMenu.label}
+          // File Browser keeps dismissal in its MENU hotkey scope and existing outside-click hook.
+          closeOnEscape={false}
+          closeOnTab={false}
+          closeOnPointerDownOutside={false}
+          className="context_menu visible"
+        >
+          {children}
+        </SitoContextMenu>
+      </>
     );
   },
 );

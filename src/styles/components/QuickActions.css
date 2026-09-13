@@ -5,7 +5,16 @@
   gap: var(--space-1);
 }
 
-/* Danger-colored action (destroy). */
+/* Vertical counterpart of the context menu separators: the action layout remains the shared
+   source of truth while the horizontal toolbar preserves the same conceptual groups. */
+.QuickBar .quick_actions .quick_action_separator {
+  width: var(--border-width-default);
+  height: var(--size-control-small);
+  flex: 0 0 var(--border-width-default);
+  background-color: var(--color-overlay-active);
+}
+
+/* Danger-colored actions (move to Trash and permanent delete). */
 .QuickBar .quick_actions .qa_danger svg {
   color: var(--color-danger);
 }

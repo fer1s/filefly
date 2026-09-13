@@ -21,9 +21,7 @@ export type Subgroup = { title: string | null; items: SettingDescriptor[] };
 // resolved `subsection` label cluster together; items without one fall under a leading title-less
 // group. Groups appear in the order their subsection is first seen (so authoring the schema in
 // subsection order yields the intended layout).
-export const groupBySubsection = (
-  items: SettingDescriptor[],
-): Subgroup[] => {
+export const groupBySubsection = (items: SettingDescriptor[]): Subgroup[] => {
   const groups: Subgroup[] = [];
   const byTitle = new Map<string, Subgroup>();
   for (const descriptor of items) {
