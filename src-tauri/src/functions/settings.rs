@@ -21,6 +21,10 @@ pub struct AppSettings {
     accent_color: String,
     // Default folder zoom multiplier (1.0 = 100%) for folders without their own saved zoom.
     default_zoom: f64,
+    // Grid tile/icon size multiplier (1.0 = default tile), independent of the per-folder zoom.
+    grid_icon_size: f64,
+    // Zoom folders with Command/Ctrl + scroll wheel.
+    zoom_with_modifier_wheel: bool,
     // Date format: a token pattern (YYYY-MM-DD HH:mm, …) or the "locale" sentinel.
     date_format: String,
     // Sidebar background opacity (alpha of --color-background-sidebar), 0..1.
@@ -42,6 +46,11 @@ pub struct AppSettings {
     startup_mode: String,
     // Folder opened on launch when startup_mode is "home" (empty = Volumes view).
     home_path: String,
+    // Switch to a tab immediately when a folder/location is opened in a new tab.
+    activate_new_tabs: bool,
+    // Restore a parent's last known scroll position when navigating Up. Back/Forward always
+    // restore their own history entry regardless of this setting.
+    remember_scroll_on_up: bool,
     // What dragging entries onto a folder does: "move" or "copy".
     drag_drop_action: String,
     // Whether a confirmation dialog is shown before a drag-and-drop move/copy.
@@ -61,6 +70,12 @@ pub struct AppSettings {
     // Open markdown files in the app's built-in preview (on Enter/double-click) instead of the OS
     // default app.
     preview_markdown_in_app: bool,
+    // Open the built-in preview in its own detached window instead of the in-app overlay. A new
+    // window is spawned per open (see window::create_preview_window).
+    open_preview_in_window: bool,
+    // Open the properties in their own detached window instead of the in-app dialog. A new window
+    // is spawned per open (see window::create_properties_window).
+    open_properties_in_window: bool,
     // On export, ask before replacing an existing settings.toml. When off (default), a unique
     // filename is used instead so nothing is overwritten silently.
     confirm_export_overwrite: bool,
@@ -80,6 +95,19 @@ pub struct AppSettings {
     // calculation, e.g. ".DS_Store", "*.tmp", "node_modules". Empty by default. Applied live: on
     // save these replace the size-index name-globs and the size cache is cleared so it recomputes.
     size_ignores: Vec<String>,
+    // Show the welcome guide (onboarding wizard) on launch until it has been completed. Exposed in
+    // Settings so the user can stop it from reappearing (or bring it back).
+    show_onboarding: bool,
+    // Whether the welcome guide has been completed or dismissed at least once (internal marker).
+    onboarding_seen: bool,
+    // Check GitHub Releases for a newer version on launch and surface a notification (read-only:
+    // nothing is downloaded or installed).
+    check_for_updates: bool,
+    // The app version that last ran: empty on a fresh install, otherwise compared against the
+    // running version on launch to detect an update. Always rewritten to the current version.
+    last_seen_version: String,
+    // After an update, show a clickable toast that opens the changelog for the new version.
+    show_changelog_after_update: bool,
 }
 
 impl AppSettings {
@@ -102,6 +130,8 @@ impl Default for AppSettings {
             theme: "system".to_string(),
             accent_color: "blue".to_string(),
             default_zoom: 1.0,
+            grid_icon_size: 1.0,
+            zoom_with_modifier_wheel: true,
             date_format: "locale".to_string(),
             sidebar_opacity: 0.85,
             context_menu_opacity: 0.5,
@@ -112,6 +142,8 @@ impl Default for AppSettings {
             show_toasts: true,
             startup_mode: "restore".to_string(),
             home_path: String::new(),
+            activate_new_tabs: true,
+            remember_scroll_on_up: false,
             drag_drop_action: "move".to_string(),
             confirm_drag_drop: true,
             confirm_delete: true,
@@ -120,19 +152,26 @@ impl Default for AppSettings {
             use_custom_folder_picker: false,
             preview_images_in_app: false,
             preview_markdown_in_app: false,
+            open_preview_in_window: false,
+            open_properties_in_window: false,
             confirm_export_overwrite: false,
             remote_thumbnails: false,
             show_system_stats: false,
             show_folder_sizes: false,
             show_volume_size: false,
             size_ignores: default_size_ignores(),
+            show_onboarding: true,
+            onboarding_seen: false,
+            check_for_updates: true,
+            last_seen_version: String::new(),
+            show_changelog_after_update: true,
         }
     }
 }
 
 // Default folder-size exclusions. On macOS, OS-generated junk (Finder metadata, AppleDouble forks,
-// Spotlight/Trash/Versions/FSEvents stores) that never holds user content and only inflates size
-// totals — so new users get sensible exclusions. Mirrors MACOS_SIZE_IGNORES in shared/constants.ts
+// Spotlight/Trash/Versions/FSEvents stores, WidgetKit timeline caches, localization markers,
+// Windows-share droppings) that never holds user content and only inflates size totals — so new users get sensible exclusions. Mirrors MACOS_SIZE_IGNORES in shared/constants.ts
 // (must stay in sync). Empty on other platforms.
 #[cfg(target_os = "macos")]
 fn default_size_ignores() -> Vec<String> {
@@ -144,6 +183,11 @@ fn default_size_ignores() -> Vec<String> {
         ".DocumentRevisions-V100",
         ".apdisk",
         ".fseventsd",
+        "com.apple.chrono",
+        ".localized",
+        ".AppleDouble",
+        "Thumbs.db",
+        "desktop.ini",
     ]
     .iter()
     .map(|s| s.to_string())

@@ -2,7 +2,9 @@ import { useEffect, useState } from "react";
 
 import { faCheck, faMinus } from "@fortawesome/free-solid-svg-icons";
 
+import Button from "@/shared/components/elements/Button";
 import Icon from "@/shared/components/elements/Icon";
+import TextInput from "@/shared/components/elements/TextInput";
 import { classNames } from "@/shared/utils";
 import { KEY, TAG_COLOR } from "@/shared/constants";
 import { TAG_PICKER_COLORS } from "@/features/directory/constants";
@@ -94,9 +96,9 @@ export const TagPicker = ({ targets, onClose }: TagPickerProps) => {
             current.some((tag) => tag.color === index),
           );
           return (
-            <button
+            <Button
               key={index}
-              type="button"
+              unstyled
               className={classNames(
                 "tag_swatch",
                 colorClass,
@@ -120,8 +122,8 @@ export const TagPicker = ({ targets, onClose }: TagPickerProps) => {
             );
             return (
               <li key={tag.name}>
-                <button
-                  type="button"
+                <Button
+                  unstyled
                   className={classNames(
                     "tag_list_item",
                     cover !== TAG_COVERAGE.NONE && "checked",
@@ -136,14 +138,14 @@ export const TagPicker = ({ targets, onClose }: TagPickerProps) => {
                     ) : null}
                   </span>
                   {tag.name}
-                </button>
+                </Button>
               </li>
             );
           })}
         </ul>
       )}
 
-      <input
+      <TextInput
         className="tag_input"
         placeholder={t.tags.add}
         value={draft}

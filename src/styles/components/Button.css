@@ -1,25 +1,58 @@
-/* Base button: resets native styling and provides the default (text) button look.
-   IconButton and other variants layer on top of this. */
+/* Sito File Browser's button contract. @sito/ui supplies behavior and structural classes; these
+   app-owned variant classes own the final chrome so package styles cannot contradict the wrapper. */
 .Button {
   font: inherit;
+  height: auto;
+  min-height: var(--space-0);
+  font-weight: inherit;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
   padding: var(--space-1-5) var(--space-3);
-  background-color: var(--color-surface-interactive);
-  border: var(--border-width-default) solid var(--color-border-default);
+  background-color: transparent;
+  border: var(--border-width-default) solid transparent;
   border-radius: var(--radius-sm);
   color: var(--color-text-primary);
   cursor: pointer;
   transition: all 0.2s ease-in-out;
 }
 
-.Button:hover:not(:disabled) {
+.Button.button_default {
+  background-color: var(--color-surface-interactive);
+  border-color: var(--color-border-default);
+}
+
+.Button.button_text {
+  background-color: transparent;
+  border-color: transparent;
+}
+
+.Button.button_outlined {
+  background-color: transparent;
+  border-color: var(--color-border-default);
+}
+
+.Button.button_default:hover:not(:disabled),
+.Button.button_text:hover:not(:disabled),
+.Button.button_outlined:hover:not(:disabled) {
   background-color: var(--color-overlay-hover);
 }
 
 .Button:disabled {
   cursor: not-allowed;
   opacity: 0.5;
+}
+
+/* Primary / submit CTA: a solid accent fill with on-solid text. Hover darkens that same accent. */
+.Button.button_primary {
+  background-color: var(--color-selection-indicator);
+  border-color: var(--color-selection-indicator);
+  color: var(--color-text-on-solid);
+}
+
+.Button.button_primary:hover:not(:disabled) {
+  background-color: color-mix(in srgb, var(--color-accent), black 12%);
+  border-color: color-mix(in srgb, var(--color-accent), black 12%);
+  color: var(--color-text-on-solid);
 }

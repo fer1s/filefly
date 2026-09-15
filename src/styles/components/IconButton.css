@@ -11,7 +11,13 @@
   place-items: center;
 }
 
-.IconButton > svg {
+.IconButton .sito-ui-icon-button__icon {
+  width: var(--font-size-base);
+  height: var(--font-size-base);
+  font-size: var(--font-size-base);
+}
+
+.IconButton .sito-ui-icon-button__icon > svg {
   pointer-events: none;
   font-size: var(--font-size-base);
 }

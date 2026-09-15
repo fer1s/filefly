@@ -15,6 +15,9 @@ export const SIDEBAR_ITEM_KIND = {
   // A saved SSH/SFTP connection (Network group). Its path is an `sftp://<id>/` URL that the
   // filesystem layer routes to the remote backend. See SSH_PLAN.md / features/connections.
   CONNECTION: "connection",
+  // A saved SMB (Windows share) location (Network group). Its path is an `smb://<host>/<share>`
+  // URL; clicking it mounts the share via macOS (if needed) and navigates to its /Volumes path.
+  SMB: "smb",
 } as const;
 
 export type SidebarItemKind =

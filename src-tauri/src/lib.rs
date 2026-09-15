@@ -24,6 +24,6 @@ pub mod functions;
 pub mod ignore;
 pub mod index;
 pub mod tray;
-pub mod watcher;
 pub mod utils;
+pub mod watcher;
 pub mod window;

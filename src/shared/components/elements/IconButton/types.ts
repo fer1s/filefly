@@ -3,7 +3,10 @@ import type { IconProps } from "../Icon";
 import type { TooltipPlacement } from "../Tooltip";
 import type { IconButtonVariant, IconButtonSize } from "./constants";
 
-export type IconButtonProps = Omit<ButtonProps, "children"> & {
+export type IconButtonProps = Omit<
+  ButtonProps,
+  "children" | "color" | "size" | "variant"
+> & {
   icon: IconProps["icon"];
   variant?: IconButtonVariant;
   size?: IconButtonSize;

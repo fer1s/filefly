@@ -1,7 +1,7 @@
 {
   "name": "sito-file-browser",
   "private": true,
-  "version": "0.5.0",
+  "version": "0.10.2",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -16,10 +16,13 @@
     "build:app": "npm run sidecar && tauri build"
   },
   "dependencies": {
+    "@crabnebula/tauri-plugin-drag": "^2.1.0",
     "@fortawesome/fontawesome-svg-core": "7.2.0",
     "@fortawesome/free-brands-svg-icons": "7.2.0",
     "@fortawesome/free-solid-svg-icons": "7.2.0",
     "@fortawesome/react-fontawesome": "3.3.1",
+    "@sito/commands": "github:sito8943/sito-commands#v0.1.0-alpha.1",
+    "@sito/ui": "0.4.1",
     "@tauri-apps/api": "^2",
     "@tauri-apps/plugin-dialog": "^2",
     "@tauri-apps/plugin-fs": "^2",
@@ -27,8 +30,7 @@
     "@use-gesture/react": "^10.3.1",
     "react": "19.2.7",
     "react-dom": "19.2.7",
-    "react-router-dom": "6.30.4",
-    "@crabnebula/tauri-plugin-drag": "^2.1.0"
+    "react-router": "7.18.3"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

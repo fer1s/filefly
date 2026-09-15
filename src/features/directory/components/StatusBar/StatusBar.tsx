@@ -3,8 +3,9 @@ import {
   faMagnifyingGlass,
 } from "@fortawesome/free-solid-svg-icons";
 
+import Button from "@/shared/components/elements/Button";
 import Icon from "@/shared/components/elements/Icon";
-import { formatBytes } from "@/shared/utils";
+import { classNames, formatBytes } from "@/shared/utils";
 import { openSystemMonitor, openStorageSettings } from "@/shared/services/api";
 import { notify, TOAST_TYPE } from "@/shared/toast";
 import { useSettings } from "@/features/settings";
@@ -35,9 +36,7 @@ const StatusBar = ({
   const searching = search.length > 0;
 
   const showStorage = () => {
-    openStorageSettings().catch((err) =>
-      notify(String(err), TOAST_TYPE.ERROR),
-    );
+    openStorageSettings().catch((err) => notify(String(err), TOAST_TYPE.ERROR));
   };
 
   const showMonitor = () => {
@@ -90,8 +89,13 @@ const StatusBar = ({
             {progress.label}
             <span className="progress_track">
               <span
-                className="progress_bar"
-                style={{ width: `${progressPercent}%` }}
+                className={classNames(
+                  "progress_bar",
+                  !progress.total && "indeterminate",
+                )}
+                style={
+                  progress.total ? { width: `${progressPercent}%` } : undefined
+                }
               />
             </span>
           </span>
@@ -99,16 +103,16 @@ const StatusBar = ({
       </div>
       {stats && (
         <div className="stats_row">
-          <button
-            type="button"
+          <Button
+            unstyled
             className="stat stat_button"
             onClick={showMonitor}
             title={t.directory.openSystemMonitor}
           >
             {t.directory.statCpu(Math.round(stats.cpuUsage))}
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            unstyled
             className="stat stat_button"
             onClick={showMonitor}
             title={t.directory.openSystemMonitor}
@@ -117,9 +121,9 @@ const StatusBar = ({
               formatBytes(stats.memUsed),
               formatBytes(stats.memTotal),
             )}
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            unstyled
             className="stat stat_button"
             onClick={showStorage}
             title={t.storage.title}
@@ -128,7 +132,7 @@ const StatusBar = ({
               formatBytes(stats.diskUsed),
               formatBytes(stats.diskTotal),
             )}
-          </button>
+          </Button>
         </div>
       )}
     </div>

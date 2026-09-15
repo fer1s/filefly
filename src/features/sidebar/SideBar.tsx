@@ -28,7 +28,11 @@ import {
   useConnections,
   ConnectionDialog,
   ConnectionAuthDialog,
+  SmbDialog,
+  NetworkAddChooser,
+  SMB_OPEN_RESULT,
 } from "@/features/connections";
+import type { SmbLocation } from "@/features/connections";
 import { notify, TOAST_TYPE } from "@/shared/toast";
 import type { Connection } from "@/shared/services/api";
 import { Properties } from "@/features/directory";
@@ -60,18 +64,18 @@ import SidebarContextMenu from "./components/SidebarContextMenu";
 import VolumeItem from "./components/VolumeItem";
 import { ejectVolume } from "@/shared/services/ejectVolume";
 import FolderItem from "./components/FolderItem";
-import Button from "@/shared/components/elements/Button";
-import Icon from "@/shared/components/elements/Icon";
+import SidebarActionButton from "./components/SidebarActionButton";
 
 import {
   faBars,
-  faPlus,
+  faAdd,
   faGear,
   faPenToSquare,
   faFolder,
   faCircle,
   faServer,
 } from "@fortawesome/free-solid-svg-icons";
+import { faWindows } from "@fortawesome/free-brands-svg-icons";
 
 import "@/styles/components/SideBar.css";
 
@@ -89,10 +93,21 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
 
   const { keymap } = useKeymap();
   const { open: openSettings } = useSettings();
-  const { connections, manager: connectionsManager, reload: reloadConnections } =
-    useConnections();
+  const {
+    connections,
+    manager: connectionsManager,
+    smbManager,
+    reload: reloadConnections,
+    openSmbLocation,
+  } = useConnections();
   // Open state for the create-connection form (opened from the Network group's "+").
   const [connectionFormOpen, setConnectionFormOpen] = useState(false);
+  // Open state for the Network "+" chooser (SSH vs Windows/SMB) and the add-SMB form.
+  const [networkChooserOpen, setNetworkChooserOpen] = useState(false);
+  const [smbFormOpen, setSmbFormOpen] = useState(false);
+  // The saved SMB location being edited/reconnected (null = not editing); opens the same SMB form
+  // prefilled. Set when a location is found unreachable, so the user can enter its new IP.
+  const [smbEditTarget, setSmbEditTarget] = useState<SmbLocation | null>(null);
   // The connection being edited (null = not editing); drives the same form dialog prefilled.
   const [editConnectionTarget, setEditConnectionTarget] =
     useState<Connection | null>(null);
@@ -187,7 +202,8 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
   const onAddItem =
     (id: string, builtinCount: number) => async (index: number) => {
       if (id === SIDEBAR_GROUP.NETWORK) {
-        setConnectionFormOpen(true);
+        // The "+" offers a choice: an SSH/SFTP connection or a Windows (SMB) share.
+        setNetworkChooserOpen(true);
         return;
       }
       // Open the custom picker at the folder currently in view (skip sentinels like Recents/tags).
@@ -207,10 +223,6 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
       <p className="section_todo">{t.sidebar.emptyGroup}</p>
     );
   };
-
-  // The rows for each group. Rendered in the user's saved order below; the group shell (header,
-  // edit affordances, drag handle) is the same SidebarSection for all of them.
-  const networkRows = customRows(SIDEBAR_GROUP.NETWORK);
 
   // Open a connection on its home directory (where `ssh` lands), resolved over SFTP. An auth failure
   // opens the interactive re-auth dialog; any other error falls back to the root path (whose load
@@ -237,7 +249,8 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
   };
 
   // Saved SSH/SFTP connections (see SSH_PLAN.md). Clicking opens the connection's home dir; the row
-  // stays highlighted for any remote folder browsed under it (prefix match).
+  // stays highlighted for any remote folder browsed under it (prefix match). In edit mode the
+  // open-in-new-tab quick action gives way to edit + delete buttons.
   const connectionRows = connections.map((connection) => {
     const prefix = connectionsManager.prefix(connection.id);
     return (
@@ -253,10 +266,69 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
         collapsed={collapsed}
         active={path === prefix || path.startsWith(`${prefix}/`)}
         onContextMenu={onRowContextMenu(prefix, SIDEBAR_ITEM_KIND.CONNECTION)}
-        onOpenInNewTab={() => openConnectionInNewTab(connection)}
+        onOpenInNewTab={
+          editingSidebar ? undefined : () => openConnectionInNewTab(connection)
+        }
+        onEdit={
+          editingSidebar ? () => setEditConnectionTarget(connection) : undefined
+        }
+        onRemove={editingSidebar ? () => removeConnection(prefix) : undefined}
       />
     );
   });
+
+  // The provider owns diagnosis, mounting, feedback and navigation. The sidebar only opens the edit
+  // form when the typed result says the saved address/share needs attention.
+  const openSavedSmbLocation = async (
+    location: SmbLocation,
+    open: (path: string) => void = setPath,
+  ) => {
+    const result = await openSmbLocation(location, open);
+    if (result === SMB_OPEN_RESULT.NEEDS_EDIT) setSmbEditTarget(location);
+  };
+
+  // Confirm, then remove a saved SMB location from the sidebar (nothing is unmounted or touched on
+  // the PC — it's only the saved shortcut).
+  const removeSmbLocation = async (location: SmbLocation) => {
+    const ok = await confirm({
+      title: t.smb.remove,
+      message: t.smb.confirmRemove(location.name),
+      destructive: true,
+    });
+    if (ok) groups.removeItem(SIDEBAR_GROUP.NETWORK, location.path);
+  };
+
+  // The Network group's saved SMB shares (its custom items, each an `smb://host/share[#name]` path).
+  // Clicking mounts + navigates; the Windows icon distinguishes them from SSH connection rows.
+  const smbRows = groups
+    .items(SIDEBAR_GROUP.NETWORK)
+    .map((itemPath) => {
+      const location = smbManager.parse(itemPath);
+      if (!location) return null;
+      return (
+        <FolderItem
+          key={`smb:${itemPath}`}
+          item={{
+            name: location.name,
+            path: itemPath,
+            icon: faWindows,
+            kind: SIDEBAR_ITEM_KIND.SMB,
+          }}
+          setPath={() => void openSavedSmbLocation(location)}
+          collapsed={collapsed}
+          active={false}
+          onOpenInNewTab={
+            editingSidebar
+              ? undefined
+              : () => void openSavedSmbLocation(location, newTab)
+          }
+          onRemove={
+            editingSidebar ? () => void removeSmbLocation(location) : undefined
+          }
+        />
+      );
+    })
+    .filter(Boolean);
 
   // Presets are hidden, not deleted (we couldn't re-create them). In edit mode show them all so a
   // hidden one can be toggled back on; otherwise drop the hidden ones. Each keeps its original
@@ -334,13 +406,18 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
         }
       />
     )),
-    // Saved connections (built-in) then user-added network locations. Placeholder only when both
-    // are empty. An array so SidebarSection can interleave add-item inserts between rows.
+    // Saved connections (built-in) then user-added network locations. When both are empty, expose
+    // the existing chooser directly so the first SSH/SFTP or SMB location can be created without
+    // having to discover an invisible edit-mode insertion strip.
     [SIDEBAR_GROUP.NETWORK]:
-      connectionRows.length || networkRows.length ? (
-        [...connectionRows, ...networkRows]
+      connectionRows.length || smbRows.length ? (
+        [...connectionRows, ...smbRows]
       ) : (
-        <p className="section_todo">{t.sidebar.todo}</p>
+        <SidebarActionButton
+          icon={faAdd}
+          label={t.smb.chooseTitle}
+          onClick={() => setNetworkChooserOpen(true)}
+        />
       ),
     // Finder tags — the tags actually in use (their real names + colours), discovered at runtime.
     // Clicking one opens its Spotlight tag view. macOS-only (the group is hidden otherwise below).
@@ -468,14 +545,11 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
       })}
 
       {editingSidebar && (
-        <Button
-          className="add_group_button"
+        <SidebarActionButton
+          icon={faAdd}
+          label={t.sidebar.addGroup}
           onClick={() => groups.addGroup(t.sidebar.newGroupName)}
-          aria-label={t.sidebar.addGroup}
-        >
-          <Icon icon={faPlus} />
-          <span>{t.sidebar.addGroup}</span>
-        </Button>
+        />
       )}
 
       <SidebarContextMenu
@@ -524,6 +598,56 @@ const SideBar = ({ collapsed, onToggle }: SideBarProps) => {
           setPendingGroupRemoval(null);
         }}
         onClose={() => setPendingGroupRemoval(null)}
+      />
+      <NetworkAddChooser
+        visible={networkChooserOpen}
+        onChooseSsh={() => {
+          setNetworkChooserOpen(false);
+          setConnectionFormOpen(true);
+        }}
+        onChooseSmb={() => {
+          setNetworkChooserOpen(false);
+          setSmbFormOpen(true);
+        }}
+        onClose={() => setNetworkChooserOpen(false)}
+      />
+      <SmbDialog
+        visible={smbFormOpen || smbEditTarget !== null}
+        initial={
+          smbEditTarget
+            ? {
+                name: smbEditTarget.name,
+                host: smbEditTarget.host,
+                share: smbEditTarget.share,
+              }
+            : null
+        }
+        onClose={() => {
+          setSmbFormOpen(false);
+          setSmbEditTarget(null);
+        }}
+        onSubmit={async (host, share, name) => {
+          const itemPath = smbManager.path(host, share, name);
+          if (smbEditTarget) {
+            // Reconnect: swap the stale path for the new one (keeping its slot), then open it — the
+            // usual diagnose → mount flow runs against the updated address.
+            groups.replaceItem(
+              SIDEBAR_GROUP.NETWORK,
+              smbEditTarget.path,
+              itemPath,
+            );
+            setSmbEditTarget(null);
+            const updated = smbManager.parse(itemPath);
+            if (updated) void openSavedSmbLocation(updated);
+          } else {
+            groups.addItem(
+              SIDEBAR_GROUP.NETWORK,
+              itemPath,
+              groups.items(SIDEBAR_GROUP.NETWORK).length,
+            );
+            setSmbFormOpen(false);
+          }
+        }}
       />
       <ConnectionDialog
         visible={connectionFormOpen || editConnectionTarget !== null}

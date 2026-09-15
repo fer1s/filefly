@@ -48,6 +48,11 @@ export interface PreviewProps {
   // Trash the file currently being previewed (with confirmation). The preview then advances to the
   // next file, or closes when none remain — handled by usePreview reacting to the shrunk list.
   onDelete: () => void;
+
+  // Render as the whole content of a dedicated window (see PreviewWindow) rather than a floating
+  // in-app panel: the native window frame is the chrome, so drop the backdrop, the custom draggable
+  // header and the resize handles, and fill the window opaquely. Defaults to false (in-app overlay).
+  windowed?: boolean;
 }
 
 export interface ZoomableImageProps {

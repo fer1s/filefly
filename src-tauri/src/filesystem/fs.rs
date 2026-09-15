@@ -9,15 +9,15 @@ use std::io::Read;
 #[cfg(unix)]
 use std::os::unix::fs::MetadataExt;
 use std::path::{Path, PathBuf};
-use std::sync::OnceLock;
-use std::time::{Duration, SystemTime};
+use std::sync::{Mutex, OnceLock};
+use std::time::{Duration, Instant, SystemTime};
 use tauri::ipc::Channel;
 use tauri::{AppHandle, Manager, State};
 
 use crate::ignore::IgnoreList;
 use crate::index::SizeIndex;
 
-#[derive(Debug, Serialize)]
+#[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DirMetadata {
     is_dir: bool,
@@ -27,7 +27,7 @@ pub struct DirMetadata {
     created: SystemTime,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DirEntry {
     name: String,
@@ -111,9 +111,7 @@ pub fn get_entry_local(path: String) -> Result<DirEntry, String> {
 pub async fn get_entry(app: AppHandle, path: String) -> Result<DirEntry, String> {
     match super::sftp::resolve(&path) {
         super::sftp::Target::Local(p) => get_entry_local(p),
-        super::sftp::Target::Remote { conn, path } => {
-            super::sftp::stat(&app, &conn, &path).await
-        }
+        super::sftp::Target::Remote { conn, path } => super::sftp::stat(&app, &conn, &path).await,
     }
 }
 
@@ -172,10 +170,7 @@ const SEARCH_RESULT_LIMIT: usize = 1000;
 // returning up to SEARCH_RESULT_LIMIT matches. Async + spawn_blocking so the (IO-bound) walk runs
 // off the main thread and keeps the UI responsive; symlinks aren't followed (jwalk default).
 #[tauri::command]
-pub async fn search_directory(
-    path: String,
-    query: String,
-) -> Result<Vec<DirEntry>, String> {
+pub async fn search_directory(path: String, query: String) -> Result<Vec<DirEntry>, String> {
     tauri::async_runtime::spawn_blocking(move || search_directory_core(&path, &query))
         .await
         .map_err(|error| error.to_string())?
@@ -240,7 +235,11 @@ pub fn typeahead_core(path: &str, query: &str) -> Result<TypeaheadResult, String
     entries.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
 
     if needle.is_empty() {
-        return Ok(TypeaheadResult { query: needle, selected_index: None, matches: Vec::new() });
+        return Ok(TypeaheadResult {
+            query: needle,
+            selected_index: None,
+            matches: Vec::new(),
+        });
     }
 
     let matches: Vec<DirEntry> = entries
@@ -249,7 +248,11 @@ pub fn typeahead_core(path: &str, query: &str) -> Result<TypeaheadResult, String
         .collect();
     let selected_index = if matches.is_empty() { None } else { Some(0) };
 
-    Ok(TypeaheadResult { query: needle, selected_index, matches })
+    Ok(TypeaheadResult {
+        query: needle,
+        selected_index,
+        matches,
+    })
 }
 
 // Extensions whose thumbnail comes from QuickLook rather than the image decoder (videos and
@@ -279,11 +282,7 @@ fn has_ext(path: &str, exts: &[&str]) -> bool {
 
 // Decode the source image used to build a thumbnail: a text-document render for markdown, a
 // frame/page rendered by QuickLook for videos and PDFs, or the image file itself.
-fn thumbnail_source(
-    path: &str,
-    size: u32,
-    tmp_dir: &Path,
-) -> Result<image::DynamicImage, String> {
+fn thumbnail_source(path: &str, size: u32, tmp_dir: &Path) -> Result<image::DynamicImage, String> {
     if is_text(path) {
         text_thumbnail(path)
     } else if needs_quicklook(path) {
@@ -526,13 +525,32 @@ pub fn read_directory_local(path: &str) -> Result<Vec<DirEntry>, String> {
     Ok(result)
 }
 
+// Touch a set of directories (read_dir + one stat per entry) so the OS pays its one-time costs —
+// the macOS TCC consent round-trip on protected folders and the cold metadata cache — before the
+// user's first navigation instead of during it. Errors are ignored: a folder that is missing or
+// denied simply stays cold.
+pub fn prewarm_directories(paths: Vec<PathBuf>) {
+    for dir in paths {
+        if let Ok(entries) = fs::read_dir(&dir) {
+            for entry in entries.flatten() {
+                let _ = entry.path().metadata();
+            }
+        }
+    }
+}
+
 // List a directory, local or remote. A `sftp://<conn>/path` argument routes to the SFTP backend;
 // anything else is a local path handled by `read_directory_local`. Async so the remote branch can
-// await the network without blocking the UI thread.
+// await the network without blocking the UI thread; the local branch runs its read+stat loop on
+// the blocking pool so a large or cold folder never stalls other pending commands.
 #[tauri::command]
 pub async fn read_directory(app: AppHandle, path: String) -> Result<Vec<DirEntry>, String> {
     match super::sftp::resolve(&path) {
-        super::sftp::Target::Local(p) => read_directory_local(&p),
+        super::sftp::Target::Local(p) => {
+            tauri::async_runtime::spawn_blocking(move || read_directory_local(&p))
+                .await
+                .map_err(|e| e.to_string())?
+        }
         super::sftp::Target::Remote { conn, path } => {
             super::sftp::read_dir(&app, &conn, &path).await
         }
@@ -552,7 +570,7 @@ pub fn open_file(path: String) -> Result<(), String> {
 }
 
 // Pick a destination path inside `dir` for `name`, avoiding collisions by appending " copy".
-fn unique_dest(dir: &Path, name: &OsStr) -> PathBuf {
+pub(crate) fn unique_dest(dir: &Path, name: &OsStr) -> PathBuf {
     let candidate = dir.join(name);
     if !candidate.exists() {
         return candidate;
@@ -588,7 +606,7 @@ pub struct ProgressPayload {
 }
 
 // Total bytes a copy will move: the file's own length, or the recursive sum for a directory.
-fn entry_total_bytes(path: &Path) -> u64 {
+pub(crate) fn entry_total_bytes(path: &Path) -> u64 {
     if path.is_dir() {
         jwalk::WalkDir::new(path)
             .skip_hidden(false)
@@ -661,7 +679,14 @@ fn copy_with_progress(
     let mut processed = 0u64;
     let mut last_percent = 0i32;
     if src.is_dir() {
-        copy_dir_with_progress(src, dest, &mut processed, total, &mut last_percent, progress)?;
+        copy_dir_with_progress(
+            src,
+            dest,
+            &mut processed,
+            total,
+            &mut last_percent,
+            progress,
+        )?;
     } else {
         fs::copy(src, dest)?;
     }
@@ -792,6 +817,38 @@ pub fn create_folder_local(parent: String) -> Result<String, String> {
     Ok(candidate.to_string_lossy().into_owned())
 }
 
+const UNTITLED_TEXT_FILE_STEM: &str = "untitled";
+const TEXT_FILE_EXTENSION: &str = "txt";
+
+pub(crate) fn untitled_text_file_name(suffix: u32) -> String {
+    if suffix == 1 {
+        format!("{UNTITLED_TEXT_FILE_STEM}.{TEXT_FILE_EXTENSION}")
+    } else {
+        format!("{UNTITLED_TEXT_FILE_STEM} {suffix}.{TEXT_FILE_EXTENSION}")
+    }
+}
+
+// Create a uniquely-named empty text file inside `parent`, without ever truncating an existing
+// entry. Returns the created path.
+pub fn create_text_file_local(parent: String) -> Result<String, String> {
+    let dir = Path::new(&parent);
+    let mut suffix = 1;
+
+    loop {
+        let candidate = dir.join(untitled_text_file_name(suffix));
+
+        match fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(&candidate)
+        {
+            Ok(_) => return Ok(candidate.to_string_lossy().into_owned()),
+            Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => suffix += 1,
+            Err(error) => return Err(error.to_string()),
+        }
+    }
+}
+
 // Create a folder locally or on a remote host, routing on the parent path. Async so the remote
 // branch can await SFTP; the local core stays sync (also used by the CLI).
 #[tauri::command]
@@ -800,6 +857,17 @@ pub async fn create_folder(app: AppHandle, parent: String) -> Result<String, Str
         super::sftp::Target::Local(p) => create_folder_local(p),
         super::sftp::Target::Remote { conn, path } => {
             super::sftp::create_dir(&app, &conn, &path).await
+        }
+    }
+}
+
+// Create an empty text file locally or on a remote host, routing on the parent path.
+#[tauri::command]
+pub async fn create_text_file(app: AppHandle, parent: String) -> Result<String, String> {
+    match super::sftp::resolve(&parent) {
+        super::sftp::Target::Local(p) => create_text_file_local(p),
+        super::sftp::Target::Remote { conn, path } => {
+            super::sftp::create_text_file(&app, &conn, &path).await
         }
     }
 }
@@ -824,7 +892,9 @@ pub fn copy_image(path: String) -> Result<(), String> {
 // Rename an entry in place within its parent directory.
 pub fn rename_entry_local(path: String, new_name: String) -> Result<(), String> {
     let p = Path::new(&path);
-    let parent = p.parent().ok_or_else(|| "No parent directory".to_string())?;
+    let parent = p
+        .parent()
+        .ok_or_else(|| "No parent directory".to_string())?;
     let dest = parent.join(&new_name);
 
     if dest.exists() {
@@ -856,7 +926,10 @@ const WRITE_PROBE_PREFIX: &str = ".sfb_write_probe_";
 pub fn can_write(path: String) -> bool {
     // Remote (sftp://) dirs: assume writable (the write itself surfaces any permission error). The
     // local probe below can't run against them anyway.
-    if matches!(super::sftp::resolve(&path), super::sftp::Target::Remote { .. }) {
+    if matches!(
+        super::sftp::resolve(&path),
+        super::sftp::Target::Remote { .. }
+    ) {
         return true;
     }
     let dir = Path::new(&path);
@@ -940,9 +1013,7 @@ pub async fn delete_entry(app: AppHandle, path: String) -> Result<(), String> {
             let config_dir = app.path().app_config_dir().map_err(|e| e.to_string())?;
             trash_entry_core(&config_dir, &p)
         }
-        super::sftp::Target::Remote { conn, path } => {
-            super::sftp::remove(&app, &conn, &path).await
-        }
+        super::sftp::Target::Remote { conn, path } => super::sftp::remove(&app, &conn, &path).await,
     }
 }
 
@@ -1043,21 +1114,73 @@ pub fn delete_permanently_core(path: &str) -> Result<(), String> {
     }
 }
 
-// Permanently empty the user's Trash (~/.Trash), removing every item it contains. Irreversible.
-// Returns the number of top-level items removed. macOS guards ~/.Trash behind Full Disk Access
-// (TCC), so reading it can fail with a permission error just like listing it in the UI.
-//
-// Uses `symlink_metadata` so a symlink in the Trash is deleted as a link (never followed into the
-// target's directory). Per-volume Trashes (/Volumes/*/.Trashes) are intentionally out of scope.
+// Permanently empty the system Trash. The GUI delegates to Finder on macOS so the OS owns the
+// progress UI; other platforms retain the manual cross-platform implementation used by the CLI.
+// Either path runs off the async runtime's main thread because a large Trash can take a while.
 #[tauri::command]
 pub async fn empty_trash() -> Result<u32, String> {
-    tauri::async_runtime::spawn_blocking(empty_trash_core)
-        .await
-        .map_err(|e| e.to_string())?
+    #[cfg(target_os = "macos")]
+    {
+        tauri::async_runtime::spawn_blocking(empty_trash_with_finder)
+            .await
+            .map_err(|e| e.to_string())?
+    }
+
+    #[cfg(not(target_os = "macos"))]
+    {
+        tauri::async_runtime::spawn_blocking(empty_trash_core)
+            .await
+            .map_err(|e| e.to_string())?
+    }
+}
+
+// Ask Finder to empty every Trash it manages (including per-volume Trashes). Besides matching the
+// native macOS behavior, Finder supplies its own progress window instead of making the Tauri app
+// appear frozen while Rust recursively removes a large tree. The fixed script contains no user
+// input, and the process is awaited by `spawn_blocking` above.
+#[cfg(target_os = "macos")]
+fn empty_trash_with_finder() -> Result<u32, String> {
+    use std::process::Command;
+
+    const SCRIPT: &str = r#"tell application "Finder"
+set removedCount to count of items of trash
+empty the trash
+return removedCount
+end tell"#;
+
+    let output = Command::new("/usr/bin/osascript")
+        .args(["-e", SCRIPT])
+        .output()
+        .map_err(|error| error.to_string())?;
+
+    if output.status.success() {
+        let count = String::from_utf8_lossy(&output.stdout);
+        return count
+            .trim()
+            .parse::<u32>()
+            .map_err(|error| {
+                format!("Finder emptied the Trash but returned an invalid count: {error}")
+            });
+    }
+
+    let reason = String::from_utf8_lossy(&output.stderr).trim().to_string();
+    if reason.contains("-1743") {
+        return Err(
+            "macOS denied permission to control Finder. Allow Sito File Browser in Privacy & Security > Automation."
+                .to_string(),
+        );
+    }
+    if reason.is_empty() {
+        Err(format!("Finder could not empty the Trash ({})", output.status))
+    } else {
+        Err(format!("Finder could not empty the Trash: {reason}"))
+    }
 }
 
 // Permanently empty the user's Trash (~/.Trash). Returns the count of top-level items removed.
-// Shared by the Tauri command and the CLI.
+// Used by the CLI on every platform and by the GUI outside macOS. Uses `symlink_metadata` so a
+// symlink is removed as a link (never followed into its target). Per-volume Trashes are out of
+// scope for this fallback.
 pub fn empty_trash_core() -> Result<u32, String> {
     let home = std::env::var("HOME").map_err(|e| e.to_string())?;
     let trash = Path::new(&home).join(".Trash");
@@ -1107,6 +1230,44 @@ pub fn empty_trash_core() -> Result<u32, String> {
 // Most recent files to return (Finder-style "Recents").
 const RECENTS_LIMIT: usize = 50;
 
+// Query the newest time band first and stop widening once it already contains enough files. This
+// avoids asking metadata for every file touched during the full month on the common path.
+const RECENTS_WINDOWS_DAYS: [u8; 3] = [1, 7, 30];
+
+// Window-focus refreshes and quick revisits should not rerun Spotlight immediately. Separate cache
+// slots preserve the hide-app-files setting, and holding the cache lock during a miss also folds
+// concurrent requests into the same query.
+const RECENTS_CACHE_TTL: Duration = Duration::from_secs(15);
+
+struct RecentFilesCache {
+    loaded_at: Instant,
+    entries: Vec<DirEntry>,
+}
+
+static RECENT_FILES_CACHE: OnceLock<Mutex<[Option<RecentFilesCache>; 2]>> = OnceLock::new();
+
+fn cached_recent_files(
+    app_dirs: Vec<PathBuf>,
+    hide_app_files: bool,
+) -> Result<Vec<DirEntry>, String> {
+    let cache = RECENT_FILES_CACHE.get_or_init(|| Mutex::new([None, None]));
+    let mut cache = cache.lock().map_err(|error| error.to_string())?;
+    let slot = hide_app_files as usize;
+
+    if let Some(cached) = &cache[slot] {
+        if cached.loaded_at.elapsed() < RECENTS_CACHE_TTL {
+            return Ok(cached.entries.clone());
+        }
+    }
+
+    let entries = recent_files_core(app_dirs)?;
+    cache[slot] = Some(RecentFilesCache {
+        loaded_at: Instant::now(),
+        entries: entries.clone(),
+    });
+    Ok(entries)
+}
+
 // Recently modified files in the user's home, à la Finder's Recents smart folder. Backed by
 // Spotlight (`mdfind`), so it only works on macOS with indexing enabled. Returns files newest
 // first; directories are excluded (Finder shows documents).
@@ -1129,44 +1290,71 @@ pub async fn get_recent_files(
         Vec::new()
     };
 
-    tauri::async_runtime::spawn_blocking(move || recent_files_core(app_dirs))
+    tauri::async_runtime::spawn_blocking(move || cached_recent_files(app_dirs, hide_app_files))
         .await
         .map_err(|e| e.to_string())?
 }
 
-// Recently modified files under $HOME (via Spotlight/`mdfind`), newest first, capped. Any path
-// under one of `app_dirs` (or a write-probe temp file) is filtered out, so passing this app's
-// config/cache dirs hides its background writes; pass an empty list to keep everything. Shared by
-// the Tauri command and the CLI.
+// Recently modified files under $HOME (via Spotlight/`mdfind`), newest first, capped. Spotlight is
+// queried in non-overlapping time bands (last day, days 1-7, then days 7-30), stopping as soon as a
+// band brings the candidate count to the display limit. The query excludes directories before
+// they reach Rust; app-owned paths are also discarded before their filesystem metadata is read.
+// Shared by the Tauri command and the CLI (the CLI intentionally bypasses the GUI's short cache).
 pub fn recent_files_core(app_dirs: Vec<PathBuf>) -> Result<Vec<DirEntry>, String> {
     let home = std::env::var("HOME").map_err(|e| e.to_string())?;
-    let output = std::process::Command::new("mdfind")
-        .arg("-onlyin")
-        .arg(&home)
-        .arg("kMDItemContentModificationDate >= $time.today(-30)")
-        .output()
-        .map_err(|e| e.to_string())?;
-
-    let is_app_file = |entry: &DirEntry| -> bool {
-        if app_dirs.iter().any(|dir| entry.path.starts_with(dir)) {
+    let is_app_path = |path: &Path| -> bool {
+        if app_dirs.iter().any(|dir| path.starts_with(dir)) {
             return true;
         }
-        entry
-            .path
+        path
             .file_name()
             .and_then(|name| name.to_str())
             .map(|name| name.starts_with(WRITE_PROBE_PREFIX))
             .unwrap_or(false)
     };
 
-    let stdout = String::from_utf8_lossy(&output.stdout);
-    let mut entries: Vec<DirEntry> = stdout
-        .lines()
-        .filter(|line| !line.is_empty())
-        .filter_map(|line| build_dir_entry(PathBuf::from(line)).ok())
-        .filter(|entry| entry.metadata.is_file)
-        .filter(|entry| !is_app_file(entry))
-        .collect();
+    let mut entries = Vec::new();
+    let mut newer_than_days = None;
+
+    for oldest_days in RECENTS_WINDOWS_DAYS {
+        let upper_bound = newer_than_days
+            .map(|days| format!(" && kMDItemFSContentChangeDate < $time.today(-{days})"))
+            .unwrap_or_default();
+        let query = format!(
+            "kMDItemFSContentChangeDate >= $time.today(-{oldest_days}){upper_bound} && kMDItemContentTypeTree == 'public.data'"
+        );
+        let output = std::process::Command::new("mdfind")
+            .arg("-onlyin")
+            .arg(&home)
+            .arg(query)
+            .output()
+            .map_err(|error| error.to_string())?;
+
+        if !output.status.success() {
+            let error = String::from_utf8_lossy(&output.stderr).trim().to_string();
+            return Err(if error.is_empty() {
+                format!("mdfind failed with status {}", output.status)
+            } else {
+                error
+            });
+        }
+
+        entries.extend(
+            String::from_utf8_lossy(&output.stdout)
+                .lines()
+                .filter(|line| !line.is_empty())
+                .map(PathBuf::from)
+                .filter(|path| !is_app_path(path))
+                .filter_map(|path| build_dir_entry(path).ok())
+                // Defensive: the Spotlight type predicate should already exclude directories.
+                .filter(|entry| entry.metadata.is_file),
+        );
+
+        if entries.len() >= RECENTS_LIMIT {
+            break;
+        }
+        newer_than_days = Some(oldest_days);
+    }
 
     // Newest first, then cap.
     entries.sort_by(|a, b| b.metadata.modified.cmp(&a.metadata.modified));

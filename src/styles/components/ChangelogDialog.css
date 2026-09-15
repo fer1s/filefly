@@ -1,0 +1,80 @@
+.changelog_modal {
+  width: var(--size-changelog-width);
+  max-width: calc(100vw - var(--space-8));
+}
+
+.changelog_modal .changelog_body {
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.changelog_modal .changelog_toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.changelog_modal .changelog_version {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.changelog_modal .changelog_select {
+  flex-shrink: 0;
+}
+
+/* Rendered release notes: a scrolling column with compact markdown typography. */
+.changelog_modal .changelog_content {
+  max-height: var(--size-changelog-max-height);
+  overflow-y: auto;
+  padding-right: var(--space-2);
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+
+.changelog_modal .changelog_content h3 {
+  margin: var(--space-3) 0 var(--space-1-5);
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.changelog_modal .changelog_content h3:first-child {
+  margin-top: 0;
+}
+
+.changelog_modal .changelog_content ul {
+  margin: 0;
+  padding-left: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.changelog_modal .changelog_content code {
+  padding: 0 var(--space-1);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-surface-input);
+  color: var(--color-text-primary);
+  font-family: var(--font-mono, monospace);
+  font-size: var(--font-size-xs);
+}
+
+.changelog_modal .changelog_content a {
+  color: var(--color-accent);
+}
+
+.changelog_modal .dialog_actions {
+  margin-top: var(--space-2);
+  padding-top: var(--space-4);
+  border-top: var(--border-width-default) solid var(--color-border-default);
+}
+
+.changelog_modal .changelog_release {
+  margin-right: auto;
+}

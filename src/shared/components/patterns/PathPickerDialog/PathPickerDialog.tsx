@@ -5,7 +5,6 @@ import DialogHeader from "@/shared/components/patterns/DialogHeader";
 import DialogActions from "@/shared/components/patterns/DialogActions";
 import Button from "@/shared/components/elements/Button";
 import Icon from "@/shared/components/elements/Icon";
-import { useCloseOnEscape } from "@/shared/hooks/useCloseOnEscape";
 import { useStateContext } from "@/shared/providers/StateProvider";
 import { classNames, dirname } from "@/shared/utils";
 import { t } from "@/lang";
@@ -53,8 +52,6 @@ const PathPickerDialog = ({
   onChoose,
   onClose,
 }: PathPickerDialogProps) => {
-  useCloseOnEscape(visible, onClose);
-
   const { fs } = useStateContext();
   const isFileMode = config.kind === PICK_KIND.FILE;
 
@@ -169,9 +166,9 @@ const PathPickerDialog = ({
   return (
     <Dialog
       visible={visible}
+      title={config.title}
       onClose={onClose}
       className="folder_picker"
-      labelledBy={PATH_PICKER_TITLE_ID}
     >
       <DialogHeader
         title={config.title}

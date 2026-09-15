@@ -46,9 +46,12 @@ export const useAppSettings = () => {
   useEffect(() => {
     getSettings()
       .then((loaded) => {
-        latest.current = loaded;
+        // Merge over the defaults: a backend older than this frontend (dev HMR mid-upgrade, or a
+        // hand-edited file) can omit newer keys, which would otherwise surface as `undefined`.
+        const merged = { ...DEFAULT_SETTINGS, ...loaded };
+        latest.current = merged;
         hydrated.current = true;
-        setSettingsState(loaded);
+        setSettingsState(merged);
       })
       .catch((error) => {
         hydrated.current = true;

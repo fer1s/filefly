@@ -62,14 +62,20 @@
   transition: all 0.2s ease-in-out;
 }
 
-/* Soft-primary hover: a faint accent-tinted fill with accent label/icon, matching IconButton's
-   ghost hover (and the sidebar rows). Danger items override this with their solid-red hover below. */
-.context_menu .context_menu_item.ctx_button:hover:not(:disabled) {
+/* Soft-primary hover/focus: a faint accent-tinted fill with accent label/icon, matching
+   IconButton's ghost hover (and the sidebar rows). Danger items override this below. */
+.context_menu .context_menu_item.ctx_button:hover:not(:disabled),
+.context_menu .context_menu_item.ctx_button:focus:not(:disabled) {
   background-color: var(--color-selection-hover);
   color: var(--color-accent);
 }
 
-.context_menu .context_menu_item.ctx_button:hover:not(:disabled) svg {
+.context_menu .context_menu_item.ctx_button:focus {
+  outline: none;
+}
+
+.context_menu .context_menu_item.ctx_button:hover:not(:disabled) svg,
+.context_menu .context_menu_item.ctx_button:focus:not(:disabled) svg {
   color: var(--color-accent);
 }
 
@@ -108,24 +114,30 @@
   color: var(--color-danger);
 }
 
-/* On hover the row fills with the solid danger colour (saturated red, ≈5.8:1 under white) in both
-   themes, so every part of the row — label, icon, and the hotkey glyphs (which otherwise stay
-   text-muted, dark and unreadable in light mode) — flips to a light on-danger colour.
+/* On hover/focus the row fills with the solid danger colour (saturated red, ≈5.8:1 under white)
+   in both themes, so every part of the row — label, icon, and the hotkey glyphs (which otherwise
+   stay text-muted, dark and unreadable in light mode) — flips to a light on-danger colour.
    Uses --color-danger-solid, not --color-danger-surface: the latter is a faint tint (for red-text-
    on-tint hovers like the close button) and washes out under white text. */
-.context_menu .context_menu_item.ctx_button.ctx_danger:hover:not(:disabled) {
+.context_menu .context_menu_item.ctx_button.ctx_danger:hover:not(:disabled),
+.context_menu .context_menu_item.ctx_button.ctx_danger:focus:not(:disabled) {
   background-color: var(--color-danger-solid);
 }
 
 .context_menu .context_menu_item.ctx_button.ctx_danger:hover:not(:disabled),
+.context_menu .context_menu_item.ctx_button.ctx_danger:focus:not(:disabled),
+.context_menu .context_menu_item.ctx_button.ctx_danger:hover:not(:disabled) svg,
 .context_menu
-  .context_menu_item.ctx_button.ctx_danger:hover:not(:disabled)
+  .context_menu_item.ctx_button.ctx_danger:focus:not(:disabled)
   svg {
   color: var(--color-text-on-solid);
 }
 
 .context_menu
   .context_menu_item.ctx_button.ctx_danger:hover:not(:disabled)
+  .ctx_hotkey,
+.context_menu
+  .context_menu_item.ctx_button.ctx_danger:focus:not(:disabled)
   .ctx_hotkey {
   color: var(--color-text-on-solid-muted);
 }

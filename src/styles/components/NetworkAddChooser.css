@@ -1,0 +1,41 @@
+.NetworkAddChooser .network_chooser_options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+}
+
+.NetworkAddChooser .network_chooser_option {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  column-gap: var(--space-3);
+  row-gap: var(--space-1);
+  align-items: center;
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  border: var(--border-width-default) solid var(--color-border-default);
+  border-radius: var(--radius-md);
+}
+
+.NetworkAddChooser .network_chooser_option:hover {
+  border-color: var(--color-accent);
+  background: var(--color-selection-hover);
+}
+
+.NetworkAddChooser .network_chooser_option > .Icon,
+.NetworkAddChooser .network_chooser_option > svg {
+  grid-row: 1 / span 2;
+  font-size: var(--font-size-lg);
+  color: var(--color-text-dim);
+}
+
+.NetworkAddChooser .network_chooser_label {
+  font-size: var(--font-size-md);
+  color: var(--color-text-primary);
+}
+
+.NetworkAddChooser .network_chooser_hint {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-dim);
+}

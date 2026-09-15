@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
+import Slider from "@/shared/components/elements/Slider";
 import { useDebouncedCallback } from "@/shared/hooks/useDebouncedCallback";
 
 import { RANGE_COMMIT_DEBOUNCE_MS } from "../constants";
@@ -32,8 +33,7 @@ const RangeControl = ({ descriptor, settings, update }: RangeControlProps) => {
 
   return (
     <span className="settings_range_control">
-      <input
-        type="range"
+      <Slider
         className="settings_range"
         min={descriptor.min}
         max={descriptor.max}

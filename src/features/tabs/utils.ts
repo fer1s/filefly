@@ -39,7 +39,7 @@ const activeTabKey = (): string => `${ACTIVE_TAB_STORAGE_KEY}${windowSuffix()}`;
 // inherit the current tab's panel state so opening one feels continuous.
 export const makeTab = (path: string, infoPanelOpen = false): Tab => ({
   id: crypto.randomUUID(),
-  history: { stack: [path], index: 0 },
+  history: { stack: [path], index: 0, scrollPositions: [0] },
   search: "",
   filters: DEFAULT_FILTERS,
   infoPanelOpen,
@@ -49,15 +49,72 @@ export const makeTab = (path: string, infoPanelOpen = false): Tab => ({
 export const tabPath = (tab: Tab): string =>
   tab.history.stack[tab.history.index];
 
+const normaliseScrollPositions = (tab: Tab): number[] =>
+  tab.history.stack.map((_, index) => {
+    const position = tab.history.scrollPositions?.[index];
+    return typeof position === "number" && Number.isFinite(position)
+      ? Math.max(0, position)
+      : 0;
+  });
+
+export const tabScrollPosition = (tab: Tab): number =>
+  normaliseScrollPositions(tab)[tab.history.index] ?? 0;
+
+// Commit the live directory scroll before leaving an entry. Directory reports scroll through a
+// ref, so ordinary scrolling does not rerender the whole app or rewrite localStorage every frame.
+export const setTabScrollPosition = (tab: Tab, position: number): Tab => {
+  const scrollPositions = normaliseScrollPositions(tab);
+  const nextPosition = Math.max(0, position);
+  if (scrollPositions[tab.history.index] === nextPosition) return tab;
+  scrollPositions[tab.history.index] = nextPosition;
+  return { ...tab, history: { ...tab.history, scrollPositions } };
+};
+
+// Matches PathBar's Up behavior: local absolute paths stop at "/"; relative and virtual roots at
+// "". Remote paths retain their scheme/connection prefix because only the final slash is removed.
+export const isParentNavigation = (current: string, next: string): boolean => {
+  if (!current || current === "/" || current === RECENTS || isTagsPath(current))
+    return false;
+  const trimmed = current.replace(/\/+$/, "");
+  const separator = trimmed.lastIndexOf("/");
+  let parent = "";
+  if (separator > 0) parent = trimmed.slice(0, separator);
+  else if (current.startsWith("/")) parent = "/";
+  return next === parent;
+};
+
 // Navigate the tab to `path`: truncate any forward history and push the new entry. Clears the
-// tab's search (a new location starts unfiltered). No-op when already there.
-export const navigateTab = (tab: Tab, path: string): Tab => {
+// tab's search (a new location starts unfiltered). A new entry normally starts at scroll 0; when
+// `restoreKnownScroll` is true, it copies the latest known position for that path.
+export const navigateTab = (
+  tab: Tab,
+  path: string,
+  restoreKnownScroll = false,
+): Tab => {
   const { stack, index } = tab.history;
   if (stack[index] === path) return tab;
   const nextStack = [...stack.slice(0, index + 1), path];
+  const scrollPositions = normaliseScrollPositions(tab);
+  let nextScrollPosition = 0;
+  if (restoreKnownScroll) {
+    for (let i = index; i >= 0; i--) {
+      if (stack[i] === path) {
+        nextScrollPosition = scrollPositions[i];
+        break;
+      }
+    }
+  }
+  const nextScrollPositions = [
+    ...scrollPositions.slice(0, index + 1),
+    nextScrollPosition,
+  ];
   return {
     ...tab,
-    history: { stack: nextStack, index: nextStack.length - 1 },
+    history: {
+      stack: nextStack,
+      index: nextStack.length - 1,
+      scrollPositions: nextScrollPositions,
+    },
     search: "",
     filters: DEFAULT_FILTERS,
   };
@@ -109,7 +166,12 @@ const isTab = (value: unknown): value is Tab => {
     history !== null &&
     Array.isArray(history.stack) &&
     history.stack.every((entry) => typeof entry === "string") &&
-    typeof history.index === "number"
+    typeof history.index === "number" &&
+    (history.scrollPositions === undefined ||
+      (Array.isArray(history.scrollPositions) &&
+        history.scrollPositions.every(
+          (position) => typeof position === "number",
+        )))
   );
 };
 
@@ -188,6 +250,15 @@ export const loadTabs = (): Tab[] => {
       if (Array.isArray(parsed) && parsed.length > 0 && parsed.every(isTab))
         return parsed.map((tab) => ({
           ...tab,
+          history: {
+            ...tab.history,
+            scrollPositions: tab.history.stack.map((_, index) => {
+              const position = tab.history.scrollPositions?.[index];
+              return typeof position === "number" && Number.isFinite(position)
+                ? Math.max(0, position)
+                : 0;
+            }),
+          },
           infoPanelOpen: tab.infoPanelOpen ?? false,
           filters: isSearchFilters(tab.filters) ? tab.filters : DEFAULT_FILTERS,
         }));

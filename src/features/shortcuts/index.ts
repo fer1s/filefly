@@ -1,1 +1,1 @@
-export { default } from "./ShortcutsDialog";
+export { default } from "./ShortcutsDialogHost";

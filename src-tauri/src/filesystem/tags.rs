@@ -205,9 +205,7 @@ mod imp {
 // showing — so reading the per-file xattr never touches the `read_directory` hot path. Runs on a
 // blocking thread (xattr reads are syscalls).
 #[tauri::command]
-pub async fn get_tags_for(
-    paths: Vec<String>,
-) -> Result<HashMap<String, Vec<Tag>>, String> {
+pub async fn get_tags_for(paths: Vec<String>) -> Result<HashMap<String, Vec<Tag>>, String> {
     tauri::async_runtime::spawn_blocking(move || {
         paths
             .into_iter()

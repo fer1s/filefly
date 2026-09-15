@@ -1,5 +1,5 @@
 use std::collections::BTreeMap;
-use std::path::PathBuf;
+use std::path::Path;
 
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
@@ -21,7 +21,11 @@ pub struct SidebarGroup {
     items: Vec<String>,
     // Stable ids of built-in preset rows the user has hidden (see PRESET_ID on the frontend).
     // Presets can't be deleted (we couldn't re-create them), only hidden; edit mode toggles this.
-    #[serde(rename = "hiddenPresets", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "hiddenPresets",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     hidden_presets: Vec<String>,
     // True for user-created groups (vs the built-in pinned/volumes/network/tags). Only custom
     // groups can be deleted; deleting one drops the whole entry, taking its items with it.
@@ -36,28 +40,49 @@ fn is_false(b: &bool) -> bool {
 // group id -> group settings. A BTreeMap keeps the file stably ordered (nicer diffs).
 pub type SidebarConfig = BTreeMap<String, SidebarGroup>;
 
-fn config_path(app: &AppHandle) -> Result<PathBuf, String> {
-    Ok(app
-        .path()
-        .app_config_dir()
-        .map_err(|e| e.to_string())?
-        .join("sidebar.toml"))
-}
+// sidebar.toml lives directly in the app config dir.
+const SIDEBAR_FILE: &str = "sidebar.toml";
 
-fn read_config(app: &AppHandle) -> SidebarConfig {
-    match config_path(app).and_then(|p| std::fs::read_to_string(p).map_err(|e| e.to_string())) {
+// Read sidebar.toml from a given config dir (empty config when absent/unreadable). Dir-based so the
+// headless `sfb` CLI shares this exact core (see ARCHITECTURE_RULES / sfb config paths).
+pub fn read_config_from(config_dir: &Path) -> SidebarConfig {
+    match std::fs::read_to_string(config_dir.join(SIDEBAR_FILE)) {
         Ok(content) => toml::from_str(&content).unwrap_or_default(),
         Err(_) => SidebarConfig::new(),
     }
 }
 
-fn write_config(app: &AppHandle, config: &SidebarConfig) -> Result<(), String> {
+// Write sidebar.toml into a given config dir, creating it if needed.
+pub fn write_config_to(config_dir: &Path, config: &SidebarConfig) -> Result<(), String> {
     let serialized = toml::to_string_pretty(config).map_err(|e| e.to_string())?;
-    let target = config_path(app)?;
-    if let Some(parent) = target.parent() {
-        std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+    std::fs::create_dir_all(config_dir).map_err(|e| e.to_string())?;
+    std::fs::write(config_dir.join(SIDEBAR_FILE), serialized).map_err(|e| e.to_string())
+}
+
+// Append an item path to a group (creating the group entry if new), preserving its other settings
+// and every other group. No-ops (returns false) when the path is already saved, so it's idempotent.
+// Shared by the GUI and the `sfb` CLI.
+pub fn add_item_to(config_dir: &Path, group_id: &str, item: String) -> Result<bool, String> {
+    let mut config = read_config_from(config_dir);
+    let group = config.entry(group_id.to_string()).or_default();
+    if group.items.contains(&item) {
+        return Ok(false);
     }
-    std::fs::write(target, serialized).map_err(|e| e.to_string())
+    group.items.push(item);
+    write_config_to(config_dir, &config)?;
+    Ok(true)
+}
+
+fn read_config(app: &AppHandle) -> SidebarConfig {
+    match app.path().app_config_dir() {
+        Ok(dir) => read_config_from(&dir),
+        Err(_) => SidebarConfig::new(),
+    }
+}
+
+fn write_config(app: &AppHandle, config: &SidebarConfig) -> Result<(), String> {
+    let dir = app.path().app_config_dir().map_err(|e| e.to_string())?;
+    write_config_to(&dir, config)
 }
 
 // All saved sidebar group settings (empty map when sidebar.toml is absent). The frontend merges
@@ -107,7 +132,12 @@ pub fn set_hidden_presets(app: AppHandle, id: String, presets: Vec<String>) -> R
 // Create a user group with a generated id, a display name and a display position. Marked `custom`
 // so the UI knows it can be renamed and deleted (built-in groups can't be deleted).
 #[tauri::command]
-pub fn add_sidebar_group(app: AppHandle, id: String, name: String, order: u32) -> Result<(), String> {
+pub fn add_sidebar_group(
+    app: AppHandle,
+    id: String,
+    name: String,
+    order: u32,
+) -> Result<(), String> {
     let mut config = read_config(&app);
     let group = config.entry(id).or_default();
     group.custom = true;

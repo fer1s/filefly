@@ -4,7 +4,6 @@ import Dialog from "@/shared/components/patterns/Dialog";
 import DialogHeader from "@/shared/components/patterns/DialogHeader";
 import DialogActions from "@/shared/components/patterns/DialogActions";
 import Button from "@/shared/components/elements/Button";
-import { useCloseOnEscape } from "@/shared/hooks/useCloseOnEscape";
 import { classNames } from "@/shared/utils";
 import { KEY } from "@/shared/constants";
 import { t } from "@/lang";
@@ -27,8 +26,6 @@ const ConfirmationDialog = ({
   onConfirm,
   onClose,
 }: ConfirmationDialogProps) => {
-  useCloseOnEscape(visible, onClose);
-
   // Enter always accepts (Confirm) — it's the dialog's default action. Even the focus the dialog
   // grabs on open (its close button) shouldn't steal it, so this preventDefaults and confirms
   // regardless of what's focused. The only exception is a text field in `extra`, where Enter needs
@@ -68,9 +65,9 @@ const ConfirmationDialog = ({
   return (
     <Dialog
       visible={visible}
+      title={content.title}
       onClose={onClose}
       className="confirmation_modal"
-      labelledBy={CONFIRMATION_TITLE_ID}
     >
       <DialogHeader
         title={content.title}

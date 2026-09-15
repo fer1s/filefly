@@ -1,60 +1,70 @@
-use std::collections::HashMap;
+//! Tauri layer over the context-menu contract. The TOML model, validation and the action
+//! execution core live in `filesystem::actions` so the `sfb` CLI runs the very same code; this
+//! module only resolves app paths, moves the work off the main thread and emits the change event.
 
-use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, Manager};
+use std::path::PathBuf;
 
-// Ordered list of action ids shown for an entry kind (the literal "separator" draws a divider).
-#[derive(Debug, Default, Serialize, Deserialize)]
-pub struct ActionList {
-    #[serde(default)]
-    actions: Vec<String>,
+use tauri::{AppHandle, Emitter, Manager};
+
+use crate::filesystem::actions;
+
+pub use crate::filesystem::actions::{ActionList, ContextMenu, CustomAction, FileType};
+
+const CONTEXT_MENU_CHANGED_EVENT: &str = "context-menu-changed";
+
+fn config_dir(app: &AppHandle) -> Result<PathBuf, String> {
+    app.path().app_config_dir().map_err(|e| e.to_string())
 }
 
-// A file-type rule: files whose extension matches use these actions instead of [file].
-#[derive(Debug, Default, Serialize, Deserialize)]
-pub struct FileType {
-    #[serde(default)]
-    extensions: Vec<String>,
-    #[serde(default)]
-    actions: Vec<String>,
-}
-
-// The full context-menu layout. Field names match the TOML table names and are sent to the
-// frontend as-is (snake_case).
-#[derive(Debug, Default, Serialize, Deserialize)]
-pub struct ContextMenu {
-    #[serde(default)]
-    directory: ActionList,
-    #[serde(default)]
-    folder: ActionList,
-    #[serde(default)]
-    file: ActionList,
-    // Entries shown while browsing the Trash (Restore / permanent delete instead of Move-to-Trash).
-    #[serde(default)]
-    trash: ActionList,
-    #[serde(default)]
-    file_type: HashMap<String, FileType>,
-}
-
-// Bundled defaults, used when the user has no context_menu.toml yet (or it can't be read).
-const DEFAULT_CONTEXT_MENU: &str = include_str!("../../context_menu.default.toml");
-
-fn parse(content: &str) -> Result<ContextMenu, String> {
-    toml::from_str(content).map_err(|e| e.to_string())
+fn load(app: &AppHandle) -> Result<ContextMenu, String> {
+    actions::load_core(&config_dir(app)?)
 }
 
 // Load the context-menu layout: the user's `context_menu.toml` in the app config dir if
 // present, otherwise the bundled defaults.
 #[tauri::command]
-pub fn get_context_menu(app: AppHandle) -> Result<ContextMenu, String> {
-    let path = app
-        .path()
-        .app_config_dir()
-        .map_err(|e| e.to_string())?
-        .join("context_menu.toml");
+pub async fn get_context_menu(app: AppHandle) -> Result<ContextMenu, String> {
+    tauri::async_runtime::spawn_blocking(move || load(&app))
+        .await
+        .map_err(|error| error.to_string())?
+}
 
-    match std::fs::read_to_string(&path) {
-        Ok(content) => parse(&content),
-        Err(_) => parse(DEFAULT_CONTEXT_MENU),
-    }
+// Persist the complete layout and custom-action list. Settings owns editing, while this module
+// owns validation and the on-disk context_menu.toml contract.
+#[tauri::command]
+pub async fn set_context_menu(
+    app: AppHandle,
+    mut menu: ContextMenu,
+) -> Result<ContextMenu, String> {
+    actions::normalize(&mut menu)?;
+    let target = actions::config_path(&config_dir(&app)?);
+    let serialized = toml::to_string_pretty(&menu).map_err(|error| error.to_string())?;
+    tauri::async_runtime::spawn_blocking(move || {
+        if let Some(parent) = target.parent() {
+            std::fs::create_dir_all(parent).map_err(|error| error.to_string())?;
+        }
+        std::fs::write(target, serialized).map_err(|error| error.to_string())
+    })
+    .await
+    .map_err(|error| error.to_string())??;
+    app.emit(CONTEXT_MENU_CHANGED_EVENT, menu.clone())
+        .map_err(|error| error.to_string())?;
+    Ok(menu)
+}
+
+// Execute a saved action by id (see `filesystem::actions::run_action_core` for the argv contract).
+#[tauri::command]
+pub async fn run_context_action(
+    app: AppHandle,
+    action_id: String,
+    clicked_path: String,
+    paths: Vec<String>,
+) -> Result<(), String> {
+    let config_dir = config_dir(&app)?;
+    let home = app.path().home_dir().map_err(|error| error.to_string())?;
+    tauri::async_runtime::spawn_blocking(move || {
+        actions::run_action_core(&config_dir, &home, &action_id, &clicked_path, &paths).map(|_| ())
+    })
+    .await
+    .map_err(|error| error.to_string())?
 }

@@ -149,6 +149,45 @@ fn run_action(app: &AppHandle, action: &str, args: &Value) -> Result<Value, Stri
             // `debug` lets a caller discover whether the introspection surface (probe) is available.
             Ok(json!({ "windows": windows, "debug": is_debug_mode() }))
         }
+        // Authoritative window list straight from Tauri (every webview window, including hidden ones
+        // and panels like the detached preview that don't mirror UI state via get-state). Reports
+        // each window's label, loaded URL, visibility and focus — the ground truth for "how many
+        // windows are open and what is each one" when debugging window creation/reveal.
+        "windows" => {
+            let windows = app.webview_windows();
+            let list: Vec<Value> = windows
+                .values()
+                .map(|w| {
+                    json!({
+                        "label": w.label(),
+                        "url": w.url().map(|u| u.to_string()).unwrap_or_default(),
+                        "title": w.title().unwrap_or_default(),
+                        "visible": w.is_visible().unwrap_or(false),
+                        "focused": w.is_focused().unwrap_or(false),
+                    })
+                })
+                .collect();
+            Ok(json!({ "count": list.len(), "windows": list }))
+        }
+        // Open the detached preview window for a file (same path the openPreviewInWindow setting
+        // takes). Lets a caller reproduce/verify the preview-window flow headlessly.
+        "preview" => {
+            let path = args
+                .get("path")
+                .and_then(Value::as_str)
+                .ok_or("preview requires args.path")?
+                .to_string();
+            preview_window_on_main(app, path)
+        }
+        // Open the detached properties window for an entry (the openPropertiesInWindow flow).
+        "properties" => {
+            let path = args
+                .get("path")
+                .and_then(Value::as_str)
+                .ok_or("properties requires args.path")?
+                .to_string();
+            properties_window_on_main(app, path)
+        }
         // Navigate the focused window's active tab to `path` (best-effort; applied in the frontend).
         "navigate" => {
             let path = args
@@ -175,8 +214,12 @@ fn run_action(app: &AppHandle, action: &str, args: &Value) -> Result<Value, Stri
             let id = control.probe_seq.fetch_add(1, Ordering::SeqCst) + 1;
             *control.probe_result.lock().unwrap() = None;
             let window = crate::window::target_window(app).ok_or("no open window to probe")?;
-            app.emit_to(window.label(), "control://probe", json!({ "id": id, "args": args }))
-                .map_err(|error| error.to_string())?;
+            app.emit_to(
+                window.label(),
+                "control://probe",
+                json!({ "id": id, "args": args }),
+            )
+            .map_err(|error| error.to_string())?;
             // Poll for the reply (the webview needs a moment to hit-test the DOM and answer).
             for _ in 0..150 {
                 std::thread::sleep(std::time::Duration::from_millis(20));
@@ -237,6 +280,42 @@ fn open_window_on_main(app: &AppHandle, path: String) -> Result<Value, String> {
     .map_err(|error| error.to_string())?;
     rx.recv().map_err(|error| error.to_string())??;
     Ok(json!({ "opened": path }))
+}
+
+// Open the detached preview window for `file`. Window creation must run on the main thread; hop
+// there and wait for the Result via a channel.
+#[cfg(unix)]
+fn preview_window_on_main(app: &AppHandle, file: String) -> Result<Value, String> {
+    let (tx, rx) = std::sync::mpsc::channel();
+    let app_for_main = app.clone();
+    let file_for_main = file.clone();
+    app.run_on_main_thread(move || {
+        let result = crate::window::create_preview_window(&app_for_main, &file_for_main)
+            .map(|_| ())
+            .map_err(|error| error.to_string());
+        let _ = tx.send(result);
+    })
+    .map_err(|error| error.to_string())?;
+    rx.recv().map_err(|error| error.to_string())??;
+    Ok(json!({ "preview": file }))
+}
+
+// Open the detached properties window for `path`. Window creation must run on the main thread; hop
+// there and wait for the Result via a channel.
+#[cfg(unix)]
+fn properties_window_on_main(app: &AppHandle, path: String) -> Result<Value, String> {
+    let (tx, rx) = std::sync::mpsc::channel();
+    let app_for_main = app.clone();
+    let path_for_main = path.clone();
+    app.run_on_main_thread(move || {
+        let result = crate::window::create_properties_window(&app_for_main, &path_for_main)
+            .map(|_| ())
+            .map_err(|error| error.to_string());
+        let _ = tx.send(result);
+    })
+    .map_err(|error| error.to_string())?;
+    rx.recv().map_err(|error| error.to_string())??;
+    Ok(json!({ "properties": path }))
 }
 
 // Reveal `file` in a new window (parent folder + the file selected). Window creation must run on
