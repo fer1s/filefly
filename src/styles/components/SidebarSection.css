@@ -50,9 +50,14 @@
 }
 
 .SideBar .SidebarSection .section_title h2 {
+  min-width: 0;
   font-size: var(--font-size-base);
   font-weight: 500;
   color: inherit;
+  /* Clip (never wrap or spill over the chevron) while the sidebar width animates open. */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Delete button on custom group headers (edit mode only). Danger-tinted like item removal. */
@@ -109,8 +114,10 @@
   transition: none;
 }
 
-/* Chevron toggle button, points down when open and right when collapsed. */
+/* Chevron toggle button, points down when open and right when collapsed. flex-shrink:0 keeps it
+   at full size while the title clips during the sidebar width animation. */
 .SideBar .SidebarSection .section_chevron {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   background-color: transparent;

@@ -52,4 +52,7 @@ export const SIDEBAR_MENU_LAYOUT: Record<SidebarItemKind, readonly string[]> = {
     ACTION_SEPARATOR,
     SIDEBAR_ACTION.EMPTY_TRASH,
   ],
+  // A saved SMB location has no real filesystem path until it's mounted, so the folder actions
+  // (open-in-tab, terminal, properties) don't apply. It's managed via edit mode (remove) instead.
+  [SIDEBAR_ITEM_KIND.SMB]: [],
 };

@@ -1,8 +1,8 @@
 import { useRef, useState, useEffect, useCallback } from "react";
 import { convertFileSrc } from "@tauri-apps/api/core";
-import IconButton, {
-  ICON_BUTTON_SIZE,
-} from "@/shared/components/elements/IconButton";
+import IconButton from "@/shared/components/elements/IconButton";
+import PreviewControls from "../PreviewControls/PreviewControls";
+import Slider from "@/shared/components/elements/Slider";
 import {
   SPACE_HOTKEY,
   useHotkey,
@@ -25,7 +25,15 @@ import { DEFAULT_VOLUME } from "./constants";
 import { formatTime } from "./utils";
 import type { AudioPreviewProps } from "./types";
 
-const AudioPreview = ({ isVisible, filePath }: AudioPreviewProps) => {
+const AudioPreview = ({
+  isVisible,
+  filePath,
+  onPrev,
+  onNext,
+  hasPrev,
+  hasNext,
+  onDelete,
+}: AudioPreviewProps) => {
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
@@ -34,6 +42,8 @@ const AudioPreview = ({ isVisible, filePath }: AudioPreviewProps) => {
   const [progress, setProgress] = useState<number>(0);
   const [duration, setDuration] = useState<number>(0);
   const [volume, setVolume] = useState<number>(DEFAULT_VOLUME);
+  const playedFraction =
+    duration > 0 ? Math.min(1, Math.max(0, progress / duration)) : 0;
 
   const togglePlay = useCallback(() => {
     setIsPlaying((prev) => !prev);
@@ -50,7 +60,11 @@ const AudioPreview = ({ isVisible, filePath }: AudioPreviewProps) => {
     if (!audioRef.current) return;
 
     setProgress(audioRef.current.currentTime);
-    setDuration(audioRef.current.duration);
+    setDuration(
+      Number.isFinite(audioRef.current.duration)
+        ? audioRef.current.duration
+        : 0,
+    );
   };
 
   const handleVolumeButtonClick = () => {
@@ -77,27 +91,38 @@ const AudioPreview = ({ isVisible, filePath }: AudioPreviewProps) => {
   });
 
   return (
-    <div className={classNames("audio_preview", isVisible && "visible")}>
+    <PreviewControls
+      className={classNames("audio_preview", isVisible && "visible")}
+      onPrev={onPrev}
+      onNext={onNext}
+      hasPrev={hasPrev}
+      hasNext={hasNext}
+      onDelete={onDelete}
+    >
       <audio
-        controls
-        src={convertFileSrc(filePath)}
+        src={filePath ? convertFileSrc(filePath) : undefined}
         ref={audioRef}
         onTimeUpdate={handleTimeUpdate}
+        onLoadedMetadata={handleTimeUpdate}
+        onEnded={() => setIsPlaying(false)}
       />
       <IconButton
         icon={isPlaying ? faPause : faPlay}
-        size={ICON_BUTTON_SIZE.LG}
+        disabled={!filePath}
+        aria-label={isPlaying ? t.common.pause : t.common.play}
         tooltip={isPlaying ? t.common.pause : t.common.play}
         hotkey={SPACE_HOTKEY}
         onClick={togglePlay}
       />
       <div className="progress">
         <span className="currentTime">{formatTime(progress)}</span>
-        <input
-          type="range"
+        <Slider
           min={0}
           max={duration}
           value={progress}
+          style={{ backgroundSize: `calc(${playedFraction} * 100%) 100%` }}
+          disabled={!duration}
+          aria-label={t.common.playbackPosition}
           onChange={handleProgress}
         />
         <span className="duration">{formatTime(duration)}</span>
@@ -105,7 +130,9 @@ const AudioPreview = ({ isVisible, filePath }: AudioPreviewProps) => {
       <div className="volume_control">
         <IconButton
           icon={faVolumeHigh}
-          size={ICON_BUTTON_SIZE.LG}
+          aria-label={t.common.volume}
+          tooltip={t.common.volume}
+          aria-expanded={isVolumeVisible}
           onClick={handleVolumeButtonClick}
         />
         <div
@@ -114,16 +141,16 @@ const AudioPreview = ({ isVisible, filePath }: AudioPreviewProps) => {
             isVolumeVisible && "visible",
           )}
         >
-          <input
-            type="range"
+          <Slider
             min={0}
             max={100}
             value={volume}
+            aria-label={t.common.volume}
             onChange={(e) => setVolume(Number(e.target.value))}
           />
         </div>
       </div>
-    </div>
+    </PreviewControls>
   );
 };
 

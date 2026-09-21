@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useStateContext } from "@/shared/providers/StateProvider";
 import { VIEW_MODE, type ViewMode } from "@/shared/constants";
 import {
-  ACCEPTED_PREVIEW_FORMATS,
+  isPreviewable,
   SORT_DIRECTION,
   type SortKey,
 } from "@/features/directory/constants";
@@ -105,9 +105,9 @@ export const useDirectoryEntries = (view: ViewMode) => {
       sorted.filter(
         (e) =>
           e.metadata.isFile &&
-          ACCEPTED_PREVIEW_FORMATS.includes(extension(e.name)),
+          isPreviewable(settings.fileTypeExtensions, extension(e.name)),
       ),
-    [sorted],
+    [sorted, settings.fileTypeExtensions],
   );
 
   return {

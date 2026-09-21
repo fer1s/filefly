@@ -1,0 +1,180 @@
+.onboarding_modal {
+  width: var(--size-onboarding-width);
+  max-width: calc(100vw - var(--space-8));
+}
+
+.onboarding_modal .onboarding_body {
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+/* Progress block under the content: dots + "Step n of m", centred. */
+.onboarding_modal .onboarding_steps {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1-5);
+  margin-top: var(--space-2);
+}
+
+/* Progress dots: one per page; the current one is accent, earlier ones dim accent. */
+.onboarding_modal .onboarding_progress {
+  display: flex;
+  gap: var(--space-1-5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.onboarding_modal .onboarding_dot {
+  width: var(--space-2);
+  height: var(--space-2);
+  border-radius: var(--radius-pill);
+  background-color: var(--color-border-strong);
+  transition: background-color 0.2s ease-in-out;
+}
+
+.onboarding_modal .onboarding_dot.done {
+  background-color: var(--color-accent);
+  opacity: 0.5;
+}
+
+.onboarding_modal .onboarding_dot.active {
+  background-color: var(--color-accent);
+}
+
+.onboarding_modal .onboarding_step_title {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.onboarding_modal .onboarding_step_description {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+/* Interactive rows under the copy (theme/accent, integration switches). */
+.onboarding_modal .onboarding_rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.onboarding_modal .onboarding_row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+}
+
+.onboarding_modal .onboarding_row_text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-0-5);
+  min-width: 0;
+}
+
+.onboarding_modal .onboarding_row_hint {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+/* Reused settings controls (the accent swatches are scoped to .settings_modal in
+   SettingsDialog.css, so mirror the swatch look here). */
+.onboarding_modal .settings_accents {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.onboarding_modal .settings_accent {
+  width: var(--space-4);
+  height: var(--space-4);
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-pill);
+  background-color: rgb(var(--swatch));
+  cursor: pointer;
+  transition: transform 0.08s ease;
+}
+
+.onboarding_modal .settings_accent:hover {
+  transform: scale(1.15);
+}
+
+.onboarding_modal .settings_accent.active {
+  outline: var(--border-width-accent) solid var(--color-text-primary);
+  outline-offset: var(--space-0-5);
+}
+
+/* Shortcut cheat rows: label left, key chip right. */
+.onboarding_modal .onboarding_shortcuts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1-5);
+  margin: 0;
+}
+
+.onboarding_modal .onboarding_shortcut {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.onboarding_modal .onboarding_shortcut dd {
+  margin: 0;
+}
+
+.onboarding_modal .onboarding_shortcut kbd {
+  padding: var(--space-0-5) var(--space-1-5);
+  border-radius: var(--radius-sm);
+  border: var(--border-width-default) solid var(--color-border-default);
+  background-color: var(--color-surface-input);
+  color: var(--color-text-primary);
+  font-family: inherit;
+  font-size: var(--font-size-xs);
+}
+
+.onboarding_modal .onboarding_show_again {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+/* Primary action (Next / Get started) carries the accent so the forward path reads first. */
+.onboarding_modal .onboarding_primary {
+  background-color: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-text-on-solid);
+}
+
+.onboarding_modal .onboarding_primary:hover {
+  background-color: var(--color-accent-hover, var(--color-accent));
+  border-color: var(--color-accent-hover, var(--color-accent));
+  color: var(--color-text-on-solid);
+}
+
+/* Footer breathes: the actions sit clear of the step content, above a hairline. */
+.onboarding_modal .dialog_actions {
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: var(--border-width-default) solid var(--color-border-default);
+}
+
+/* Skip sits apart from Back/Next on the left. */
+.onboarding_modal .onboarding_skip {
+  margin-right: auto;
+}

@@ -13,7 +13,11 @@ import { KEY } from "@/shared/constants";
 import "@/styles/components/Tooltip.css";
 
 import { TOOLTIP_GAP, TOOLTIP_PLACEMENT } from "./constants";
-import { computeTooltipPosition } from "./utils";
+import {
+  computeTooltipPosition,
+  getTooltipTriggerRect,
+  hasTooltipTriggerMoved,
+} from "./utils";
 import type { TooltipCoords, TooltipProps } from "./types";
 
 // Wraps a trigger and shows a floating hint on hover/focus. The body is either a simple
@@ -36,6 +40,7 @@ const Tooltip = ({
   const triggerRef = useRef<HTMLSpanElement>(null);
   const bubbleRef = useRef<HTMLSpanElement>(null);
   const showTimerRef = useRef<number | null>(null);
+  const initialTriggerRectRef = useRef<DOMRect | null>(null);
   const [open, setOpen] = useState(false);
   // True while the open is scheduled but not yet shown (delay window). Tracked so scroll/resize
   // can cancel a pending open too, not just an already-open bubble.
@@ -50,11 +55,7 @@ const Tooltip = ({
     const bubble = bubbleRef.current;
     if (!trigger || !bubble) return;
 
-    const wrapperRect = trigger.getBoundingClientRect();
-    const triggerRect =
-      wrapperRect.width || wrapperRect.height
-        ? wrapperRect
-        : trigger.firstElementChild?.getBoundingClientRect();
+    const triggerRect = getTooltipTriggerRect(trigger);
     if (!triggerRect) return;
 
     setCoords(
@@ -76,6 +77,10 @@ const Tooltip = ({
 
   const show = () => {
     if (disabled) return;
+    const trigger = triggerRef.current;
+    initialTriggerRectRef.current = trigger
+      ? (getTooltipTriggerRect(trigger) ?? null)
+      : null;
     if (delay <= 0) return setOpen(true);
     clearShowTimer();
     setPending(true);
@@ -90,7 +95,29 @@ const Tooltip = ({
     setPending(false);
     setOpen(false);
     setCoords(null);
+    initialTriggerRectRef.current = null;
   }, []);
+
+  // A keyed trigger can be moved without unmounting when its parent reorders children (for
+  // example, a directory row moving while folder sizes are being sorted). That move does not
+  // reliably emit mouseleave, so watch the trigger while visible/pending and dismiss the portal
+  // as soon as its geometry changes.
+  useEffect(() => {
+    if (!open && !pending) return;
+    const trigger = triggerRef.current;
+    const initialRect = initialTriggerRectRef.current;
+    if (!trigger || !initialRect) return;
+
+    let frame = requestAnimationFrame(function detectTriggerMove() {
+      if (hasTooltipTriggerMoved(trigger, initialRect)) {
+        hide();
+        return;
+      }
+      frame = requestAnimationFrame(detectTriggerMove);
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [open, pending, hide]);
 
   // Dismiss on Escape, clicking, scroll and resize, so the bubble can't be left orphaned: it
   // renders in a portal with coords measured once, so any layout shift (scrolling a container,

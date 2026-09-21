@@ -1,51 +1,31 @@
 import type { ReactNode } from "react";
+import type {
+  BindingOrList as CommandsBindingOrList,
+  HotkeyEntry as CommandsHotkeyEntry,
+  HotkeyHandler as CommandsHotkeyHandler,
+  HotkeyOptions as CommandsHotkeyOptions,
+  KeyBinding as CommandsKeyBinding,
+  Keymap as CommandsKeymap,
+} from "@sito/commands";
 
 import type { KeymapAction } from "./constants";
 import type { HotkeyScope } from "./scopes";
 
-export type KeyBinding = {
-  keys: string[];
-  // `mod` = Cmd (mac) / Ctrl (win-linux). `ctrl` = literally Control on every platform.
-  mod?: boolean;
-  ctrl?: boolean;
-  shift?: boolean;
-  alt?: boolean;
-};
-
-// An action's binding may be a single chord or several alternatives (e.g. Alt+Left *and* Cmd+[).
-export type BindingOrList = KeyBinding | KeyBinding[];
+export type KeyBinding = CommandsKeyBinding;
+export type BindingOrList = CommandsBindingOrList;
 
 // An action maps to a single chord, or several alternative chords (the user can bind more than one
 // shortcut to the same action — e.g. `[[nav_back]]` twice in keymap.toml).
-export type Keymap = Partial<Record<KeymapAction, KeyBinding | KeyBinding[]>>;
+export type Keymap = CommandsKeymap<KeymapAction>;
 
 // A hotkey handler. Returning `false` means "I didn't handle this" → the dispatcher falls through
 // to the next-best candidate (opt-in passthrough). Any other return consumes the event.
-export type HotkeyHandler = (event: KeyboardEvent) => void | boolean;
+export type HotkeyHandler = CommandsHotkeyHandler;
 
-// One registered hotkey. Either `action` (resolved against the live, rebindable keymap) or
+// One registered hotkey. Either `command` (resolved against the live, rebindable keymap) or
 // `hotkey` (a fixed binding, e.g. Escape / arrows) is set.
-export type HotkeyEntry = {
-  id: number;
-  action?: KeymapAction;
-  hotkey?: KeyBinding;
-  scope: HotkeyScope;
-  priority: number;
-  allowInInput: boolean;
-  handler: HotkeyHandler;
-};
-
-export type HotkeyOptions = {
-  scope?: HotkeyScope;
-  priority?: number; // tiebreak within a scope (default 0)
-  allowInInput?: boolean; // default false → ignored while typing in input/textarea/CE
-  when?: boolean; // only register while true (default true)
-};
-
-export type HotkeyContextValue = {
-  register: (entry: Omit<HotkeyEntry, "id">) => () => void;
-  pushScope: (scope: HotkeyScope) => () => void;
-};
+export type HotkeyEntry = CommandsHotkeyEntry<KeymapAction, HotkeyScope>;
+export type HotkeyOptions = CommandsHotkeyOptions<HotkeyScope>;
 
 export type KeymapContextValue = {
   keymap: Keymap;

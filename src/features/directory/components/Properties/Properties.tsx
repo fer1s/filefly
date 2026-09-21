@@ -3,7 +3,6 @@ import { useEffect } from "react";
 import Dialog from "@/shared/components/patterns/Dialog";
 import DialogHeader from "@/shared/components/patterns/DialogHeader";
 import { notify, TOAST_TYPE } from "@/shared/toast";
-import { useCloseOnEscape } from "@/shared/hooks/useCloseOnEscape";
 import { t } from "@/lang";
 
 import "@/styles/components/Properties.css";
@@ -13,8 +12,6 @@ import { PropertiesContent } from "./PropertiesContent";
 import type { PropertiesProps } from "./types";
 
 const Properties = ({ entry, visible, onClose }: PropertiesProps) => {
-  useCloseOnEscape(visible, onClose);
-
   // Confirm with a toast when the user copies selected text from the popup. The native copy
   // does the actual clipboard write; this only surfaces the feedback.
   useEffect(() => {
@@ -32,9 +29,9 @@ const Properties = ({ entry, visible, onClose }: PropertiesProps) => {
   return (
     <Dialog
       visible={visible}
+      title={t.properties.title}
       onClose={onClose}
       className="properties_modal"
-      labelledBy={PROPERTIES_TITLE_ID}
     >
       <DialogHeader
         title={t.properties.title}

@@ -1,11 +1,15 @@
 .PathBar {
   width: 100%;
-  margin-bottom: var(--space-5);
+  margin-bottom: var(--space-2-5);
+  flex-shrink: 0;
   display: flex;
   justify-content: center;
   align-items: center;
   gap: var(--space-2-5);
-  padding-left: var(--space-2);
+  padding: var(--space-2);
+  background-color: var(--color-overlay-soft);
+  border: var(--border-width-default) solid var(--color-border-default);
+  border-radius: var(--radius-md);
 }
 
 /* The generic .shadow class carries the heavy elevation shadow; in the path bar the controls only
@@ -16,15 +20,24 @@
 
 .PathBar .controls {
   display: flex;
+  flex-shrink: 0;
   justify-content: center;
   align-items: center;
   width: var(--size-path-controls);
   height: var(--size-control-large);
 }
 
-/* Info-panel and search toggles: highlight the button while active. */
+/* Give the permanent search field its own share of the row instead of a full-width path input. */
+.PathBar > .PathCrumbs,
+.PathBar > input,
+.PathBar > .path_label {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Highlight the selected view and the info-panel toggle while active. */
 .PathBar .info_toggle.active .IconButton,
-.PathBar .search_toggle.active .IconButton {
+.PathBar .view_toggle.active .IconButton {
   color: var(--color-text-primary);
   background-color: var(--color-overlay-active);
 }

@@ -5,7 +5,9 @@ import {
 import Icon from "@/shared/components/elements/Icon";
 import { useStateContext } from "@/shared/providers/StateProvider";
 import { extension } from "@/shared/utils";
+import { RECENTS } from "@/shared/constants";
 import { useKeymap, formatBinding, isMacPlatform } from "@/shared/keymap";
+import { customActionIcon } from "@/shared/contextActions";
 
 import { TagPicker } from "./TagPicker";
 
@@ -13,11 +15,17 @@ import {
   ENTRY_ACTIONS,
   ACTION_SEPARATOR,
   resolveActionIds,
+  resolveCustomActions,
   isActionVisible,
+  resolveActionIcon,
   type EntryActionContext,
   type EntryActionId,
 } from "../../actions";
+import { opensInAppPreview } from "../../constants";
+import { useFileTypeExtensions } from "../../formats";
 import { useContextMenuLayout } from "../../hooks/useContextMenuLayout";
+import { useArchiveActions } from "../../hooks/useArchiveActions";
+import { useSevenzipAvailable } from "@/shared/hooks/useSevenzipAvailable";
 import { useDirectory } from "../../providers/DirectoryProvider";
 
 import type { EntryContextMenuProps } from "./types";
@@ -29,6 +37,8 @@ const EntryContextMenu = ({
   contextMenuRef,
   visible,
   onClose,
+  actionIds: providedActionIds,
+  showTags = true,
   elementId,
   elementType,
   isCurrentDirectory,
@@ -40,10 +50,23 @@ const EntryContextMenu = ({
   onPreview,
   onProperties,
 }: EntryContextMenuProps) => {
-  const { fs, setPath, showHidden, toggleShowHidden } = useStateContext();
-  const { sort, handleSort } = useDirectory();
+  const {
+    fs,
+    path,
+    setPath,
+    newTab,
+    showHidden,
+    toggleShowHidden,
+    previewImagesInApp,
+    previewMarkdownInApp,
+  } = useStateContext();
+  const { onCompress, onExtract, onExtractToFolder } =
+    useArchiveActions(fileOps);
+  const sevenzipAvailable = useSevenzipAvailable();
+  const { sort, handleSort, searchActive, focusCreatedEntry } = useDirectory();
   const { keymap } = useKeymap();
   const layout = useContextMenuLayout();
+  const fileTypes = useFileTypeExtensions();
 
   // Act on the whole selection if the clicked item is part of it, otherwise just that item.
   const targets = selectedIDs.includes(elementId) ? selectedIDs : [elementId];
@@ -54,34 +77,63 @@ const EntryContextMenu = ({
     elementType,
     targets,
     isCurrentDirectory,
+    isDispersedView: path === RECENTS || searchActive,
     canPaste,
     fs,
     fileOps,
     setPath,
+    openInNewTab: newTab,
     onClose,
     onStartRename,
+    onEntryCreated: focusCreatedEntry,
     onPreview,
     onProperties,
+    onCompress,
+    onExtract,
+    onExtractToFolder,
+    sevenzipAvailable,
     sort,
     onSort: handleSort,
     showHidden,
     toggleShowHidden,
+    opensInAppPreview: opensInAppPreview(
+      fileExtension.toLowerCase(),
+      fileTypes,
+      previewImagesInApp,
+      previewMarkdownInApp,
+    ),
   };
 
-  const actionIds = resolveActionIds(layout, {
-    isCurrentDirectory,
-    inTrash,
-    elementType,
-    extension: fileExtension,
+  const actionIds =
+    providedActionIds ??
+    resolveActionIds(layout, {
+      isCurrentDirectory,
+      inTrash,
+      elementType,
+      extension: fileExtension,
+    });
+  const customActions = providedActionIds
+    ? []
+    : resolveCustomActions(layout, {
+        isCurrentDirectory,
+        inTrash,
+        elementType,
+        extension: fileExtension,
+        elementId,
+      });
+  const hasVisiblePredefinedActions = actionIds.some((id) => {
+    const action = ENTRY_ACTIONS[id as EntryActionId];
+    return !!action && isActionVisible(action, ctx);
   });
 
   // Finder tags: a colour-swatch row at the top, for a real entry (not the empty-directory menu
   // or the Trash). macOS only — tags are a native macOS feature.
-  const showTags = isMacPlatform() && !isCurrentDirectory && !inTrash;
+  const shouldShowTags =
+    showTags && isMacPlatform() && !isCurrentDirectory && !inTrash;
 
   return (
     <ContextMenu contextMenuVisible={visible} ref={contextMenuRef}>
-      {showTags && (
+      {shouldShowTags && (
         <>
           <TagPicker targets={targets} onClose={onClose} />
           <ContextMenuItem isSeparator />
@@ -120,7 +172,7 @@ const EntryContextMenu = ({
           <ContextMenuItem
             key={action.id}
             text={action.label()}
-            icon={<Icon icon={action.icon} />}
+            icon={<Icon icon={resolveActionIcon(action, ctx)} />}
             hotkey={hotkey}
             color={action.color}
             checked={action.checked?.(ctx)}
@@ -135,6 +187,20 @@ const EntryContextMenu = ({
           />
         );
       })}
+      {customActions.length > 0 && hasVisiblePredefinedActions && (
+        <ContextMenuItem isSeparator />
+      )}
+      {customActions.map((action) => (
+        <ContextMenuItem
+          key={`custom-${action.id}`}
+          text={action.label}
+          icon={<Icon icon={customActionIcon(action.icon)} />}
+          onClick={() => {
+            onClose();
+            void fs.runContextAction(action.id, elementId, targets);
+          }}
+        />
+      ))}
     </ContextMenu>
   );
 };

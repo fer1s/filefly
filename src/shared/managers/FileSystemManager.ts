@@ -143,6 +143,14 @@ export class FileSystemManager {
     return api.openInTerminal(path);
   }
 
+  runContextAction(
+    actionId: string,
+    clickedPath: string,
+    paths: string[],
+  ): Promise<void> {
+    return api.runContextAction(actionId, clickedPath, paths);
+  }
+
   // Render a markdown source string to HTML (renders the live editor draft, so unsaved edits show).
   renderMarkdown(content: string): Promise<string> {
     return api.renderMarkdown(content);
@@ -184,9 +192,14 @@ export class FileSystemManager {
     return api.createFolder(parent);
   }
 
-  // Copy an image file to the system clipboard.
-  copyImage(path: string): Promise<void> {
-    return api.copyImage(path);
+  // Create a uniquely named empty .txt file inside `parent`.
+  createTextFile(parent: string): Promise<string> {
+    return api.createTextFile(parent);
+  }
+
+  // Copy a local image, optionally using the preview's clockwise rotation in degrees.
+  copyImage(path: string, rotation?: number): Promise<void> {
+    return api.copyImage(path, rotation);
   }
 
   trash(path: string): Promise<void> {

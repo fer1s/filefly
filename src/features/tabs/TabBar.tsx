@@ -137,17 +137,17 @@ const TabBar = () => {
             translate={translateFor(index)}
           />
         ))}
+        <IconButton
+          className="tab_new"
+          icon={faPlus}
+          size={ICON_BUTTON_SIZE.SM}
+          variant={ICON_BUTTON_VARIANT.GHOST}
+          tooltip={t.tabs.newTab}
+          hotkey={newTabHotkey}
+          aria-label={t.tabs.newTab}
+          onClick={() => newTab()}
+        />
       </div>
-      <IconButton
-        className="tab_new"
-        icon={faPlus}
-        size={ICON_BUTTON_SIZE.SM}
-        variant={ICON_BUTTON_VARIANT.GHOST}
-        tooltip={t.tabs.newTab}
-        hotkey={newTabHotkey}
-        aria-label={t.tabs.newTab}
-        onClick={() => newTab()}
-      />
     </div>
   );
 };

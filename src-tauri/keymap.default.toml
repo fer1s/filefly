@@ -14,6 +14,13 @@
 keys = ["c"]
 mod = true
 
+# Copy the selection's filesystem path(s) to the OS clipboard. Matches Finder's Cmd+Opt+C
+# ("Copy as Pathname"); alt = Option.
+[copy_path]
+keys = ["c"]
+mod = true
+alt = true
+
 [cut]
 keys = ["x"]
 mod = true

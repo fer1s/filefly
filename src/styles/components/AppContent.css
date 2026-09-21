@@ -1,0 +1,11 @@
+/* The active tab shares this surface and covers its top border to join the tab to its content. */
+.AppContent .tab_content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  padding: var(--space-2);
+  border: var(--border-width-default) solid var(--color-border-default);
+  border-radius: var(--radius-md);
+  background-color: var(--color-background-app);
+}

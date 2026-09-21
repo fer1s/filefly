@@ -3,8 +3,9 @@ import {
   faMagnifyingGlass,
 } from "@fortawesome/free-solid-svg-icons";
 
+import Button from "@/shared/components/elements/Button";
 import Icon from "@/shared/components/elements/Icon";
-import { formatBytes } from "@/shared/utils";
+import { classNames } from "@/shared/utils";
 import { openSystemMonitor, openStorageSettings } from "@/shared/services/api";
 import { notify, TOAST_TYPE } from "@/shared/toast";
 import { useSettings } from "@/features/settings";
@@ -16,6 +17,7 @@ import { useSystemStats } from "../../hooks/useSystemStats";
 import "@/styles/components/StatusBar.css";
 
 import type { StatusBarProps } from "./types";
+import { usagePercent } from "./utils";
 
 // Footer with the total entry count and, when any are selected, the selection count.
 // Shows spinners on the right while folder sizes are being computed (the list re-sorts as they
@@ -35,9 +37,7 @@ const StatusBar = ({
   const searching = search.length > 0;
 
   const showStorage = () => {
-    openStorageSettings().catch((err) =>
-      notify(String(err), TOAST_TYPE.ERROR),
-    );
+    openStorageSettings().catch((err) => notify(String(err), TOAST_TYPE.ERROR));
   };
 
   const showMonitor = () => {
@@ -90,8 +90,13 @@ const StatusBar = ({
             {progress.label}
             <span className="progress_track">
               <span
-                className="progress_bar"
-                style={{ width: `${progressPercent}%` }}
+                className={classNames(
+                  "progress_bar",
+                  !progress.total && "indeterminate",
+                )}
+                style={
+                  progress.total ? { width: `${progressPercent}%` } : undefined
+                }
               />
             </span>
           </span>
@@ -99,36 +104,34 @@ const StatusBar = ({
       </div>
       {stats && (
         <div className="stats_row">
-          <button
-            type="button"
+          <Button
+            unstyled
             className="stat stat_button"
             onClick={showMonitor}
             title={t.directory.openSystemMonitor}
           >
             {t.directory.statCpu(Math.round(stats.cpuUsage))}
-          </button>
-          <button
-            type="button"
+          </Button>
+          <span aria-hidden="true">{t.directory.statSeparator}</span>
+          <Button
+            unstyled
             className="stat stat_button"
             onClick={showMonitor}
             title={t.directory.openSystemMonitor}
           >
-            {t.directory.statRam(
-              formatBytes(stats.memUsed),
-              formatBytes(stats.memTotal),
-            )}
-          </button>
-          <button
-            type="button"
+            {t.directory.statRam(usagePercent(stats.memUsed, stats.memTotal))}
+          </Button>
+          <span aria-hidden="true">{t.directory.statSeparator}</span>
+          <Button
+            unstyled
             className="stat stat_button"
             onClick={showStorage}
             title={t.storage.title}
           >
             {t.directory.statDisk(
-              formatBytes(stats.diskUsed),
-              formatBytes(stats.diskTotal),
+              usagePercent(stats.diskUsed, stats.diskTotal),
             )}
-          </button>
+          </Button>
         </div>
       )}
     </div>

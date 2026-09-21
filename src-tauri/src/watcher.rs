@@ -18,7 +18,7 @@ struct SizeChanged {
 
 // Holds the active recursive watcher and the directory it watches (the current view).
 pub struct DirWatcher {
-    inner: Mutex<WatcherState>,
+    inner: Arc<Mutex<WatcherState>>,
 }
 
 struct WatcherState {
@@ -29,10 +29,10 @@ struct WatcherState {
 impl DirWatcher {
     pub fn new() -> Self {
         DirWatcher {
-            inner: Mutex::new(WatcherState {
+            inner: Arc::new(Mutex::new(WatcherState {
                 watcher: None,
                 root: None,
-            }),
+            })),
         }
     }
 }
@@ -121,46 +121,49 @@ fn handle_event(
     }
 }
 
-// Watch `path` recursively for changes, replacing any previous watch. Called by the frontend
-// whenever the viewed directory changes. Changes bubble into the size cache and emit
-// `dir-size-changed` so the open view updates live.
+// Watch `path` recursively for changes, replacing any previous watch. Native recursive watcher
+// registration can take seconds on a large/cold tree, so the synchronous notify setup runs on the
+// blocking pool instead of Tauri's main thread.
 #[tauri::command]
-pub fn watch_directory(
+pub async fn watch_directory(
     path: String,
     app: AppHandle,
     watcher: State<'_, DirWatcher>,
     index: State<'_, SizeIndex>,
     ignore: State<'_, IgnoreList>,
 ) -> Result<(), String> {
-    let mut state = watcher.inner.lock().map_err(|e| e.to_string())?;
-
-    let root = PathBuf::from(&path);
-    if !root.is_dir() {
-        state.watcher = None; // drops & stops the previous watcher
-        state.root = None;
-        return Ok(());
-    }
-
-    let app_handle = app.clone();
+    let watcher = watcher.inner.clone();
     let conn = index.0.clone();
     let ignores = ignore.0.clone();
-    let cb_root = root.clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        let mut state = watcher.lock().map_err(|e| e.to_string())?;
+        let root = PathBuf::from(&path);
+        if !root.is_dir() {
+            state.watcher = None; // drops & stops the previous watcher
+            state.root = None;
+            return Ok(());
+        }
 
-    let mut new_watcher =
-        notify::recommended_watcher(move |res: notify::Result<notify::Event>| {
-            if let Ok(event) = res {
-                handle_event(&app_handle, &conn, &ignores, &cb_root, &event.paths);
-            }
-        })
-        .map_err(|e| e.to_string())?;
+        let app_handle = app.clone();
+        let cb_root = root.clone();
+        let mut new_watcher =
+            notify::recommended_watcher(move |res: notify::Result<notify::Event>| {
+                if let Ok(event) = res {
+                    handle_event(&app_handle, &conn, &ignores, &cb_root, &event.paths);
+                }
+            })
+            .map_err(|e| e.to_string())?;
 
-    new_watcher
-        .watch(&root, RecursiveMode::Recursive)
-        .map_err(|e| e.to_string())?;
+        new_watcher
+            .watch(&root, RecursiveMode::Recursive)
+            .map_err(|e| e.to_string())?;
 
-    crate::dlog!("watching   {}", root.display());
+        crate::dlog!("watching   {}", root.display());
 
-    state.watcher = Some(new_watcher); // drops the previous watcher
-    state.root = Some(root);
-    Ok(())
+        state.watcher = Some(new_watcher); // drops the previous watcher
+        state.root = Some(root);
+        Ok(())
+    })
+    .await
+    .map_err(|e| e.to_string())?
 }

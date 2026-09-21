@@ -2,39 +2,60 @@ import { useStateContext } from "@/shared/providers/StateProvider";
 import { useKeymap, formatBinding } from "@/shared/keymap";
 import IconButton from "@/shared/components/elements/IconButton";
 import { extension } from "@/shared/utils";
-import { TRASH_DIR_NAME } from "@/shared/constants";
-import { ENTRY_KIND } from "@/features/directory/constants";
+import { RECENTS, TRASH_DIR_NAME } from "@/shared/constants";
+import { ENTRY_KIND, opensInAppPreview } from "@/features/directory/constants";
+import { useFileTypeExtensions } from "@/features/directory/formats";
 
 import { useDirectory } from "../../providers/DirectoryProvider";
 import { useContextMenuLayout } from "../../hooks/useContextMenuLayout";
+import { useArchiveActions } from "../../hooks/useArchiveActions";
+import { useSevenzipAvailable } from "@/shared/hooks/useSevenzipAvailable";
 import {
+  ENTRY_ACTION,
   ENTRY_ACTIONS,
   ACTION_SEPARATOR,
   resolveActionIds,
   isActionVisible,
+  resolveActionIcon,
   type EntryActionContext,
   type EntryActionId,
 } from "../../actions";
 
+import QuickActionMenu from "./QuickActionMenu";
+
 import "@/styles/components/QuickActions.css";
 
-// Quick-actions toolbar (left of the QuickBar): the same context-menu actions, but driven by
-// the current selection — the folder's own actions when nothing is selected, the selected
-// entry's actions otherwise (applied to every selected entry).
+// Quick-actions toolbar (left of the QuickBar): Sort always targets the folder being viewed; the
+// remaining context-menu actions target that folder when nothing is selected, or the selection.
 const QuickActions = () => {
-  const { fs, path, setPath, showHidden, toggleShowHidden } = useStateContext();
+  const {
+    fs,
+    path,
+    setPath,
+    newTab,
+    showHidden,
+    toggleShowHidden,
+    previewImagesInApp,
+    previewMarkdownInApp,
+  } = useStateContext();
   const { keymap } = useKeymap();
   const layout = useContextMenuLayout();
+  const fileTypes = useFileTypeExtensions();
   const {
     sorted,
     selectedIDs,
     setRenamingID,
+    focusCreatedEntry,
     fileOps,
     preview,
     properties,
+    searchActive,
     sort,
     handleSort,
   } = useDirectory();
+  const { onCompress, onExtract, onExtractToFolder } =
+    useArchiveActions(fileOps);
+  const sevenzipAvailable = useSevenzipAvailable();
 
   const hasSelection = selectedIDs.length > 0;
   const elementId = hasSelection ? selectedIDs[0] : path;
@@ -54,37 +75,95 @@ const QuickActions = () => {
     elementType,
     targets: hasSelection ? selectedIDs : [path],
     isCurrentDirectory,
+    isDispersedView: path === RECENTS || searchActive,
     canPaste: !!fileOps.clipboard,
     fs,
     fileOps,
     setPath,
+    openInNewTab: newTab,
     onClose: () => {},
     onStartRename: setRenamingID,
+    onEntryCreated: focusCreatedEntry,
     onPreview: preview.open,
     onProperties: properties.open,
+    onCompress,
+    onExtract,
+    onExtractToFolder,
+    sevenzipAvailable,
     sort,
     onSort: handleSort,
     showHidden,
     toggleShowHidden,
+    opensInAppPreview: opensInAppPreview(
+      fileExtension.toLowerCase(),
+      fileTypes,
+      previewImagesInApp,
+      previewMarkdownInApp,
+    ),
   };
 
+  // Sort always belongs to the folder being viewed, not to the current selection. Keep its Quick
+  // Bar menu available while file/folder actions adapt to whatever the user has selected.
+  const sortCtx: EntryActionContext = {
+    ...ctx,
+    elementId: path,
+    elementType: ENTRY_KIND.DIRECTORY,
+    targets: [path],
+    isCurrentDirectory: true,
+    isDispersedView: false,
+    opensInAppPreview: false,
+  };
+  const sortAction = ENTRY_ACTIONS[ENTRY_ACTION.SORT_BY];
+
+  // Keep the context menu's conceptual groups in the Quick Bar. Actions hidden for the current
+  // context are removed before separators are normalized, avoiding empty or duplicate dividers.
+  // Sort is rendered separately because it always targets the folder being viewed.
   const actionIds = resolveActionIds(layout, {
     isCurrentDirectory,
     inTrash,
     elementType,
     extension: fileExtension,
-  }).filter((id) => id !== ACTION_SEPARATOR);
+  }).reduce<string[]>((items, id) => {
+    if (id === ENTRY_ACTION.SORT_BY) return items;
 
-  if (path === "" || actionIds.length === 0) return null;
+    if (id === ACTION_SEPARATOR) {
+      if (items.length > 0 && items[items.length - 1] !== ACTION_SEPARATOR)
+        items.push(id);
+      return items;
+    }
+
+    const action = ENTRY_ACTIONS[id as EntryActionId];
+    if (
+      action &&
+      isActionVisible(action, ctx) &&
+      (action.submenu || action.run)
+    )
+      items.push(id);
+    return items;
+  }, []);
+
+  if (actionIds[actionIds.length - 1] === ACTION_SEPARATOR) actionIds.pop();
+
+  if (path === "") return null;
 
   return (
     <div className="quick_actions">
-      {actionIds.map((id) => {
+      {actionIds.map((id, index) => {
+        if (id === ACTION_SEPARATOR)
+          return (
+            <span
+              className="quick_action_separator"
+              role="separator"
+              aria-orientation="vertical"
+              key={`separator-${index}`}
+            />
+          );
+
         const action = ENTRY_ACTIONS[id as EntryActionId];
-        if (!action || !isActionVisible(action, ctx)) return null;
-        // Submenu actions (e.g. Sort By) can't render as a flat toolbar button — skip them here;
-        // they remain available in the right-click menu.
-        if (action.submenu || !action.run) return null;
+        if (!action) return null;
+        if (action.submenu)
+          return <QuickActionMenu key={action.id} action={action} ctx={ctx} />;
+        if (!action.run) return null;
 
         const enabled = action.isEnabled ? action.isEnabled(ctx) : true;
         const hotkey =
@@ -96,7 +175,7 @@ const QuickActions = () => {
         return (
           <IconButton
             key={action.id}
-            icon={action.icon}
+            icon={resolveActionIcon(action, ctx)}
             tooltip={action.label()}
             hotkey={hotkey}
             disabled={!enabled}
@@ -105,6 +184,16 @@ const QuickActions = () => {
           />
         );
       })}
+      <div className="quick_sort">
+        <QuickActionMenu
+          action={sortAction}
+          ctx={sortCtx}
+          label={
+            sortAction.submenu?.(sortCtx).find((item) => item.key === sort.key)
+              ?.label
+          }
+        />
+      </div>
     </div>
   );
 };
