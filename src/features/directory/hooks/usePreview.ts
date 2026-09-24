@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { ACCEPTED_PREVIEW_FORMATS } from "@/features/directory/constants";
+import { isPreviewable } from "@/features/directory/constants";
+import { useFileTypeExtensions } from "@/features/directory/formats";
 import { extension } from "@/shared/utils";
 import { DirEntry } from "@/shared/models";
 
@@ -9,18 +10,31 @@ import { DirEntry } from "@/shared/models";
 export const usePreview = (previewables: DirEntry[]) => {
   const [visible, setVisible] = useState(false);
   const [index, setIndex] = useState(-1);
+  const [selectedPath, setSelectedPath] = useState("");
+  const fileTypes = useFileTypeExtensions();
 
-  // Clamp the index to the live list (derived, no state write). When the open file is trashed the
-  // list shifts down, so the same index now points at the next file ("advance to next" for free);
-  // if it was the last one, this falls back to the new last (the previous file).
+  // Keep the opened file's identity when sorting or refreshing changes its position. Only fall
+  // back to the previous position when that file disappears (e.g. after moving it to Trash).
+  const selectedIndex = previewables.findIndex(
+    (entry) => entry.path === selectedPath,
+  );
   const safeIndex =
-    index >= 0 && previewables.length
-      ? Math.min(index, previewables.length - 1)
-      : -1;
+    selectedIndex >= 0
+      ? selectedIndex
+      : index >= 0 && previewables.length
+        ? Math.min(index, previewables.length - 1)
+        : -1;
 
   const entry = safeIndex >= 0 ? previewables[safeIndex] : undefined;
   const filePath = entry?.path ?? "";
   const fileType = entry ? extension(entry.name) : "";
+
+  // Remember the current position for deletion fallback and adopt the replacement's identity
+  // before rendering children, so later refreshes cannot silently switch to another file.
+  if (index !== safeIndex || selectedPath !== filePath) {
+    setIndex(safeIndex);
+    setSelectedPath(filePath);
+  }
 
   // Close when the previewed file was the only previewable and is now gone. Syncing to an external
   // change (the filesystem, surfaced via `previewables`), which is the intended use of an effect —
@@ -30,31 +44,32 @@ export const usePreview = (previewables: DirEntry[]) => {
     if (visible && previewables.length === 0) setVisible(false);
   }, [visible, previewables.length]);
 
-  // prev/next move relative to the displayed position (safeIndex), so a stale index left by a
-  // delete self-corrects on the next navigation.
-  const prev = useCallback(
-    () => setIndex(safeIndex > 0 ? safeIndex - 1 : safeIndex),
-    [safeIndex],
-  );
-  const next = useCallback(
-    () =>
-      setIndex(safeIndex < previewables.length - 1 ? safeIndex + 1 : safeIndex),
-    [safeIndex, previewables.length],
-  );
+  // Navigation changes identity as well as position in the current list.
+  const prev = useCallback(() => {
+    if (safeIndex <= 0) return;
+    setIndex(safeIndex - 1);
+    setSelectedPath(previewables[safeIndex - 1].path);
+  }, [safeIndex, previewables]);
+  const next = useCallback(() => {
+    if (safeIndex < 0 || safeIndex >= previewables.length - 1) return;
+    setIndex(safeIndex + 1);
+    setSelectedPath(previewables[safeIndex + 1].path);
+  }, [safeIndex, previewables]);
 
   // Open the preview for a file path if it's a supported, previewable entry.
   const open = useCallback(
     (path: string) => {
       const ext = extension(path);
-      if (!ACCEPTED_PREVIEW_FORMATS.includes(ext)) return;
+      if (!isPreviewable(fileTypes, ext)) return;
 
       const i = previewables.findIndex((e) => e.path === path);
       if (i < 0) return;
 
       setIndex(i);
+      setSelectedPath(path);
       setVisible(true);
     },
-    [previewables],
+    [previewables, fileTypes],
   );
 
   // Memoized so the returned object has a stable identity across renders. Consumers put it in

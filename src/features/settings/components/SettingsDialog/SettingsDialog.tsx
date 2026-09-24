@@ -7,7 +7,7 @@ import IconButton, {
   ICON_BUTTON_VARIANT,
   ICON_BUTTON_SIZE,
 } from "@/shared/components/elements/IconButton";
-import { useCloseOnEscape } from "@/shared/hooks/useCloseOnEscape";
+import TextInput from "@/shared/components/elements/TextInput";
 import { useStateContext } from "@/shared/providers/StateProvider";
 import { useConfirm } from "@/shared/providers/ConfirmProvider";
 import { useFilePicker } from "@/shared/providers/FilePickerProvider";
@@ -39,8 +39,6 @@ const SettingsDialog = ({ visible, onClose }: SettingsDialogProps) => {
   const [activeSection, setActiveSection] = useState<SettingsSectionId>(
     SETTINGS_SECTION.GENERAL,
   );
-
-  useCloseOnEscape(visible, onClose);
 
   const query = rawQuery.trim().toLowerCase();
   const searching = query !== "";
@@ -149,9 +147,9 @@ const SettingsDialog = ({ visible, onClose }: SettingsDialogProps) => {
   return (
     <Dialog
       visible={visible}
+      title={t.settings.title}
       onClose={onClose}
       className="settings_modal"
-      labelledBy={SETTINGS_TITLE_ID}
     >
       <DialogHeader
         title={t.settings.title}
@@ -160,7 +158,7 @@ const SettingsDialog = ({ visible, onClose }: SettingsDialogProps) => {
       />
 
       <div className="settings_toolbar">
-        <input
+        <TextInput
           type="search"
           className="settings_search"
           value={rawQuery}

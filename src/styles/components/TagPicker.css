@@ -97,16 +97,11 @@
   flex-shrink: 0;
 }
 
-.tag_input {
-  width: 100%;
+/* Deltas over the shared TextInput base: spacing below the tag list + tighter padding. Scoped to
+   the container so it outranks the base's own single-class padding regardless of CSS load order. */
+.tag_picker .tag_input {
   margin-top: var(--space-2);
   padding: var(--space-1) var(--space-1-5);
-  border: var(--border-width-default) solid var(--color-border-default);
-  border-radius: var(--radius-sm);
-  background-color: var(--color-surface-input);
-  color: var(--color-text-primary);
-  font-size: var(--font-size-base);
-  outline: none;
 }
 
 .tag_input::placeholder {

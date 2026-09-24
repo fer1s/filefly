@@ -1,4 +1,11 @@
-import { TAG_COLOR } from "@/shared/constants";
+import {
+  TAG_COLOR,
+  FILE_CATEGORY,
+  type FileCategory,
+  type FileTypeExtensions,
+} from "@/shared/constants";
+
+import { isCategory } from "./formats";
 
 // How often the status-bar OS-stats readout re-polls the system (ms). Slow enough to be cheap,
 // fast enough to feel live.
@@ -50,73 +57,41 @@ export const TAG_PICKER_COLORS = [
   { index: TAG_COLOR.GRAY, class: "gray" },
 ] as const;
 
+// The extension a newly created markdown file gets. Which extensions *render* as markdown is the
+// user's markdown category (see FILE_CATEGORY) — this is only the one we write.
 export const MARKDOWN_FORMAT = "md";
-export const MARKDOWN_FORMATS: readonly string[] = ["md", "markdown"];
-export const PDF_FORMAT = "pdf";
-// SVG renders natively in the webview's <img>, so it skips the Rust thumbnail pipeline (the
-// `image` crate can't rasterise SVG) and is drawn straight from the file — see useEntryThumbnail.
-export const SVG_FORMAT = "svg";
-export const IMAGE_FORMATS: readonly string[] = [
-  "png",
-  "jpg",
-  "jpeg",
-  "webp",
-  "gif",
-  SVG_FORMAT,
-];
-export const AUDIO_FORMATS: readonly string[] = ["mp3", "wav", "ogg"];
-export const VIDEO_FORMATS: readonly string[] = [
-  "mp4",
-  "webm",
-  "mov",
-  "m4v",
-  "ogv",
+
+// Folder image mosaics are only useful once the grid tile is large enough to read. Below this
+// zoom folders keep their regular glyph and, importantly, never inspect their contents.
+export const FOLDER_THUMBNAIL_MIN_ZOOM = 1.5;
+export const FOLDER_THUMBNAIL_COUNT = 4;
+
+// Whether opening an entry with the given (lowercased) extension launches the in-app preview
+// rather than the OS default app, per the user's preview-in-app settings. Single source of truth
+// shared by open-routing (Directory.openFile) and by hiding the redundant Preview action when
+// Open already previews. Only images/markdown are gated here; pdf/audio/video always open in the
+// OS app, so their explicit Preview action stays.
+export const opensInAppPreview = (
+  ext: string,
+  extensions: FileTypeExtensions,
+  previewImagesInApp: boolean,
+  previewMarkdownInApp: boolean,
+): boolean =>
+  (previewImagesInApp && isCategory(extensions, ext, FILE_CATEGORY.IMAGE)) ||
+  (previewMarkdownInApp && isCategory(extensions, ext, FILE_CATEGORY.MARKDOWN));
+
+// Categories the built-in preview can render. Videos are intentionally excluded: they open in the
+// OS's default player instead (the webview struggles with large/long files). Thumbnails still work
+// (see DirEntry).
+export const PREVIEWABLE_CATEGORIES: readonly FileCategory[] = [
+  FILE_CATEGORY.MARKDOWN,
+  FILE_CATEGORY.PDF,
+  FILE_CATEGORY.IMAGE,
+  FILE_CATEGORY.AUDIO,
 ];
 
-// Format groups used only to pick a file-type glyph (see fileIcon registry). They are
-// not previewable — purely cosmetic icon hints — so they live apart from ACCEPTED_PREVIEW_FORMATS.
-export const ARCHIVE_FORMATS: readonly string[] = [
-  "zip",
-  "rar",
-  "7z",
-  "tar",
-  "gz",
-  "bz2",
-  "xz",
-];
-export const WORD_FORMATS: readonly string[] = ["doc", "docx", "odt"];
-export const SPREADSHEET_FORMATS: readonly string[] = ["xls", "xlsx", "ods"];
-export const CSV_FORMATS: readonly string[] = ["csv", "tsv"];
-export const PRESENTATION_FORMATS: readonly string[] = ["ppt", "pptx", "odp"];
-export const TEXT_FORMATS: readonly string[] = ["txt", "log", "rtf"];
-export const CODE_FORMATS: readonly string[] = [
-  "js",
-  "jsx",
-  "ts",
-  "tsx",
-  "json",
-  "html",
-  "css",
-  "scss",
-  "rs",
-  "py",
-  "go",
-  "java",
-  "c",
-  "cpp",
-  "h",
-  "sh",
-  "yml",
-  "yaml",
-  "toml",
-  "xml",
-];
-
-// Videos are intentionally excluded: they open in the OS's default player instead of the in-app
-// preview (the webview struggles with large/long files). Thumbnails still work (see DirEntry).
-export const ACCEPTED_PREVIEW_FORMATS: readonly string[] = [
-  MARKDOWN_FORMAT,
-  PDF_FORMAT,
-  ...IMAGE_FORMATS,
-  ...AUDIO_FORMATS,
-];
+// Whether the built-in preview can open this extension, per the user's category map.
+export const isPreviewable = (
+  extensions: FileTypeExtensions,
+  ext: string,
+): boolean => isCategory(extensions, ext, ...PREVIEWABLE_CATEGORIES);

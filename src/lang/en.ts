@@ -13,6 +13,7 @@ export const en = {
     edit: "Edit",
     preview: "Preview",
     previewTitle: (name: string) => `Preview - ${name}`,
+    propertiesTitle: (name: string) => `Properties - ${name}`,
     editTitle: (name: string) => `Edit - ${name}`,
     previous: "Previous",
     next: "Next",
@@ -21,8 +22,12 @@ export const en = {
     unknown: "?",
     play: "Play",
     pause: "Pause",
+    volume: "Volume",
+    playbackPosition: "Playback position",
     cancel: "Cancel",
     confirm: "Confirm",
+    showPassword: "Show password",
+    hidePassword: "Hide password",
     move: "Move",
     copy: "Copy",
     dontAskAgain: "Don't ask again",
@@ -41,25 +46,56 @@ export const en = {
     },
   },
   contextMenu: {
+    label: "Context menu",
     newFolder: "New Folder",
+    createFile: "Create a File",
+    textFile: "Text File",
     open: "Open",
     openInNewTab: "Open in New Tab",
+    openContainingFolder: "Open Containing Folder",
     openInTerminal: "Open in Terminal",
     emptyTrash: "Empty Trash",
     eject: "Eject",
     copy: "Copy",
+    copyPath: "Copy Path",
     cut: "Cut",
     rename: "Rename",
     delete: "Move to trash",
     restore: "Restore",
     deletePermanently: "Destroy",
     copyImage: "Copy image",
+    copyImageCurrentState: "Copy image for current state",
     paste: "Paste",
     properties: "Properties",
+    compress: "Compress",
+    extract: "Extract Here",
+    extractToFolder: "Extract to Folder",
     sortBy: "Sort By",
     showHidden: "Show Hidden Files",
     sortAscending: "Ascending",
     sortDescending: "Descending",
+  },
+  archive: {
+    toZip: "To ZIP (.zip)",
+    to7z: "To 7z (.7z)",
+    compressTitle: "Compress",
+    name: "Archive name",
+    level: "Compression level",
+    levelFast: "Fastest",
+    levelBest: "Smallest",
+    compressButton: "Compress",
+    password: "Password",
+    passwordOptional: "Optional — leave empty for no encryption",
+    passwordTitle: "Enter password",
+    passwordPrompt: "This archive is password-protected",
+    extractButton: "Extract",
+    compressing: "Compressing…",
+    compressed: (name: string) => `Created ${name}`,
+    extracting: "Extracting…",
+    extracted: (name: string) => `Extracted ${name}`,
+    extractedMany: (count: number) => `Extracted ${count} items`,
+    compressError: (reason: string) => `Could not compress: ${reason}`,
+    extractError: (reason: string) => `Could not extract: ${reason}`,
   },
   properties: {
     title: "Properties",
@@ -142,11 +178,17 @@ export const en = {
     forward: "Forward",
     up: "Up",
     toggleView: "Toggle view",
+    listView: "List view",
+    gridView: "Grid view",
     toggleInfo: "Toggle info panel",
     search: "Search",
     searchPlaceholder: "Search in folder",
     recentSearches: "Recent searches",
     clearRecents: "Clear",
+  },
+  imagePreview: {
+    rotateLeft: "Rotate left",
+    rotateRight: "Rotate right",
   },
   quickbar: {
     zoomIn: "Zoom in",
@@ -201,6 +243,7 @@ export const en = {
     },
     actions: {
       copy: "Copy",
+      copyPath: "Copy path",
       cut: "Cut",
       paste: "Paste",
       undo: "Undo",
@@ -297,6 +340,8 @@ export const en = {
     added: "Connection created",
     // Downloading a remote file to open/preview it failed (read-only cache copy — phase 3a).
     openError: (error: string) => `Couldn't open remote file: ${error}`,
+    dragOutRequiresLocalCopy:
+      "Copy remote files to a local folder before dragging them to another app.",
     // Interactive auth dialog, shown when opening a connection fails authentication (phase 4).
     authTitle: (name: string) => `Authenticate ${name}`,
     authFailed: (target: string) => `Couldn't authenticate to ${target}.`,
@@ -305,6 +350,59 @@ export const en = {
       "Using an SSH key? Make sure it's loaded in your agent — run `ssh-add ~/.ssh/id_ed25519` in a terminal — then retry. Leave the field empty for agent auth.",
     retry: "Retry",
     authFailedRetry: (error: string) => `Still couldn't connect: ${error}`,
+  },
+  smb: {
+    // Chooser shown when adding to the Network group (SSH vs Windows share).
+    chooseTitle: "Add network location",
+    chooseSsh: "SSH / SFTP",
+    chooseSshHint: "Browse a remote server over SSH.",
+    chooseSmb: "Windows share (SMB)",
+    chooseSmbHint: "A Windows PC or NAS on your network.",
+    // Add-SMB dialog (host + share). Doubles as the edit/reconnect dialog (see editTitle).
+    newTitle: "Add Windows share",
+    // Shown when a saved location is unreachable — the dialog opens prefilled to fix its address.
+    editTitle: "Update Windows share",
+    reconnectHint: (name: string, host: string) =>
+      `${name} didn't answer at ${host}. Its IP may have changed (a different network gives the PC a new address). Enter the current IP or hostname and test it.`,
+    save: "Save & connect",
+    fieldName: "Name",
+    fieldNamePlaceholder: "My PC",
+    fieldHost: "Host",
+    fieldHostPlaceholder: "192.168.1.98",
+    fieldShare: "Share",
+    fieldSharePlaceholder: "Users",
+    hint: "macOS mounts the share and asks for your Windows username and password when you open it. Nothing is stored here.",
+    test: "Test connection",
+    testing: "Testing…",
+    // Share discovery (list the host's shares as pickable folders).
+    sharesTitle: "Shared folders",
+    listShares: "List shared folders",
+    loadingShares: "Listing shared folders…",
+    pickShareHint: "Pick a shared folder, or type its name below.",
+    sharesUnavailable:
+      "Can't list shared folders yet — this works after you've signed in to the PC once (macOS remembers it). Meanwhile, on the PC run `Get-SmbShare` in PowerShell to see the names, and type one below.",
+    adminShareNote: "admin — needs a Windows administrator account",
+    reachable: "Reachable — port 445 is open.",
+    unreachable:
+      "Couldn't reach port 445. Check the PC is on and file sharing is allowed through its firewall.",
+    add: "Add",
+    invalidHost: "Enter the PC's hostname or IP address.",
+    invalidShare: "Enter the Windows share name (no slashes).",
+    // Open flow (clicking a saved SMB row). Each step is toasted so the flow isn't opaque.
+    checking: (name: string) => `Checking ${name}…`,
+    unreachableToast: (name: string, host: string) =>
+      `${name} isn't reachable — no answer from ${host} on port 445. Is the PC on, and file sharing allowed through its firewall?`,
+    connecting: (name: string) =>
+      `${name} is reachable — opening the macOS sign-in…`,
+    waitingMount: (name: string) =>
+      `Waiting for ${name} to mount (sign in to the macOS prompt)…`,
+    mounted: (name: string) => `${name} mounted.`,
+    connectTimeout:
+      "The share didn't mount. Finish signing in to the macOS prompt, or check the PC is reachable.",
+    connectError: (error: string) => `Couldn't connect: ${error}`,
+    remove: "Remove location",
+    confirmRemove: (name: string) =>
+      `Remove "${name}" from the sidebar? This only removes the saved location — it doesn't unmount or change anything on the PC.`,
   },
   settings: {
     title: "Settings",
@@ -327,7 +425,7 @@ export const en = {
     sections: {
       general: "General",
       appearance: "Appearance",
-      files: "Files & Transfers",
+      files: "Files",
       notifications: "Notifications",
       remote: "Remote",
       storage: "Storage",
@@ -336,9 +434,12 @@ export const en = {
     subsections: {
       filesFolders: "Files & folders",
       folderSizes: "Folder sizes",
+      fileTypes: "File types",
       startup: "Startup",
+      updates: "Updates",
+      tabs: "Tabs",
       systemIntegration: "System integration",
-      previews: "Previews",
+      previews: "Previews & windows",
       statusBar: "Status bar",
       theme: "Theme & colour",
       layout: "Layout & format",
@@ -346,10 +447,14 @@ export const en = {
       dragDrop: "Drag & drop",
       deletion: "Deletion",
       importExport: "Import & export",
+      contextMenu: "Context menu",
       toasts: "Toasts",
     },
     showHidden: "Show hidden files",
     showHiddenHint: "Display dotfiles and other hidden entries in folders.",
+    rememberScrollOnUp: "Remember scroll position when navigating up",
+    rememberScrollOnUpHint:
+      "Restore the parent's last scroll position when navigating up. Back and Forward always remember their scroll positions.",
     hideSystemRecents: "Hide app files in Recents",
     hideSystemRecentsHint:
       "Keep files this app writes in the background (cache, settings, temp) out of Recents.",
@@ -375,6 +480,109 @@ export const en = {
     sizeIgnoresAdd: "Add pattern",
     sizeIgnoresRemove: "Remove pattern",
     sizeIgnoresEmpty: "No patterns — every file counts toward folder sizes.",
+    fileTypes: "File types",
+    colorfulFileTypes: "Colorful file types",
+    colorfulFileTypesHint:
+      "Use category colors for file icons in list and grid views. Turn off for gray icons. Folders and thumbnails keep their appearance.",
+    fileTypesHint:
+      "Which file type each extension belongs to. The type decides the entry's icon, whether it can be thumbnailed, and whether the built-in preview opens it — so adding opus to Audio gives .opus files the audio icon. An extension can only belong to one type.",
+    fileTypesCategoryLabel: "File type",
+    fileTypesPlaceholder: "e.g. opus",
+    fileTypesAdd: "Add extension",
+    fileTypesAddShort: "Add",
+    fileTypesAddTo: (category: string) => `Add extension to ${category}`,
+    fileTypeDescriptions: {
+      archive: "ZIP, RAR, 7Z and similar compressed files",
+      audio: "Audio files such as MP3, WAV and OGG",
+      video: "Video files such as MP4, WEBM and MOV",
+      image: "Image files such as PNG, JPG and GIF",
+      pdf: "Portable Document Format",
+      word: "Word, OpenDocument and Pages files",
+      spreadsheet: "Excel, OpenDocument and similar spreadsheets",
+      csv: "Comma- and tab-separated data files",
+      presentation: "PowerPoint and OpenDocument presentations",
+      code: "Source code, scripts and configuration files",
+      text: "Text documents, logs and rich text files",
+      markdown: "Markdown documents with formatted text",
+    },
+    fileTypesRemove: "Remove extension",
+    fileTypesEmpty: "No extensions.",
+    fileTypesDuplicate: (extension: string, category: string) =>
+      `".${extension}" is already in ${category}. Remove it there first — an extension can only belong to one type.`,
+    fileTypeCategories: {
+      archive: "Archive",
+      audio: "Audio",
+      video: "Video",
+      image: "Image",
+      pdf: "PDF",
+      word: "Document",
+      spreadsheet: "Spreadsheet",
+      csv: "CSV",
+      presentation: "Presentation",
+      code: "Code",
+      text: "Text",
+      markdown: "Markdown",
+    },
+    contextActions: "Custom actions",
+    contextActionsHint:
+      "Add local commands or executable scripts to file and folder context menus. Commands run directly without a shell.",
+    contextActionsPlaceholders:
+      "Arguments support {path}, {paths}, {directory}, {name}, and {extension}. Put each argument on its own line; {paths} expands to the full selection.",
+    contextActionsAdd: "Add action",
+    contextActionsExport: "Export actions",
+    contextActionsImport: "Import actions",
+    contextActionsExportEmpty: "There are no custom actions to export.",
+    contextActionsExportExists:
+      "A context-actions.json already exists in this folder. Overwrite it?",
+    contextActionsExported: (path: string) => `Actions exported to ${path}`,
+    contextActionsImported: (count: number) =>
+      count === 1 ? "1 action imported" : `${count} actions imported`,
+    contextActionsExportError: (reason: string) =>
+      `Could not export actions: ${reason}`,
+    contextActionsImportError: (reason: string) =>
+      `Could not import actions: ${reason}`,
+    contextActionsImportInvalid: "That file is not a custom-actions export.",
+    contextActionsImportEmpty: "That file contains no usable actions.",
+    contextActionsLoading: "Loading custom actions…",
+    contextActionsEmpty: "No custom context-menu actions.",
+    contextActionsEnabled: "Action enabled",
+    contextActionsMoveUp: "Move action up",
+    contextActionsMoveDown: "Move action down",
+    contextActionsEdit: "Edit action",
+    contextActionsDelete: "Delete action",
+    contextActionsDeleteTitle: "Delete custom action?",
+    contextActionsDeleteMessage: (label: string) =>
+      `Remove “${label}” from the context menu?`,
+    contextActionsName: "Name",
+    contextActionsNamePlaceholder: "Open with Code",
+    contextActionsIcon: "Icon",
+    contextActionsIconBolt: "Bolt",
+    contextActionsIconCode: "Code",
+    contextActionsIconTerminal: "Terminal",
+    contextActionsIconApp: "Application",
+    contextActionsIconPlay: "Run",
+    contextActionsIconGear: "Tool",
+    contextActionsIconFile: "File",
+    contextActionsIconFolder: "Folder",
+    contextActionsTargets: "Show for",
+    contextActionsTargetDirectory: "Current directory",
+    contextActionsTargetFolder: "Folder entries",
+    contextActionsTargetFile: "Files",
+    contextActionsSummary: (targets: string, extensions: string) =>
+      extensions ? `${targets} · ${extensions}` : targets,
+    contextActionsExtensions: "File extensions",
+    contextActionsExtensionsPlaceholder: "e.g. ts, tsx, js — empty means all",
+    contextActionsCommand: "Executable or script",
+    contextActionsCommandPlaceholder:
+      "/usr/bin/open or ~/Scripts/action.command",
+    contextActionsArguments: "Arguments — one per line",
+    contextActionsArgumentsPlaceholder: "-a\nVisual Studio Code\n{path}",
+    contextActionsSave: "Save action",
+    contextActionsCancel: "Cancel",
+    contextActionsLoadError: (reason: string) =>
+      `Could not load custom actions: ${reason}`,
+    contextActionsSaveError: (reason: string) =>
+      `Could not save custom actions: ${reason}`,
     showToasts: "Show notifications",
     showToastsHint: "Show transient pop-up messages (e.g. “Copied”, errors).",
     theme: "Appearance",
@@ -393,6 +601,12 @@ export const en = {
     },
     defaultZoom: "Default zoom",
     defaultZoomHint: "Zoom level for folders you haven't zoomed yet.",
+    gridIconSize: "Icon size",
+    gridIconSizeHint:
+      "Size of icons in grid and list views, independent of the folder zoom.",
+    zoomWithModifierWheel: "Zoom with Command/Ctrl + scroll wheel",
+    zoomWithModifierWheelHint:
+      "Change the current folder's zoom while holding Command on macOS or Ctrl on other platforms.",
     zoomPercent: (percent: number) => `${percent}%`,
     dateFormat: "Date format",
     dateFormatHint: "How dates are shown in folders and properties.",
@@ -416,6 +630,9 @@ export const en = {
     startupRestore: "Restore previous session",
     startupVolumes: "New session (Volumes)",
     startupHome: "New session (home folder)",
+    activateNewTabs: "Switch to newly opened tabs",
+    activateNewTabsHint:
+      "When opening a folder or location in a new tab, switch to it immediately.",
     homeFolder: "Home folder",
     homeFolderHint:
       "Folder opened when a new session starts at your home folder.",
@@ -445,6 +662,12 @@ export const en = {
     previewMarkdownInApp: "Open markdown in built-in preview",
     previewMarkdownInAppHint:
       "Opening a markdown file (Enter or double-click) shows it in the app's preview — where you can also edit it — instead of the system app.",
+    openPreviewInWindow: "Open preview in its own window",
+    openPreviewInWindowHint:
+      "The built-in preview opens as a separate, movable window instead of an overlay inside the current window. A new window opens each time, so you can compare several files side by side.",
+    openPropertiesInWindow: "Open properties in its own window",
+    openPropertiesInWindowHint:
+      "Properties open as a separate, movable window instead of a dialog inside the current window. A new window opens each time.",
     saving: "Saving settings…",
     storage: "Disk usage",
     storageHint: "Space the app's data uses on disk and where it's stored.",
@@ -458,12 +681,139 @@ export const en = {
       "Delete cached thumbnails and other regenerable files? Your settings and data are kept. The cache rebuilds as you browse.",
     storageCleared: "Cache cleared",
     storageClearError: (error: string) => `Couldn't clear the cache: ${error}`,
+    cleanup: "Folders to clean up",
+    cleanupHint:
+      "Watch folders that grow over time — dependency caches, build output, app leftovers — and reclaim them when they get big.",
+    cleanupTotalShort: (size: string) => `Total: ${size}`,
+    cleanupEmpty:
+      "No folders watched yet. Type or paste a path above — for example a package or build cache.",
+    cleanupPlaceholder: "e.g. ~/.gradle/caches",
+    cleanupAdd: "Watch this folder",
+    cleanupRefresh: "Measure again",
+    cleanupRemove: "Stop watching this folder",
+    cleanupMissing: "Folder not found",
+    cleanupModeContents: "Empty contents",
+    cleanupModeFolder: "Delete folder",
+    cleanupModeToggle: (mode: string) =>
+      `Cleaning does: ${mode}. Click to switch.`,
+    cleanupClean: "Clean up",
+    cleanupCleanContentsConfirm: (path: string, size: string) =>
+      `Move everything inside ${path} to the Trash? That's ${size}. The folder itself is kept, and you can put the items back from the Trash until you empty it.`,
+    cleanupCleanFolderConfirm: (path: string, size: string) =>
+      `Move ${path} to the Trash? That's ${size}, the folder included. You can put it back from the Trash until you empty it.`,
+    cleanupTrashHint:
+      "Cleaning moves items to the Trash, so nothing is lost by accident — empty the Trash to actually free the space.",
+    cleanupFreed: (size: string) => `${size} moved to the Trash`,
+    cleanupAlreadyEmpty: "Nothing to clean — the folder is already empty.",
+    cleanupPartial: (size: string, failed: number, error: string) =>
+      `${size} moved to the Trash, but ${failed} item(s) couldn't be moved: ${error}`,
+    cleanupError: (error: string) => `Cleanup failed: ${error}`,
+    cleanupErrorNotAbsolute:
+      "Type a full path to a folder (or start it with ~).",
+    cleanupErrorNotADir: "That folder doesn't exist any more.",
+    cleanupErrorProtected:
+      "That folder is protected — system directories, disk roots, your home folder and this app's own settings can't be cleaned.",
+    cleanupErrorDuplicate: "That folder is already on the list.",
+    cleanupErrorUnknownTarget: "That folder isn't on the list any more.",
+    cleanupErrorInvalidMode: "Unknown cleanup mode.",
     folderHandler: "Default file manager",
     folderHandlerHint:
       "Open folders from Terminal, other apps and links in this app instead of Finder. Does not change double-clicking folders inside Finder.",
     folderHandlerOn: "This app is now the default folder handler.",
     folderHandlerOff: "Finder restored as the default folder handler.",
     folderHandlerError: "Couldn't change the default folder handler.",
+    showOnboarding: "Show welcome guide on launch",
+    showOnboardingHint:
+      "Open the welcome guide when the app starts, until you finish or dismiss it.",
+    onboardingReplay: "Welcome guide",
+    onboardingReplayHint:
+      "Walk through the app's basics again: appearance, shortcuts, sidebar and system integration.",
+    onboardingReplayButton: "Open guide",
+    checkForUpdates: "Check for updates on launch",
+    checkForUpdatesHint:
+      "Look up the latest GitHub release when the app starts and show a notification if it's newer. Nothing is downloaded.",
+    updates: "Updates",
+    updatesHint: "Compare the installed version with the latest release.",
+    showChangelogAfterUpdate: "Show what's new after an update",
+    showChangelogAfterUpdateHint:
+      "After the app updates, show a notification that opens the release notes.",
+    changelog: "Release notes",
+    changelogHint: "Read what changed in this and earlier versions.",
+    changelogButton: "Show changelog",
+  },
+  changelog: {
+    title: "What's new",
+    version: (version: string) => `Version ${version}`,
+    pickVersion: "Version",
+    viewOnGitHub: "View on GitHub",
+    updatedToast: (version: string) =>
+      `Updated to v${version}. Click to see what's new.`,
+  },
+  updates: {
+    checkNow: "Check now",
+    checking: "Checking…",
+    upToDate: "You're on the latest version.",
+    available: (version: string) => `Version ${version} is available.`,
+    availableToast: (version: string) =>
+      `Update available: v${version}. Click to view the release.`,
+    error: "Couldn't reach GitHub to check for updates.",
+    installedVersion: (version: string) => `Installed: v${version}`,
+    installedVersionUnknown: "Installed version unknown",
+    viewRelease: "View release",
+    copyBrewCommand: "Copy brew command",
+  },
+  onboarding: {
+    title: "Welcome",
+    back: "Back",
+    next: "Next",
+    skip: "Skip",
+    finish: "Get started",
+    showAgain: "Show this guide next time the app starts",
+    steps: {
+      welcome: {
+        title: "Welcome to Sito File Browser",
+        description:
+          "A quick tour of the basics. Everything here can be changed later in Settings.",
+      },
+      appearance: {
+        title: "Make it yours",
+        description:
+          "Pick a theme and an accent colour. The app recolours live as you choose.",
+        theme: "Theme",
+        accent: "Accent",
+      },
+      shortcuts: {
+        title: "Keyboard shortcuts",
+        description:
+          "The essentials. Every binding can be changed, and the full list is one keystroke away.",
+        openSettings: "Open Settings",
+        toggleSidebar: "Toggle the sidebar",
+        newTab: "New tab",
+        search: "Search the current folder",
+        toggleHidden: "Show / hide hidden files",
+        helpShortcuts: "Show all shortcuts",
+      },
+      sidebar: {
+        title: "Your sidebar",
+        description:
+          "Quick Access holds your favourite folders. Use the pencil to add groups, reorder them, pin folders and hide the presets you don't need. The first pinned folders get their own shortcut.",
+      },
+      integration: {
+        title: "System integration",
+        description:
+          "Optional extras. Both can be toggled at any time in Settings › General.",
+        folderHandler:
+          "Open folders from other apps here (default file manager)",
+        folderSizes: "Show folder sizes in list view",
+        folderSizesHint:
+          "Walks each folder once and caches the result; can spike CPU on big trees.",
+      },
+      finish: {
+        title: "You're all set",
+        description:
+          "Press ⌘/Ctrl + , anytime to open Settings, or ⌘/Ctrl + / to see every shortcut.",
+      },
+    },
   },
   infoPanel: {
     title: "Info",
@@ -524,8 +874,9 @@ export const en = {
     calculatingSizes: "Calculating sizes…",
     // Status-bar OS stats readout (opt-in via the showSystemStats setting).
     statCpu: (percent: number) => `CPU ${percent}%`,
-    statRam: (used: string, total: string) => `RAM ${used} / ${total}`,
-    statDisk: (used: string, total: string) => `Disk ${used} / ${total}`,
+    statRam: (percent: number) => `RAM ${percent}%`,
+    statDisk: (percent: number) => `Disk ${percent}%`,
+    statSeparator: "·",
     // Tooltip on the clickable CPU / RAM readouts.
     openSystemMonitor: "Open the system resource monitor",
     copying: "Copying…",
@@ -535,9 +886,11 @@ export const en = {
     showingHidden: "Showing hidden files",
     hidingHidden: "Hiding hidden files",
     copied: (label: string) => `Copied ${label}`,
+    pathCopied: (n: number) => (n === 1 ? "Path copied" : "Paths copied"),
     cut: (label: string) => `Cut ${label}`,
     pasted: (label: string) => `Pasted ${label}`,
     moved: (label: string) => `Moved ${label}`,
+    textFileCreated: (name: string) => `Created ${name}`,
     trashed: (label: string) => `Moved ${label} to Trash`,
     restored: (label: string) => `Restored ${label}`,
     deleted: (label: string) => `Deleted ${label}`,
@@ -550,6 +903,23 @@ export const en = {
         "macOS blocks apps from reading protected folders like the Trash until you grant Full Disk Access.",
       grant: "Open Full Disk Access settings",
       hint: "After enabling access, reopen the app.",
+      // Toast shown when a denied folder bounces the tab back. Clicking it opens the settings pane.
+      bounced:
+        "That folder needs Full Disk Access. Click here to open System Settings, then reopen the app.",
+    },
+    // Shown in place of the listing when a remote (SFTP) folder fails to load — the description is
+    // the loader's error (connections.listError / hostKeyChanged).
+    remoteError: {
+      title: "Can't reach this server",
+      retry: "Retry",
+    },
+    // Shown (non-blocking) when a read hangs far too long — typically a network share whose server
+    // went away. The app stays alive; this offers a way out without waiting for the OS timeout.
+    stalled: {
+      title: "Still loading…",
+      description:
+        "This folder is taking a long time. If it's a network share, the server may be slow or disconnected. You can keep waiting, or leave.",
+      leave: "Go to Volumes",
     },
     ntfs: {
       title: "Read-only NTFS drive",
@@ -565,6 +935,7 @@ export const en = {
   errors: {
     open: (reason: string) => `Could not open file: ${reason}`,
     openInTerminal: (reason: string) => `Could not open terminal: ${reason}`,
+    customAction: (reason: string) => `Could not run custom action: ${reason}`,
     delete: (name: string, reason: string) =>
       `Could not delete ${name}: ${reason}`,
     restore: (name: string, reason: string) =>
@@ -575,12 +946,14 @@ export const en = {
     undo: (reason: string) => `Could not undo: ${reason}`,
     redo: (reason: string) => `Could not redo: ${reason}`,
     createFolder: (reason: string) => `Could not create folder: ${reason}`,
+    createTextFile: (reason: string) => `Could not create text file: ${reason}`,
     copyImage: (reason: string) => `Could not copy image: ${reason}`,
     properties: (reason: string) => `Could not read properties: ${reason}`,
     emptyTrash: (reason: string) => `Could not empty the Trash: ${reason}`,
     eject: (reason: string) => `Could not eject: ${reason}`,
     save: (reason: string) => `Could not save: ${reason}`,
     read: (reason: string) => `Could not read file: ${reason}`,
+    dragOut: (reason: string) => `Could not start dragging files: ${reason}`,
     openSystemMonitor: (reason: string) =>
       `Could not open the system monitor: ${reason}`,
   },

@@ -6,6 +6,19 @@ export const IMAGE_ZOOM_MAX = 5;
 // Scale change per wheel delta unit, and per +/- button click.
 export const IMAGE_ZOOM_STEP = 0.0015;
 export const IMAGE_ZOOM_BUTTON_STEP = 0.5;
+export const IMAGE_ROTATION_STEP = 90;
+export const IMAGE_ROTATION_FULL = 360;
+export const IMAGE_ROTATION_HALF = 180;
+
+export const IMAGE_ROTATION_ACTIONS = [
+  { direction: -1, label: "rotateLeft" },
+  { direction: 1, label: "rotateRight" },
+] as const;
+
+export const IMAGE_COPY_ACTIONS = [
+  { label: "copyImage", currentState: false },
+  { label: "copyImageCurrentState", currentState: true },
+] as const;
 
 // Centered pan (no offset) — the reset value whenever zoom returns to 1x.
 export const NO_PAN = { x: 0, y: 0 };

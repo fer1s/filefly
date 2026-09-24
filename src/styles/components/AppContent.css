@@ -1,0 +1,9 @@
+/* One continuous canvas keeps the navigation and directory from becoming nested panels. */
+.AppContent .tab_content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  padding: var(--space-2);
+  background-color: var(--color-background-app);
+}

@@ -14,51 +14,43 @@ import {
   faFileZipper,
 } from "@fortawesome/free-solid-svg-icons";
 
-import {
-  ARCHIVE_FORMATS,
-  AUDIO_FORMATS,
-  CODE_FORMATS,
-  CSV_FORMATS,
-  IMAGE_FORMATS,
-  MARKDOWN_FORMATS,
-  PDF_FORMAT,
-  PRESENTATION_FORMATS,
-  SPREADSHEET_FORMATS,
-  TEXT_FORMATS,
-  VIDEO_FORMATS,
-  WORD_FORMATS,
-} from "@/features/directory/constants";
+import { FILE_CATEGORY, type FileTypeExtensions } from "@/shared/constants";
 
-// Declarative file-type → glyph registry. The first group whose formats include the extension
-// wins (groups are disjoint today, so order is cosmetic). Extend by adding a row — no branching.
-const FILE_ICON_REGISTRY: readonly {
-  formats: readonly string[];
-  icon: IconDefinition;
-}[] = [
-  { formats: ARCHIVE_FORMATS, icon: faFileZipper },
-  { formats: AUDIO_FORMATS, icon: faFileAudio },
-  { formats: VIDEO_FORMATS, icon: faFileVideo },
-  { formats: IMAGE_FORMATS, icon: faFileImage },
-  { formats: [PDF_FORMAT], icon: faFilePdf },
-  { formats: WORD_FORMATS, icon: faFileWord },
-  { formats: SPREADSHEET_FORMATS, icon: faFileExcel },
-  { formats: CSV_FORMATS, icon: faFileCsv },
-  { formats: PRESENTATION_FORMATS, icon: faFilePowerpoint },
-  { formats: CODE_FORMATS, icon: faFileCode },
-  { formats: [...MARKDOWN_FORMATS, ...TEXT_FORMATS], icon: faFileLines },
-];
+import { categoryOf } from "../../formats";
 
-// Glyph for a file by extension; the generic file icon when no group matches.
-export const getFileIcon = (extension: string): IconDefinition => {
-  const ext = extension.toLowerCase().trim();
-  return (
-    FILE_ICON_REGISTRY.find((entry) => entry.formats.includes(ext))?.icon ??
-    faFile
-  );
+// Declarative file-category → glyph registry. Which extensions land in a category is the user's
+// call (Settings › File types); the glyph for a category is not — that mapping lives here so the
+// user never has to pick an icon. Extend by adding a category + row, no branching.
+export const FILE_ICON_REGISTRY: Record<
+  (typeof FILE_CATEGORY)[keyof typeof FILE_CATEGORY],
+  IconDefinition
+> = {
+  [FILE_CATEGORY.ARCHIVE]: faFileZipper,
+  [FILE_CATEGORY.AUDIO]: faFileAudio,
+  [FILE_CATEGORY.VIDEO]: faFileVideo,
+  [FILE_CATEGORY.IMAGE]: faFileImage,
+  [FILE_CATEGORY.PDF]: faFilePdf,
+  [FILE_CATEGORY.WORD]: faFileWord,
+  [FILE_CATEGORY.SPREADSHEET]: faFileExcel,
+  [FILE_CATEGORY.CSV]: faFileCsv,
+  [FILE_CATEGORY.PRESENTATION]: faFilePowerpoint,
+  [FILE_CATEGORY.CODE]: faFileCode,
+  [FILE_CATEGORY.TEXT]: faFileLines,
+  [FILE_CATEGORY.MARKDOWN]: faFileLines,
+};
+
+// Glyph for a file by extension; the generic file icon when no category claims it.
+export const getFileIcon = (
+  extensions: FileTypeExtensions,
+  extension: string,
+): IconDefinition => {
+  const category = categoryOf(extensions, extension);
+  return category ? FILE_ICON_REGISTRY[category] : faFile;
 };
 
 // Every glyph getFileIcon can return, for pre-rendering them (e.g. as native drag previews).
+// Category-keyed, so it never changes with the user's extension map.
 export const FILE_ICONS: readonly IconDefinition[] = [
-  ...FILE_ICON_REGISTRY.map((entry) => entry.icon),
+  ...Object.values(FILE_ICON_REGISTRY),
   faFile,
 ];

@@ -1,3 +1,8 @@
+/* @sito/ui base styles live in a named cascade layer: every unlayered app rule beats them no matter
+   the specificity or the order stylesheets end up loaded in. Vite's code-split build emits chunk CSS
+   (Button, DialogHeader, …) before index.css, which otherwise let the package's same-specificity
+   rules (.sito-ui-dialog, .sito-ui-button) win over the app's (.dialog, .Button). */
+@import url("@sito/ui/styles.css") layer(sito-ui);
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap");
 
 * {
@@ -32,6 +37,20 @@ body {
 
 .shadow {
   box-shadow: var(--shadow-elevation);
+}
+
+/* Pressed-state feedback. @sito/ui only scales buttons carrying its .sito-ui-button class, which
+   bespoke controls (`unstyled` Button wrapper, raw <button>s) never get — mirror the same token
+   here so every real button control presses alike. Drag surfaces (dir entries, tabs, volume rows,
+   grips) are divs, so this cannot latch onto a drag gesture. */
+button:enabled:not([aria-disabled="true"]):active {
+  transform: scale(var(--sito-ui-button-active-scale));
+}
+
+/* Except while resizing list columns: the header button stays :active for the whole drag and a
+   held-down scale reads as a glitch, not feedback. */
+.list_header.resizing button:active {
+  transform: none;
 }
 
 /* Shared header for dialogs and side panels: title on the left, close button on the right. */

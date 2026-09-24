@@ -1,10 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { useStateContext } from "@/shared/providers/StateProvider";
 import { DirEntry } from "@/shared/models";
 import { SFTP_SCHEME } from "@/shared/constants";
 
-import { dirSizeCache } from "./dirSizeCache";
+import {
+  clearDirSizeCache,
+  getFreshCachedDirSize,
+  setCachedDirSize,
+  setLiveCachedDirSize,
+} from "./dirSizeCache";
 
 // Bulk size-walking a remote folder would fire a recursive SFTP walk per subfolder (many network
 // round trips) just from listing it — too heavy. Remote folder sizes are computed only on demand
@@ -48,13 +53,27 @@ export const useDirSizes = (
   }
 
   useEffect(() => {
-    dirSizeCache.clear();
+    clearDirSizeCache();
   }, [ignoresKey]);
+
+  // Rehydrate entries already measured in this session. The cache validates both the directory
+  // mtime and ignore rules, so only unchanged results bypass the backend lookup.
+  const resolvedSizes = useMemo(() => {
+    const next = { ...sizes };
+    entries.forEach((entry) => {
+      const cached = getFreshCachedDirSize(entry, ignoresKey);
+      if (cached != null) next[entry.path] = cached;
+    });
+    return next;
+  }, [entries, ignoresKey, sizes]);
 
   useEffect(() => {
     if (!enabled) return;
 
-    const queue = entries.filter(isWalkable);
+    const queue = entries.filter(
+      (entry) =>
+        isWalkable(entry) && getFreshCachedDirSize(entry, ignoresKey) == null,
+    );
     if (!queue.length) return;
 
     let cancelled = false;
@@ -84,7 +103,7 @@ export const useDirSizes = (
         if (!folder) return;
         try {
           const size = await fs.getDirSize(folder.path);
-          dirSizeCache.set(folder.path, size);
+          setCachedDirSize(folder, size, ignoresKey);
           if (!cancelled) {
             pending[folder.path] = size;
             scheduleFlush();
@@ -117,7 +136,7 @@ export const useDirSizes = (
     let cancelled = false;
     let unlisten: (() => void) | undefined;
     fs.onDirSizeChanged((change) => {
-      dirSizeCache.set(change.path, change.size);
+      setLiveCachedDirSize(change.path, change.size);
       setSizes((prev) => ({ ...prev, [change.path]: change.size }));
     }).then((fn) => {
       if (cancelled) fn();
@@ -132,7 +151,10 @@ export const useDirSizes = (
   // Still computing while any visible folder has no size yet. Derived (no extra state) so it
   // flips off on its own as the batches land.
   const computing =
-    enabled && entries.some((entry) => isWalkable(entry) && sizes[entry.path] == null);
+    enabled &&
+    entries.some(
+      (entry) => isWalkable(entry) && resolvedSizes[entry.path] == null,
+    );
 
-  return { sizes, computing };
+  return { sizes: resolvedSizes, computing };
 };

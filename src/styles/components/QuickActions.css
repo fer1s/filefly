@@ -1,11 +1,46 @@
 /* Quick-actions toolbar on the left of the QuickBar. */
 .QuickBar .quick_actions {
   display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--space-1);
 }
 
-/* Danger-colored action (destroy). */
+.QuickBar .quick_actions .quick_sort {
+  margin-left: auto;
+}
+
+.QuickBar .quick_actions .quick_action_menu_label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--size-control-medium);
+  padding: var(--space-1) var(--space-2);
+  border: none;
+  border-radius: var(--radius-sm);
+  background-color: transparent;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-base);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.QuickBar .quick_actions .quick_action_menu_label:hover {
+  background-color: var(--color-overlay-hover);
+}
+
+/* Vertical counterpart of the context menu separators: the action layout remains the shared
+   source of truth while the horizontal toolbar preserves the same conceptual groups. */
+.QuickBar .quick_actions .quick_action_separator {
+  width: var(--border-width-default);
+  height: var(--size-control-small);
+  flex: 0 0 var(--border-width-default);
+  background-color: var(--color-overlay-active);
+}
+
+/* Danger-colored actions (move to Trash and permanent delete). */
 .QuickBar .quick_actions .qa_danger svg {
   color: var(--color-danger);
 }

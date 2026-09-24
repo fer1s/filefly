@@ -11,6 +11,8 @@ export const previewAction: EntryAction = {
   id: ENTRY_ACTION.PREVIEW,
   label: () => t.common.preview,
   icon: faEye,
+  // Redundant when opening the entry already launches the in-app preview — hide it then.
+  isVisible: ({ opensInAppPreview }) => !opensInAppPreview,
   run: ({ elementId, onPreview, onClose }) => {
     onPreview(elementId);
     onClose();

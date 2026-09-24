@@ -8,8 +8,8 @@
   display: flex;
   align-items: center;
   padding: var(--space-0-5) var(--space-1-5);
-  background-color: var(--color-overlay-faint);
-  border: var(--border-width-default) solid var(--color-border-faint);
+  background-color: transparent;
+  border: var(--border-width-default) solid transparent;
   border-radius: var(--radius-sm);
   /* The empty area is the click target that opens the editable input. */
   cursor: text;

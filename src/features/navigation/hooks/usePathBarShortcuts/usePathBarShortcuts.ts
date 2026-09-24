@@ -25,7 +25,14 @@ export const usePathBarShortcuts = ({
   useHotkey(KEYMAP_ACTION.TOGGLE_HIDDEN, toggleHidden);
   useHotkey(KEYMAP_ACTION.TOGGLE_INFO, toggleInfo);
   useHotkey(KEYMAP_ACTION.SEARCH, toggleSearch);
-  // Escape closes the search field whether or not the input is focused (allowInInput), so it works
+  // Plain Backspace has no navigation action, but WKWebView still treats it as browser-history
+  // back. Cancel only that native fallback and let registered handlers continue: type-to-find may
+  // edit its query, and an explicit user keymap binding may still own the key.
+  useHotkey({ keys: [KEY.BACKSPACE] }, (event) => {
+    event.preventDefault();
+    return false;
+  });
+  // Escape clears the search whether or not the input is focused (allowInInput), so it works
   // both while typing and while browsing the results.
   useHotkey({ keys: [KEY.ESCAPE] }, closeSearch, {
     when: searchActive,

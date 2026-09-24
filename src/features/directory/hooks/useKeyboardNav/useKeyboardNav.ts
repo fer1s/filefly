@@ -30,14 +30,15 @@ export const useKeyboardNav = ({
   }, [selectedIDs]);
 
   useEffect(() => {
-    // Skip when typing in the path bar or any other text field.
-    const isTypingTarget = (el: EventTarget | null) => {
+    // Text fields and overlays own their keyboard events; directory navigation must stay behind.
+    const shouldIgnoreTarget = (el: EventTarget | null) => {
       const t = el as HTMLElement | null;
       return (
         !!t &&
         (t.tagName === "INPUT" ||
           t.tagName === "TEXTAREA" ||
-          t.isContentEditable)
+          t.isContentEditable ||
+          t.closest('[role="menu"]') !== null)
       );
     };
 
@@ -136,17 +137,25 @@ export const useKeyboardNav = ({
     // Type-to-find: accumulate typed chars; a single-char buffer starts after the current entry so
     // repeated presses cycle through matches.
     const typeahead = (char: string) => {
-      searchBufferRef.current += char;
-      onTypeaheadChange(searchBufferRef.current);
+      const currentBuffer = searchBufferRef.current;
+      const repeatedSingleChar =
+        currentBuffer.length === 1 &&
+        currentBuffer.toLowerCase() === char.toLowerCase();
+      const nextBuffer = repeatedSingleChar
+        ? currentBuffer
+        : currentBuffer + char;
+
+      searchBufferRef.current = nextBuffer;
+      onTypeaheadChange(nextBuffer);
       scheduleTypeaheadReset();
 
-      const buf = searchBufferRef.current.toLowerCase();
+      const buf = nextBuffer.toLowerCase();
       setSelectedIDs((prev) => {
         if (!items.length) return prev;
         const current = prev.length
           ? items.findIndex((e) => e.path === prev[prev.length - 1])
           : -1;
-        const start = buf.length === 1 ? current + 1 : 0;
+        const start = nextBuffer.length === 1 ? current + 1 : 0;
         for (let i = 0; i < items.length; i++) {
           const entry = items[(start + i) % items.length];
           if (entry.name.toLowerCase().startsWith(buf)) return [entry.path];
@@ -172,7 +181,7 @@ export const useKeyboardNav = ({
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (isTypingTarget(e.target)) return;
+      if (shouldIgnoreTarget(e.target)) return;
       if (!enabled) return;
 
       // Printable single characters drive the type-to-find search.

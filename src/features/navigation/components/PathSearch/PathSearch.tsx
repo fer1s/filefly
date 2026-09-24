@@ -1,13 +1,14 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   faMagnifyingGlass,
   faClockRotateLeft,
 } from "@fortawesome/free-solid-svg-icons";
 
+import Button from "@/shared/components/elements/Button";
 import Icon from "@/shared/components/elements/Icon";
+import TextInput from "@/shared/components/elements/TextInput";
 import { useRecentSearches } from "@/shared/search/recentSearches";
-import { classNames } from "@/shared/utils";
 import { t } from "@/lang";
 
 import "@/styles/components/PathSearch.css";
@@ -15,36 +16,24 @@ import "@/styles/components/PathSearch.css";
 import { RECENTS_GAP } from "./constants";
 import type { DropdownCoords, PathSearchProps } from "./types";
 
-// Inline folder filter, expanded from the PathBar's search button (which it replaces while open).
-// Bound to the per-tab `search` state. Focusing the empty field shows a small recent-searches
-// dropdown (portaled so the box's overflow:hidden, used by the open/close animation, can't clip
-// it). Escape closes; an empty blur closes too. Animates in on mount and out via `closing`.
+// Persistent per-tab folder filter. The portaled recent-search menu stays outside the shell's
+// overflow clipping; focus remains controlled by the existing search shortcut.
 const PathSearch = ({
   value,
   onChange,
-  onClose,
-  closing,
-  onExited,
+  inputRef,
+  onFocusChange,
 }: PathSearchProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
   const [focused, setFocused] = useState(false);
-  const [opened, setOpened] = useState(false);
   const [coords, setCoords] = useState<DropdownCoords | null>(null);
 
   const { recents, clearRecents } = useRecentSearches();
-  // Gate on `opened` so recents appear only after the open animation finishes — while the box is
-  // still growing (max-width 0→full), the tracked dropdown would fly across from the button spot.
-  const showRecents =
-    focused && opened && !value && !closing && recents.length > 0;
-
-  useEffect(() => inputRef.current?.focus(), []);
+  const showRecents = focused && !value && recents.length > 0;
 
   // Measure and position the dropdown under the box when it opens (portal renders only while
-  // showRecents, so stale coords while hidden are harmless — no need to reset them). Focus fires
-  // on mount while the box is still animating open (max-width 0→full), so a one-shot measure would
-  // capture the collapsed width/position; re-measure via ResizeObserver as it grows, and on
-  // scroll/resize, so the dropdown tracks the box's final rect.
+  // showRecents, so stale coords while hidden are harmless — no need to reset them). Observe
+  // resizes so the menu follows the field when neighbouring controls or window size change.
   useLayoutEffect(() => {
     if (!showRecents) return;
     const el = containerRef.current;
@@ -76,28 +65,24 @@ const PathSearch = ({
   };
 
   return (
-    <div
-      ref={containerRef}
-      className={classNames("PathSearch", "shadow", closing && "closing")}
-      onAnimationEnd={(event) => {
-        if (event.target !== event.currentTarget) return;
-        if (closing) onExited();
-        else setOpened(true);
-      }}
-    >
+    <div ref={containerRef} className="PathSearch shadow">
       <Icon className="path_search_icon" icon={faMagnifyingGlass} />
-      <input
+      <TextInput
+        unstyled
         ref={inputRef}
-        type="text"
         className="path_search_input"
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        onFocus={() => setFocused(true)}
+        onFocus={() => {
+          setFocused(true);
+          onFocusChange(true);
+        }}
         onBlur={() => {
           setFocused(false);
-          if (!value) onClose();
+          onFocusChange(false);
         }}
         placeholder={t.pathbar.searchPlaceholder}
+        aria-label={t.pathbar.search}
       />
 
       {showRecents &&
@@ -110,26 +95,26 @@ const PathSearch = ({
             <div className="path_recents_header">
               <span>{t.pathbar.recentSearches}</span>
               {/* preventDefault on mousedown so clicking doesn't blur (and close) the field. */}
-              <button
-                type="button"
+              <Button
+                unstyled
                 className="path_recents_clear"
                 onMouseDown={(event) => event.preventDefault()}
                 onClick={clearRecents}
               >
                 {t.pathbar.clearRecents}
-              </button>
+              </Button>
             </div>
             {recents.map((query) => (
-              <button
+              <Button
                 key={query}
-                type="button"
+                unstyled
                 className="path_recents_item"
                 onMouseDown={(event) => event.preventDefault()}
                 onClick={() => selectRecent(query)}
               >
                 <Icon icon={faClockRotateLeft} />
                 <span>{query}</span>
-              </button>
+              </Button>
             ))}
           </div>,
           document.body,

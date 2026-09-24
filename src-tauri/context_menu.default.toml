@@ -4,9 +4,13 @@
 #
 # Action ids map to the predefined actions in the app:
 #   open               open a file with the OS default app, or enter a folder
+#   open_in_new_tab    open a folder in a fresh tab and focus it
+#   open_containing_folder  open a Recents/search result's parent in a fresh tab
 #   open_in_terminal   open a terminal at the folder (folders / a file's parent)
+#   create_file        submenu: create a new file inside a folder
 #   preview            in-app preview (images, markdown, pdf, video, audio)
 #   copy               copy to the internal clipboard
+#   copy_path          copy the entry's filesystem path(s) to the OS clipboard
 #   cut                cut to the internal clipboard
 #   paste              paste the clipboard into the current directory
 #   rename             inline rename
@@ -14,15 +18,23 @@
 #   restore            restore a trashed item to where it came from (or pick a folder)
 #   destroy            permanently delete (irreversible)
 #   properties         open the properties panel
+#   compress           submenu: compress the selection into an archive (.zip)
+#   extract            extract an archive's top-level entries directly beside it ("Extract Here")
+#   extract_to_folder  extract an archive into a new subfolder beside it, named after the archive
 #   sort_by            submenu: pick the sort key/direction (per folder)
 #   toggle_hidden      toggle showing hidden entries / dotfiles (global)
 #
 # Use the literal "separator" to draw a divider between groups. Order here is display order.
+#
+# Settings can also append [[custom_action]] entries with a label, curated icon key, targets
+# ("directory", "folder", "file"), optional file extensions, command and argv list. Commands run
+# directly without a shell. Argument placeholders: {path}, {paths}, {directory}, {name}, {extension}.
 
 # Right-click on the empty floor of the current directory.
 [directory]
 actions = [
   "new_folder",
+  "create_file",
   "paste",
   "separator",
   "sort_by",
@@ -37,10 +49,17 @@ actions = [
 [folder]
 actions = [
   "open",
+  "open_in_new_tab",
+  "open_containing_folder",
   "open_in_terminal",
+  "create_file",
+  "separator",
   "copy",
+  "copy_path",
   "cut",
   "rename",
+  "compress",
+  "separator",
   "trash",
   "destroy",
   "separator",
@@ -51,9 +70,14 @@ actions = [
 [file]
 actions = [
   "open",
+  "open_containing_folder",
+  "separator",
   "copy",
+  "copy_path",
   "cut",
   "rename",
+  "compress",
+  "separator",
   "trash",
   "destroy",
   "separator",
@@ -65,6 +89,8 @@ actions = [
 [trash]
 actions = [
   "open",
+  "open_containing_folder",
+  "separator",
   "restore",
   "separator",
   "destroy",
@@ -81,9 +107,14 @@ extensions = ["png", "jpg", "jpeg", "webp", "gif"]
 actions = [
   "open",
   "preview",
+  "open_containing_folder",
+  "separator",
   "copy",
+  "copy_path",
   "cut",
   "rename",
+  "compress",
+  "separator",
   "trash",
   "destroy",
   "separator",
@@ -95,9 +126,14 @@ extensions = ["md", "markdown"]
 actions = [
   "open",
   "preview",
+  "open_containing_folder",
+  "separator",
   "copy",
+  "copy_path",
   "cut",
   "rename",
+  "compress",
+  "separator",
   "trash",
   "destroy",
   "separator",
@@ -109,9 +145,14 @@ extensions = ["pdf"]
 actions = [
   "open",
   "preview",
+  "open_containing_folder",
+  "separator",
   "copy",
+  "copy_path",
   "cut",
   "rename",
+  "compress",
+  "separator",
   "trash",
   "destroy",
   "separator",
@@ -124,9 +165,14 @@ actions = [
 extensions = ["mp4", "webm", "mov", "m4v", "ogv"]
 actions = [
   "open",
+  "open_containing_folder",
+  "separator",
   "copy",
+  "copy_path",
   "cut",
   "rename",
+  "compress",
+  "separator",
   "trash",
   "destroy",
   "separator",
@@ -138,9 +184,37 @@ extensions = ["mp3", "wav", "ogg", "flac", "m4a"]
 actions = [
   "open",
   "preview",
+  "open_containing_folder",
+  "separator",
   "copy",
+  "copy_path",
   "cut",
   "rename",
+  "compress",
+  "separator",
+  "trash",
+  "destroy",
+  "separator",
+  "properties",
+]
+
+# Archive files: offer extraction actions beside Compress, in place of a preview.
+# Non-zip formats (7z, rar) extract through the system 7-Zip binary; without one on PATH the
+# extract actions hide themselves (see archiveNeedsSevenzip in the frontend action registry).
+[file_type.archive]
+extensions = ["zip", "7z", "rar"]
+actions = [
+  "open",
+  "open_containing_folder",
+  "separator",
+  "copy",
+  "copy_path",
+  "cut",
+  "rename",
+  "compress",
+  "extract",
+  "extract_to_folder",
+  "separator",
   "trash",
   "destroy",
   "separator",

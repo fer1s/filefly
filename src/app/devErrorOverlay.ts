@@ -52,18 +52,29 @@ const render = (): void => {
       : "  ·  app crashed — reload to recover");
   header.appendChild(title);
 
+  const actions = document.createElement("div");
+  actions.style.cssText = "display:flex;gap:8px;flex:0 0 auto;";
+  const buttonCss =
+    "background:#fff;color:#7a0010;border:0;border-radius:4px;padding:4px 12px;" +
+    "cursor:pointer;font:inherit;font-weight:600;";
+
+  const reload = document.createElement("button");
+  reload.textContent = "Reload";
+  reload.style.cssText = buttonCss;
+  reload.onclick = () => window.location.reload();
+  actions.appendChild(reload);
+
   if (recoverable) {
     const close = document.createElement("button");
     close.textContent = "Close";
-    close.style.cssText =
-      "background:#fff;color:#7a0010;border:0;border-radius:4px;padding:4px 12px;" +
-      "cursor:pointer;font:inherit;font-weight:600;";
+    close.style.cssText = buttonCss;
     close.onclick = () => {
       dismissed = true;
       removeOverlay();
     };
-    header.appendChild(close);
+    actions.appendChild(close);
   }
+  header.appendChild(actions);
   overlay.appendChild(header);
 
   const body = document.createElement("pre");

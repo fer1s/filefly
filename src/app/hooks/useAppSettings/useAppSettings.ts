@@ -6,6 +6,8 @@ import {
   type AppSettings,
 } from "@/shared/services/api";
 
+import { normalizeFileTypeExtensions } from "@/features/directory/formats";
+
 import { DEFAULT_SETTINGS, SETTINGS_PERSIST_DEBOUNCE_MS } from "./constants";
 
 // Owns the app-wide settings: hydrates them from settings.toml on launch and persists every
@@ -46,9 +48,20 @@ export const useAppSettings = () => {
   useEffect(() => {
     getSettings()
       .then((loaded) => {
-        latest.current = loaded;
+        // Merge over the defaults: a backend older than this frontend (dev HMR mid-upgrade, or a
+        // hand-edited file) can omit newer keys, which would otherwise surface as `undefined`.
+        const merged = {
+          ...DEFAULT_SETTINGS,
+          ...loaded,
+          // The merge above is shallow, so a settings.toml written by an older build (or edited by
+          // hand) could leave a file-type category missing — normalise it back to a full map.
+          fileTypeExtensions: normalizeFileTypeExtensions(
+            loaded.fileTypeExtensions,
+          ),
+        };
+        latest.current = merged;
         hydrated.current = true;
-        setSettingsState(loaded);
+        setSettingsState(merged);
       })
       .catch((error) => {
         hydrated.current = true;

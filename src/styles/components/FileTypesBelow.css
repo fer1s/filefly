@@ -1,0 +1,114 @@
+.settings_file_types {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+  container-type: inline-size;
+}
+
+.settings_file_types .settings_file_types_card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr) auto;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  border: var(--border-width-default) solid var(--color-border-default);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface-interactive);
+}
+
+.settings_file_types .settings_file_types_summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.settings_file_types .settings_file_types_icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: var(--space-12);
+  height: var(--space-12);
+  border-radius: var(--radius-md);
+  color: var(--color-text-on-solid);
+  background-color: var(--color-tag-gray);
+  box-shadow: var(--shadow-popover);
+}
+
+.settings_file_types .settings_file_types_icon svg {
+  width: var(--space-6);
+  height: var(--space-6);
+}
+
+.settings_file_types .settings_file_types_description {
+  min-width: 0;
+}
+
+.settings_file_types .settings_file_types_description h4 {
+  margin: 0;
+  font-size: var(--font-size-md);
+  color: var(--color-text-primary);
+}
+
+.settings_file_types .settings_file_types_description p {
+  margin: var(--space-1) 0 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+.settings_file_types .settings_file_types_chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.settings_file_types .settings_file_types_add {
+  justify-self: end;
+}
+
+.settings_file_types .settings_file_types_editor {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-top: var(--space-3);
+  border-top: var(--border-width-default) solid var(--color-border-default);
+}
+
+.settings_file_types .settings_file_types_input {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.settings_file_types .settings_file_types_input .settings_input {
+  flex: 1;
+  min-width: 0;
+}
+
+.settings_file_types .settings_file_types_error {
+  color: var(--color-danger);
+  font-size: var(--font-size-md);
+}
+
+/* Respond to the settings panel's width, including space consumed by its navigation sidebar. */
+@container (max-width: 700px) {
+  .settings_file_types .settings_file_types_card {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .settings_file_types .settings_file_types_chips {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .settings_file_types .settings_file_types_add {
+    grid-column: 2;
+    grid-row: 1;
+  }
+}

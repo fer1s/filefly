@@ -10,35 +10,29 @@ import {
   type FileKind,
   type SearchFilters,
 } from "@/shared/search/filters";
-import {
-  IMAGE_FORMATS,
-  VIDEO_FORMATS,
-  AUDIO_FORMATS,
-  MARKDOWN_FORMATS,
-  PDF_FORMAT,
-} from "@/features/directory/constants";
+import { FILE_CATEGORY, type FileCategory } from "@/shared/constants";
 
-// Document extensions treated as the "document" kind (PDF + text/markdown + common office docs).
-const DOCUMENT_FORMATS = [
-  PDF_FORMAT,
-  ...MARKDOWN_FORMATS,
-  "txt",
-  "rtf",
-  "doc",
-  "docx",
-  "pages",
-  "odt",
-];
+import { getFileTypeExtensions, categoryOf } from "./formats";
 
-// Map an entry to one of the coarse filter kinds by its extension (or folder-ness).
+// Coarse search-filter kind per file-type category. Categories the user can remap (Settings ›
+// File types) feed this, so a custom extension filters like the category it was put in.
+// Categories absent from this map fall through to FILE_KIND.OTHER.
+const KIND_BY_CATEGORY: Partial<Record<FileCategory, FileKind>> = {
+  [FILE_CATEGORY.IMAGE]: FILE_KIND.IMAGE,
+  [FILE_CATEGORY.VIDEO]: FILE_KIND.VIDEO,
+  [FILE_CATEGORY.AUDIO]: FILE_KIND.AUDIO,
+  [FILE_CATEGORY.PDF]: FILE_KIND.DOCUMENT,
+  [FILE_CATEGORY.MARKDOWN]: FILE_KIND.DOCUMENT,
+  [FILE_CATEGORY.TEXT]: FILE_KIND.DOCUMENT,
+  [FILE_CATEGORY.WORD]: FILE_KIND.DOCUMENT,
+};
+
+// Map an entry to one of the coarse filter kinds by its extension (or folder-ness). Reads the
+// live category map from the store: filtering runs outside React (search results pipeline).
 export const kindOf = (entry: DirEntry): FileKind => {
   if (entry.metadata.isDir) return FILE_KIND.FOLDER;
-  const ext = extension(entry.name);
-  if (IMAGE_FORMATS.includes(ext)) return FILE_KIND.IMAGE;
-  if (VIDEO_FORMATS.includes(ext)) return FILE_KIND.VIDEO;
-  if (AUDIO_FORMATS.includes(ext)) return FILE_KIND.AUDIO;
-  if (DOCUMENT_FORMATS.includes(ext)) return FILE_KIND.DOCUMENT;
-  return FILE_KIND.OTHER;
+  const category = categoryOf(getFileTypeExtensions(), extension(entry.name));
+  return (category && KIND_BY_CATEGORY[category]) ?? FILE_KIND.OTHER;
 };
 
 // Apply the filters to a list of entries (typically recursive search results). `currentPath` is the

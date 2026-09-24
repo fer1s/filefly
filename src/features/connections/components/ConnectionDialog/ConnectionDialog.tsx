@@ -3,20 +3,19 @@ import { useState } from "react";
 import Dialog from "@/shared/components/patterns/Dialog";
 import DialogHeader from "@/shared/components/patterns/DialogHeader";
 import DialogActions from "@/shared/components/patterns/DialogActions";
-import Button from "@/shared/components/elements/Button";
-import { useCloseOnEscape } from "@/shared/hooks/useCloseOnEscape";
+import Button, { BUTTON_VARIANT } from "@/shared/components/elements/Button";
+import TextInput from "@/shared/components/elements/TextInput";
+import Select from "@/shared/components/elements/Select";
+import PasswordInput from "@/shared/components/patterns/PasswordInput";
 import type { NewConnection } from "@/shared/services/api";
-import { classNames } from "@/shared/utils";
 import { t } from "@/lang";
 
 import "@/styles/components/ConnectionDialog.css";
 
 import { AUTH_KIND, SSH_DEFAULT_PORT, type AuthKind } from "../../constants";
-import { ConnectionsManager } from "../../managers/ConnectionsManager";
+import { useConnections } from "../../providers/ConnectionsProvider";
 import { CONNECTION_TITLE_ID } from "./constants";
 import type { ConnectionDialogProps } from "./types";
-
-const manager = new ConnectionsManager();
 
 // Create-connection form (SSH_PLAN.md phase 2). Non-secret fields go to connections.toml; the
 // password / key passphrase go to the OS keychain (handled by the backend). The auth selector only
@@ -27,7 +26,7 @@ const ConnectionDialog = ({
   onSubmit,
   onClose,
 }: ConnectionDialogProps) => {
-  useCloseOnEscape(visible, onClose);
+  const { manager } = useConnections();
 
   const editing = !!initial;
 
@@ -56,8 +55,8 @@ const ConnectionDialog = ({
       setHost(initial?.host ?? "");
       setPort(String(initial?.port ?? SSH_DEFAULT_PORT));
       setUser(initial?.user ?? "");
-      setAuthKind(AUTH_KIND.AGENT);
-      setKeyPath("");
+      setAuthKind(initial?.keyPath ? AUTH_KIND.KEY : AUTH_KIND.AGENT);
+      setKeyPath(initial?.keyPath ?? "");
       setKeyPassphrase("");
       setPassword("");
       setBusy(false);
@@ -84,7 +83,9 @@ const ConnectionDialog = ({
       port: parsedPort,
       user: user.trim(),
       keyPath:
-        authKind === AUTH_KIND.KEY && keyPath.trim() ? keyPath.trim() : undefined,
+        authKind === AUTH_KIND.KEY && keyPath.trim()
+          ? keyPath.trim()
+          : undefined,
       keyPassphrase:
         authKind === AUTH_KIND.KEY && keyPassphrase ? keyPassphrase : undefined,
       password:
@@ -103,9 +104,9 @@ const ConnectionDialog = ({
   return (
     <Dialog
       visible={visible}
+      title={editing ? t.connections.editTitle : t.connections.newTitle}
       onClose={onClose}
       className="connection_modal"
-      labelledBy={CONNECTION_TITLE_ID}
     >
       <DialogHeader
         title={editing ? t.connections.editTitle : t.connections.newTitle}
@@ -122,7 +123,7 @@ const ConnectionDialog = ({
       >
         <label className="connection_field">
           <span>{t.connections.fieldName}</span>
-          <input
+          <TextInput
             autoFocus
             value={name}
             placeholder={t.connections.fieldNamePlaceholder}
@@ -132,7 +133,7 @@ const ConnectionDialog = ({
 
         <label className="connection_field">
           <span>{t.connections.fieldHost}</span>
-          <input
+          <TextInput
             value={host}
             placeholder={t.connections.fieldHostPlaceholder}
             onChange={(event) => setHost(event.target.value)}
@@ -142,7 +143,7 @@ const ConnectionDialog = ({
         <div className="connection_row">
           <label className="connection_field connection_field_user">
             <span>{t.connections.fieldUser}</span>
-            <input
+            <TextInput
               value={user}
               placeholder={t.connections.fieldUserPlaceholder}
               onChange={(event) => setUser(event.target.value)}
@@ -150,7 +151,7 @@ const ConnectionDialog = ({
           </label>
           <label className="connection_field connection_field_port">
             <span>{t.connections.fieldPort}</span>
-            <input
+            <TextInput
               type="number"
               min={1}
               max={65535}
@@ -162,8 +163,7 @@ const ConnectionDialog = ({
 
         <label className="connection_field">
           <span>{t.connections.fieldAuth}</span>
-          <select
-            className="connection_select"
+          <Select
             value={authKind}
             onChange={(event) => setAuthKind(event.target.value as AuthKind)}
           >
@@ -172,14 +172,14 @@ const ConnectionDialog = ({
             <option value={AUTH_KIND.PASSWORD}>
               {t.connections.authPassword}
             </option>
-          </select>
+          </Select>
         </label>
 
         {authKind === AUTH_KIND.KEY && (
           <>
             <label className="connection_field">
               <span>{t.connections.fieldKeyPath}</span>
-              <input
+              <TextInput
                 value={keyPath}
                 placeholder={t.connections.fieldKeyPathPlaceholder}
                 onChange={(event) => setKeyPath(event.target.value)}
@@ -187,8 +187,7 @@ const ConnectionDialog = ({
             </label>
             <label className="connection_field">
               <span>{t.connections.fieldKeyPassphrase}</span>
-              <input
-                type="password"
+              <PasswordInput
                 value={keyPassphrase}
                 placeholder={t.connections.optional}
                 onChange={(event) => setKeyPassphrase(event.target.value)}
@@ -200,8 +199,7 @@ const ConnectionDialog = ({
         {authKind === AUTH_KIND.PASSWORD && (
           <label className="connection_field">
             <span>{t.connections.fieldPassword}</span>
-            <input
-              type="password"
+            <PasswordInput
               value={password}
               onChange={(event) => setPassword(event.target.value)}
             />
@@ -217,7 +215,7 @@ const ConnectionDialog = ({
           </Button>
           <Button
             type="submit"
-            className={classNames("connection_submit", !canSubmit && "disabled")}
+            variant={BUTTON_VARIANT.PRIMARY}
             disabled={!canSubmit}
           >
             {editing ? t.connections.save : t.connections.create}

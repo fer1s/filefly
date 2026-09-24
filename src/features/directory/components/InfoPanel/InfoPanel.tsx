@@ -3,17 +3,15 @@ import { convertFileSrc } from "@tauri-apps/api/core";
 import { useStateContext } from "@/shared/providers/StateProvider";
 import IconButton from "@/shared/components/elements/IconButton";
 import { classNames, extension } from "@/shared/utils";
-import {
-  IMAGE_FORMATS,
-  VIDEO_FORMATS,
-  AUDIO_FORMATS,
-  PDF_FORMAT,
-} from "@/features/directory/constants";
+
 import { t } from "@/lang";
 
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 
+import { FILE_CATEGORY } from "@/shared/constants";
+
 import { useDirectory } from "../../providers/DirectoryProvider";
+import { useFileTypeExtensions, categoryOf } from "../../formats";
 import { PropertiesContent } from "../Properties/PropertiesContent";
 
 import "@/styles/components/InfoPanel.css";
@@ -24,6 +22,7 @@ import "@/styles/components/InfoPanel.css";
 const InfoPanel = () => {
   const { infoPanelOpen, toggleInfoPanel } = useStateContext();
   const { selectedIDs, sorted } = useDirectory();
+  const fileTypes = useFileTypeExtensions();
 
   // Details a single entry: undefined when nothing is selected, or more than one is (e.g.
   // Ctrl+A). The panel stays open regardless (showing an empty state) so it doesn't slide
@@ -38,17 +37,19 @@ const InfoPanel = () => {
   const ext = entry ? extension(entry.name) : "";
   const src = entry ? convertFileSrc(entry.path) : "";
 
-  let preview = null;
-  if (entry?.metadata.isFile) {
-    if (IMAGE_FORMATS.includes(ext))
-      preview = <img src={src} alt={entry.name} draggable={false} />;
-    else if (VIDEO_FORMATS.includes(ext))
-      preview = <video src={src} controls />;
-    else if (AUDIO_FORMATS.includes(ext))
-      preview = <audio src={src} controls />;
-    else if (ext === PDF_FORMAT)
-      preview = <iframe src={src} title={entry.name} />;
-  }
+  // The inline preview is chosen by the entry's category, so an extension the user mapped onto
+  // Audio (e.g. .opus) plays here just like a built-in one — as long as the webview can decode it.
+  const category = entry?.metadata.isFile ? categoryOf(fileTypes, ext) : null;
+  const preview =
+    category === FILE_CATEGORY.IMAGE ? (
+      <img src={src} alt={entry?.name} draggable={false} />
+    ) : category === FILE_CATEGORY.VIDEO ? (
+      <video src={src} controls />
+    ) : category === FILE_CATEGORY.AUDIO ? (
+      <audio src={src} controls />
+    ) : category === FILE_CATEGORY.PDF ? (
+      <iframe src={src} title={entry?.name} />
+    ) : null;
 
   return (
     <aside className={classNames("InfoPanel", !visible && "closed")}>
