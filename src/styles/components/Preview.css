@@ -20,6 +20,14 @@
   transition-delay: 0s;
 }
 
+/* Detached preview root: audio only renders its floating controls, so this surface remains visible
+   behind them when there is no artwork. Fixed to the viewport because #root has no explicit size. */
+.preview_window {
+  position: fixed;
+  inset: 0;
+  background-color: var(--color-background-app);
+}
+
 .preview_container {
   position: fixed;
   z-index: 1001;
@@ -264,10 +272,12 @@
 }
 
 /* Raw markdown source editor (edit mode). Fills the preview body. */
+/* Fills the preview pane edge-to-edge: strips the shared .TextArea's frame + inset padding. */
 .preview_container .preview_content .preview_md_editor {
   width: 100%;
   height: 100%;
   box-sizing: border-box;
+  padding: 0;
   resize: none;
   border: none;
   outline: none;
@@ -382,29 +392,6 @@
   position: relative;
 }
 
-/* Floating controls pill (prev · zoom · next), centred over the content at the bottom. */
-.preview_container .preview_controls {
-  position: absolute;
-  bottom: var(--space-3);
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-1) var(--space-2-5);
-  /* Popover surface as raw RGB + a user-adjustable alpha (Settings › Appearance › Preview controls
-     transparency). The --preview-controls-opacity override is set inline on .App (see App.tsx).
-     Using the -rgb token (not --color-surface-popover) keeps the pill light in light mode. */
-  background-color: rgba(
-    var(--color-surface-popover-rgb),
-    var(--preview-controls-opacity)
-  );
-  backdrop-filter: blur(var(--blur-medium));
-  border: var(--border-width-default) solid var(--color-border-default);
-  border-radius: var(--radius-pill);
-  box-shadow: var(--shadow-popover);
-}
-
 .preview_container .preview_content.image img {
   max-width: 100%;
   max-height: 100%;
@@ -412,6 +399,12 @@
   height: auto;
   /* Don't let the image be dragged out as a file/ghost. */
   -webkit-user-drag: none;
+}
+
+.preview_container .preview_image_error {
+  padding: var(--space-5);
+  color: var(--color-text-secondary);
+  text-align: center;
 }
 
 .preview_container .preview_content.video video {
@@ -429,4 +422,24 @@
 .preview_container.image {
   width: calc(100% - var(--space-20));
   height: calc(100% - var(--space-20));
+}
+
+/* Windowed mode (PreviewWindow): the panel IS the window's content, framed by the native window
+   chrome. Fill the window edge-to-edge, opaque, with no floating-panel styling (no margin, border,
+   radius, blur, shadow, or enter animation) and no free-floating geometry. */
+.preview_container.windowed,
+.preview_container.windowed.image {
+  position: absolute;
+  inset: 0;
+  margin: var(--space-0);
+  width: 100%;
+  height: 100%;
+  border: none;
+  border-radius: var(--space-0);
+  background-color: var(--color-background-app);
+  backdrop-filter: none;
+  opacity: 1;
+  transform: none;
+  visibility: visible;
+  pointer-events: auto;
 }

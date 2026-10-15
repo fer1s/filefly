@@ -5,6 +5,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 import IconButton from "@/shared/components/elements/IconButton";
+import TextInput from "@/shared/components/elements/TextInput";
 import { t } from "@/lang";
 
 import type { PreviewFindBarProps } from "./types";
@@ -23,7 +24,8 @@ const PreviewFindBar = ({
   onClose,
 }: PreviewFindBarProps) => (
   <div className="preview_find">
-    <input
+    <TextInput
+      unstyled
       ref={inputRef}
       className="preview_find_input"
       value={query}

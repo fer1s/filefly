@@ -1,0 +1,29 @@
+.image_preview_skeleton {
+  position: absolute;
+  inset: var(--space-5);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-row) 25%,
+    var(--color-surface-interactive) 50%,
+    var(--color-surface-row) 75%
+  );
+  background-size: 200% 100%;
+  animation: image-preview-loading 1.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes image-preview-loading {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .image_preview_skeleton {
+    animation: none;
+  }
+}

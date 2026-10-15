@@ -17,31 +17,34 @@
   overflow-x: hidden;
   /* Empty gutters around the entries (no padding-top so the sticky list header stays
      flush). These bands give the rubber-band selection somewhere to start on every side,
-     not just the floor below the entries. Header and rows inset together, so list columns
-     stay aligned. */
+     not just the floor below the entries. The header cancels the side gutters for its background
+     and restores them as inner padding to keep its columns aligned with the rows. */
   padding: 0 var(--space-2-5) var(--space-2-5);
 }
 
 /* Hidden columns (toggled from the list header context menu). The cell stays in the DOM but is
    removed from the grid flow, so the dynamic --list-grid (set inline with one track per visible
-   column) keeps the header and rows aligned. Name is never hideable. */
+   column) keeps the header and rows aligned. Name is never hideable.
+   Selectors carry .dir_entry_item so they outrank the per-cell `display: flex` rules further
+   down (same class count otherwise → the later flex rule won, the cell stayed in flow with no
+   track, and wrapped under the icon as a stray "File"/"Directory" label). */
 .directory_content.hide_col_modified .list_header .modified,
-.directory_content.hide_col_modified .list .date_modified {
+.directory_content.hide_col_modified .list .dir_entry_item .date_modified {
   display: none;
 }
 
 .directory_content.hide_col_created .list_header .created,
-.directory_content.hide_col_created .list .date_created {
+.directory_content.hide_col_created .list .dir_entry_item .date_created {
   display: none;
 }
 
 .directory_content.hide_col_size .list_header .size,
-.directory_content.hide_col_size .list .size {
+.directory_content.hide_col_size .list .dir_entry_item .size {
   display: none;
 }
 
 .directory_content.hide_col_kind .list_header .kind,
-.directory_content.hide_col_kind .list .kind {
+.directory_content.hide_col_kind .list .dir_entry_item .kind {
   display: none;
 }
 
@@ -230,9 +233,14 @@ body.is-entry-dragging .drag_ghost {
 }
 
 .directory_page .grid .dir_entry_item {
-  /* Zoom scales the tile (and thus the icon), but not the label/badge fonts. */
-  width: calc(var(--size-directory-tile) * var(--zoom, 1));
-  height: calc(var(--size-directory-tile) * var(--zoom, 1));
+  /* Zoom scales the tile (and thus the icon), but not the label/badge fonts. --tile-scale is the
+     Finder-style "Icon size" setting — a second multiplier independent of the per-folder zoom. */
+  width: calc(
+    var(--size-directory-tile) * var(--zoom, 1) * var(--tile-scale, 1)
+  );
+  height: calc(
+    var(--size-directory-tile) * var(--zoom, 1) * var(--tile-scale, 1)
+  );
   cursor: pointer;
   background-color: transparent;
   border-radius: var(--radius-sm);
@@ -277,7 +285,7 @@ body.is-entry-dragging .drag_ghost {
 }
 
 .directory_page .grid .dir_entry_item .icon svg {
-  font-size: calc(var(--font-size-3xl) * var(--zoom, 1));
+  font-size: calc(var(--font-size-3xl) * var(--zoom, 1) * var(--tile-scale, 1));
   color: var(--color-text-muted);
 }
 
@@ -287,11 +295,89 @@ body.is-entry-dragging .drag_ghost {
   color: var(--color-accent);
 }
 
-.directory_page .grid .dir_entry_item .icon img {
+.directory_page .grid .dir_entry_item .icon > img {
   width: 100%;
   height: 100%;
   object-fit: contain;
   border-radius: var(--radius-xs);
+}
+
+/* At larger zoom levels, folders containing images keep their folder glyph and layer a compact
+   contact sheet over its body. The grid shape adapts for 1-4 previews without changing the tile. */
+.directory_page .grid .dir_entry_item .icon.has_folder_thumbnails > svg {
+  width: 94%;
+  height: 94%;
+}
+
+.directory_page .grid .dir_entry_item .icon .folder_thumbnails {
+  position: absolute;
+  left: 50%;
+  top: 58%;
+  transform: translate(-50%, -50%);
+  width: 78%;
+  height: 58%;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  gap: var(--border-width-default);
+  padding: var(--space-0-5);
+  overflow: hidden;
+  pointer-events: none;
+  background-color: var(--color-surface-solid);
+  border-radius: var(--radius-xs);
+}
+
+.directory_page .grid .dir_entry_item .icon .folder_thumbnails img {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  object-fit: cover;
+  border-radius: var(--radius-xs);
+}
+
+/* SVGs keep their transparent canvas when loaded directly. A neutral checkerboard behind only
+   those cells guarantees contrast for black and white artwork in either application theme. */
+.directory_page
+  .grid
+  .dir_entry_item
+  .icon
+  .folder_thumbnails
+  .folder_thumbnail.is_svg {
+  background-color: var(--color-transparency-grid-light);
+  background-image: conic-gradient(
+    var(--color-transparency-grid-dark) 25%,
+    var(--color-transparency-grid-light) 0 50%,
+    var(--color-transparency-grid-dark) 0 75%,
+    var(--color-transparency-grid-light) 0
+  );
+  background-size: var(--space-2) var(--space-2);
+  border: var(--border-width-default) solid
+    var(--color-transparency-grid-border);
+  object-fit: contain;
+}
+
+.directory_page
+  .grid
+  .dir_entry_item
+  .icon
+  .folder_thumbnails[data-count="1"]
+  img {
+  grid-column: 1 / -1;
+  grid-row: 1 / -1;
+}
+
+.directory_page .grid .dir_entry_item .icon .folder_thumbnails[data-count="2"] {
+  grid-template-rows: minmax(0, 1fr);
+}
+
+.directory_page
+  .grid
+  .dir_entry_item
+  .icon
+  .folder_thumbnails[data-count="3"]
+  img:first-child {
+  grid-row: 1 / -1;
 }
 
 /* Bottom label bar: name centred, tag dots to its left. Absolute so the icon can occupy the
@@ -310,6 +396,11 @@ body.is-entry-dragging .drag_ghost {
 
 .directory_page .grid .dir_entry_item .entry_label .tag_dots {
   order: -1;
+}
+
+/* Grid keeps the compact stem + corner badge; list mode shows this suffix inline with the name. */
+.directory_page .grid .dir_entry_item .list_name_extension {
+  display: none;
 }
 
 .directory_page .grid .dir_entry_item .entry_label h3 {
@@ -376,6 +467,10 @@ body.is-entry-dragging .drag_ghost {
   /* Top gutter below the sticky header so the rubber-band can start there. */
   padding-top: var(--space-2-5);
   padding-bottom: var(--space-2-5);
+  /* Finder-style: in list view the Icon size slider only nudges the icon (Finder's list icons are
+     small/large, not free-scaling). Capped at 2× so the icon always fits beside the name instead
+     of swallowing the column and blowing up the row; grid view gets the slider's full range. */
+  --list-tile-scale: min(var(--tile-scale, 1), 2);
 }
 
 /* Sticky column-header row above the entries. */
@@ -387,16 +482,12 @@ body.is-entry-dragging .drag_ghost {
   grid-template-columns: var(--list-grid);
   align-items: center;
   gap: var(--space-2);
-  padding: var(--space-1-5) var(--space-2-5);
-  background-color: var(--color-surface-backdrop);
-  backdrop-filter: blur(var(--blur-medium));
-  border-bottom: var(--border-width-default) solid var(--color-border-default);
-}
-
-/* Light theme: the dark 25%-black backdrop reads as a heavy gray band here. Use the
-   translucent-white floating surface so the header stays light and subtle. */
-:root[data-theme="light"] .directory_page .list_header {
-  background-color: var(--color-surface-floating);
+  /* Extend the background across the selection gutters without moving the column content. */
+  margin-inline: calc(-1 * var(--space-2-5));
+  padding: var(--space-1-5) calc(var(--space-2-5) * 2);
+  /* An opaque surface keeps scrolling filenames from showing through the sticky header. */
+  background-color: var(--color-surface-solid);
+  border-bottom: var(--border-width-default) solid var(--color-border-soft);
 }
 
 .directory_page .list_header button {
@@ -450,6 +541,43 @@ body.is-entry-dragging .drag_ghost {
   background-color: var(--color-overlay-hover);
 }
 
+/* Wide invisible hit target centred on each divider. The inner line only gains accent feedback on
+   hover/drag; the existing button::after remains the resting divider. */
+.directory_page .list_header button .list_column_resize {
+  position: absolute;
+  z-index: 2;
+  top: calc(-1 * var(--space-1-5));
+  right: calc(var(--space-2) / -2);
+  bottom: calc(-1 * var(--space-1-5));
+  width: var(--space-2);
+  cursor: col-resize;
+  touch-action: none;
+  overflow: visible;
+}
+
+.directory_page .list_header button .list_column_resize::after {
+  content: "";
+  position: absolute;
+  top: 20%;
+  bottom: 20%;
+  left: 50%;
+  width: var(--border-width-default);
+  transform: translateX(-50%);
+  background-color: transparent;
+}
+
+.directory_page .list_header button .list_column_resize:hover::after,
+.directory_page .list_header.resizing button .list_column_resize:active::after {
+  background-color: var(--color-accent);
+}
+
+.directory_page .list_header.resizing,
+.directory_page .list_header.resizing * {
+  cursor: col-resize !important;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
 .directory_page .list_header button:hover span,
 .directory_page .list_header button.active span {
   color: var(--color-text-secondary);
@@ -457,8 +585,11 @@ body.is-entry-dragging .drag_ghost {
 
 .directory_page .list .dir_entry_item {
   width: 100%;
-  /* Row grows with the icon zoom so the larger icon fits; column text stays the same size. */
-  height: calc(var(--size-directory-row) * var(--zoom, 1));
+  /* Row grows with the icon zoom (and the capped Icon size setting) so the larger icon fits;
+     column text stays the same size. */
+  height: calc(
+    var(--size-directory-row) * var(--zoom, 1) * var(--list-tile-scale, 1)
+  );
   display: grid;
   grid-template-columns: var(--list-grid);
   align-items: center;
@@ -471,14 +602,18 @@ body.is-entry-dragging .drag_ghost {
     border-color 0.1s ease-in-out;
 }
 
-/* Grid-only extension badge is hidden in the list (the Kind column shows it). */
+/* Grid-only extension badge is hidden in the list, where the full name includes the extension. */
 .directory_page .list .dir_entry_item .extension {
   display: none;
 }
 
 .directory_page .list .dir_entry_item .icon {
-  width: calc(var(--size-control-large) * var(--zoom, 1));
-  height: calc(var(--size-control-large) * var(--zoom, 1));
+  width: calc(
+    var(--size-directory-list-icon) * var(--zoom, 1) * var(--list-tile-scale, 1)
+  );
+  height: calc(
+    var(--size-directory-list-icon) * var(--zoom, 1) * var(--list-tile-scale, 1)
+  );
   flex-shrink: 0;
   display: flex;
   justify-content: center;
@@ -486,7 +621,9 @@ body.is-entry-dragging .drag_ghost {
 }
 
 .directory_page .list .dir_entry_item .icon svg {
-  font-size: calc(var(--font-size-lg) * var(--zoom, 1));
+  font-size: calc(
+    var(--font-size-3xl) * var(--zoom, 1) * var(--list-tile-scale, 1)
+  );
   color: var(--color-text-muted);
 }
 
@@ -582,14 +719,6 @@ body.is-entry-dragging .drag_ghost {
   user-select: none;
 }
 
-.directory_page .list .dir_entry_item:nth-child(odd) {
-  background-color: var(--color-overlay-faint);
-}
-
-.directory_page .list .dir_entry_item:nth-child(even) {
-  background-color: var(--color-surface-row);
-}
-
 .directory_page .list .dir_entry_item:hover {
   background-color: var(--color-overlay-hover);
 }
@@ -610,6 +739,10 @@ body.is-entry-dragging .drag_ghost {
 
 .directory_page .list .dir_entry_item.selected {
   background-color: var(--color-selection-background);
+  /* Inset outline adds a full selection frame without shifting the column geometry. */
+  outline: var(--border-width-default) solid var(--color-selection-border);
+  outline-offset: calc(-1 * var(--border-width-default));
+  border-radius: var(--radius-sm);
   box-shadow: inset var(--border-width-accent) 0 0
     var(--color-selection-indicator);
 }

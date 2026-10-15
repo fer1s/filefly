@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 
 import { Volume, DirEntry } from "@/shared/models";
@@ -9,12 +15,12 @@ import {
   SSH_HOST_KEY_CHANGED,
 } from "@/shared/constants";
 import { isTagsPath, tagFromPath } from "@/shared/utils";
-import { notify, TOAST_TYPE } from "@/shared/toast";
 import { t } from "@/lang";
 
 import { ROUTES } from "../../routes";
 import {
   DIRECTORY_LOADING_SPINNER_DELAY_MS,
+  DIRECTORY_STALL_DELAY_MS,
   DIRECTORY_WATCH_DEBOUNCE_MS,
   VOLUMES_MOUNT_DIR,
 } from "./constants";
@@ -29,14 +35,23 @@ export const useDirectoryContents = ({
   navigate,
   locationPathname,
   hideSystemRecents,
+  onAccessDenied,
 }: UseDirectoryContentsArgs) => {
   const [volumes, setVolumes] = useState<Volume[]>([]);
   const [dirContent, setDirContent] = useState<DirEntry[]>([]);
   const [accessDenied, setAccessDenied] = useState<boolean>(false);
+  // Human-readable reason the current listing failed (remote connect/auth errors), or null. Shown
+  // as a persistent notice in the directory view — a toast would vanish while the folder stays
+  // deceptively empty. Cleared by the next successful load.
+  const [loadError, setLoadError] = useState<string | null>(null);
   // True while a *navigation* is fetching the new folder and the old entries are still in state.
   // The directory view shows a spinner instead of the stale listing (matters for slow SFTP loads).
   // Set only by the path-change effect, never by refreshDir, so background refreshes don't flash it.
   const [loadingDir, setLoadingDir] = useState<boolean>(false);
+  // True when a read (navigation OR background refresh) has been pending far too long — the mount is
+  // likely a dead SMB share whose reads block for the OS timeout. Drives a non-blocking "still
+  // loading / leave" overlay so the app stays clearly alive and the user can bail out.
+  const [stalled, setStalled] = useState<boolean>(false);
   // Flips true once the first listing (a folder, or the Volumes view at the root) has loaded, so
   // the app can reveal the window with real content instead of an empty shell. Latched once.
   const [ready, setReady] = useState(false);
@@ -49,6 +64,15 @@ export const useDirectoryContents = ({
   // Which view the app launched on: at the root the Volumes list *is* the content, so readiness
   // waits on the volume load; on a folder it waits on that folder's listing. Captured once.
   const startedOnVolumes = useRef(path === "");
+  // Background refreshes can outlive the folder that started them (notably a slow Recents query
+  // triggered on window focus). Keep their target and revision tied to the committed navigation so
+  // a late result cannot replace the active folder's entries or stalled state.
+  const activePathRef = useRef(path);
+  const refreshRevisionRef = useRef(0);
+  useLayoutEffect(() => {
+    activePathRef.current = path;
+    refreshRevisionRef.current += 1;
+  }, [path]);
 
   const fetchVolumes = useCallback(
     async () => setVolumes(await fs.listVolumes()),
@@ -58,7 +82,13 @@ export const useDirectoryContents = ({
   // Read a directory, reporting whether the OS blocked it (Full Disk Access required, e.g. the
   // Trash). Kept free of setState so callers own state updates in their async callbacks.
   const loadDirectory = useCallback(
-    async (target: string): Promise<{ files: DirEntry[]; denied: boolean }> => {
+    async (
+      target: string,
+    ): Promise<{
+      files: DirEntry[];
+      denied: boolean;
+      error: string | null;
+    }> => {
       try {
         // Recents and tag views are virtual listings (Finder-style), not real folders to read.
         const files =
@@ -67,32 +97,59 @@ export const useDirectoryContents = ({
             : isTagsPath(target)
               ? await fs.findTagged(tagFromPath(target))
               : await fs.readDirectory(target);
-        return { files, denied: false };
+        return { files, denied: false, error: null };
       } catch (err) {
         const denied = String(err).includes(ACCESS_DENIED_ERROR);
         // Remote (SFTP) failures are opaque — connect/auth errors would otherwise show as a blank
-        // folder with no clue why. Surface them; a changed host key gets its own clear warning.
-        if (!denied && target.startsWith(SFTP_SCHEME))
-          notify(
-            String(err).includes(SSH_HOST_KEY_CHANGED)
+        // folder with no clue why. Surface them as a persistent notice in the directory view; a
+        // changed host key gets its own clear warning.
+        const error =
+          !denied && target.startsWith(SFTP_SCHEME)
+            ? String(err).includes(SSH_HOST_KEY_CHANGED)
               ? t.connections.hostKeyChanged
-              : t.connections.listError(String(err)),
-            TOAST_TYPE.ERROR,
-          );
-        return { files: [], denied };
+              : t.connections.listError(String(err))
+            : null;
+        return { files: [], denied, error };
       }
     },
     [fs, hideSystemRecents],
   );
 
-  // Reload the current view (used after filesystem operations like copy/move/rename/delete).
+  // Reload the current view (used after filesystem operations like copy/move/rename/delete, and by
+  // the folder watcher / focus refresh). A stall timer flags a read that hangs — e.g. a background
+  // refresh landing on a share whose server just died — so the view can surface the "leave" overlay
+  // even when the user is already sitting in the folder (not navigating).
   const refreshDir = useCallback(() => {
     if (path === "") return fetchVolumes();
-    loadDirectory(path).then(({ files, denied }) => {
+    const target = path;
+    const revision = ++refreshRevisionRef.current;
+    const stallTimer = window.setTimeout(() => {
+      if (
+        activePathRef.current === target &&
+        refreshRevisionRef.current === revision
+      )
+        setStalled(true);
+    }, DIRECTORY_STALL_DELAY_MS);
+    loadDirectory(target).then(({ files, denied, error }) => {
+      window.clearTimeout(stallTimer);
+      if (
+        activePathRef.current !== target ||
+        refreshRevisionRef.current !== revision
+      )
+        return;
+      setStalled(false);
+      if (denied) {
+        setDirContent([]);
+        setAccessDenied(false);
+        setLoadError(null);
+        onAccessDenied();
+        return;
+      }
       setDirContent(files);
-      setAccessDenied(denied);
+      setAccessDenied(false);
+      setLoadError(error);
     });
-  }, [loadDirectory, fetchVolumes, path]);
+  }, [loadDirectory, fetchVolumes, path, onAccessDenied]);
 
   // Keep a ref to the latest refreshDir so the watcher below doesn't re-subscribe on every
   // change to it (it changes with `path`, which already re-runs the watch effect).
@@ -110,11 +167,13 @@ export const useDirectoryContents = ({
   const loadDirectoryRef = useRef(loadDirectory);
   const navigateRef = useRef(navigate);
   const locationRef = useRef(locationPathname);
+  const onAccessDeniedRef = useRef(onAccessDenied);
   useEffect(() => {
     loadDirectoryRef.current = loadDirectory;
     navigateRef.current = navigate;
     locationRef.current = locationPathname;
-  }, [loadDirectory, navigate, locationPathname]);
+    onAccessDeniedRef.current = onAccessDenied;
+  }, [loadDirectory, navigate, locationPathname, onAccessDenied]);
 
   // Watch the current directory so external changes (e.g. `mv`/`rm` from a terminal, or another
   // app) refresh the listing automatically. Debounced, and torn down when the path changes.
@@ -176,22 +235,23 @@ export const useDirectoryContents = ({
     };
   }, [fetchVolumes]);
 
-  // Keep the recursive size-index watcher (Phase B) pointed at the viewed folder so live
-  // filesystem changes bubble into the cached ancestor sizes in real time — this is what keeps
-  // folder sizes (Properties, the Size column) from going stale after deep changes. Local folders
-  // only; remote/virtual listings aren't size-indexed. Stops when leaving the folder.
+  // Keep the recursive size-index watcher (Phase B) pointed at the viewed folder so live changes
+  // keep both Properties and the optional Size column accurate. Sending an empty path stops the
+  // previous watcher for virtual/remote views. Each effect run replaces it directly, without a
+  // fire-and-forget cleanup racing the next folder's registration.
   useEffect(() => {
-    if (
-      path === "" ||
-      path === RECENTS ||
-      isTagsPath(path) ||
-      path.startsWith(SFTP_SCHEME)
-    )
-      return;
-    void fs.watchDirSizes(path);
-    return () => {
-      void fs.watchDirSizes("");
-    };
+    const watchPath =
+      path !== "" &&
+      path !== RECENTS &&
+      !isTagsPath(path) &&
+      !path.startsWith(SFTP_SCHEME)
+        ? path
+        : "";
+    void fs
+      .watchDirSizes(watchPath)
+      .catch((err) =>
+        console.error("Failed to watch directory sizes:\n" + err),
+      );
   }, [fs, path]);
 
   // Initial volumes load.
@@ -244,20 +304,39 @@ export const useDirectoryContents = ({
 
     // Show the spinner only if the listing hasn't arrived within the delay: fast local reads
     // never flash it, slow remotes (SFTP) cross the threshold and get it.
+    // Note: `stalled` is reset by the previous path's effect cleanup (below) before this runs, so
+    // there's no need to clear it synchronously here (which would trip the cascading-render lint).
     let cancelled = false;
     const spinnerTimer = window.setTimeout(
       () => setLoadingDir(true),
       DIRECTORY_LOADING_SPINNER_DELAY_MS,
     );
+    // A much longer timer: if even the initial listing never arrives (dead SMB mount), swap the
+    // bare spinner for the "still loading / leave" overlay so the user isn't stuck watching it.
+    const stallTimer = window.setTimeout(
+      () => setStalled(true),
+      DIRECTORY_STALL_DELAY_MS,
+    );
 
     // Guard against a stale load resolving after we've already navigated away: e.g. leaving the
     // Trash (slow, ends denied) for Recents would otherwise leave the access-denied notice up.
-    loadDirectoryRef.current(path).then(({ files, denied }) => {
+    loadDirectoryRef.current(path).then(({ files, denied, error }) => {
       if (cancelled) return;
       window.clearTimeout(spinnerTimer);
+      window.clearTimeout(stallTimer);
       setLoadingDir(false);
+      setStalled(false);
+      if (denied) {
+        setDirContent([]);
+        setAccessDenied(false);
+        setLoadError(null);
+        markReady();
+        onAccessDeniedRef.current();
+        return;
+      }
       setDirContent(files);
-      setAccessDenied(denied);
+      setAccessDenied(false);
+      setLoadError(error);
       markReady();
       if (locationRef.current !== ROUTES.directory && path !== "")
         navigateRef.current(ROUTES.directory);
@@ -265,7 +344,9 @@ export const useDirectoryContents = ({
     return () => {
       cancelled = true;
       window.clearTimeout(spinnerTimer);
+      window.clearTimeout(stallTimer);
       setLoadingDir(false);
+      setStalled(false);
     };
   }, [path, markReady]);
 
@@ -275,7 +356,9 @@ export const useDirectoryContents = ({
     dirContent,
     setDirContent,
     accessDenied,
+    loadError,
     loadingDir,
+    stalled,
     refreshDir,
     ready,
   };

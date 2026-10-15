@@ -23,15 +23,17 @@
   gap: var(--space-1-5);
 }
 
+/* Deltas over the shared TextInput base: fill the toolbar row + roomier padding. */
 .settings_modal .settings_search {
+  /* Native search controls need the matching scheme to contrast with the custom input surface. */
+  color-scheme: dark;
   flex: 1;
   min-width: 0;
   padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-sm);
-  border: var(--border-width-default) solid var(--color-border-default);
-  background-color: var(--color-surface-input);
-  color: var(--color-text-primary);
-  font-size: var(--font-size-base);
+}
+
+:root[data-theme="light"] .settings_modal .settings_search {
+  color-scheme: light;
 }
 
 /* Two-pane body: category rail on the left, scrolling settings panel on the right. Flexes to fill
@@ -49,6 +51,15 @@
   width: var(--size-settings-nav-width);
   display: flex;
   flex-direction: column;
+  gap: var(--space-0-5);
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.settings_modal .settings_nav_group {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
   gap: var(--space-0-5);
 }
 
@@ -74,6 +85,13 @@
 
 .settings_modal .settings_nav_item.empty {
   color: var(--color-text-dim);
+}
+
+.settings_modal .settings_nav_subsection {
+  padding-left: var(--space-5);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  overflow-wrap: anywhere;
 }
 
 .settings_modal .settings_panel {
@@ -200,15 +218,9 @@
   font-size: var(--font-size-base);
 }
 
+/* Appearance comes from the shared .Select element; this only pins the field's row layout. */
 .settings_modal .settings_select {
   flex-shrink: 0;
-  padding: var(--space-1) var(--space-2);
-  border-radius: var(--radius-sm);
-  border: var(--border-width-default) solid var(--color-border-default);
-  background-color: var(--color-surface-input);
-  color: var(--color-text-primary);
-  font-size: var(--font-size-base);
-  cursor: pointer;
 }
 
 /* Accent picker: a row of colour-swatch radio buttons. Each swatch fills from its own --swatch RGB
@@ -261,13 +273,9 @@
   padding-left: var(--space-4);
 }
 
+/* Deltas over the shared TextInput base: tighter padding + monospace (these fields hold formats). */
 .settings_modal .settings_input {
   padding: var(--space-1) var(--space-2);
-  border-radius: var(--radius-sm);
-  border: var(--border-width-default) solid var(--color-border-default);
-  background-color: var(--color-surface-input);
-  color: var(--color-text-primary);
-  font-size: var(--font-size-base);
   font-family: var(--font-mono, monospace);
 }
 
@@ -284,9 +292,10 @@
   gap: var(--space-2-5);
 }
 
+/* Track + thumb come from the shared Slider base; pin an explicit width so this fixed-size control
+   doesn't stretch to the base's default 100%. */
 .settings_modal .settings_range {
-  accent-color: var(--color-selection-indicator);
-  cursor: pointer;
+  width: var(--space-20);
 }
 
 .settings_modal .settings_range_value {
@@ -345,8 +354,67 @@
   text-decoration: underline;
 }
 
+/* Cleanup panel: the folders the user watches for reclaimable space, full-width below the Cleanup
+   row. A path input (shares .settings_ignores_input with the size-ignore editor), then one chip per
+   watched folder, then a footer with the Trash reminder and the watched total. */
+.settings_modal .settings_cleanup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-top: var(--space-2);
+}
+
+/* Footer under the chips: the Trash reminder on the left, watched total + re-measure on the right. */
+.settings_modal .settings_cleanup_footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.settings_modal .settings_cleanup_footer_meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+/* Layout row for the watched-folder chips — same wrapping look as the size-ignore pattern chips. */
+.settings_modal .settings_cleanup_chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+/* The folder's basename, clickable to open it in a new window. Inherits the deletable chip's mono
+   label look; the hover matches the storage-path link. */
+.settings_modal .settings_cleanup_chip_name {
+  padding: var(--space-0);
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.settings_modal .settings_cleanup_chip_name:hover {
+  color: var(--color-selection-indicator);
+  text-decoration: underline;
+}
+
+.settings_modal .settings_cleanup_chip_size {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-dim);
+  white-space: nowrap;
+}
+
+/* A watched folder that no longer exists on disk: dim the whole chip (same treatment as hidden
+   entries); only its × still acts. */
+.settings_modal .settings_cleanup_chip--missing {
+  opacity: var(--opacity-hidden-entry);
+}
+
 /* Size-ignore editor: an input + Add button, then a wrapping list of pattern chips. Full-width
-   below the "Exclude from folder sizes" row. */
+   below the "Exclude from folder sizes" row. The input row (.settings_ignores_input) is shared by
+   the cleanup panel's path input, so both editors stay visually identical. */
 .settings_modal .settings_ignores {
   display: flex;
   flex-direction: column;
@@ -370,6 +438,132 @@
 .settings_modal .settings_ignores_chips {
   display: flex;
   flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+/* User-defined context-menu commands. Cards preserve saved order; the editor uses direct argv
+   fields (one argument per line) so paths with spaces need no quoting. */
+.settings_modal .settings_context_actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-top: var(--space-2);
+}
+
+.settings_modal .settings_context_actions_header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.settings_modal .settings_context_actions_header_actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1-5);
+  flex-shrink: 0;
+}
+
+.settings_modal .settings_context_action {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2-5);
+  padding: var(--space-2-5);
+  border: var(--border-width-default) solid var(--color-border-default);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-surface-input);
+}
+
+.settings_modal .settings_context_action_text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-0-5);
+}
+
+.settings_modal .settings_context_action_command {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-mono, monospace);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-dim);
+}
+
+.settings_modal .settings_context_action_buttons {
+  display: flex;
+  align-items: center;
+  gap: var(--space-0-5);
+  flex-shrink: 0;
+}
+
+.settings_modal .settings_context_action_form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: var(--border-width-default) solid var(--color-border-default);
+  border-radius: var(--radius-sm);
+}
+
+.settings_modal .settings_context_action_form > label,
+.settings_modal .settings_context_action_form fieldset {
+  min-width: 0;
+  margin: var(--space-0);
+  padding: var(--space-0);
+  border: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-base);
+}
+
+.settings_modal .settings_context_action_form input:not([type="checkbox"]),
+.settings_modal .settings_context_action_form select,
+.settings_modal .settings_context_action_form textarea {
+  width: 100%;
+  min-width: 0;
+}
+
+.settings_modal .settings_context_action_form legend {
+  margin-bottom: var(--space-1);
+}
+
+.settings_modal .settings_context_action_targets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2-5);
+}
+
+.settings_modal .settings_context_action_targets label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--color-text-primary);
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.settings_modal .settings_context_action_icon_select {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.settings_modal .settings_context_action_icon_select .Select {
+  flex: 1;
+}
+
+.settings_modal .settings_context_action_args,
+.settings_modal .settings_context_action_form_actions {
+  grid-column: 1 / -1;
+}
+
+.settings_modal .settings_context_action_form_actions {
+  display: flex;
+  justify-content: flex-end;
   gap: var(--space-2);
 }
 

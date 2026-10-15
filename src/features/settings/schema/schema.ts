@@ -2,6 +2,9 @@ import {
   SIDEBAR_OPACITY_MIN,
   SIDEBAR_OPACITY_MAX,
   SIDEBAR_OPACITY_STEP,
+  GRID_ICON_SIZE_MIN,
+  GRID_ICON_SIZE_MAX,
+  GRID_ICON_SIZE_STEP,
   DRAG_DROP_ACTION,
   THEME,
 } from "@/shared/constants";
@@ -14,10 +17,20 @@ import StartupControl from "../components/SettingsDialog/controls/StartupControl
 import StartupBelow from "../components/SettingsDialog/controls/StartupBelow";
 import StorageControl from "../components/SettingsDialog/controls/StorageControl";
 import StorageBelow from "../components/SettingsDialog/controls/StorageBelow";
+import CleanupControl from "../components/SettingsDialog/controls/CleanupControl";
+import CleanupBelow from "../components/SettingsDialog/controls/CleanupBelow";
 import SizeIgnoresControl from "../components/SettingsDialog/controls/SizeIgnoresControl";
 import SizeIgnoresBelow from "../components/SettingsDialog/controls/SizeIgnoresBelow";
+import FileTypesControl from "../components/SettingsDialog/controls/FileTypesControl";
+import FileTypesBelow from "../components/SettingsDialog/controls/FileTypesBelow";
 import AccentControl from "../components/SettingsDialog/controls/AccentControl";
 import FolderHandlerControl from "../components/SettingsDialog/controls/FolderHandlerControl";
+import ContextActionsControl from "../components/SettingsDialog/controls/ContextActionsControl";
+import ContextActionsBelow from "../components/SettingsDialog/controls/ContextActionsBelow";
+import OnboardingReplayControl from "../components/SettingsDialog/controls/OnboardingReplayControl";
+import UpdatesControl from "../components/SettingsDialog/controls/UpdatesControl";
+import UpdatesBelow from "../components/SettingsDialog/controls/UpdatesBelow";
+import ChangelogControl from "../components/SettingsDialog/controls/ChangelogControl";
 
 import { SETTINGS_SECTION } from "./sections";
 import { SETTING_KIND, type SettingDescriptor } from "./types";
@@ -31,49 +44,6 @@ const percent = (fraction: number) =>
 // wires modified/reset generically from this list.
 export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
   // ── General ── behavior basics, launch, and OS integration.
-  {
-    kind: SETTING_KIND.TOGGLE,
-    key: "showHidden",
-    section: SETTINGS_SECTION.GENERAL,
-    subsection: () => t.settings.subsections.filesFolders,
-    label: () => t.settings.showHidden,
-    hint: () => t.settings.showHiddenHint,
-  },
-  {
-    kind: SETTING_KIND.TOGGLE,
-    key: "hideSystemRecents",
-    section: SETTINGS_SECTION.GENERAL,
-    subsection: () => t.settings.subsections.filesFolders,
-    label: () => t.settings.hideSystemRecents,
-    hint: () => t.settings.hideSystemRecentsHint,
-  },
-  {
-    kind: SETTING_KIND.TOGGLE,
-    key: "showFolderSizes",
-    section: SETTINGS_SECTION.GENERAL,
-    subsection: () => t.settings.subsections.folderSizes,
-    label: () => t.settings.showFolderSizes,
-    hint: () => t.settings.showFolderSizesHint,
-    // Walking every folder can spike CPU on large directories — confirm before enabling.
-    confirmOn: {
-      title: () => t.settings.showFolderSizesConfirmTitle,
-      message: () => t.settings.showFolderSizesConfirmMessage,
-    },
-  },
-  {
-    kind: SETTING_KIND.CUSTOM,
-    key: "sizeIgnores",
-    section: SETTINGS_SECTION.GENERAL,
-    subsection: () => t.settings.subsections.folderSizes,
-    label: () => t.settings.sizeIgnores,
-    hint: () => t.settings.sizeIgnoresHint,
-    Control: SizeIgnoresControl,
-    Below: SizeIgnoresBelow,
-    isModified: (settings, defaults) =>
-      settings.sizeIgnores.join("\n") !== defaults.sizeIgnores.join("\n"),
-    reset: (update, defaults) =>
-      update({ sizeIgnores: [...defaults.sizeIgnores] }),
-  },
   {
     kind: SETTING_KIND.CUSTOM,
     key: "startupMode",
@@ -91,6 +61,75 @@ export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
         startupMode: defaults.startupMode,
         homePath: defaults.homePath,
       }),
+  },
+  {
+    kind: SETTING_KIND.TOGGLE,
+    key: "showOnboarding",
+    section: SETTINGS_SECTION.GENERAL,
+    subsection: () => t.settings.subsections.startup,
+    label: () => t.settings.showOnboarding,
+    hint: () => t.settings.showOnboardingHint,
+  },
+  {
+    kind: SETTING_KIND.CUSTOM,
+    key: "onboardingReplay",
+    section: SETTINGS_SECTION.GENERAL,
+    subsection: () => t.settings.subsections.startup,
+    label: () => t.settings.onboardingReplay,
+    hint: () => t.settings.onboardingReplayHint,
+    Control: OnboardingReplayControl,
+    isModified: () => false,
+    reset: () => {},
+    noReset: true,
+  },
+  {
+    kind: SETTING_KIND.TOGGLE,
+    key: "checkForUpdates",
+    section: SETTINGS_SECTION.GENERAL,
+    subsection: () => t.settings.subsections.updates,
+    label: () => t.settings.checkForUpdates,
+    hint: () => t.settings.checkForUpdatesHint,
+  },
+  {
+    kind: SETTING_KIND.CUSTOM,
+    key: "updatesCheck",
+    section: SETTINGS_SECTION.GENERAL,
+    subsection: () => t.settings.subsections.updates,
+    label: () => t.settings.updates,
+    hint: () => t.settings.updatesHint,
+    Control: UpdatesControl,
+    Below: UpdatesBelow,
+    isModified: () => false,
+    reset: () => {},
+    noReset: true,
+  },
+  {
+    kind: SETTING_KIND.TOGGLE,
+    key: "showChangelogAfterUpdate",
+    section: SETTINGS_SECTION.GENERAL,
+    subsection: () => t.settings.subsections.updates,
+    label: () => t.settings.showChangelogAfterUpdate,
+    hint: () => t.settings.showChangelogAfterUpdateHint,
+  },
+  {
+    kind: SETTING_KIND.CUSTOM,
+    key: "changelog",
+    section: SETTINGS_SECTION.GENERAL,
+    subsection: () => t.settings.subsections.updates,
+    label: () => t.settings.changelog,
+    hint: () => t.settings.changelogHint,
+    Control: ChangelogControl,
+    isModified: () => false,
+    reset: () => {},
+    noReset: true,
+  },
+  {
+    kind: SETTING_KIND.TOGGLE,
+    key: "activateNewTabs",
+    section: SETTINGS_SECTION.GENERAL,
+    subsection: () => t.settings.subsections.tabs,
+    label: () => t.settings.activateNewTabs,
+    hint: () => t.settings.activateNewTabsHint,
   },
   // macOS integration. OS state (Launch Services), not an AppSettings field: the control reads/
   // writes it live, so it's never "modified" and has no reset (synthetic key).
@@ -115,46 +154,15 @@ export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
   },
   {
     kind: SETTING_KIND.TOGGLE,
-    key: "previewImagesInApp",
-    section: SETTINGS_SECTION.GENERAL,
-    subsection: () => t.settings.subsections.previews,
-    label: () => t.settings.previewImagesInApp,
-    hint: () => t.settings.previewImagesInAppHint,
-  },
-  {
-    kind: SETTING_KIND.TOGGLE,
-    key: "previewMarkdownInApp",
-    section: SETTINGS_SECTION.GENERAL,
-    subsection: () => t.settings.subsections.previews,
-    label: () => t.settings.previewMarkdownInApp,
-    hint: () => t.settings.previewMarkdownInAppHint,
-  },
-  {
-    kind: SETTING_KIND.TOGGLE,
     key: "showSystemStats",
     section: SETTINGS_SECTION.GENERAL,
     subsection: () => t.settings.subsections.statusBar,
     label: () => t.settings.showSystemStats,
     hint: () => t.settings.showSystemStatsHint,
   },
-  {
-    kind: SETTING_KIND.TOGGLE,
-    key: "confirmExportOverwrite",
-    section: SETTINGS_SECTION.FILES,
-    subsection: () => t.settings.subsections.importExport,
-    label: () => t.settings.confirmExportOverwrite,
-    hint: () => t.settings.confirmExportOverwriteHint,
-  },
-
-  // ── Appearance ── everything visual (theme, accent, zoom, dates, sidebar).
-  {
-    kind: SETTING_KIND.TOGGLE,
-    key: "showVolumeSize",
-    section: SETTINGS_SECTION.APPEARANCE,
-    subsection: () => t.settings.subsections.layout,
-    label: () => t.settings.showVolumeSize,
-    hint: () => t.settings.showVolumeSizeHint,
-  },
+  // ── Appearance ── everything visual (theme, accent, zoom, dates, sidebar). Declared in
+  // subsection order — Theme & colour, Layout & format, Transparency — because the dialog renders
+  // subsections in first-seen order (see groupBySubsection).
   {
     kind: SETTING_KIND.SELECT,
     key: "theme",
@@ -194,6 +202,28 @@ export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
       })),
     toValue: Number,
   },
+  // Finder-style "Icon size" (View Options): scales the grid tile and its icon without being a
+  // conceptual zoom of the whole view — the per-folder zoom stays separate and multiplies on top.
+  {
+    kind: SETTING_KIND.RANGE,
+    key: "gridIconSize",
+    section: SETTINGS_SECTION.APPEARANCE,
+    subsection: () => t.settings.subsections.layout,
+    label: () => t.settings.gridIconSize,
+    hint: () => t.settings.gridIconSizeHint,
+    min: GRID_ICON_SIZE_MIN,
+    max: GRID_ICON_SIZE_MAX,
+    step: GRID_ICON_SIZE_STEP,
+    format: (size) => percent(size),
+  },
+  {
+    kind: SETTING_KIND.TOGGLE,
+    key: "zoomWithModifierWheel",
+    section: SETTINGS_SECTION.APPEARANCE,
+    subsection: () => t.settings.subsections.layout,
+    label: () => t.settings.zoomWithModifierWheel,
+    hint: () => t.settings.zoomWithModifierWheelHint,
+  },
   {
     kind: SETTING_KIND.CUSTOM,
     key: "dateFormat",
@@ -206,6 +236,14 @@ export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
     isModified: (settings, defaults) =>
       settings.dateFormat !== defaults.dateFormat,
     reset: (update, defaults) => update({ dateFormat: defaults.dateFormat }),
+  },
+  {
+    kind: SETTING_KIND.TOGGLE,
+    key: "showVolumeSize",
+    section: SETTINGS_SECTION.APPEARANCE,
+    subsection: () => t.settings.subsections.layout,
+    label: () => t.settings.showVolumeSize,
+    hint: () => t.settings.showVolumeSizeHint,
   },
   {
     kind: SETTING_KIND.RANGE,
@@ -268,7 +306,133 @@ export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
     format: (opacity) => percent(SIDEBAR_OPACITY_MAX - opacity),
   },
 
-  // ── Files & Transfers ── what dragging entries onto folders / out of the window does.
+  // ── Files ── how files are treated: their types, previews, sizes, menus, drag & drop, deletion.
+  {
+    kind: SETTING_KIND.TOGGLE,
+    key: "showHidden",
+    section: SETTINGS_SECTION.FILES,
+    subsection: () => t.settings.subsections.filesFolders,
+    label: () => t.settings.showHidden,
+    hint: () => t.settings.showHiddenHint,
+  },
+  {
+    kind: SETTING_KIND.TOGGLE,
+    key: "rememberScrollOnUp",
+    section: SETTINGS_SECTION.FILES,
+    subsection: () => t.settings.subsections.filesFolders,
+    label: () => t.settings.rememberScrollOnUp,
+    hint: () => t.settings.rememberScrollOnUpHint,
+  },
+  {
+    kind: SETTING_KIND.TOGGLE,
+    key: "hideSystemRecents",
+    section: SETTINGS_SECTION.FILES,
+    subsection: () => t.settings.subsections.filesFolders,
+    label: () => t.settings.hideSystemRecents,
+    hint: () => t.settings.hideSystemRecentsHint,
+  },
+  {
+    kind: SETTING_KIND.TOGGLE,
+    key: "colorfulFileTypes",
+    section: SETTINGS_SECTION.FILES,
+    subsection: () => t.settings.subsections.fileTypes,
+    label: () => t.settings.colorfulFileTypes,
+    hint: () => t.settings.colorfulFileTypesHint,
+  },
+  {
+    kind: SETTING_KIND.CUSTOM,
+    key: "fileTypeExtensions",
+    section: SETTINGS_SECTION.FILES,
+    subsection: () => t.settings.subsections.fileTypes,
+    label: () => t.settings.fileTypes,
+    hint: () => t.settings.fileTypesHint,
+    Control: FileTypesControl,
+    Below: FileTypesBelow,
+    isModified: (settings, defaults) =>
+      JSON.stringify(settings.fileTypeExtensions) !==
+        JSON.stringify(defaults.fileTypeExtensions) ||
+      JSON.stringify(settings.quickLookThumbnailExtensions) !==
+        JSON.stringify(defaults.quickLookThumbnailExtensions),
+    reset: (update, defaults) =>
+      update({
+        fileTypeExtensions: structuredClone(defaults.fileTypeExtensions),
+        quickLookThumbnailExtensions: [
+          ...defaults.quickLookThumbnailExtensions,
+        ],
+      }),
+  },
+  {
+    kind: SETTING_KIND.TOGGLE,
+    key: "previewImagesInApp",
+    section: SETTINGS_SECTION.FILES,
+    subsection: () => t.settings.subsections.previews,
+    label: () => t.settings.previewImagesInApp,
+    hint: () => t.settings.previewImagesInAppHint,
+  },
+  {
+    kind: SETTING_KIND.TOGGLE,
+    key: "previewMarkdownInApp",
+    section: SETTINGS_SECTION.FILES,
+    subsection: () => t.settings.subsections.previews,
+    label: () => t.settings.previewMarkdownInApp,
+    hint: () => t.settings.previewMarkdownInAppHint,
+  },
+  {
+    kind: SETTING_KIND.TOGGLE,
+    key: "openPreviewInWindow",
+    section: SETTINGS_SECTION.FILES,
+    subsection: () => t.settings.subsections.previews,
+    label: () => t.settings.openPreviewInWindow,
+    hint: () => t.settings.openPreviewInWindowHint,
+  },
+  {
+    kind: SETTING_KIND.TOGGLE,
+    key: "openPropertiesInWindow",
+    section: SETTINGS_SECTION.FILES,
+    subsection: () => t.settings.subsections.previews,
+    label: () => t.settings.openPropertiesInWindow,
+    hint: () => t.settings.openPropertiesInWindowHint,
+  },
+  {
+    kind: SETTING_KIND.TOGGLE,
+    key: "showFolderSizes",
+    section: SETTINGS_SECTION.FILES,
+    subsection: () => t.settings.subsections.folderSizes,
+    label: () => t.settings.showFolderSizes,
+    hint: () => t.settings.showFolderSizesHint,
+    // Walking every folder can spike CPU on large directories — confirm before enabling.
+    confirmOn: {
+      title: () => t.settings.showFolderSizesConfirmTitle,
+      message: () => t.settings.showFolderSizesConfirmMessage,
+    },
+  },
+  {
+    kind: SETTING_KIND.CUSTOM,
+    key: "sizeIgnores",
+    section: SETTINGS_SECTION.FILES,
+    subsection: () => t.settings.subsections.folderSizes,
+    label: () => t.settings.sizeIgnores,
+    hint: () => t.settings.sizeIgnoresHint,
+    Control: SizeIgnoresControl,
+    Below: SizeIgnoresBelow,
+    isModified: (settings, defaults) =>
+      settings.sizeIgnores.join("\n") !== defaults.sizeIgnores.join("\n"),
+    reset: (update, defaults) =>
+      update({ sizeIgnores: [...defaults.sizeIgnores] }),
+  },
+  {
+    kind: SETTING_KIND.CUSTOM,
+    key: "contextActions",
+    section: SETTINGS_SECTION.FILES,
+    subsection: () => t.settings.subsections.contextMenu,
+    label: () => t.settings.contextActions,
+    hint: () => t.settings.contextActionsHint,
+    Control: ContextActionsControl,
+    Below: ContextActionsBelow,
+    noReset: true,
+    isModified: () => false,
+    reset: () => {},
+  },
   {
     kind: SETTING_KIND.SELECT,
     key: "dragDropAction",
@@ -291,19 +455,29 @@ export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
   },
   {
     kind: SETTING_KIND.TOGGLE,
+    key: "dragToExternalApps",
+    section: SETTINGS_SECTION.FILES,
+    subsection: () => t.settings.subsections.dragDrop,
+    label: () => t.settings.dragToExternalApps,
+    hint: () => t.settings.dragToExternalAppsHint,
+  },
+  {
+    kind: SETTING_KIND.TOGGLE,
     key: "confirmDelete",
     section: SETTINGS_SECTION.FILES,
     subsection: () => t.settings.subsections.deletion,
     label: () => t.settings.confirmDelete,
     hint: () => t.settings.confirmDeleteHint,
   },
+  // Confirming before overwriting an exported settings.toml belongs with the other file-operation
+  // confirmations, even though the export itself is triggered from this dialog's toolbar.
   {
     kind: SETTING_KIND.TOGGLE,
-    key: "dragToExternalApps",
+    key: "confirmExportOverwrite",
     section: SETTINGS_SECTION.FILES,
-    subsection: () => t.settings.subsections.dragDrop,
-    label: () => t.settings.dragToExternalApps,
-    hint: () => t.settings.dragToExternalAppsHint,
+    subsection: () => t.settings.subsections.importExport,
+    label: () => t.settings.confirmExportOverwrite,
+    hint: () => t.settings.confirmExportOverwriteHint,
   },
 
   // ── Remote ── SSH/SFTP connection behaviour.
@@ -333,8 +507,10 @@ export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
     hint: () => t.settings.clickableToastsHint,
   },
 
-  // ── Storage ── informational: the app's on-disk footprint and where it lives. Binds to no
-  // AppSettings field (synthetic key), so it's never "modified" and has no reset.
+  // ── Storage ── disk usage: the app's own footprint, then the user's cleanup watch list.
+
+  // Informational: the app's on-disk footprint and where it lives. Binds to no AppSettings field
+  // (synthetic key), so it's never "modified" and has no reset.
   {
     kind: SETTING_KIND.CUSTOM,
     key: "appStorage",
@@ -347,6 +523,23 @@ export const SETTINGS_SCHEMA: readonly SettingDescriptor[] = [
     reset: () => {},
     // Informational only — never resettable, so drop the reset gutter that would otherwise
     // left-indent this row out of line with the full-width storage panel below it.
+    noReset: true,
+  },
+
+  // The user's own watch list: folders whose size they want to keep an eye on and reclaim
+  // periodically (dependency caches, build output, launcher leftovers). Persisted in cleanup.toml,
+  // not settings.toml, so this binds to no AppSettings field (synthetic key) and has nothing to
+  // reset.
+  {
+    kind: SETTING_KIND.CUSTOM,
+    key: "cleanupTargets",
+    section: SETTINGS_SECTION.STORAGE,
+    label: () => t.settings.cleanup,
+    hint: () => t.settings.cleanupHint,
+    Control: CleanupControl,
+    Below: CleanupBelow,
+    isModified: () => false,
+    reset: () => {},
     noReset: true,
   },
 ];

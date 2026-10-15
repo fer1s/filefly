@@ -85,6 +85,8 @@
 
 /* ── Main pane (right) ── */
 .folder_picker .folder_picker_main {
+  /* Positioning context for the type-to-find popup (bottom-right of the list pane). */
+  position: relative;
   min-width: 0;
   min-height: 0;
   display: flex;
@@ -123,7 +125,10 @@
   cursor: default;
 }
 
+/* Crumbs take the free width and give it up to the search field before overflowing (scrolling). */
 .folder_picker .folder_picker_crumbs {
+  flex: 1 1 auto;
+  min-width: 0;
   display: flex;
   align-items: center;
   gap: var(--space-0-5);
@@ -167,6 +172,45 @@
   color: var(--color-text-muted);
 }
 
+/* Name filter at the end of the nav bar, modelled on the PathBar's PathSearch box. */
+.folder_picker .folder_picker_search {
+  flex: 0 1 var(--size-folder-picker-search-width);
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1-5);
+  height: var(--size-control-small);
+  padding: var(--space-0) var(--space-2);
+  background-color: var(--color-surface-input);
+  border: var(--border-width-default) solid var(--color-border-faint);
+  border-radius: var(--radius-sm);
+}
+
+.folder_picker .folder_picker_search:focus-within {
+  background-color: var(--color-surface-interactive);
+  border-color: var(--color-border-default);
+}
+
+.folder_picker .folder_picker_search_icon {
+  flex: none;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+/* Two-class selector so the bare field stays transparent inside its box (no inner background). */
+.folder_picker .folder_picker_search_input {
+  flex: 1;
+  min-width: 0;
+  padding: var(--space-0);
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+}
+
 /* Scrolling folder list. */
 .folder_picker .folder_picker_list {
   flex: 1;
@@ -176,6 +220,17 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-0-25);
+}
+
+/* The list takes keyboard focus (arrows, type-to-find); the selected row already shows where the
+   cursor is, so only keyboard-driven focus gets a ring, inset to stay inside the clipped pane. */
+.folder_picker .folder_picker_list:focus {
+  outline: none;
+}
+
+.folder_picker .folder_picker_list:focus-visible {
+  outline: var(--border-width-default) solid var(--color-selection-border);
+  outline-offset: calc(-1 * var(--border-width-default));
 }
 
 .folder_picker .folder_picker_row {
@@ -204,9 +259,16 @@
   color: var(--color-text-primary);
 }
 
+/* Accent is only the default glyph colour: per-row inline colours (file category, first coloured
+   Finder tag on folders) are set on the element and win over this rule. */
 .folder_picker .folder_picker_row .Icon {
   color: var(--color-accent);
   flex: none;
+}
+
+/* Tag dots sit at the row's trailing edge so they line up in a column across rows. */
+.folder_picker .folder_picker_row .tag_dots {
+  margin-left: auto;
 }
 
 .folder_picker .folder_picker_row_name {

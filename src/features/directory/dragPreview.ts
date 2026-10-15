@@ -4,8 +4,12 @@ import { readTextFile } from "@tauri-apps/plugin-fs";
 
 import { DirEntry } from "@/shared/models";
 import { extension } from "@/shared/utils";
+import {
+  getFileIcon,
+  getFileTypeExtensions,
+  FILE_ICONS,
+} from "@/shared/formats";
 
-import { getFileIcon, FILE_ICONS } from "./components/DirEntry/fileIcon";
 import { setThumbnailPath } from "./thumbnailCache";
 
 // Native-drag previews for entries without a real thumbnail (folders, documents, …): the entry's
@@ -91,6 +95,6 @@ export const prewarmDragGlyphs = async (): Promise<void> => {
 export const glyphPngFor = (entry: DirEntry): string | undefined => {
   const icon = entry.metadata.isDir
     ? faFolder
-    : getFileIcon(extension(entry.name));
+    : getFileIcon(getFileTypeExtensions(), extension(entry.name));
   return cache.get(icon.iconName);
 };

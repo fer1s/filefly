@@ -9,15 +9,15 @@ use std::io::Read;
 #[cfg(unix)]
 use std::os::unix::fs::MetadataExt;
 use std::path::{Path, PathBuf};
-use std::sync::OnceLock;
-use std::time::{Duration, SystemTime};
+use std::sync::{Mutex, OnceLock};
+use std::time::{Duration, Instant, SystemTime};
 use tauri::ipc::Channel;
 use tauri::{AppHandle, Manager, State};
 
 use crate::ignore::IgnoreList;
 use crate::index::SizeIndex;
 
-#[derive(Debug, Serialize)]
+#[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DirMetadata {
     is_dir: bool,
@@ -27,7 +27,7 @@ pub struct DirMetadata {
     created: SystemTime,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DirEntry {
     name: String,
@@ -111,9 +111,7 @@ pub fn get_entry_local(path: String) -> Result<DirEntry, String> {
 pub async fn get_entry(app: AppHandle, path: String) -> Result<DirEntry, String> {
     match super::sftp::resolve(&path) {
         super::sftp::Target::Local(p) => get_entry_local(p),
-        super::sftp::Target::Remote { conn, path } => {
-            super::sftp::stat(&app, &conn, &path).await
-        }
+        super::sftp::Target::Remote { conn, path } => super::sftp::stat(&app, &conn, &path).await,
     }
 }
 
@@ -172,10 +170,7 @@ const SEARCH_RESULT_LIMIT: usize = 1000;
 // returning up to SEARCH_RESULT_LIMIT matches. Async + spawn_blocking so the (IO-bound) walk runs
 // off the main thread and keeps the UI responsive; symlinks aren't followed (jwalk default).
 #[tauri::command]
-pub async fn search_directory(
-    path: String,
-    query: String,
-) -> Result<Vec<DirEntry>, String> {
+pub async fn search_directory(path: String, query: String) -> Result<Vec<DirEntry>, String> {
     tauri::async_runtime::spawn_blocking(move || search_directory_core(&path, &query))
         .await
         .map_err(|error| error.to_string())?
@@ -240,7 +235,11 @@ pub fn typeahead_core(path: &str, query: &str) -> Result<TypeaheadResult, String
     entries.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
 
     if needle.is_empty() {
-        return Ok(TypeaheadResult { query: needle, selected_index: None, matches: Vec::new() });
+        return Ok(TypeaheadResult {
+            query: needle,
+            selected_index: None,
+            matches: Vec::new(),
+        });
     }
 
     let matches: Vec<DirEntry> = entries
@@ -249,13 +248,33 @@ pub fn typeahead_core(path: &str, query: &str) -> Result<TypeaheadResult, String
         .collect();
     let selected_index = if matches.is_empty() { None } else { Some(0) };
 
-    Ok(TypeaheadResult { query: needle, selected_index, matches })
+    Ok(TypeaheadResult {
+        query: needle,
+        selected_index,
+        matches,
+    })
 }
 
 // Extensions whose thumbnail comes from QuickLook rather than the image decoder (videos and
 // PDFs). Matches the previewable video/pdf sets. (Markdown is handled by text_thumbnail instead:
 // QuickLook has no good markdown thumbnailer and stalls the queue — see TEXT_EXTS.)
 const QUICKLOOK_EXTS: &[&str] = &["mp4", "mov", "m4v", "webm", "ogv", "pdf"];
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ThumbnailCapabilities {
+    image_extensions: Vec<&'static str>,
+    quick_look: bool,
+}
+
+#[tauri::command]
+pub fn get_thumbnail_capabilities() -> ThumbnailCapabilities {
+    // Keep aligned with Cargo.toml's image features. SVG is rendered directly by the WebView.
+    ThumbnailCapabilities {
+        image_extensions: vec!["png", "jpg", "jpeg", "webp", "gif", "bmp", "svg"],
+        quick_look: cfg!(target_os = "macos"),
+    }
+}
 
 fn needs_quicklook(path: &str) -> bool {
     has_ext(path, QUICKLOOK_EXTS)
@@ -279,18 +298,172 @@ fn has_ext(path: &str, exts: &[&str]) -> bool {
 
 // Decode the source image used to build a thumbnail: a text-document render for markdown, a
 // frame/page rendered by QuickLook for videos and PDFs, or the image file itself.
-fn thumbnail_source(
-    path: &str,
-    size: u32,
-    tmp_dir: &Path,
-) -> Result<image::DynamicImage, String> {
+fn thumbnail_source(path: &str, size: u32, tmp_dir: &Path) -> Result<image::DynamicImage, String> {
     if is_text(path) {
         text_thumbnail(path)
+    } else if has_ext(path, &["dmg"]) {
+        dmg_app_icon_thumbnail(path, tmp_dir)
     } else if needs_quicklook(path) {
         quicklook_thumbnail(path, size, tmp_dir)
     } else {
         image::open(path).map_err(|e| e.to_string())
     }
+}
+
+// DMGs are mounted read-only only while asking LaunchServices for the contained app's icon.
+// Scanning is bounded to shallow bundle locations so unrelated disk contents are never walked.
+#[cfg(target_os = "macos")]
+fn dmg_app_icon_thumbnail(path: &str, tmp_dir: &Path) -> Result<image::DynamicImage, String> {
+    use objc2::rc::autoreleasepool;
+    use objc2_app_kit::NSWorkspace;
+    use objc2_foundation::NSString;
+    use std::process::{Command, Stdio};
+
+    fs::create_dir_all(tmp_dir).map_err(|error| error.to_string())?;
+    // Keep the mount path short; it is also unique because each thumbnail request has its own
+    // scratch directory, even when several requests target the same DMG at once.
+    let scratch_name = tmp_dir
+        .file_name()
+        .and_then(|name| name.to_str())
+        .ok_or_else(|| "Could not create a temporary mount path".to_string())?;
+    let mountpoint = std::env::temp_dir().join(format!("sito-dmg-{scratch_name}"));
+    if let Err(error) = fs::create_dir(&mountpoint) {
+        let _ = fs::remove_dir_all(tmp_dir);
+        return Err(error.to_string());
+    }
+    let mut attach = match Command::new("hdiutil")
+        .args([
+            "attach",
+            "-readonly",
+            "-noverify",
+            "-nobrowse",
+            "-noautoopen",
+            "-mountpoint",
+        ])
+        .arg(&mountpoint)
+        .arg(path)
+        .stdout(Stdio::null())
+        .stderr(Stdio::inherit())
+        .spawn()
+    {
+        Ok(child) => child,
+        Err(error) => {
+            eprintln!("[thumbnail] Could not start hdiutil for DMG icon extraction: {error}");
+            let _ = fs::remove_dir(&mountpoint);
+            let _ = fs::remove_dir_all(tmp_dir);
+            return Err(error.to_string());
+        }
+    };
+
+    let result = (|| {
+        const MOUNT_TIMEOUT: Duration = Duration::from_secs(30);
+        match wait_with_timeout(&mut attach, MOUNT_TIMEOUT)? {
+            Some(status) if status.success() => {}
+            Some(_) => return Err("Could not mount this disk image".to_string()),
+            None => return Err("Mounting this disk image timed out".to_string()),
+        }
+
+        let app_path = find_app_bundle(&mountpoint, 3)
+            .ok_or_else(|| "No app bundle found in this disk image".to_string())?;
+        let icon_path = tmp_dir.join("app-icon.tiff");
+        let wrote_icon = autoreleasepool(|_| {
+            let workspace = NSWorkspace::sharedWorkspace();
+            let icon = workspace.iconForFile(&NSString::from_str(&app_path.to_string_lossy()));
+            icon.TIFFRepresentation().map(|data| {
+                data.writeToFile_atomically(&NSString::from_str(&icon_path.to_string_lossy()), true)
+            })
+                .unwrap_or(false)
+        });
+        if !wrote_icon {
+            return Err("Could not read the app icon from this disk image".to_string());
+        }
+        image::open(&icon_path).map_err(|error| error.to_string())
+    })();
+    if let Err(error) = &result {
+        eprintln!("[thumbnail] DMG app icon extraction failed: {error}");
+    }
+
+    // Always detach, including when app discovery or icon decoding fails.
+    let mut detached = false;
+    let mut detach = Command::new("hdiutil")
+        .args(["detach", "-quiet"])
+        .arg(&mountpoint)
+        .stdout(Stdio::null())
+        .stderr(Stdio::inherit())
+        .spawn();
+    if let Ok(ref mut child) = detach {
+        const DETACH_TIMEOUT: Duration = Duration::from_secs(10);
+        detached = matches!(
+            wait_with_timeout(child, DETACH_TIMEOUT),
+            Ok(Some(status)) if status.success()
+        );
+        if !detached {
+            let _ = child.kill();
+            let _ = child.wait();
+            if let Ok(mut force_detach) = Command::new("hdiutil")
+                .args(["detach", "-force", "-quiet"])
+                .arg(&mountpoint)
+                .stdout(Stdio::null())
+                .stderr(Stdio::null())
+                .spawn()
+            {
+                const FORCE_DETACH_TIMEOUT: Duration = Duration::from_secs(5);
+                detached = matches!(
+                    wait_with_timeout(&mut force_detach, FORCE_DETACH_TIMEOUT),
+                    Ok(Some(status)) if status.success()
+                );
+                if !detached {
+                    let _ = force_detach.kill();
+                    let _ = force_detach.wait();
+                }
+            }
+        }
+    }
+    if detached || matches!(&result, Err(error) if error == "Could not mount this disk image") {
+        let _ = fs::remove_dir(&mountpoint);
+    }
+    let _ = fs::remove_dir_all(tmp_dir);
+    result.and_then(|thumbnail| {
+        if detached {
+            Ok(thumbnail)
+        } else {
+            Err("Could not detach the disk image after reading its app icon".to_string())
+        }
+    })
+}
+
+#[cfg(not(target_os = "macos"))]
+fn dmg_app_icon_thumbnail(_path: &str, _tmp_dir: &Path) -> Result<image::DynamicImage, String> {
+    Err("DMG app icons are only supported on macOS".to_string())
+}
+
+fn find_app_bundle(root: &Path, max_depth: usize) -> Option<PathBuf> {
+    let mut current = vec![(root.to_path_buf(), 0)];
+    while let Some((directory, depth)) = current.pop() {
+        let Ok(entries) = fs::read_dir(&directory) else {
+            continue;
+        };
+        let mut children: Vec<PathBuf> = entries
+            .flatten()
+            .map(|entry| entry.path())
+            .collect();
+        children.sort();
+        for child in &children {
+            if child.extension().and_then(|extension| extension.to_str()) == Some("app") {
+                return Some(child.clone());
+            }
+        }
+        if depth < max_depth {
+            for child in children.into_iter().rev() {
+                if let Ok(metadata) = child.symlink_metadata() {
+                    if metadata.file_type().is_dir() {
+                        current.push((child, depth + 1));
+                    }
+                }
+            }
+        }
+    }
+    None
 }
 
 // A font for text-document thumbnails, loaded once from a system font (macOS ships these). None
@@ -349,6 +522,29 @@ fn text_thumbnail(path: &str) -> Result<image::DynamicImage, String> {
     Ok(image::DynamicImage::ImageRgba8(canvas))
 }
 
+// Native tools (qlmanage, sips) can hang on unsupported or damaged files. Poll instead of a
+// blocking `wait` so the worker gives up after `timeout`, and reap a killed process so it never
+// lingers as a zombie. `Ok(None)` means the deadline passed.
+#[cfg(target_os = "macos")]
+fn wait_with_timeout(
+    child: &mut std::process::Child,
+    timeout: Duration,
+) -> Result<Option<std::process::ExitStatus>, String> {
+    const POLL_INTERVAL: Duration = Duration::from_millis(50);
+    let started = Instant::now();
+    loop {
+        match child.try_wait() {
+            Ok(Some(status)) => return Ok(Some(status)),
+            Ok(None) if started.elapsed() < timeout => std::thread::sleep(POLL_INTERVAL),
+            outcome => {
+                let _ = child.kill();
+                let _ = child.wait();
+                return outcome.map(|_| None).map_err(|e| e.to_string());
+            }
+        }
+    }
+}
+
 // Render a thumbnail (video frame / PDF first page) via QuickLook (`qlmanage`), which writes
 // "<name>.png" into the output dir. macOS-only; other platforms fall back to the generic icon.
 //
@@ -363,26 +559,44 @@ fn quicklook_thumbnail(
     size: u32,
     tmp_dir: &Path,
 ) -> Result<image::DynamicImage, String> {
-    use std::process::Command;
+    use std::process::{Command, Stdio};
 
     fs::create_dir_all(tmp_dir).map_err(|e| e.to_string())?;
-    Command::new("qlmanage")
+    let mut child = Command::new("qlmanage")
         .args(["-t", "-s", &size.to_string(), "-o"])
         .arg(tmp_dir)
         .arg(path)
-        .output()
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .spawn()
         .map_err(|e| e.to_string())?;
 
-    let frame = fs::read_dir(tmp_dir)
-        .map_err(|e| e.to_string())?
-        .flatten()
-        .map(|entry| entry.path())
-        .find(|p| p.extension().and_then(|e| e.to_str()) == Some("png"))
-        .ok_or_else(|| "qlmanage produced no thumbnail".to_string())?;
+    // Native generators can hang on unsupported samples. Bound the worker's wait so one test
+    // cannot indefinitely occupy a thumbnail slot.
+    let result = (|| {
+        const TIMEOUT: Duration = Duration::from_secs(10);
+        match wait_with_timeout(&mut child, TIMEOUT)? {
+            Some(status) if status.success() => {}
+            Some(_) => {
+                return Err("Quick Look could not generate a thumbnail for this file".to_string())
+            }
+            None => return Err("Quick Look thumbnail generation timed out".to_string()),
+        }
+        let frame = fs::read_dir(tmp_dir)
+            .map_err(|e| e.to_string())?
+            .flatten()
+            .map(|entry| entry.path())
+            .find(|p| p.extension().and_then(|e| e.to_str()) == Some("png"))
+            .ok_or_else(|| "qlmanage produced no thumbnail".to_string())?;
 
-    let img = image::open(&frame).map_err(|e| e.to_string())?;
+        image::open(&frame).map_err(|e| e.to_string())
+    })();
+    if result.is_err() {
+        let _ = child.kill();
+        let _ = child.wait();
+    }
     let _ = fs::remove_dir_all(tmp_dir);
-    Ok(img)
+    result
 }
 
 // TODO(windows/linux): render video/PDF thumbnails on non-macOS platforms — e.g. the Windows
@@ -397,6 +611,148 @@ fn quicklook_thumbnail(
     Err("QuickLook thumbnails are only supported on macOS".to_string())
 }
 
+// Preview renders are sized from the source's real dimensions so large images keep their detail.
+// Small sources still request PREVIEW_MIN_SIZE because qlmanage never upscales, and the cap bounds
+// the decoded bitmap (4096² RGBA ≈ 64 MB) the `image` crate holds while re-encoding.
+const PREVIEW_MIN_SIZE: u32 = 2048;
+const PREVIEW_MAX_SIZE: u32 = 4096;
+const PREVIEW_JPEG_QUALITY: u8 = 90;
+const PREVIEW_CACHE_SUBDIR: &str = "preview";
+const JPEG_EXT: &str = "jpg";
+const PNG_EXT: &str = "png";
+
+// Read the source's pixel size without decoding it in-process. None on any failure; the caller
+// then uses the minimum preview size, which matches the previous fixed behaviour.
+#[cfg(target_os = "macos")]
+fn image_pixel_dimensions(path: &str) -> Option<(u32, u32)> {
+    use std::process::{Command, Stdio};
+
+    // A dead network mount or an unusual file can stall sips like any other native tool.
+    const TIMEOUT: Duration = Duration::from_secs(5);
+    let mut child = Command::new("sips")
+        .args(["-g", "pixelWidth", "-g", "pixelHeight"])
+        .arg(path)
+        .stdout(Stdio::piped())
+        .stderr(Stdio::null())
+        .spawn()
+        .ok()?;
+    // The two-property report is far below the pipe buffer, so polling before reading stdout
+    // cannot deadlock on a full pipe.
+    let status = wait_with_timeout(&mut child, TIMEOUT).ok()??;
+    if !status.success() {
+        return None;
+    }
+    let mut output = String::new();
+    child.stdout.take()?.read_to_string(&mut output).ok()?;
+    parse_sips_dimensions(&output)
+}
+
+#[cfg(not(target_os = "macos"))]
+fn image_pixel_dimensions(_path: &str) -> Option<(u32, u32)> {
+    None
+}
+
+// sips prints the file path first, then one `  <property>: <value>` line per requested property.
+#[cfg(target_os = "macos")]
+fn parse_sips_dimensions(output: &str) -> Option<(u32, u32)> {
+    let property = |key: &str| {
+        output.lines().find_map(|line| {
+            line.trim()
+                .strip_prefix(key)?
+                .trim_start()
+                .strip_prefix(':')?
+                .trim()
+                .parse::<u32>()
+                .ok()
+        })
+    };
+    Some((property("pixelWidth")?, property("pixelHeight")?))
+}
+
+fn preview_render_size(dimensions: Option<(u32, u32)>) -> u32 {
+    dimensions
+        .map_or(PREVIEW_MIN_SIZE, |(width, height)| width.max(height))
+        .clamp(PREVIEW_MIN_SIZE, PREVIEW_MAX_SIZE)
+}
+
+// Grid thumbnails and full-size preview renders differ in storage, encoding, and disk budget, so
+// one kind decides all three instead of a growing list of boolean flags.
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum ThumbnailKind {
+    Grid,
+    Preview,
+}
+
+impl ThumbnailKind {
+    // Previews live in their own directory so their larger files get a separate eviction budget
+    // instead of pushing grid thumbnails out of the shared one.
+    fn cache_dir(self, thumbnails_dir: &Path) -> PathBuf {
+        match self {
+            ThumbnailKind::Grid => thumbnails_dir.to_path_buf(),
+            ThumbnailKind::Preview => thumbnails_dir.join(PREVIEW_CACHE_SUBDIR),
+        }
+    }
+
+    // A preview's format depends on the decoded image's alpha, which is unknown before decoding,
+    // so a cache hit may carry either extension.
+    fn cached_extensions(self) -> &'static [&'static str] {
+        match self {
+            ThumbnailKind::Grid => &[JPEG_EXT],
+            ThumbnailKind::Preview => &[PNG_EXT, JPEG_EXT],
+        }
+    }
+}
+
+// Quick Look can hand back RGBA output even for opaque content, so the channel's presence alone
+// would send every opaque render to the much larger PNG format. Only a translucent pixel needs it.
+fn has_visible_alpha(img: &image::DynamicImage) -> bool {
+    const ALPHA_CHANNEL: usize = 3;
+    match img {
+        image::DynamicImage::ImageRgba8(buffer) => {
+            buffer.pixels().any(|pixel| pixel.0[ALPHA_CHANNEL] < u8::MAX)
+        }
+        other => other.color().has_alpha(),
+    }
+}
+
+// Grid thumbnails always flatten to RGB JPEG: JPEG can't encode alpha and grid cells are small.
+// Previews keep transparency as PNG only when the image shows it; opaque previews use a
+// higher-quality JPEG, which is far smaller than PNG at these sizes.
+fn save_thumbnail(
+    img: &image::DynamicImage,
+    kind: ThumbnailKind,
+    cache_dir: &Path,
+    hash: u64,
+) -> Result<PathBuf, String> {
+    let keep_alpha = kind == ThumbnailKind::Preview && has_visible_alpha(img);
+    let extension = if keep_alpha { PNG_EXT } else { JPEG_EXT };
+    let out = cache_dir.join(format!("{:x}.{extension}", hash));
+    if keep_alpha {
+        img.save_with_format(&out, image::ImageFormat::Png)
+            .map_err(|e| e.to_string())?;
+        return Ok(out);
+    }
+    let rgb = image::DynamicImage::ImageRgb8(img.to_rgb8());
+    match kind {
+        ThumbnailKind::Grid => rgb
+            .save_with_format(&out, image::ImageFormat::Jpeg)
+            .map_err(|e| e.to_string())?,
+        ThumbnailKind::Preview => {
+            use std::io::Write;
+            let file = fs::File::create(&out).map_err(|e| e.to_string())?;
+            let mut writer = std::io::BufWriter::new(file);
+            rgb.write_with_encoder(image::codecs::jpeg::JpegEncoder::new_with_quality(
+                &mut writer,
+                PREVIEW_JPEG_QUALITY,
+            ))
+            .map_err(|e| e.to_string())?;
+            // Surface a failed final write instead of losing it in BufWriter's drop.
+            writer.flush().map_err(|e| e.to_string())?;
+        }
+    }
+    Ok(out)
+}
+
 // Generate (and cache) a downscaled thumbnail for an image file, returning the path to the
 // cached thumbnail. The full-resolution decode + resize runs on a worker thread
 // (spawn_blocking) so it never blocks the UI thread, and the result is cached on disk keyed
@@ -405,6 +761,73 @@ fn quicklook_thumbnail(
 // folder full of screenshots from saturating the compositor with huge bitmaps.
 #[tauri::command]
 pub async fn get_thumbnail(app: AppHandle, path: String, size: u32) -> Result<String, String> {
+    generate_thumbnail(app, path, size, false, ThumbnailKind::Grid).await
+}
+
+#[tauri::command]
+pub async fn probe_quicklook_thumbnail(app: AppHandle, path: String) -> Result<String, String> {
+    if !cfg!(target_os = "macos") {
+        return Err("Quick Look thumbnails are only supported on macOS".to_string());
+    }
+    if !Path::new(&path).is_absolute() {
+        return Err("Choose a local sample file".to_string());
+    }
+    const SAMPLE_SIZE: u32 = 256;
+    generate_thumbnail(app, path, SAMPLE_SIZE, true, ThumbnailKind::Grid).await
+}
+
+// Grant only the selected local file, including a hidden path, rather than broadening the
+// asset protocol's global scope. The fallback is a bounded Quick Look representation cached
+// separately, not an edit.
+#[tauri::command]
+pub async fn prepare_image_preview(
+    app: AppHandle,
+    path: String,
+    fallback: bool,
+) -> Result<String, String> {
+    let selected = tauri::async_runtime::spawn_blocking(move || -> Result<_, String> {
+        let local = fs::canonicalize(&path).map_err(|e| e.to_string())?;
+        if !local.is_file() {
+            return Err("The preview requires a local file".to_string());
+        }
+        app.asset_protocol_scope().allow_file(&local).map_err(|e| e.to_string())?;
+        Ok((app, local.to_string_lossy().into_owned()))
+    })
+    .await
+    .map_err(|e| e.to_string())??;
+    let (app, path) = selected;
+    if !fallback {
+        return Ok(path);
+    }
+    if !cfg!(target_os = "macos") {
+        return Err("Native image preview fallback is only supported on macOS".to_string());
+    }
+    // sips is a subprocess, so measuring the source stays off Tauri's main thread.
+    let size = {
+        let path = path.clone();
+        tauri::async_runtime::spawn_blocking(move || {
+            preview_render_size(image_pixel_dimensions(&path))
+        })
+        .await
+        .map_err(|e| e.to_string())?
+    };
+    let output =
+        generate_thumbnail(app.clone(), path, size, true, ThumbnailKind::Preview).await?;
+    tauri::async_runtime::spawn_blocking(move || {
+        app.asset_protocol_scope().allow_file(&output).map_err(|e| e.to_string())?;
+        Ok(output)
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
+async fn generate_thumbnail(
+    app: AppHandle,
+    path: String,
+    size: u32,
+    probe_quicklook: bool,
+    kind: ThumbnailKind,
+) -> Result<String, String> {
     // Remote (sftp://) images: download to the cache first, then thumbnail the local copy. The
     // frontend only requests these when the "remote thumbnails" setting is on (it's off by default,
     // since each one downloads the whole file). See SSH_PLAN.md phase 4.
@@ -415,16 +838,26 @@ pub async fn get_thumbnail(app: AppHandle, path: String, size: u32) -> Result<St
         }
     };
 
-    let cache_dir = app
+    let thumbnails_dir = app
         .path()
         .app_cache_dir()
         .map_err(|e| e.to_string())?
         .join("thumbnails");
+    let cache_dir = kind.cache_dir(&thumbnails_dir);
 
     tauri::async_runtime::spawn_blocking(move || -> Result<String, String> {
+        // Read settings on the worker too: disk access must not block Tauri's main thread.
+        let settings = crate::functions::settings::get_settings(app);
+        let configured = settings.quick_look_thumbnail_extensions.iter().any(|ext| {
+            has_ext(&path, &[ext.trim().trim_start_matches('.').to_lowercase().as_str()])
+        });
+        let use_quicklook = probe_quicklook || (cfg!(target_os = "macos") && configured);
         fs::create_dir_all(&cache_dir).map_err(|e| e.to_string())?;
 
         let metadata = fs::metadata(&path).map_err(|e| e.to_string())?;
+        if !metadata.is_file() {
+            return Err("Choose a regular file for thumbnail generation".to_string());
+        }
         let mtime = metadata
             .modified()
             .ok()
@@ -436,10 +869,20 @@ pub async fn get_thumbnail(app: AppHandle, path: String, size: u32) -> Result<St
         path.hash(&mut hasher);
         mtime.hash(&mut hasher);
         size.hash(&mut hasher);
+        // A method change must not reuse a thumbnail generated by the previous decoder.
+        use_quicklook.hash(&mut hasher);
+        // Grid keys stay unsalted so existing grid thumbnails remain valid cache hits.
+        if kind == ThumbnailKind::Preview {
+            PREVIEW_CACHE_SUBDIR.hash(&mut hasher);
+        }
         let hash = hasher.finish();
-        let out = cache_dir.join(format!("{:x}.jpg", hash));
 
-        if out.exists() {
+        let cached = kind
+            .cached_extensions()
+            .iter()
+            .map(|ext| cache_dir.join(format!("{:x}.{ext}", hash)))
+            .find(|candidate| candidate.exists());
+        if let Some(out) = cached {
             // Bump mtime so eviction treats this as recently used (cheap LRU proxy).
             let _ = std::fs::OpenOptions::new()
                 .write(true)
@@ -449,14 +892,27 @@ pub async fn get_thumbnail(app: AppHandle, path: String, size: u32) -> Result<St
         }
 
         // Per-call scratch dir for the video frame extractor (cleaned up inside).
-        let tmp_dir = cache_dir.join("video").join(format!("{:x}", hash));
-        let img = thumbnail_source(&path, size, &tmp_dir)?;
-        // JPEG can't encode alpha, so flatten to RGB. `thumbnail` keeps the aspect ratio and
-        // fits within size x size.
-        let thumb = image::DynamicImage::ImageRgb8(img.thumbnail(size, size).to_rgb8());
-        thumb
-            .save_with_format(&out, image::ImageFormat::Jpeg)
-            .map_err(|e| e.to_string())?;
+        // Separate concurrent requests for the same file so scratch cleanup cannot race.
+        static SCRATCH_ID: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+        let scratch_id = SCRATCH_ID.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        // Scratch stays under the grid dir for both kinds so preview pruning never sees it.
+        let tmp_dir = thumbnails_dir.join("video").join(format!(
+            "{:x}-{}-{}", hash, std::process::id(), scratch_id
+        ));
+        let img = if use_quicklook {
+            quicklook_thumbnail(&path, size, &tmp_dir)?
+        } else {
+            thumbnail_source(&path, size, &tmp_dir)?
+        };
+        // `thumbnail` keeps the aspect ratio and fits within size x size, but it also upscales.
+        // A preview of a small source keeps its own resolution instead of being cached blown up.
+        let fits = img.width() <= size && img.height() <= size;
+        let thumb = if kind == ThumbnailKind::Preview && fits {
+            img
+        } else {
+            img.thumbnail(size, size)
+        };
+        let out = save_thumbnail(&thumb, kind, &cache_dir, hash)?;
 
         Ok(out.to_string_lossy().into_owned())
     })
@@ -464,22 +920,39 @@ pub async fn get_thumbnail(app: AppHandle, path: String, size: u32) -> Result<St
     .map_err(|e| e.to_string())?
 }
 
-// Max size of the on-disk thumbnail cache before least-recently-used entries are evicted.
+// Max size of the on-disk grid-thumbnail cache before least-recently-used entries are evicted.
 const MAX_THUMBNAIL_CACHE_BYTES: u64 = 200 * 1024 * 1024;
+// Full-size previews are far larger than grid thumbnails, so they get their own budget instead of
+// evicting the grid cache.
+const MAX_PREVIEW_CACHE_BYTES: u64 = 300 * 1024 * 1024;
 
-// Evict least-recently-used thumbnails when the cache grows past the limit. get_thumbnail bumps
-// each file's mtime on a cache hit, so the oldest mtime ≈ least recently used. Best-effort:
-// any IO error just leaves that file in place. Run off the UI thread (e.g. at startup).
-pub fn prune_thumbnail_cache(cache_dir: &Path) {
+// Trim the grid-thumbnail and preview caches, each to its own budget. Run off the UI thread
+// (e.g. at startup).
+pub fn prune_thumbnail_cache(thumbnails_dir: &Path) {
+    prune_cache_dir(thumbnails_dir, MAX_THUMBNAIL_CACHE_BYTES);
+    prune_cache_dir(
+        &ThumbnailKind::Preview.cache_dir(thumbnails_dir),
+        MAX_PREVIEW_CACHE_BYTES,
+    );
+}
+
+// Evict least-recently-used files when a cache dir grows past `max_bytes`. generate_thumbnail
+// bumps each file's mtime on a cache hit, so the oldest mtime ≈ least recently used. Best-effort:
+// any IO error just leaves that file in place. Only the dir's own files count: read_dir does not
+// recurse and subdirs are skipped, so the grid budget never includes `preview/` or `video/`.
+fn prune_cache_dir(cache_dir: &Path, max_bytes: u64) {
     let mut files: Vec<(PathBuf, SystemTime, u64)> = match fs::read_dir(cache_dir) {
         Ok(entries) => entries
             .flatten()
             .filter_map(|entry| {
                 let path = entry.path();
-                if path.extension().and_then(|e| e.to_str()) != Some("jpg") {
+                if !matches!(path.extension().and_then(|e| e.to_str()), Some(JPEG_EXT | PNG_EXT)) {
                     return None;
                 }
                 let metadata = entry.metadata().ok()?;
+                if !metadata.is_file() {
+                    return None;
+                }
                 Some((path, metadata.modified().ok()?, metadata.len()))
             })
             .collect(),
@@ -487,7 +960,7 @@ pub fn prune_thumbnail_cache(cache_dir: &Path) {
     };
 
     let mut total: u64 = files.iter().map(|(_, _, len)| len).sum();
-    if total <= MAX_THUMBNAIL_CACHE_BYTES {
+    if total <= max_bytes {
         return;
     }
 
@@ -495,7 +968,7 @@ pub fn prune_thumbnail_cache(cache_dir: &Path) {
     files.sort_by_key(|(_, mtime, _)| *mtime);
 
     for (path, _, len) in files {
-        if total <= MAX_THUMBNAIL_CACHE_BYTES {
+        if total <= max_bytes {
             break;
         }
         if fs::remove_file(&path).is_ok() {
@@ -526,13 +999,32 @@ pub fn read_directory_local(path: &str) -> Result<Vec<DirEntry>, String> {
     Ok(result)
 }
 
+// Touch a set of directories (read_dir + one stat per entry) so the OS pays its one-time costs —
+// the macOS TCC consent round-trip on protected folders and the cold metadata cache — before the
+// user's first navigation instead of during it. Errors are ignored: a folder that is missing or
+// denied simply stays cold.
+pub fn prewarm_directories(paths: Vec<PathBuf>) {
+    for dir in paths {
+        if let Ok(entries) = fs::read_dir(&dir) {
+            for entry in entries.flatten() {
+                let _ = entry.path().metadata();
+            }
+        }
+    }
+}
+
 // List a directory, local or remote. A `sftp://<conn>/path` argument routes to the SFTP backend;
 // anything else is a local path handled by `read_directory_local`. Async so the remote branch can
-// await the network without blocking the UI thread.
+// await the network without blocking the UI thread; the local branch runs its read+stat loop on
+// the blocking pool so a large or cold folder never stalls other pending commands.
 #[tauri::command]
 pub async fn read_directory(app: AppHandle, path: String) -> Result<Vec<DirEntry>, String> {
     match super::sftp::resolve(&path) {
-        super::sftp::Target::Local(p) => read_directory_local(&p),
+        super::sftp::Target::Local(p) => {
+            tauri::async_runtime::spawn_blocking(move || read_directory_local(&p))
+                .await
+                .map_err(|e| e.to_string())?
+        }
         super::sftp::Target::Remote { conn, path } => {
             super::sftp::read_dir(&app, &conn, &path).await
         }
@@ -552,7 +1044,7 @@ pub fn open_file(path: String) -> Result<(), String> {
 }
 
 // Pick a destination path inside `dir` for `name`, avoiding collisions by appending " copy".
-fn unique_dest(dir: &Path, name: &OsStr) -> PathBuf {
+pub(crate) fn unique_dest(dir: &Path, name: &OsStr) -> PathBuf {
     let candidate = dir.join(name);
     if !candidate.exists() {
         return candidate;
@@ -588,7 +1080,7 @@ pub struct ProgressPayload {
 }
 
 // Total bytes a copy will move: the file's own length, or the recursive sum for a directory.
-fn entry_total_bytes(path: &Path) -> u64 {
+pub(crate) fn entry_total_bytes(path: &Path) -> u64 {
     if path.is_dir() {
         jwalk::WalkDir::new(path)
             .skip_hidden(false)
@@ -661,7 +1153,14 @@ fn copy_with_progress(
     let mut processed = 0u64;
     let mut last_percent = 0i32;
     if src.is_dir() {
-        copy_dir_with_progress(src, dest, &mut processed, total, &mut last_percent, progress)?;
+        copy_dir_with_progress(
+            src,
+            dest,
+            &mut processed,
+            total,
+            &mut last_percent,
+            progress,
+        )?;
     } else {
         fs::copy(src, dest)?;
     }
@@ -792,6 +1291,38 @@ pub fn create_folder_local(parent: String) -> Result<String, String> {
     Ok(candidate.to_string_lossy().into_owned())
 }
 
+const UNTITLED_TEXT_FILE_STEM: &str = "untitled";
+const TEXT_FILE_EXTENSION: &str = "txt";
+
+pub(crate) fn untitled_text_file_name(suffix: u32) -> String {
+    if suffix == 1 {
+        format!("{UNTITLED_TEXT_FILE_STEM}.{TEXT_FILE_EXTENSION}")
+    } else {
+        format!("{UNTITLED_TEXT_FILE_STEM} {suffix}.{TEXT_FILE_EXTENSION}")
+    }
+}
+
+// Create a uniquely-named empty text file inside `parent`, without ever truncating an existing
+// entry. Returns the created path.
+pub fn create_text_file_local(parent: String) -> Result<String, String> {
+    let dir = Path::new(&parent);
+    let mut suffix = 1;
+
+    loop {
+        let candidate = dir.join(untitled_text_file_name(suffix));
+
+        match fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(&candidate)
+        {
+            Ok(_) => return Ok(candidate.to_string_lossy().into_owned()),
+            Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => suffix += 1,
+            Err(error) => return Err(error.to_string()),
+        }
+    }
+}
+
 // Create a folder locally or on a remote host, routing on the parent path. Async so the remote
 // branch can await SFTP; the local core stays sync (also used by the CLI).
 #[tauri::command]
@@ -804,11 +1335,44 @@ pub async fn create_folder(app: AppHandle, parent: String) -> Result<String, Str
     }
 }
 
-// Copy an image file to the system clipboard (as a bitmap), so it can be pasted into other
-// apps. Decodes to RGBA8 and hands it to the OS clipboard.
+// Create an empty text file locally or on a remote host, routing on the parent path.
 #[tauri::command]
-pub fn copy_image(path: String) -> Result<(), String> {
-    let rgba = image::open(&path).map_err(|e| e.to_string())?.to_rgba8();
+pub async fn create_text_file(app: AppHandle, parent: String) -> Result<String, String> {
+    match super::sftp::resolve(&parent) {
+        super::sftp::Target::Local(p) => create_text_file_local(p),
+        super::sftp::Target::Remote { conn, path } => {
+            super::sftp::create_text_file(&app, &conn, &path).await
+        }
+    }
+}
+
+// The original copy preserves its existing decoding behavior. A preview-state copy first
+// applies embedded orientation, matching the browser, then the user's clockwise quarter turns.
+pub fn copy_image_local(path: String, rotation: Option<u16>) -> Result<(), String> {
+    use image::{metadata::Orientation, ImageDecoder};
+
+    let mut decoded = if let Some(degrees) = rotation {
+        if !matches!(degrees, 0 | 90 | 180 | 270) {
+            return Err("Image rotation must be 0, 90, 180 or 270 degrees".to_string());
+        }
+        let mut decoder = image::ImageReader::open(&path)
+            .map_err(|e| e.to_string())?
+            .into_decoder()
+            .map_err(|e| e.to_string())?;
+        let orientation = decoder.orientation().map_err(|e| e.to_string())?;
+        let mut decoded = image::DynamicImage::from_decoder(decoder).map_err(|e| e.to_string())?;
+        decoded.apply_orientation(orientation);
+        decoded
+    } else {
+        image::open(&path).map_err(|e| e.to_string())?
+    };
+    decoded.apply_orientation(match rotation {
+        Some(90) => Orientation::Rotate90,
+        Some(180) => Orientation::Rotate180,
+        Some(270) => Orientation::Rotate270,
+        _ => Orientation::NoTransforms,
+    });
+    let rgba = decoded.to_rgba8();
     let (width, height) = rgba.dimensions();
 
     let mut clipboard = arboard::Clipboard::new().map_err(|e| e.to_string())?;
@@ -821,10 +1385,20 @@ pub fn copy_image(path: String) -> Result<(), String> {
         .map_err(|e| e.to_string())
 }
 
+// Decode, rotate and write the clipboard on a worker; large images must not block Tauri's UI.
+#[tauri::command]
+pub async fn copy_image(path: String, rotation: Option<u16>) -> Result<(), String> {
+    tauri::async_runtime::spawn_blocking(move || copy_image_local(path, rotation))
+        .await
+        .map_err(|e| e.to_string())?
+}
+
 // Rename an entry in place within its parent directory.
 pub fn rename_entry_local(path: String, new_name: String) -> Result<(), String> {
     let p = Path::new(&path);
-    let parent = p.parent().ok_or_else(|| "No parent directory".to_string())?;
+    let parent = p
+        .parent()
+        .ok_or_else(|| "No parent directory".to_string())?;
     let dest = parent.join(&new_name);
 
     if dest.exists() {
@@ -856,7 +1430,10 @@ const WRITE_PROBE_PREFIX: &str = ".sfb_write_probe_";
 pub fn can_write(path: String) -> bool {
     // Remote (sftp://) dirs: assume writable (the write itself surfaces any permission error). The
     // local probe below can't run against them anyway.
-    if matches!(super::sftp::resolve(&path), super::sftp::Target::Remote { .. }) {
+    if matches!(
+        super::sftp::resolve(&path),
+        super::sftp::Target::Remote { .. }
+    ) {
         return true;
     }
     let dir = Path::new(&path);
@@ -940,9 +1517,7 @@ pub async fn delete_entry(app: AppHandle, path: String) -> Result<(), String> {
             let config_dir = app.path().app_config_dir().map_err(|e| e.to_string())?;
             trash_entry_core(&config_dir, &p)
         }
-        super::sftp::Target::Remote { conn, path } => {
-            super::sftp::remove(&app, &conn, &path).await
-        }
+        super::sftp::Target::Remote { conn, path } => super::sftp::remove(&app, &conn, &path).await,
     }
 }
 
@@ -1043,21 +1618,73 @@ pub fn delete_permanently_core(path: &str) -> Result<(), String> {
     }
 }
 
-// Permanently empty the user's Trash (~/.Trash), removing every item it contains. Irreversible.
-// Returns the number of top-level items removed. macOS guards ~/.Trash behind Full Disk Access
-// (TCC), so reading it can fail with a permission error just like listing it in the UI.
-//
-// Uses `symlink_metadata` so a symlink in the Trash is deleted as a link (never followed into the
-// target's directory). Per-volume Trashes (/Volumes/*/.Trashes) are intentionally out of scope.
+// Permanently empty the system Trash. The GUI delegates to Finder on macOS so the OS owns the
+// progress UI; other platforms retain the manual cross-platform implementation used by the CLI.
+// Either path runs off the async runtime's main thread because a large Trash can take a while.
 #[tauri::command]
 pub async fn empty_trash() -> Result<u32, String> {
-    tauri::async_runtime::spawn_blocking(empty_trash_core)
-        .await
-        .map_err(|e| e.to_string())?
+    #[cfg(target_os = "macos")]
+    {
+        tauri::async_runtime::spawn_blocking(empty_trash_with_finder)
+            .await
+            .map_err(|e| e.to_string())?
+    }
+
+    #[cfg(not(target_os = "macos"))]
+    {
+        tauri::async_runtime::spawn_blocking(empty_trash_core)
+            .await
+            .map_err(|e| e.to_string())?
+    }
+}
+
+// Ask Finder to empty every Trash it manages (including per-volume Trashes). Besides matching the
+// native macOS behavior, Finder supplies its own progress window instead of making the Tauri app
+// appear frozen while Rust recursively removes a large tree. The fixed script contains no user
+// input, and the process is awaited by `spawn_blocking` above.
+#[cfg(target_os = "macos")]
+fn empty_trash_with_finder() -> Result<u32, String> {
+    use std::process::Command;
+
+    const SCRIPT: &str = r#"tell application "Finder"
+set removedCount to count of items of trash
+empty the trash
+return removedCount
+end tell"#;
+
+    let output = Command::new("/usr/bin/osascript")
+        .args(["-e", SCRIPT])
+        .output()
+        .map_err(|error| error.to_string())?;
+
+    if output.status.success() {
+        let count = String::from_utf8_lossy(&output.stdout);
+        return count
+            .trim()
+            .parse::<u32>()
+            .map_err(|error| {
+                format!("Finder emptied the Trash but returned an invalid count: {error}")
+            });
+    }
+
+    let reason = String::from_utf8_lossy(&output.stderr).trim().to_string();
+    if reason.contains("-1743") {
+        return Err(
+            "macOS denied permission to control Finder. Allow Sito File Browser in Privacy & Security > Automation."
+                .to_string(),
+        );
+    }
+    if reason.is_empty() {
+        Err(format!("Finder could not empty the Trash ({})", output.status))
+    } else {
+        Err(format!("Finder could not empty the Trash: {reason}"))
+    }
 }
 
 // Permanently empty the user's Trash (~/.Trash). Returns the count of top-level items removed.
-// Shared by the Tauri command and the CLI.
+// Used by the CLI on every platform and by the GUI outside macOS. Uses `symlink_metadata` so a
+// symlink is removed as a link (never followed into its target). Per-volume Trashes are out of
+// scope for this fallback.
 pub fn empty_trash_core() -> Result<u32, String> {
     let home = std::env::var("HOME").map_err(|e| e.to_string())?;
     let trash = Path::new(&home).join(".Trash");
@@ -1107,6 +1734,44 @@ pub fn empty_trash_core() -> Result<u32, String> {
 // Most recent files to return (Finder-style "Recents").
 const RECENTS_LIMIT: usize = 50;
 
+// Query the newest time band first and stop widening once it already contains enough files. This
+// avoids asking metadata for every file touched during the full month on the common path.
+const RECENTS_WINDOWS_DAYS: [u8; 3] = [1, 7, 30];
+
+// Window-focus refreshes and quick revisits should not rerun Spotlight immediately. Separate cache
+// slots preserve the hide-app-files setting, and holding the cache lock during a miss also folds
+// concurrent requests into the same query.
+const RECENTS_CACHE_TTL: Duration = Duration::from_secs(15);
+
+struct RecentFilesCache {
+    loaded_at: Instant,
+    entries: Vec<DirEntry>,
+}
+
+static RECENT_FILES_CACHE: OnceLock<Mutex<[Option<RecentFilesCache>; 2]>> = OnceLock::new();
+
+fn cached_recent_files(
+    app_dirs: Vec<PathBuf>,
+    hide_app_files: bool,
+) -> Result<Vec<DirEntry>, String> {
+    let cache = RECENT_FILES_CACHE.get_or_init(|| Mutex::new([None, None]));
+    let mut cache = cache.lock().map_err(|error| error.to_string())?;
+    let slot = hide_app_files as usize;
+
+    if let Some(cached) = &cache[slot] {
+        if cached.loaded_at.elapsed() < RECENTS_CACHE_TTL {
+            return Ok(cached.entries.clone());
+        }
+    }
+
+    let entries = recent_files_core(app_dirs)?;
+    cache[slot] = Some(RecentFilesCache {
+        loaded_at: Instant::now(),
+        entries: entries.clone(),
+    });
+    Ok(entries)
+}
+
 // Recently modified files in the user's home, à la Finder's Recents smart folder. Backed by
 // Spotlight (`mdfind`), so it only works on macOS with indexing enabled. Returns files newest
 // first; directories are excluded (Finder shows documents).
@@ -1129,44 +1794,71 @@ pub async fn get_recent_files(
         Vec::new()
     };
 
-    tauri::async_runtime::spawn_blocking(move || recent_files_core(app_dirs))
+    tauri::async_runtime::spawn_blocking(move || cached_recent_files(app_dirs, hide_app_files))
         .await
         .map_err(|e| e.to_string())?
 }
 
-// Recently modified files under $HOME (via Spotlight/`mdfind`), newest first, capped. Any path
-// under one of `app_dirs` (or a write-probe temp file) is filtered out, so passing this app's
-// config/cache dirs hides its background writes; pass an empty list to keep everything. Shared by
-// the Tauri command and the CLI.
+// Recently modified files under $HOME (via Spotlight/`mdfind`), newest first, capped. Spotlight is
+// queried in non-overlapping time bands (last day, days 1-7, then days 7-30), stopping as soon as a
+// band brings the candidate count to the display limit. The query excludes directories before
+// they reach Rust; app-owned paths are also discarded before their filesystem metadata is read.
+// Shared by the Tauri command and the CLI (the CLI intentionally bypasses the GUI's short cache).
 pub fn recent_files_core(app_dirs: Vec<PathBuf>) -> Result<Vec<DirEntry>, String> {
     let home = std::env::var("HOME").map_err(|e| e.to_string())?;
-    let output = std::process::Command::new("mdfind")
-        .arg("-onlyin")
-        .arg(&home)
-        .arg("kMDItemContentModificationDate >= $time.today(-30)")
-        .output()
-        .map_err(|e| e.to_string())?;
-
-    let is_app_file = |entry: &DirEntry| -> bool {
-        if app_dirs.iter().any(|dir| entry.path.starts_with(dir)) {
+    let is_app_path = |path: &Path| -> bool {
+        if app_dirs.iter().any(|dir| path.starts_with(dir)) {
             return true;
         }
-        entry
-            .path
+        path
             .file_name()
             .and_then(|name| name.to_str())
             .map(|name| name.starts_with(WRITE_PROBE_PREFIX))
             .unwrap_or(false)
     };
 
-    let stdout = String::from_utf8_lossy(&output.stdout);
-    let mut entries: Vec<DirEntry> = stdout
-        .lines()
-        .filter(|line| !line.is_empty())
-        .filter_map(|line| build_dir_entry(PathBuf::from(line)).ok())
-        .filter(|entry| entry.metadata.is_file)
-        .filter(|entry| !is_app_file(entry))
-        .collect();
+    let mut entries = Vec::new();
+    let mut newer_than_days = None;
+
+    for oldest_days in RECENTS_WINDOWS_DAYS {
+        let upper_bound = newer_than_days
+            .map(|days| format!(" && kMDItemFSContentChangeDate < $time.today(-{days})"))
+            .unwrap_or_default();
+        let query = format!(
+            "kMDItemFSContentChangeDate >= $time.today(-{oldest_days}){upper_bound} && kMDItemContentTypeTree == 'public.data'"
+        );
+        let output = std::process::Command::new("mdfind")
+            .arg("-onlyin")
+            .arg(&home)
+            .arg(query)
+            .output()
+            .map_err(|error| error.to_string())?;
+
+        if !output.status.success() {
+            let error = String::from_utf8_lossy(&output.stderr).trim().to_string();
+            return Err(if error.is_empty() {
+                format!("mdfind failed with status {}", output.status)
+            } else {
+                error
+            });
+        }
+
+        entries.extend(
+            String::from_utf8_lossy(&output.stdout)
+                .lines()
+                .filter(|line| !line.is_empty())
+                .map(PathBuf::from)
+                .filter(|path| !is_app_path(path))
+                .filter_map(|path| build_dir_entry(path).ok())
+                // Defensive: the Spotlight type predicate should already exclude directories.
+                .filter(|entry| entry.metadata.is_file),
+        );
+
+        if entries.len() >= RECENTS_LIMIT {
+            break;
+        }
+        newer_than_days = Some(oldest_days);
+    }
 
     // Newest first, then cap.
     entries.sort_by(|a, b| b.metadata.modified.cmp(&a.metadata.modified));

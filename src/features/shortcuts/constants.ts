@@ -23,6 +23,10 @@ export const SHORTCUT_SECTIONS: readonly ShortcutSection[] = [
     title: () => t.shortcuts.sections.files,
     rows: [
       { label: () => t.shortcuts.actions.copy, actions: [KEYMAP_ACTION.COPY] },
+      {
+        label: () => t.shortcuts.actions.copyPath,
+        actions: [KEYMAP_ACTION.COPY_PATH],
+      },
       { label: () => t.shortcuts.actions.cut, actions: [KEYMAP_ACTION.CUT] },
       {
         label: () => t.shortcuts.actions.paste,
@@ -133,6 +137,14 @@ export const SHORTCUT_SECTIONS: readonly ShortcutSection[] = [
       {
         label: () => t.shortcuts.actions.previewZoomOut,
         actions: [KEYMAP_ACTION.PREVIEW_ZOOM_OUT],
+      },
+      {
+        label: () => t.shortcuts.actions.previewRotateLeft,
+        actions: [KEYMAP_ACTION.PREVIEW_ROTATE_LEFT],
+      },
+      {
+        label: () => t.shortcuts.actions.previewRotateRight,
+        actions: [KEYMAP_ACTION.PREVIEW_ROTATE_RIGHT],
       },
     ],
   },

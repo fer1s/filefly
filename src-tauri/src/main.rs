@@ -46,7 +46,10 @@ fn main() {
             // Internal prefix: the app's own data dir. User name-globs: hydrated from settings.toml
             // so ".DS_Store" & friends are excluded from folder sizes from the first walk.
             let ignore_list = ignore::IgnoreList::new(
-                app.path().app_data_dir().map(|d| vec![d]).unwrap_or_default(),
+                app.path()
+                    .app_data_dir()
+                    .map(|d| vec![d])
+                    .unwrap_or_default(),
                 functions::settings::get_settings(app.handle().clone()).size_ignores(),
             );
             let size_index = index::init(app.handle())?;
@@ -57,7 +60,25 @@ fn main() {
             // into cached ancestor sizes and emit dir-size-changed so the open view updates live.
             app.manage(watcher::DirWatcher::new());
 
-            // Trim the thumbnail cache to its size budget, off the UI thread.
+            // Pre-warm the folders a first navigation most likely lands on (home + the macOS
+            // TCC-protected trio). Their first-ever access pays a tccd round-trip plus cold
+            // metadata-cache stats (~1s on Desktop); doing it here, off-thread and in parallel
+            // with the WebView boot, makes the user's first navigation as fast as the rest.
+            {
+                let path = app.path();
+                let warm: Vec<std::path::PathBuf> = [
+                    path.home_dir(),
+                    path.desktop_dir(),
+                    path.document_dir(),
+                    path.download_dir(),
+                ]
+                .into_iter()
+                .flatten()
+                .collect();
+                std::thread::spawn(move || filesystem::fs::prewarm_directories(warm));
+            }
+
+            // Trim the grid-thumbnail and preview caches to their size budgets, off the UI thread.
             if let Ok(cache_dir) = app.path().app_cache_dir() {
                 let thumbnails = cache_dir.join("thumbnails");
                 std::thread::spawn(move || filesystem::fs::prune_thumbnail_cache(&thumbnails));
@@ -78,6 +99,9 @@ fn main() {
             filesystem::fs::get_dir_size,
             filesystem::fs::get_recent_files,
             filesystem::fs::get_thumbnail,
+            filesystem::fs::prepare_image_preview,
+            filesystem::fs::get_thumbnail_capabilities,
+            filesystem::fs::probe_quicklook_thumbnail,
             filesystem::fs::read_directory,
             filesystem::fs::search_directory,
             filesystem::fs::can_write,
@@ -86,11 +110,16 @@ fn main() {
             filesystem::fs::move_entry,
             filesystem::fs::rename_entry,
             filesystem::fs::create_folder,
+            filesystem::fs::create_text_file,
             filesystem::fs::copy_image,
             filesystem::fs::delete_entry,
             filesystem::fs::restore_trashed,
             filesystem::fs::delete_entry_permanently,
             filesystem::fs::empty_trash,
+            filesystem::archive::compress_entries,
+            filesystem::archive::extract_archive,
+            filesystem::archive::archive_encrypted,
+            filesystem::archive::sevenzip_available,
             filesystem::tags::get_tags_for,
             filesystem::tags::set_file_tags,
             filesystem::tags::find_tagged,
@@ -106,17 +135,30 @@ fn main() {
             watcher::watch_directory,
             functions::keymap::get_keymap,
             functions::context_menu::get_context_menu,
+            functions::context_menu::set_context_menu,
+            functions::context_menu::run_context_action,
+            functions::clipboard::copy_files_to_clipboard,
             functions::settings::get_settings,
             functions::settings::set_settings,
             functions::settings::import_settings,
             functions::settings::export_settings,
             functions::storage::get_app_storage,
             functions::storage::clear_app_cache,
+            functions::cleanup::get_cleanup_targets,
+            functions::cleanup::add_cleanup_target,
+            functions::cleanup::remove_cleanup_target,
+            functions::cleanup::set_cleanup_target_mode,
+            functions::cleanup::clean_cleanup_target,
             filesystem::sftp::sftp_list_connections,
             filesystem::sftp::sftp_add_connection,
             filesystem::sftp::sftp_remove_connection,
             filesystem::sftp::sftp_home,
             filesystem::sftp::sftp_download,
+            filesystem::smb::smb_diagnose,
+            filesystem::smb::smb_mounts,
+            filesystem::smb::smb_shares,
+            filesystem::smb::smb_connect,
+            filesystem::smb::smb_mount_point,
             functions::control::set_ui_state,
             functions::control::set_probe_result,
             functions::handler::is_default_folder_handler,
@@ -140,6 +182,8 @@ fn main() {
             dock_menu::clear_recent_folders,
             window::open_new_window,
             window::open_path_in_new_window,
+            window::open_preview_window,
+            window::open_properties_window,
         ])
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {
@@ -158,6 +202,20 @@ fn main() {
             // doesn't linger across sessions. Other caches (thumbnails) are kept.
             if let tauri::RunEvent::Exit = &event {
                 filesystem::sftp::clear_cache(app_handle);
+            }
+
+            // Clicking the Dock icon while the app is still running but has no visible window asks
+            // macOS to reopen it. Restore the hidden main window, or create a browser window if all
+            // windows were actually closed.
+            #[cfg(target_os = "macos")]
+            if let tauri::RunEvent::Reopen {
+                has_visible_windows,
+                ..
+            } = &event
+            {
+                if !*has_visible_windows {
+                    let _ = window::focus_or_create_window(app_handle);
+                }
             }
 
             // macOS routes URLs here in two cases:
@@ -195,7 +253,8 @@ fn main() {
                     // forced opens — not becoming the default app for any file type.
                     if let Ok(path) = url.to_file_path() {
                         if path.is_dir() {
-                            let _ = window::create_window(app_handle, Some(&path.to_string_lossy()));
+                            let _ =
+                                window::create_window(app_handle, Some(&path.to_string_lossy()));
                         } else if path.is_file() {
                             let _ =
                                 window::create_reveal_window(app_handle, &path.to_string_lossy());

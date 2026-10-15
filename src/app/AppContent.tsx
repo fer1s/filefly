@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { Routes, Route, useLocation } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router";
 
 import { useStateContext } from "@/shared/providers/StateProvider";
 import { TabBar, useTabsShortcuts } from "@/features/tabs";
@@ -10,6 +10,8 @@ import Volumes from "@/features/volumes";
 import Directory, { DirectoryProvider, InfoPanel } from "@/features/directory";
 
 import { ROUTES } from "./routes";
+
+import "@/styles/components/AppContent.css";
 
 function AppContent() {
   const location = useLocation();
@@ -45,17 +47,19 @@ function AppContent() {
     <DirectoryProvider>
       <div className="AppContent">
         <TabBar />
-        <PathBar />
-        {/* Zoom only applies to the directory view, so the quick bar is hidden on Volumes. */}
-        {onDirectory && <QuickBar />}
-        <div className="Page">
-          <div className="page_main">
-            <Routes>
-              <Route path={ROUTES.volumes} element={<Volumes />} />
-              <Route path={ROUTES.directory} element={<Directory />} />
-            </Routes>
+        <div className="tab_content">
+          <PathBar />
+          {/* Zoom only applies to the directory view, so the quick bar is hidden on Volumes. */}
+          {onDirectory && <QuickBar />}
+          <div className="Page">
+            <div className="page_main">
+              <Routes>
+                <Route path={ROUTES.volumes} element={<Volumes />} />
+                <Route path={ROUTES.directory} element={<Directory />} />
+              </Routes>
+            </div>
+            {onDirectory && <InfoPanel />}
           </div>
-          {onDirectory && <InfoPanel />}
         </div>
       </div>
     </DirectoryProvider>

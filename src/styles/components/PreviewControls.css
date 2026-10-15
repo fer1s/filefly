@@ -1,0 +1,19 @@
+/* One floating pill for every media type, including the standalone audio preview. */
+.preview_controls {
+  position: absolute;
+  bottom: var(--space-3);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2-5);
+  background-color: rgba(
+    var(--color-surface-popover-rgb),
+    var(--preview-controls-opacity)
+  );
+  backdrop-filter: blur(var(--blur-medium));
+  border: var(--border-width-default) solid var(--color-border-default);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-popover);
+}

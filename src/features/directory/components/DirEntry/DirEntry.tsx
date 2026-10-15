@@ -6,24 +6,21 @@ import {
   formatBytes,
   formatDate,
 } from "@/shared/utils";
-import {
-  IMAGE_FORMATS,
-  VIDEO_FORMATS,
-  PDF_FORMAT,
-  MARKDOWN_FORMATS,
-  SVG_FORMAT,
-} from "@/features/directory/constants";
+import { useFileTypeExtensions, isCategory } from "@/shared/formats";
 import Tooltip from "@/shared/components/elements/Tooltip";
-import { SFTP_SCHEME } from "@/shared/constants";
+import TagDots from "@/shared/components/elements/TagDots";
+import TextInput from "@/shared/components/elements/TextInput";
+import { SFTP_SCHEME, SVG_FORMAT, FILE_CATEGORY } from "@/shared/constants";
+import { isMacPlatform } from "@/shared/keymap";
 import { t } from "@/lang";
 
 import { METADATA_TOOLTIP_DELAY } from "./constants";
 import { useEntryThumbnail } from "./useEntryThumbnail";
+import { useFolderThumbnails } from "./useFolderThumbnails";
 import { useInlineRename } from "./useInlineRename";
 import { useEntryContextMenu } from "./useEntryContextMenu";
 import { EntryMetadata } from "./EntryMetadata";
 import { EntryIcon } from "./EntryIcon";
-import { TagDots } from "./TagDots";
 import type { DirEntryItemProps } from "./types";
 
 const DirEntryItemComponent = ({
@@ -53,8 +50,12 @@ const DirEntryItemComponent = ({
   bindDrag,
   metadataTooltipDisabled,
   remoteThumbnails,
+  showFolderThumbnails,
+  colorfulFileTypes,
 }: DirEntryItemProps) => {
   const itemRef = useRef<HTMLDivElement>(null);
+  // The user's extension → category map; drives both the glyph and what may be thumbnailed.
+  const fileTypes = useFileTypeExtensions();
 
   useEntryContextMenu({
     itemRef,
@@ -85,21 +86,28 @@ const DirEntryItemComponent = ({
     if (renaming) itemRef.current?.scrollIntoView({ block: "nearest" });
   }, [renaming]);
 
-  // Split extension from the file name.
-  const name = entry.metadata.isFile ? entry.name.split(".")[0] : entry.name;
-  const extension = entry.metadata.isFile
-    ? entry.name.split(".")[entry.name.split(".").length - 1]
-    : "";
+  // Split the extension off at the LAST dot, so "settings.toml copy.zip" keeps its full stem and
+  // only ".zip" is the extension. A leading dot (dotfile) or no dot means no extension.
+  const lastDot = entry.name.lastIndexOf(".");
+  const hasExtension = entry.metadata.isFile && lastDot > 0;
+  const name = hasExtension ? entry.name.slice(0, lastDot) : entry.name;
+  const extension = hasExtension ? entry.name.slice(lastDot + 1) : "";
+  const extensionSuffix = hasExtension ? entry.name.slice(lastDot) : "";
 
   const ext = extension.toLowerCase().trim();
-  const isImage = entry.metadata.isFile && IMAGE_FORMATS.includes(ext);
+  const isImage =
+    entry.metadata.isFile && isCategory(fileTypes, ext, FILE_CATEGORY.IMAGE);
   // Videos, PDFs and markdown get a thumbnail too (macOS QuickLook); same lazy/throttled path.
-  const isVideo = entry.metadata.isFile && VIDEO_FORMATS.includes(ext);
-  const isPdf = entry.metadata.isFile && ext === PDF_FORMAT;
-  const isMarkdown = entry.metadata.isFile && MARKDOWN_FORMATS.includes(ext);
+  const isVideo =
+    entry.metadata.isFile && isCategory(fileTypes, ext, FILE_CATEGORY.VIDEO);
+  const isPdf =
+    entry.metadata.isFile && isCategory(fileTypes, ext, FILE_CATEGORY.PDF);
+  const isMarkdown =
+    entry.metadata.isFile && isCategory(fileTypes, ext, FILE_CATEGORY.MARKDOWN);
+  const isDmg = entry.metadata.isFile && ext === "dmg" && isMacPlatform();
   // SVG draws straight from the file (no backend thumbnail) — the webview rasterises it natively.
   const isSvg = entry.metadata.isFile && ext === SVG_FORMAT;
-  const isThumbnail = isImage || isVideo || isPdf || isMarkdown;
+  const isThumbnail = isImage || isVideo || isPdf || isMarkdown || isDmg;
   // A remote (SFTP) file must be downloaded to make a thumbnail, so only do it when the setting is
   // on. When off, remote entries fall back to the generic type icon (no network hit).
   const remote = entry.path.startsWith(SFTP_SCHEME);
@@ -117,6 +125,12 @@ const DirEntryItemComponent = ({
     // them through the backend thumbnail (which downloads first) instead of the direct SVG path.
     isSvg && !remote,
   );
+  const { thumbnails: folderThumbnails } = useFolderThumbnails(
+    entry.path,
+    fs,
+    entry.metadata.isDir && showFolderThumbnails && thumbnailAllowed,
+    itemRef,
+  );
 
   const { renameInputRef, submitRename, handleRenameKeyDown } = useInlineRename(
     entry.name,
@@ -127,7 +141,8 @@ const DirEntryItemComponent = ({
   );
 
   const renameInput = (
-    <input
+    <TextInput
+      unstyled
       ref={renameInputRef}
       className="rename_input"
       defaultValue={entry.name}
@@ -177,14 +192,26 @@ const DirEntryItemComponent = ({
 
         <div className="name">
           <EntryIcon
+            colorfulFileTypes={colorfulFileTypes}
             isDir={entry.metadata.isDir}
+            tags={tags}
             extension={ext}
             imgSrc={imgSrc}
             imgRef={imgRef}
             finishLoad={finishLoad}
+            folderThumbnails={folderThumbnails}
           />
           <span className="entry_label">
-            {renaming ? renameInput : <h3>{name || extension}</h3>}
+            {renaming ? (
+              renameInput
+            ) : (
+              <h3>
+                {name || extension}
+                {extensionSuffix && (
+                  <span className="list_name_extension">{extensionSuffix}</span>
+                )}
+              </h3>
+            )}
             <TagDots tags={tags} />
           </span>
         </div>

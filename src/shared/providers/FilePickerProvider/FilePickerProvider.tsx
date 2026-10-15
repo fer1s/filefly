@@ -15,9 +15,13 @@ import type { PickFileOptions, PendingFilePick } from "./types";
 // sites never branch on the setting. Mirrors FolderPickerProvider.
 export const FilePickerProvider = ({
   useCustom,
+  colorfulFileTypes,
   children,
 }: {
   useCustom: boolean;
+  // Mirrors the "colorful file types" setting so picker rows match the directory's glyph colours.
+  // Passed in like `useCustom`: shared code can't reach the settings feature's provider.
+  colorfulFileTypes: boolean;
   children: ReactNode;
 }) => {
   const [pending, setPending] = useState<PendingFilePick | null>(null);
@@ -56,6 +60,7 @@ export const FilePickerProvider = ({
       <PathPickerDialog
         visible={pending !== null}
         config={config}
+        colorfulFileTypes={colorfulFileTypes}
         initialPath={pending?.startPath ?? ""}
         onChoose={(path) => settle(path)}
         onClose={() => settle(null)}

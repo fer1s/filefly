@@ -1,0 +1,21 @@
+/* Compress-options dialog fields (name + compression level). Reuses the confirmation modal shell
+   for padding/backdrop; these style the form rows inside it. */
+
+.compress_field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1-5);
+  margin-bottom: var(--space-4);
+}
+
+.compress_field > span {
+  font-size: var(--font-size-base);
+  opacity: 0.8;
+}
+
+.compress_level_hint {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--font-size-sm);
+  opacity: 0.6;
+}

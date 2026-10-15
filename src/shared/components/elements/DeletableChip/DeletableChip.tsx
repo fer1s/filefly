@@ -3,7 +3,10 @@ import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import { classNames } from "@/shared/utils";
 
 import Chip, { CHIP_VARIANT } from "../Chip";
-import IconButton, { ICON_BUTTON_SIZE, ICON_BUTTON_VARIANT } from "../IconButton";
+import IconButton, {
+  ICON_BUTTON_SIZE,
+  ICON_BUTTON_VARIANT,
+} from "../IconButton";
 import type { DeletableChipProps } from "./types";
 
 // A Chip that displays a value with a trailing × to remove it — e.g. an entry in an editable list

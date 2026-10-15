@@ -9,41 +9,69 @@ import PropertyRow from "./PropertyRow";
 import type { PropertiesContentProps } from "./types";
 
 // The metadata rows for an entry. Shared by the Properties dialog and the info side panel.
-export const PropertiesContent = ({ entry }: PropertiesContentProps) => {
+export const PropertiesContent = ({
+  entry,
+  aggregate,
+}: PropertiesContentProps) => {
   const { dateFormat } = useStateContext();
   // Files report their size directly; folders are computed (null while calculating).
-  const size = useEntrySize(entry);
+  const size = useEntrySize(entry, !aggregate);
 
   return (
     <div className="properties_content">
-      <PropertyRow label={t.properties.name} value={entry.name} />
-      <PropertyRow
-        label={t.properties.type}
-        value={entry.metadata.isDir ? t.common.directory : t.common.file}
-      />
-      <PropertyRow label={t.properties.path} value={entry.path} />
-      <PropertyRow
-        label={t.properties.size}
-        value={size === null ? t.properties.calculating : formatBytes(size)}
-      />
-      {entry.metadata.isFile && (
-        <PropertyRow
-          label={t.properties.sizeOnDisk}
-          value={formatBytes(entry.sizeOnDisk)}
-        />
+      {aggregate ? (
+        <>
+          <PropertyRow label={t.properties.items} value={aggregate.count} />
+          <PropertyRow
+            label={t.properties.size}
+            value={
+              aggregate.size === null
+                ? t.properties.calculating
+                : formatBytes(aggregate.size)
+            }
+          />
+        </>
+      ) : (
+        <>
+          <PropertyRow label={t.properties.name} value={entry.name} />
+          <PropertyRow
+            label={t.properties.type}
+            value={entry.metadata.isDir ? t.common.directory : t.common.file}
+          />
+          <PropertyRow label={t.properties.path} value={entry.path} />
+          <PropertyRow
+            label={t.properties.size}
+            value={size === null ? t.properties.calculating : formatBytes(size)}
+          />
+          {entry.metadata.isFile && (
+            <PropertyRow
+              label={t.properties.sizeOnDisk}
+              value={formatBytes(entry.sizeOnDisk)}
+            />
+          )}
+          <PropertyRow
+            label={t.properties.created}
+            value={formatDate(
+              entry.metadata.created.secs_since_epoch,
+              dateFormat,
+            )}
+          />
+          <PropertyRow
+            label={t.properties.modified}
+            value={formatDate(
+              entry.metadata.modified.secs_since_epoch,
+              dateFormat,
+            )}
+          />
+          <PropertyRow
+            label={t.properties.accessed}
+            value={formatDate(
+              entry.metadata.accessed.secs_since_epoch,
+              dateFormat,
+            )}
+          />
+        </>
       )}
-      <PropertyRow
-        label={t.properties.created}
-        value={formatDate(entry.metadata.created.secs_since_epoch, dateFormat)}
-      />
-      <PropertyRow
-        label={t.properties.modified}
-        value={formatDate(entry.metadata.modified.secs_since_epoch, dateFormat)}
-      />
-      <PropertyRow
-        label={t.properties.accessed}
-        value={formatDate(entry.metadata.accessed.secs_since_epoch, dateFormat)}
-      />
     </div>
   );
 };

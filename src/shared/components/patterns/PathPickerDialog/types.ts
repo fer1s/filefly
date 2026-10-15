@@ -25,6 +25,9 @@ export type PickerConfig = {
 export type PathPickerDialogProps = {
   visible: boolean;
   config: PickerConfig;
+  // Tint file glyphs by category (the "colorful file types" setting). Only meaningful where files
+  // are listed, so the folder picker omits it.
+  colorfulFileTypes?: boolean;
   // Location the picker opens at. Empty string starts at the user's home folder.
   initialPath: string;
   // Called with the chosen absolute path (a folder in folder mode, a file in file mode).
@@ -33,11 +36,13 @@ export type PathPickerDialogProps = {
 };
 
 // A row in the main list: a folder or file, addressed by absolute path. `isDir` drives its icon
-// and whether double-click navigates into it (folders) or it's a selectable leaf (files).
+// and whether double-click navigates into it (folders) or it's a selectable leaf (files);
+// `extension` (lowercased, no dot) picks a file's category glyph and colour.
 export type PickerEntry = {
   name: string;
   path: string;
   isDir: boolean;
+  extension: string;
 };
 
 // A "Favorites" shortcut in the source list (resolved standard directory).

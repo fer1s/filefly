@@ -1,6 +1,6 @@
 export type DialogHeaderProps = {
   title: string;
-  // id wired to the dialog's aria-labelledby.
+  // Stable id for the visible app-specific heading.
   titleId: string;
   onClose: () => void;
 };

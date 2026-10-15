@@ -1,0 +1,34 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {};
+	objectVersion = 56;
+	objects = {
+		A10000000000000000000001 /* FinderSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000002 /* FinderSync.swift */; };
+		A10000000000000000000003 /* FinderSync.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A10000000000000000000004 /* FinderSync.framework */; };
+		A10000000000000000000005 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000000B /* Localizable.strings */; };
+		A10000000000000000000002 /* FinderSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FinderSync.swift; sourceTree = "<group>"; };
+		A10000000000000000000004 /* FinderSync.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = FinderSync.framework; path = System/Library/Frameworks/FinderSync.framework; sourceTree = SDKROOT; };
+		A10000000000000000000007 /* FinderSync.appex */ = {isa = PBXFileReference; explicitFileType = wrapper.app-extension; includeInIndex = 0; path = FinderSync.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		A10000000000000000000008 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A10000000000000000000009 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		A1000000000000000000000A /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/Localizable.strings; sourceTree = "<group>"; };
+		A1000000000000000000000B /* Localizable.strings */ = {isa = PBXVariantGroup; children = (A10000000000000000000009 /* en */, A1000000000000000000000A /* es */,); name = Localizable.strings; sourceTree = "<group>"; };
+		A1000000000000000000000C /* FinderSync */ = {isa = PBXGroup; children = (A10000000000000000000002 /* FinderSync.swift */, A10000000000000000000008 /* Info.plist */, A1000000000000000000000B /* Localizable.strings */, A1000000000000000000000D /* Frameworks */,); path = FinderSync; sourceTree = "<group>"; };
+		A1000000000000000000000D /* Frameworks */ = {isa = PBXGroup; children = (A10000000000000000000004 /* FinderSync.framework */,); name = Frameworks; sourceTree = "<group>"; };
+		A1000000000000000000000E /* Products */ = {isa = PBXGroup; children = (A10000000000000000000007 /* FinderSync.appex */,); name = Products; sourceTree = "<group>"; };
+		A1000000000000000000000F /* Project */ = {isa = PBXGroup; children = (A1000000000000000000000C /* FinderSync */, A1000000000000000000000E /* Products */,); sourceTree = "<group>"; };
+		A10000000000000000000010 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A10000000000000000000001 /* FinderSync.swift in Sources */,); runOnlyForDeploymentPostprocessing = 0; };
+		A10000000000000000000011 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (A10000000000000000000003 /* FinderSync.framework in Frameworks */,); runOnlyForDeploymentPostprocessing = 0; };
+		A10000000000000000000012 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (A10000000000000000000005 /* Localizable.strings in Resources */,); runOnlyForDeploymentPostprocessing = 0; };
+		A10000000000000000000013 /* FinderSyncExtension */ = {isa = PBXNativeTarget; buildConfigurationList = A10000000000000000000018 /* Build configuration list for PBXNativeTarget "FinderSyncExtension" */; buildPhases = (A10000000000000000000010 /* Sources */, A10000000000000000000011 /* Frameworks */, A10000000000000000000012 /* Resources */,); buildRules = (); dependencies = (); name = FinderSyncExtension; productName = FinderSyncExtension; productReference = A10000000000000000000007 /* FinderSync.appex */; productType = "com.apple.product-type.app-extension"; };
+		A10000000000000000000014 /* Project */ = {isa = PBXProject; attributes = {LastUpgradeCheck = 1600; BuildIndependentTargetsInParallel = 1;}; buildConfigurationList = A10000000000000000000017 /* Build configuration list for PBXProject "FinderSync" */; compatibilityVersion = "Xcode 14.0"; developmentRegion = en; hasScannedForEncodings = 0; knownRegions = (en, es, Base,); mainGroup = A1000000000000000000000F /* Project */; productRefGroup = A1000000000000000000000E /* Products */; projectDirPath = ""; projectRoot = ""; targets = (A10000000000000000000013 /* FinderSyncExtension */,); };
+		A10000000000000000000015 /* Debug */ = {isa = XCBuildConfiguration; buildSettings = {APPLICATION_EXTENSION_API_ONLY = YES; CODE_SIGNING_ALLOWED = YES; CODE_SIGNING_REQUIRED = NO; CODE_SIGN_IDENTITY = "-"; CODE_SIGN_ENTITLEMENTS = FinderSync/FinderSync.entitlements; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = FinderSync/Info.plist; MACOSX_DEPLOYMENT_TARGET = 14.0; PRODUCT_BUNDLE_IDENTIFIER = com.sito8943.file-browser.FinderSync; PRODUCT_MODULE_NAME = SitoFinderSync; PRODUCT_NAME = FinderSync; SKIP_INSTALL = YES; SWIFT_EMIT_LOC_STRINGS = NO; SWIFT_VERSION = 5.0;}; name = Debug; };
+		A10000000000000000000016 /* Release */ = {isa = XCBuildConfiguration; buildSettings = {APPLICATION_EXTENSION_API_ONLY = YES; CODE_SIGNING_ALLOWED = YES; CODE_SIGNING_REQUIRED = NO; CODE_SIGN_IDENTITY = "-"; CODE_SIGN_ENTITLEMENTS = FinderSync/FinderSync.entitlements; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = FinderSync/Info.plist; MACOSX_DEPLOYMENT_TARGET = 14.0; PRODUCT_BUNDLE_IDENTIFIER = com.sito8943.file-browser.FinderSync; PRODUCT_MODULE_NAME = SitoFinderSync; PRODUCT_NAME = FinderSync; SKIP_INSTALL = YES; SWIFT_EMIT_LOC_STRINGS = NO; SWIFT_VERSION = 5.0;}; name = Release; };
+		A10000000000000000000017 /* Build configuration list for PBXProject "FinderSync" */ = {isa = XCConfigurationList; buildConfigurations = (A10000000000000000000019 /* Debug */, A1000000000000000000001A /* Release */,); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		A10000000000000000000018 /* Build configuration list for PBXNativeTarget "FinderSyncExtension" */ = {isa = XCConfigurationList; buildConfigurations = (A10000000000000000000015 /* Debug */, A10000000000000000000016 /* Release */,); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		A10000000000000000000019 /* Debug project */ = {isa = XCBuildConfiguration; buildSettings = {CLANG_ENABLE_MODULES = YES; SDKROOT = macosx; SWIFT_VERSION = 5.0;}; name = Debug; };
+		A1000000000000000000001A /* Release project */ = {isa = XCBuildConfiguration; buildSettings = {CLANG_ENABLE_MODULES = YES; SDKROOT = macosx; SWIFT_VERSION = 5.0;}; name = Release; };
+	};
+	rootObject = A10000000000000000000014 /* Project object */;
+}

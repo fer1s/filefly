@@ -1,3 +1,5 @@
+import Select from "@/shared/components/elements/Select";
+
 import type { SelectControlProps } from "./types";
 
 // Enum setting → a dropdown, bound generically. The <select> value is a string; `toValue` maps it
@@ -7,7 +9,7 @@ const SelectControl = ({
   settings,
   update,
 }: SelectControlProps) => (
-  <select
+  <Select
     className="settings_select"
     value={String(settings[descriptor.key])}
     onChange={(event) =>
@@ -23,7 +25,7 @@ const SelectControl = ({
         {option.label}
       </option>
     ))}
-  </select>
+  </Select>
 );
 
 export default SelectControl;

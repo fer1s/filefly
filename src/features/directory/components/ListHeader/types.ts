@@ -1,6 +1,7 @@
 import type { RefObject } from "react";
 
 import type { SortKey } from "@/features/directory/constants";
+import type { ColumnWidths } from "../../columns";
 import type { Sort } from "../../sort";
 
 export type ListHeaderProps = {
@@ -8,6 +9,7 @@ export type ListHeaderProps = {
   onSort: (key: SortKey) => void;
   visibleColumns: SortKey[];
   onToggleColumn: (key: SortKey) => void;
+  onColumnWidthsChange: (widths: ColumnWidths) => void;
 };
 
 export type ColumnsMenuProps = {
@@ -17,4 +19,10 @@ export type ColumnsMenuProps = {
   visible: boolean;
   visibleColumns: SortKey[];
   onToggleColumn: (key: SortKey) => void;
+};
+
+export type ResizeSnapshot = {
+  widths: ColumnWidths;
+  left: SortKey;
+  right: SortKey;
 };

@@ -1,6 +1,6 @@
 import * as api from "@/shared/services/api";
 import { DirEntry, Volume, Tag } from "@/shared/models";
-import type { DragDropAction } from "@/shared/constants";
+import type { DragDropAction, ViewMode } from "@/shared/constants";
 
 // Encapsulates all filesystem domain operations. Views/components consume this through the provider
 // instead of calling the Tauri service (`api`) directly. Also owns data shaping (filtering, sorting).
@@ -99,12 +99,12 @@ export class FileSystemManager {
   }
 
   // Per-folder zoom level (null when unset).
-  getFolderZoom(path: string): Promise<number | null> {
-    return api.getFolderZoom(path);
+  getFolderZoom(path: string, view: ViewMode): Promise<number | null> {
+    return api.getFolderZoom(path, view);
   }
 
-  setFolderZoom(path: string, zoom: number): Promise<void> {
-    return api.setFolderZoom(path, zoom);
+  setFolderZoom(path: string, view: ViewMode, zoom: number): Promise<void> {
+    return api.setFolderZoom(path, view, zoom);
   }
 
   getDirSize(path: string): Promise<number> {
@@ -128,6 +128,18 @@ export class FileSystemManager {
     return api.getThumbnail(path, size);
   }
 
+  getThumbnailCapabilities(): Promise<api.ThumbnailCapabilities> {
+    return api.getThumbnailCapabilities();
+  }
+
+  probeQuickLookThumbnail(path: string): Promise<string> {
+    return api.probeQuickLookThumbnail(path);
+  }
+
+  prepareImagePreview(path: string, fallback: boolean): Promise<string> {
+    return api.prepareImagePreview(path, fallback);
+  }
+
   open(path: string): Promise<void> {
     return api.openFile(path);
   }
@@ -141,6 +153,14 @@ export class FileSystemManager {
 
   openInTerminal(path: string): Promise<void> {
     return api.openInTerminal(path);
+  }
+
+  runContextAction(
+    actionId: string,
+    clickedPath: string,
+    paths: string[],
+  ): Promise<void> {
+    return api.runContextAction(actionId, clickedPath, paths);
   }
 
   // Render a markdown source string to HTML (renders the live editor draft, so unsaved edits show).
@@ -184,9 +204,14 @@ export class FileSystemManager {
     return api.createFolder(parent);
   }
 
-  // Copy an image file to the system clipboard.
-  copyImage(path: string): Promise<void> {
-    return api.copyImage(path);
+  // Create a uniquely named empty .txt file inside `parent`.
+  createTextFile(parent: string): Promise<string> {
+    return api.createTextFile(parent);
+  }
+
+  // Copy a local image, optionally using the preview's clockwise rotation in degrees.
+  copyImage(path: string, rotation?: number): Promise<void> {
+    return api.copyImage(path, rotation);
   }
 
   trash(path: string): Promise<void> {

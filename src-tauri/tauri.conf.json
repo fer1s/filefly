@@ -1,11 +1,15 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Sito File Browser",
-  "version": "0.5.0",
+  "version": "0.16.0",
   "identifier": "com.sito8943.file-browser",
   "build": {
     "beforeDevCommand": "npm run dev",
     "beforeBuildCommand": "npm run build",
+    "beforeBundleCommand": {
+      "script": "node scripts/build-finder-sync.mjs",
+      "cwd": "../"
+    },
     "devUrl": "http://localhost:1420",
     "frontendDist": "../dist"
   },
@@ -30,7 +34,7 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; img-src 'self' data: asset: https://asset.localhost; media-src 'self' asset: https://asset.localhost; frame-src 'self' asset: https://asset.localhost; object-src 'self' asset: https://asset.localhost",
+      "csp": "default-src 'self'; connect-src 'self' ipc: http://ipc.localhost https://api.github.com; img-src 'self' data: asset: https://asset.localhost; media-src 'self' asset: https://asset.localhost; frame-src 'self' asset: https://asset.localhost; object-src 'self' asset: https://asset.localhost",
       "assetProtocol": {
         "enable": true,
         "scope": ["**", "**/*"]
@@ -42,7 +46,10 @@
     "targets": "all",
     "externalBin": ["binaries/sfb"],
     "macOS": {
-      "minimumSystemVersion": "14.0"
+      "minimumSystemVersion": "14.0",
+      "files": {
+        "PlugIns/FinderSync.appex": "target/finder-sync/FinderSync.appex"
+      }
     },
     "resources": ["icons/32x32.png"],
     "icon": [

@@ -2,6 +2,264 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.16.0]
+
+### Added
+
+- Open selected folders from Finder with the **Open in Sito File Browser** action. The Finder Sync extension currently covers the home folder and its descendants (`128d7ea`)
+- Properties for multiple selected files and folders shows the item count and their combined size, including recursive folder sizes (`bc85fcd`)
+- macOS DMG thumbnails can show the icon of an app contained in the disk image, using a temporary read-only mount (`4d9d0c0`)
+
+## [0.15.0]
+
+### Added
+
+- Image preview falls back to a cached Quick Look render on macOS when the WebView cannot decode a format such as AVIF or HEIC. Renders are sized from the source (2048–4096 px), kept as PNG only when translucent, stored under `thumbnails/preview/` with their own eviction budget, and flagged with a "compatible preview" tooltip (`5beb5a6`, `47b4ed4`)
+- Rotate the image preview with `R` / `Shift+R`, configurable in the keymap (`7c66521`)
+- Built-in file and folder picker shows file-type icons and colors, Finder tag dots, a search field (`Cmd+F`) filtering the current folder, type-to-find, and full keyboard navigation: arrows, Home/End, Enter, Backspace or `Cmd+↑` to go up (`71cb443`)
+
+### Changed
+
+- Image preview shows a skeleton while loading and reports a load error instead of a blank panel (`cda61fa`)
+- Zoom is remembered per folder and per view, so grid and list keep independent sizes (`dca4825`)
+- File-type map, file icons, tag dots, the typeahead popup and the type-to-find buffer moved to `src/shared` so the picker and the directory share one implementation (`71cb443`)
+- Path bar surface styling (`7f23cf8`)
+
+### Fixed
+
+- Detached preview window could stay on its spinner forever when the folder listing finished before settings loaded and the target file's type was user-mapped (`47b4ed4`)
+- `Cmd+Option+C` copy path hotkey works on macOS, where the WebView reports the key as `ç` (`584d585`)
+- Choose-folder and thumbnail probe dialogs use the built-in picker instead of the native one (`a2cce4a`)
+
+## [0.14.0]
+
+### Added
+
+- Path bar breadcrumb context menus include applicable user-defined actions, using the existing target filters and execution flow (`20689d9`)
+- Quick Bar shows applicable user-defined actions after Information, with their configured icons and tooltips and a divider separating them from built-in actions. Actions target the current folder or selection (`ac4409a`)
+- Settings sidebar lists subsection headings beneath each category. Clicking a heading opens its category and scrolls the content panel to that subsection; the sidebar scrolls independently (`da38309`)
+
+### Changed
+
+- Settings moves Files & folders from General to the start of Files, grouping Show hidden files, Remember scroll position when navigating up, and Hide app files in Recents there (`f36dc7c`)
+
+## [0.13.0]
+
+### Added
+
+- Folder icons use the first coloured Finder tag in list and grid views, including folders with thumbnail mosaics. Folders without a coloured tag retain their default appearance (`e1b1d5e`)
+
+### Changed
+
+- A vertical divider separates the sort menu from the zoom controls, matching the quick-action separators (`0b46af7`)
+
+### Fixed
+
+- Confirmation buttons, including Move, use the filled primary variant; destructive confirmations retain their red styling (`97bc06a`)
+- Escape closes an open dialog before leaving sidebar edit mode. Clicks inside the dialog also preserve sidebar editing (`cf31d5c`)
+
+## [0.12.0]
+
+### Changed
+
+- Dark theme adopts a blue-gray palette for backgrounds, panels, text, borders and selection, with updated blue, green and red accents. The blue accent swatch in Settings matches the new palette (`6140f4a`)
+- Navigation and directory surfaces use fewer nested borders: the outer content frame and listing frame are removed, breadcrumbs sit directly on the canvas, and the search field retains its own surface. Active tabs use a background highlight, the quick-action bar loses its border, and the status bar keeps only a subtle top separator (`71c0cb9`)
+- List rows use a continuous background with hover and selection highlights instead of alternating stripes; the sticky column header has an opaque surface and a subtle bottom separator (`71c0cb9`)
+
+### Fixed
+
+- Settings search uses the matching light or dark colour scheme for its native clear button, improving contrast against the input background (`99b5e18`)
+
+## [0.11.1]
+
+### Added
+
+- Audio playback progress highlights the played portion with the theme's accent colour, updating during playback and when seeking (`7cd620b`)
+
+### Changed
+
+- Audio previews share the floating controls bar used by other previews, with matching pill shape, transparency, shadows and buttons. Previous, Next and Trash actions now sit alongside playback, progress and volume controls (`7528c86`)
+
+### Fixed
+
+- Previews track the opened file by its path instead of its position in the list, preventing directory refreshes or sorting changes from switching the preview to another file. Removing the previewed file still advances to a neighbouring entry (`ee7823c`)
+- Audio progress and volume slider thumbs are vertically centred on their tracks (`e140848`)
+
+## [0.11.0]
+
+### Added
+
+- Settings › Files › File types: map any extension onto a built-in file type (e.g. `opus` → Audio). The type — not a hand-picked icon — decides the entry glyph, whether the file is thumbnailed, and whether the built-in preview opens it, so a remapped extension behaves exactly like a built-in one. The full default map is seeded into `settings.toml` and editable there; an extension may belong to only one type and the editor rejects (and explains) a duplicate
+- Image previews gain 90° left/right rotation controls alongside zoom, in both the in-app panel and detached window. Rotated images fit the viewport and retain zoom and pan support; rotation is temporary and resets when switching files or reopening the preview (`744d0d5`)
+- Rotated image previews expose "Copy image for current state" in the context menu: copy the full image with its current orientation, respecting embedded EXIF orientation and leaving the original file untouched. "Copy image" remains available for the original; decoding, rotation and clipboard writes run on a worker (`744d0d5`)
+- Settings › Files › File types gains "Colorful file types": optionally colour file icons in list and grid views using the category palette. The choice is persisted and defaults to gray; folders and thumbnails keep their appearance (`9efab19`)
+
+### Changed
+
+- Settings: "Files & Transfers" is now "Files" and gathers everything about how files are treated — File types, Previews & windows and Folder sizes moved there from General, which was carrying 21 settings across 8 sub-headings
+- File types are presented as responsive category cards with coloured icons, descriptions, extension chips and an inline Add editor for each category (`085aede`)
+- The active tab joins a bordered content panel, visually grouping navigation, actions and the directory under their owning tab (`03173d7`)
+- Navigation and quick-action bars gain subtle backgrounds and rounded borders; the Home button follows Back, Forward and Up (`94ea8a9`, `f5667cb`, `0296735`)
+- Directory listings gain a rounded frame, larger rows and thumbnails, and a full selection outline alongside the accent strip (`2ce7b20`)
+- The quick-action bar shows the active sort criterion in a labelled menu on the right, reusing the existing folder sorting choices (`d760aca`)
+- Item counts and optional system statistics share a framed status row, wrapping when space is limited (`859a679`)
+- Folder search stays visible in the navigation bar. The search shortcut focuses the field; Escape clears the filter and releases focus, while recent searches remain available (`f5a5766`)
+- Separate List and Grid buttons replace the single view toggle and highlight the active view; the existing toggle shortcut remains available (`7cca898`)
+
+### Fixed
+
+- Context menus no longer highlight one row under the pointer and another with keyboard focus at the same time. Pointer movement and keyboard navigation share a single focused row, including submenu items (`744d0d5`)
+- The list header background extends across the directory's side gutters to the edges of the scrollable area, keeping column labels aligned with the file rows
+
+## [0.10.2]
+
+### Fixed
+
+- Context-menu submenus did nothing when picked — Compress › To zip / To 7z, Sort By, New File, and every other submenu row. The flyout is portaled to `<body>` to escape the menu's `overflow`, so it sits outside the element the outside-press handlers test containment against: the press dismissed the whole menu on `mousedown` and the row unmounted before its `click` could fire. `useContextMenu` and `useContextMenuState` now treat a press inside `.context_menu_submenu` as a press inside the menu
+- Clicking an actionable toast (the "reveal the archive" toast after compressing, and the like) could drop the action — the global "any interaction dismisses" `pointerdown` handler fired on the toast itself, starting the exit animation under the cursor so the toast slid out from under the pending `mouseup`. Presses on a toast are now left to that toast's own click handler
+
+## [0.10.1]
+
+### Fixed
+
+- `src-tauri/tauri.conf.json` version was left at `0.9.1` when 0.10.0 was cut, so the packaged dmg was named `..._0.9.1_....dmg` while the release tag/cask expected `..._0.10.0_....dmg` — Homebrew upgrades 404'd. Version file now kept in sync with `package.json`.
+
+## [0.10.0]
+
+### Added
+
+- `sfb` CLI gains custom context-menu actions: `sfb get actions` lists the user's actions (id, label, targets, extensions, enabled); `sfb run action --id ... --path ... --force` runs one exactly as the GUI would, sharing the same `filesystem::actions` core as `functions::context_menu` (`0e68a3d`)
+- Export/Import for custom context-menu actions — Settings › Context Actions can save the user's custom actions to a shareable `context-actions.json` and import one back; imported entries are validated (label/command/target required, unknown icons fall back to default) and get freshly generated ids so a shared bundle never collides with a local action (`04323ef`)
+
+### Changed
+
+- Right-click "Inspect Element" works again in dev builds — the app's context-menu override (which replaces the OS/webview menu everywhere) is skipped when `import.meta.env.DEV` (`e4f1e3b`)
+
+### Fixed
+
+- Leaving a folder while an inline rename was in progress no longer leaves it resumed on return — navigating to a new path now clears `renamingID` alongside the stale selection (`d8e4045`)
+
+## [0.9.1]
+
+### Fixed
+
+- Dialogs (Settings, Shortcuts, confirmations, …) no longer open shifted down and to the right in the packaged app. The code-split build loads the shared `Button`/`DialogHeader` CSS chunks before the main stylesheet, so `@sito/ui`'s same-specificity base rules (`.sito-ui-dialog { position: relative }`, `.sito-ui-button` height/padding/weight) beat the app's `.dialog` / `.Button` overrides. The package styles now live in a `@layer sito-ui` cascade layer, so every unlayered app rule wins regardless of stylesheet order or specificity; dialog centring is delegated to the flex backdrop instead of `position: fixed` + `top/left: 50%`
+- Buttons in the packaged app return to their intended height, padding and font weight (same root cause as above)
+
+## [0.9.0]
+
+### Added
+
+- Welcome guide — a first-launch onboarding wizard (appearance, essential shortcuts, sidebar, system integration) driven by a declarative step registry; a Settings toggle decides whether it shows on launch, and an "Open guide" button replays it anytime (`759c793`, `bb84140`)
+- Update notifications — on launch the app compares the installed version with the latest GitHub release and shows a clickable toast when a newer one exists; Settings › General › Updates adds a "Check now" row with the release link and the Homebrew upgrade command. Read-only: nothing is downloaded or installed (`435d9f0`)
+- What's new after an update — the first launch on a newer version shows a clickable toast that opens the bundled release notes (this `CHANGELOG.md`, rendered in-app, with a version picker); Settings › General › Updates adds a "Show changelog" row and a toggle for the post-update toast. Fresh installs get the welcome guide instead, never both (`a93ac91`, `972d487`)
+- Cleanup watch list — register folders (dependency caches, build artifacts) in Settings › Storage and reclaim them on demand, either emptying their contents or trashing the folder itself; OS-owned paths are refused (`1d181a1`)
+- Custom context-menu actions — user-defined process commands appended to the entry context menu, saved in `context_menu.toml` and executed with argv (never through a shell), with `{paths}` and scalar placeholders (`7106d48`)
+- Grid icon size — a Finder-style "Icon size" setting that scales grid tiles and their icons independently of the per-folder zoom; list view only nudges the icon (`266b840`)
+- Full keyboard navigation in context menus (arrow keys, submenus) through the shared `@sito/ui` menu primitive (`4d09119`)
+- Committing a file path in the path bar navigates to its folder and reveals the file once the listing loads (`15c42ed`)
+
+### Changed
+
+- Hotkey registration and dispatch now run on `@sito/commands`, replacing the in-house keymap dispatcher (`5510d0e`)
+- Clicking the Dock icon while the app has no visible window restores the hidden main window, or opens a new browser window if all were closed (`9fd7a35`)
+- Network group with no saved connections exposes the SSH/SMB chooser directly; sidebar add actions and dialog submit buttons use the shared Button variants (`1282918`)
+- Folder-size cache keeps the directory mtime and ignore-rules key with each size so an unchanged folder skips the backend lookup within a session (`f707afe`)
+- Settings loaded from disk are merged over the defaults, so a file written by an older build never leaves newer keys undefined (`bb84140`)
+- Routing moved from `react-router-dom` 6 to `react-router` 7.18 (same declarative API), clearing the open-redirect / SSR advisories against v6; `postcss` and `brace-expansion` bumped past their advisories, and `russh` 0.62.5 / `serde_with` 3.21 merged from Dependabot (`e200c76`)
+- Rarely-opened surfaces are now code-split and loaded on first open — Settings, Preview, Properties, the connection/SMB/auth dialogs, compress/password dialogs, the welcome guide, release notes and the shortcuts sheet — plus the detached preview/properties panel windows; startup JS drops from 697 kB to 616 kB (`shared/components/patterns/Deferred`, `540e5e3`)
+- `@sito/commands` is consumed from its public git tag (`v0.1.0-alpha.1`) instead of a local path, so CI can install it (`9adc3b7`)
+- Architecture rules rewritten to match the codebase (registries, settings contract, dialogs/hotkeys, launch lifecycle) and the remaining cross-feature deep imports routed through public `index.ts` files (`188ab49`, `140e479`)
+
+### Fixed
+
+- List view: hidden columns (e.g. Kind in Pictures, whose default hides it) no longer leak a stray "File"/"Directory" label under each row — the hide rules lost a CSS specificity tie against the cell's `display: flex` (`4af28e4`)
+- Sidebar section titles no longer overlap the group chevron while the sidebar animates open (`7dee05c`)
+- The "open in new tab" button on connection rows no longer shows in the collapsed icon rail (`8e64f64`)
+- Remote (SFTP) breadcrumbs keep their `sftp://<connection>` prefix, so clicking an ancestor crumb no longer produces a broken local path (`2c0d9b6`)
+- Late background refreshes (e.g. a slow Recents query on window focus) can no longer replace the entries of the folder you have since navigated to (`47c7a46`)
+- Dragging a remote (SFTP) entry out of the window is refused with a message instead of handing an invalid path to the native drag (`c21bacf`)
+- Tooltips dismiss when their trigger row moves (e.g. while sorting by folder size) instead of floating detached (`540f5a2`)
+
+## [0.8.0]
+
+### Added
+
+- Windows (SMB) network shares — browse SMB shares (e.g. a Windows VM) from the sidebar's Network group, with a chooser that adds either an SSH/SFTP connection or an SMB share, mount handling, and a redirect out of folders whose mount disappears (`7cdce45`)
+- RAR extraction via the system 7-Zip binary — `.rar` files get Extract Here / Extract to Folder, including password detection for encrypted archives; extract actions for formats that need 7-Zip (7z, rar) hide themselves when no binary is on PATH (`2c80c6f`)
+- Create a text file from the browser — a New File context-menu action, working locally and on remote (SFTP) folders (`3019305`)
+- Zoom the current folder with Command/Ctrl + scroll wheel, behind a new setting (`904ddbd`)
+- Breadcrumb context menus — right-clicking a path crumb opens a reduced folder menu; the path bar still switches to a raw editable path on click (`bee3149`)
+- Resource-oriented `sfb` CLI syntax (`sfb <verb> <resource>`, e.g. `sfb trash file`) layered over the existing commands, with argument aliases and a machine-readable schema for agents (`32ef6db`)
+- AI-agent docs — `AGENTS.md` and `PROJECT_CONTEXT.md` describing the architecture and conventions for coding agents (`e08513c`)
+
+### Changed
+
+- Emptying the Trash on macOS now delegates to Finder, which owns the progress UI and covers per-volume Trashes; other platforms keep the manual implementation (`7f4ffb2`)
+- Home and the macOS TCC-protected folders are pre-warmed at launch, so the first navigation doesn't pay the consent round-trip and cold metadata cache (`cb9ef25`)
+- Navigating into a folder the OS denies (e.g. the Trash without Full Disk Access) now bounces back to the previous folder — or Volumes — with an error toast that opens the Full Disk Access settings pane when clicked (`9fd1f63`, `06850ea`)
+- Context-menu groups are separated with dividers, mirrored in the quick-actions bar (`5f39618`, `c75fb6d`)
+- The Trash action is shown in the danger color (`bee3149`)
+- Form controls started migrating to the shared `@sito/ui` component library (`afc1178`)
+
+### Fixed
+
+- Directory watcher now refreshes reliably on desktop when files change externally (`35e0a89`)
+- Type-to-find now matches multi-character queries correctly while navigating with the keyboard (`1235935`)
+- Deleting from a detached preview window now asks for confirmation, honoring the confirm-before-Trash setting like the main window (`91c4225`)
+
+## [0.7.0]
+
+### Added
+
+- Folder image mosaics in grid view — at larger zoom levels, folders show up to four thumbnails from their direct image children, loaded lazily through the existing thumbnail queue and cache (`1583cbf`)
+- Open folders in a new tab from entry actions, with a setting to control whether newly opened tabs are activated immediately (`ee4f1b2`)
+- Open Containing Folder for entries shown outside their parent directory, including Recents and recursive search results (`4e31bdc`)
+- Resizable column headers in list view (`4b93bff`)
+- Per-history-entry scroll restoration when navigating Back or Forward, plus an optional setting to remember a parent's scroll position when navigating Up (`5fde13d`)
+
+### Changed
+
+- Quick Actions now exposes Sort as an anchored menu and uses context-aware action icons; folders use a dedicated Open icon (`ee4f1b2`)
+- List view now displays file extensions inline as part of the filename (`574ab37`)
+- Recents now queries Spotlight in progressively wider time windows, excludes directories and app-owned paths earlier, and caches results briefly to avoid redundant refreshes (`4e31bdc`)
+
+### Fixed
+
+- Type-to-find now mounts and scrolls to matching entries beyond the current lazy-render batch (`c6efb6d`)
+- Plain Backspace no longer triggers the embedded browser's history navigation (`22e65d9`)
+- Detached audio previews now use the application background instead of leaving the window surface unstyled (`cd9276b`)
+
+## [0.6.0]
+
+### Added
+
+- Archive support — compress files/folders to `.zip` (optional password) and extract archives, with extract-here / extract-to-folder, entry actions, and context-menu wiring (`431cc4d`, `0e104ea`)
+- 7-Zip archives — compress & extract via the system 7-Zip binary, with a compress/extract UI gated on 7z availability (`2b29b35`, `b7777d0`)
+- Copy files to the OS clipboard the Finder way — a copied selection pastes as real files into file-aware apps (Finder, Mail) and as names into text fields (macOS multi-flavor `NSPasteboard`) (`c00d537`)
+- Open properties in its own detached window — an `openPropertiesInWindow` setting, plus `sfb ui-properties` and a `properties` control action (`2cf1633`)
+- Open an image preview in its own window (`422a16c`)
+- Copy path — a context-menu action and keybinding that copy an entry's path (`84dcce8`, `71d804b`)
+- Edit a saved SSH connection from the sidebar; the stored key path rehydrates the auth dialog (`0f19b2c`)
+- Persistent notice when a remote folder fails to load, with a Retry — replaces the transient toast that left the folder deceptively empty (`ec3b4cc`)
+- Indeterminate progress bar for operations without a byte total (`684e5ba`)
+- Reload button on the dev error overlay (`6dad352`)
+- `sfb ui-windows` and `ui-preview` control commands (`96e7c8a`)
+- Remote write over SFTP, host-key verification, and Keychain-stored connection secrets (`642f272`)
+- Shared UI element library — `Checkbox`, `Select`, `TextArea`, `TextInput`, `Slider`, `PasswordInput`; feature code is barred from raw form elements and routed through these primitives (`2065dd0`, `7c782e6`, `54440fd`, `dd6e01e`)
+
+### Changed
+
+- More macOS/Windows junk excluded from folder-size totals by default (`com.apple.chrono`, `.localized`, `.AppleDouble`, `Thumbs.db`, `desktop.ini`); ignore rules now match any path component, so deep watcher events under an ignored dir are dropped (`5419b0f`)
+- Committing a file path in the path bar now opens the file (open routing centralized through the directory provider; the redundant Preview action is hidden when Open already previews) (`669a783`)
+- Reordered the Compress action in the context menu — after Destroy, before Properties (`029f6c3`)
+
+### Fixed
+
+- Context-menu opacity now mirrors to portaled submenu flyouts (`7df372e`)
+- Derive a file's extension from the last dot, not the first (`2076701`)
+- Preview iframe background uses the app-background token (`d610f54`)
+
 ## [0.5.0]
 
 ### Added

@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { faFileImport, faFileExport } from "@fortawesome/free-solid-svg-icons";
 
 import Dialog from "@/shared/components/patterns/Dialog";
@@ -7,7 +7,7 @@ import IconButton, {
   ICON_BUTTON_VARIANT,
   ICON_BUTTON_SIZE,
 } from "@/shared/components/elements/IconButton";
-import { useCloseOnEscape } from "@/shared/hooks/useCloseOnEscape";
+import TextInput from "@/shared/components/elements/TextInput";
 import { useStateContext } from "@/shared/providers/StateProvider";
 import { useConfirm } from "@/shared/providers/ConfirmProvider";
 import { useFilePicker } from "@/shared/providers/FilePickerProvider";
@@ -28,7 +28,7 @@ import { SETTINGS_TITLE_ID } from "./constants";
 import { matchesQuery, groupBySubsection } from "./utils";
 import SettingsNav from "./SettingsNav";
 import SettingItem from "./SettingItem";
-import type { SettingsDialogProps } from "./types";
+import type { SettingsDialogProps, SettingsNavigationTarget } from "./types";
 
 // VS Code-style settings: a declarative schema (SETTINGS_SCHEMA) rendered generically. A search
 // box filters across every section; a left rail navigates sections when not searching. Each row
@@ -36,11 +36,38 @@ import type { SettingsDialogProps } from "./types";
 const SettingsDialog = ({ visible, onClose }: SettingsDialogProps) => {
   const { settings, update, defaults, manager } = useSettings();
   const [rawQuery, setRawQuery] = useState("");
-  const [activeSection, setActiveSection] = useState<SettingsSectionId>(
-    SETTINGS_SECTION.GENERAL,
-  );
+  const [navigation, setNavigation] = useState<SettingsNavigationTarget>({
+    section: SETTINGS_SECTION.GENERAL,
+  });
+  const activeSection = navigation.section;
+  const panelRef = useRef<HTMLDivElement>(null);
+  const subsectionRefs = useRef(new Map<string, HTMLDivElement>());
 
-  useCloseOnEscape(visible, onClose);
+  // Wait for the selected category to render before scrolling, including when leaving search.
+  // Scroll only the content panel so the navigation rail and dialog stay in place.
+  useLayoutEffect(() => {
+    const panel = panelRef.current;
+    if (!panel) return;
+    const target = navigation.subsectionKey
+      ? subsectionRefs.current.get(navigation.subsectionKey)
+      : undefined;
+    panel.scrollTo({
+      top: target
+        ? panel.scrollTop +
+          target.getBoundingClientRect().top -
+          panel.getBoundingClientRect().top
+        : 0,
+    });
+  }, [navigation]);
+
+  const subsections = SETTINGS_SECTIONS.map((section) => ({
+    section: section.id,
+    items: groupBySubsection(
+      SETTINGS_SCHEMA.filter((d) => d.section === section.id),
+    ).flatMap((sub) =>
+      sub.title ? [{ key: sub.items[0].key, title: sub.title }] : [],
+    ),
+  }));
 
   const query = rawQuery.trim().toLowerCase();
   const searching = query !== "";
@@ -78,9 +105,9 @@ const SettingsDialog = ({ visible, onClose }: SettingsDialogProps) => {
     );
   }, [searching, query]);
 
-  const selectSection = (id: SettingsSectionId) => {
+  const selectSection = (id: SettingsSectionId, subsectionKey?: string) => {
     setRawQuery("");
-    setActiveSection(id);
+    setNavigation({ section: id, subsectionKey });
   };
 
   const { pickFile } = useFilePicker();
@@ -149,9 +176,9 @@ const SettingsDialog = ({ visible, onClose }: SettingsDialogProps) => {
   return (
     <Dialog
       visible={visible}
+      title={t.settings.title}
       onClose={onClose}
       className="settings_modal"
-      labelledBy={SETTINGS_TITLE_ID}
     >
       <DialogHeader
         title={t.settings.title}
@@ -160,7 +187,7 @@ const SettingsDialog = ({ visible, onClose }: SettingsDialogProps) => {
       />
 
       <div className="settings_toolbar">
-        <input
+        <TextInput
           type="search"
           className="settings_search"
           value={rawQuery}
@@ -193,10 +220,11 @@ const SettingsDialog = ({ visible, onClose }: SettingsDialogProps) => {
         <SettingsNav
           active={activeSection}
           counts={counts}
+          subsections={subsections}
           onSelect={selectSection}
         />
 
-        <div className="settings_panel">
+        <div className="settings_panel" ref={panelRef}>
           {groups.length === 0 ? (
             <p className="settings_empty">{t.settings.searchEmpty(rawQuery)}</p>
           ) : (
@@ -206,7 +234,15 @@ const SettingsDialog = ({ visible, onClose }: SettingsDialogProps) => {
                   {group.section.label()}
                 </h5>
                 {groupBySubsection(group.items).map((sub) => (
-                  <div key={sub.title ?? "_"} className="settings_subsection">
+                  <div
+                    key={sub.title ?? "_"}
+                    className="settings_subsection"
+                    ref={(element) => {
+                      const key = sub.items[0].key;
+                      if (element) subsectionRefs.current.set(key, element);
+                      else subsectionRefs.current.delete(key);
+                    }}
+                  >
                     {sub.title && (
                       <h6 className="settings_subsection_title">{sub.title}</h6>
                     )}

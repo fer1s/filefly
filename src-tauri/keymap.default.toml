@@ -14,6 +14,20 @@
 keys = ["c"]
 mod = true
 
+# Copy the selection's filesystem path(s) to the OS clipboard. Matches Finder's Cmd+Opt+C
+# ("Copy as Pathname"); alt = Option.
+[copy_path]
+keys = ["c"]
+mod = true
+alt = true
+
+# Option+C can report "ç" as KeyboardEvent.key on macOS. Keep "c" first so the
+# shortcut label remains Cmd+Option+C while accepting either character from the WebView.
+[copy_path.macos]
+keys = ["c", "ç"]
+mod = true
+alt = true
+
 [cut]
 keys = ["x"]
 mod = true
@@ -127,6 +141,14 @@ mod = true
 [preview_zoom_out]
 keys = ["-"]
 mod = true
+
+# Rotate the image preview in quarter turns without changing the original file.
+[preview_rotate_left]
+keys = ["r"]
+shift = true
+
+[preview_rotate_right]
+keys = ["r"]
 
 # Tabs. mod = Cmd / Ctrl. Next/prev cycle uses mod+alt+arrows to avoid clashing with the
 # alt+arrow history navigation.

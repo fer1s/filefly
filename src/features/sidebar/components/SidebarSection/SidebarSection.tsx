@@ -11,6 +11,7 @@ import IconButton, {
   ICON_BUTTON_SIZE,
 } from "@/shared/components/elements/IconButton";
 import Icon from "@/shared/components/elements/Icon";
+import TextInput from "@/shared/components/elements/TextInput";
 import { TOOLTIP_PLACEMENT } from "@/shared/components/elements/Tooltip";
 import { classNames } from "@/shared/utils";
 import { t } from "@/lang";
@@ -100,23 +101,23 @@ const SidebarSection = forwardRef<HTMLElement, SidebarSectionProps>(
             </span>
           )}
           {renaming ? (
-            <input
+            <TextInput
+              unstyled
               ref={inputRef}
-              type="text"
               className="section_title_input"
               defaultValue={title}
               onKeyDown={handleRenameKeyDown}
               onBlur={cancelRename}
             />
           ) : (
-            <button
-              type="button"
+            <Button
+              unstyled
               className="section_title"
               // Editable groups open the rename input on click; read-only groups just toggle.
               onClick={onRename ? startRename : toggle}
             >
               <h2>{title}</h2>
-            </button>
+            </Button>
           )}
           {editing && onDelete && (
             <IconButton
@@ -129,15 +130,15 @@ const SidebarSection = forwardRef<HTMLElement, SidebarSectionProps>(
               aria-label={t.sidebar.deleteGroup}
             />
           )}
-          <button
-            type="button"
+          <Button
+            unstyled
             className="section_chevron"
             onClick={toggle}
             aria-expanded={open}
             aria-label={open ? t.sidebar.collapseGroup : t.sidebar.expandGroup}
           >
             <Icon icon={faChevronDown} />
-          </button>
+          </Button>
         </div>
         <div className="section_content">
           <div className="section_content_inner">

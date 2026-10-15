@@ -10,10 +10,12 @@ export type PropertyRowProps = {
 
 export type PropertiesProps = {
   entry: DirEntry | null;
+  aggregate?: { count: number; size: number | null } | null;
   visible: boolean;
   onClose: () => void;
 };
 
 export type PropertiesContentProps = {
   entry: DirEntry;
+  aggregate?: { count: number; size: number | null } | null;
 };

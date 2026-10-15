@@ -4,6 +4,7 @@ import {
   TOAST_VISIBLE_MS,
   TOAST_EXIT_MS,
   TOAST_ARM_DELAY_MS,
+  TOAST_SELECTOR,
   type ToastData,
 } from "@/shared/components/patterns/ToastStack";
 import { setNotifier, type ToastType } from "@/shared/toast";
@@ -56,7 +57,12 @@ export const useToasts = () => {
   useEffect(() => {
     if (toasts.length === 0) return;
 
-    const handle = () => dismissAll();
+    // A press on a toast itself is that toast's own click; let its handler own it.
+    const handle = (event: Event) => {
+      const target = event.target as HTMLElement | null;
+      if (target?.closest?.(TOAST_SELECTOR)) return;
+      dismissAll();
+    };
     const arm = setTimeout(() => {
       window.addEventListener("pointerdown", handle);
       window.addEventListener("keydown", handle);

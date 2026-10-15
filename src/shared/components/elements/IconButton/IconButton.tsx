@@ -1,11 +1,16 @@
 import { classNames } from "@/shared/utils";
+import { IconButton as SitoIconButton } from "@sito/ui";
 
 import "@/styles/components/IconButton.css";
 
-import Button from "../Button";
 import Icon from "../Icon";
 import Tooltip from "../Tooltip";
-import { ICON_BUTTON_SIZE, ICON_BUTTON_VARIANT } from "./constants";
+import {
+  ICON_BUTTON_SIZE,
+  ICON_BUTTON_VARIANT,
+  SITO_ICON_BUTTON_COLOR,
+  SITO_ICON_BUTTON_VARIANT,
+} from "./constants";
 import type { IconButtonProps } from "./types";
 
 const IconButton = ({
@@ -16,11 +21,26 @@ const IconButton = ({
   hotkey,
   tooltipPlacement,
   className,
+  "aria-label": ariaLabel,
   ...props
 }: IconButtonProps) => {
+  const color =
+    variant === ICON_BUTTON_VARIANT.DANGER
+      ? SITO_ICON_BUTTON_COLOR.ERROR
+      : SITO_ICON_BUTTON_COLOR.DEFAULT;
+  const sitoVariant =
+    variant === ICON_BUTTON_VARIANT.BOXED
+      ? SITO_ICON_BUTTON_VARIANT.OUTLINED
+      : SITO_ICON_BUTTON_VARIANT.TEXT;
   const button = (
-    <Button
+    <SitoIconButton
+      icon={<Icon icon={icon} />}
+      aria-label={ariaLabel ?? tooltip ?? ""}
+      color={color}
+      variant={sitoVariant}
+      size={size}
       className={classNames(
+        "Button",
         "IconButton",
         size,
         variant === ICON_BUTTON_VARIANT.BOXED && "boxed",
@@ -30,9 +50,7 @@ const IconButton = ({
         !tooltip && className,
       )}
       {...props}
-    >
-      <Icon icon={icon} />
-    </Button>
+    />
   );
 
   if (!tooltip) return button;

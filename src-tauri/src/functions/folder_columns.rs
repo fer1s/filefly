@@ -14,8 +14,14 @@ pub struct SortSetting {
     direction: String,
 }
 
+// The list view's identifier as the frontend sends it (VIEW_MODE.LIST).
+const LIST_VIEW: &str = "list";
+
 // Per-folder view settings persisted centrally: which list columns are visible, whether the
-// folder is shown as a grid or a list, and its column sort. Empty/absent fields are omitted.
+// folder is shown as a grid or a list, its column sort, and one zoom per view. Grid and list
+// zoom are independent: a tile size that suits a grid is far too large for rows. `zoom` keeps its
+// original name so files saved before list zoom existed still apply to the grid. Empty/absent
+// fields are omitted.
 #[derive(Debug, Deserialize, Serialize, Clone, Default)]
 struct FolderSettings {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -26,6 +32,22 @@ struct FolderSettings {
     sort: Option<SortSetting>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     zoom: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    list_zoom: Option<f64>,
+}
+
+impl FolderSettings {
+    fn zoom_for(&self, view: &str) -> Option<f64> {
+        if view == LIST_VIEW { self.list_zoom } else { self.zoom }
+    }
+
+    fn set_zoom_for(&mut self, view: &str, zoom: f64) {
+        if view == LIST_VIEW {
+            self.list_zoom = Some(zoom);
+        } else {
+            self.zoom = Some(zoom);
+        }
+    }
 }
 
 // path -> settings. A BTreeMap keeps the file stably ordered (nicer diffs / AI-friendly).
@@ -134,16 +156,21 @@ pub fn set_folder_sort(
     write_config(&app, &config)
 }
 
-// Saved zoom level for a folder (None when the user hasn't zoomed it).
+// Saved zoom level for a folder in the given view (None when the user hasn't zoomed it there).
 #[tauri::command]
-pub fn get_folder_zoom(app: AppHandle, path: String) -> Option<f64> {
-    read_config(&app).get(&path).and_then(|s| s.zoom)
+pub fn get_folder_zoom(app: AppHandle, path: String, view: String) -> Option<f64> {
+    read_config(&app).get(&path).and_then(|s| s.zoom_for(&view))
 }
 
-// Persist the zoom level for a folder, preserving its other settings.
+// Persist the zoom level for a folder in the given view, preserving its other settings.
 #[tauri::command]
-pub fn set_folder_zoom(app: AppHandle, path: String, zoom: f64) -> Result<(), String> {
+pub fn set_folder_zoom(
+    app: AppHandle,
+    path: String,
+    view: String,
+    zoom: f64,
+) -> Result<(), String> {
     let mut config = read_config(&app);
-    config.entry(path).or_default().zoom = Some(zoom);
+    config.entry(path).or_default().set_zoom_for(&view, zoom);
     write_config(&app, &config)
 }

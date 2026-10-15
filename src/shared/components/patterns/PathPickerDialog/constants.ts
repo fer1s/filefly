@@ -12,8 +12,14 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 
+import type { Tag } from "@/shared/models";
+
 // Wired to the dialog's aria-labelledby (points at the header title).
 export const PATH_PICKER_TITLE_ID = "path-picker-title";
+
+// Stable empty tag list for rows whose tags haven't loaded (or have none), so TagDots/icon colour
+// see the same reference every render.
+export const NO_TAGS: readonly Tag[] = [];
 
 // macOS firmlink/internal volumes (the APFS data volume, Preboot, VM…) mount under here. They share
 // the boot volume's name ("Macintosh HD") and aren't user-browsable, so hide them from Locations.

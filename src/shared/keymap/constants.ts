@@ -1,6 +1,7 @@
 // Named actions that can be bound to a key. Values match the table names in keymap.toml.
 export const KEYMAP_ACTION = {
   COPY: "copy",
+  COPY_PATH: "copy_path",
   CUT: "cut",
   PASTE: "paste",
   UNDO: "undo",
@@ -21,6 +22,8 @@ export const KEYMAP_ACTION = {
   PREVIEW_NEXT: "preview_next",
   PREVIEW_ZOOM_IN: "preview_zoom_in",
   PREVIEW_ZOOM_OUT: "preview_zoom_out",
+  PREVIEW_ROTATE_LEFT: "preview_rotate_left",
+  PREVIEW_ROTATE_RIGHT: "preview_rotate_right",
   NEW_TAB: "new_tab",
   NEW_WINDOW: "new_window",
   CLOSE_TAB: "close_tab",
@@ -76,16 +79,3 @@ export const TAB_ACTIONS = [
   KEYMAP_ACTION.TAB_8,
   KEYMAP_ACTION.TAB_9,
 ] as const;
-
-// Pretty glyphs for common keys when rendering a binding (keyed by lowercased KeyboardEvent.key).
-export const KEY_GLYPH: Record<string, string> = {
-  arrowleft: "←",
-  arrowright: "→",
-  arrowup: "↑",
-  arrowdown: "↓",
-  escape: "Esc",
-  enter: "↵",
-  backspace: "⌫",
-  delete: "Del",
-  " ": "Space",
-};

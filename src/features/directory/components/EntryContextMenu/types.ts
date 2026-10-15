@@ -4,17 +4,29 @@ import type { EntryKind } from "@/features/directory/constants";
 
 export type FileOps = {
   copy: (targets: string[]) => void;
+  copyPath: (targets: string[]) => void;
   cut: (targets: string[]) => void;
   remove: (targets: string[]) => Promise<void>;
   removePermanently: (targets: string[]) => Promise<void>;
   restore: (targets: string[]) => Promise<void>;
   paste: () => Promise<void>;
+  compress: (
+    targets: string[],
+    options: { name: string; level: number },
+  ) => Promise<void>;
+  extract: (archivePath: string) => Promise<void>;
 };
 
 export type EntryContextMenuProps = {
   contextMenuRef: RefObject<HTMLDivElement | null>;
   visible: boolean;
   onClose: () => void;
+  // Optional reduced built-in action list for surfaces that reuse the entry menu (e.g. path
+  // breadcrumbs). Applicable user-defined actions are appended independently of this list.
+  // When omitted, the configured context_menu.toml layout remains the source of truth.
+  actionIds?: readonly string[];
+  // Finder tags belong to directory-entry menus, not reduced menus on navigation surfaces.
+  showTags?: boolean;
   elementId: string;
   elementType: EntryKind;
   isCurrentDirectory: boolean;

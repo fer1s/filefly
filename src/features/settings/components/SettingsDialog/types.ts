@@ -20,8 +20,17 @@ export type SettingItemProps = {
 
 export type SettingsNavProps = {
   active: SettingsSectionId;
+  subsections: {
+    section: SettingsSectionId;
+    items: { key: string; title: string }[];
+  }[];
   // Match count per section for the current search (all-totals when not searching). Sections with
   // zero are dimmed so the nav doubles as a "where are the results" hint.
   counts: Record<SettingsSectionId, number>;
-  onSelect: (id: SettingsSectionId) => void;
+  onSelect: (id: SettingsSectionId, subsectionKey?: string) => void;
+};
+
+export type SettingsNavigationTarget = {
+  section: SettingsSectionId;
+  subsectionKey?: string;
 };

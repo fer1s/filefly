@@ -82,7 +82,7 @@ export const loadEntries = async (
 ): Promise<PickerEntry[]> => {
   if (path === "") {
     const locations = await loadLocations();
-    return locations.map((loc) => ({ ...loc, isDir: true }));
+    return locations.map((loc) => ({ ...loc, isDir: true, extension: "" }));
   }
   try {
     const dir = await readDirectory(path);
@@ -98,6 +98,7 @@ export const loadEntries = async (
         name: entry.name,
         path: entry.path,
         isDir: entry.metadata.isDir,
+        extension: extension(entry.name),
       }))
       .sort((a, b) =>
         a.isDir === b.isDir ? a.name.localeCompare(b.name) : a.isDir ? -1 : 1,
@@ -106,6 +107,16 @@ export const loadEntries = async (
     // ACCESS_DENIED or an unreadable folder: show it as empty rather than breaking the picker.
     return [];
   }
+};
+
+// The rows whose name contains `query` (case-insensitive). An empty query keeps every row.
+export const filterEntries = (
+  entries: readonly PickerEntry[],
+  query: string,
+): readonly PickerEntry[] => {
+  const needle = query.toLowerCase();
+  if (!needle) return entries;
+  return entries.filter((entry) => entry.name.toLowerCase().includes(needle));
 };
 
 const stripTrailingSlash = (path: string) => path.replace(/\/+$/, "") || path;

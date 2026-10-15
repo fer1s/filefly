@@ -12,6 +12,7 @@ import {
   faTrash,
   faEye,
   faEyeSlash,
+  faPen,
   faUpRightFromSquare,
 } from "@fortawesome/free-solid-svg-icons";
 
@@ -25,6 +26,7 @@ const FolderItem = ({
   hotkey,
   onContextMenu,
   onRemove,
+  onEdit,
   onToggleHidden,
   onOpenInNewTab,
   hidden,
@@ -56,7 +58,8 @@ const FolderItem = ({
       {hotkey && !onRemove && !onToggleHidden && (
         <span className="folder_hotkey">{hotkey}</span>
       )}
-      {onOpenInNewTab && (
+      {/* Not in the collapsed rail: the row is icon-only there (the context menu still offers it). */}
+      {onOpenInNewTab && !collapsed && (
         <IconButton
           icon={faUpRightFromSquare}
           size={ICON_BUTTON_SIZE.SM}
@@ -68,6 +71,20 @@ const FolderItem = ({
             onOpenInNewTab();
           }}
           aria-label={t.contextMenu.openInNewTab}
+        />
+      )}
+      {onEdit && (
+        <IconButton
+          icon={faPen}
+          size={ICON_BUTTON_SIZE.SM}
+          className="item_edit"
+          tooltip={t.connections.edit}
+          tooltipPlacement={TOOLTIP_PLACEMENT.RIGHT}
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit();
+          }}
+          aria-label={t.connections.edit}
         />
       )}
       {onRemove && (

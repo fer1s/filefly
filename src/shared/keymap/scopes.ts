@@ -1,3 +1,5 @@
+import type { HotkeyConfig } from "@sito/commands";
+
 // Hotkey scopes (layers). A scope is a context that can be active or not; the dispatcher resolves
 // "which handler wins for this key" by precedence — the highest-precedence active scope consumes
 // the event. GLOBAL is implicitly always active; the others are pushed/popped by the feature that
@@ -30,3 +32,9 @@ export const EXCLUSIVE_SCOPES: ReadonlySet<HotkeyScope> = new Set([
   HOTKEY_SCOPE.MENU,
   HOTKEY_SCOPE.MODAL,
 ]);
+
+export const HOTKEY_CONFIG = {
+  globalScope: HOTKEY_SCOPE.GLOBAL,
+  precedence: SCOPE_PRECEDENCE,
+  exclusiveScopes: EXCLUSIVE_SCOPES,
+} satisfies HotkeyConfig<HotkeyScope>;

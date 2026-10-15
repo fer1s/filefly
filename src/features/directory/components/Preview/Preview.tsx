@@ -2,43 +2,40 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { convertFileSrc } from "@tauri-apps/api/core";
 
 import { useStateContext } from "@/shared/providers/StateProvider";
-import IconButton, {
-  ICON_BUTTON_VARIANT,
-} from "@/shared/components/elements/IconButton";
+import IconButton from "@/shared/components/elements/IconButton";
 import Spinner from "@/shared/components/elements/Spinner";
 import Icon from "@/shared/components/elements/Icon";
+import TextArea from "@/shared/components/elements/TextArea";
 import CloseButton from "@/shared/components/patterns/CloseButton";
 import ZoomControl from "@/shared/components/patterns/ZoomControl";
 import {
   ContextMenu,
   ContextMenuItem,
 } from "@/shared/components/patterns/ContextMenu";
-import { KEY, SFTP_SCHEME } from "@/shared/constants";
-import {
-  AUDIO_FORMATS,
-  IMAGE_FORMATS,
-  VIDEO_FORMATS,
-  ENTRY_KIND,
-  MARKDOWN_FORMAT,
-  PDF_FORMAT,
-} from "@/features/directory/constants";
+import { KEY, SFTP_SCHEME, FILE_CATEGORY } from "@/shared/constants";
+import { ENTRY_KIND } from "@/features/directory/constants";
+import { useFileTypeExtensions, categoryOf } from "@/shared/formats";
 import {
   useKeymap,
   useHotkey,
+  useHotkeys,
   useHotkeyScope,
   HOTKEY_SCOPE,
   formatBinding,
   isMacPlatform,
   KEYMAP_ACTION,
+  type HotkeySpec,
 } from "@/shared/keymap";
 import { classNames } from "@/shared/utils";
 import { notify, TOAST_TYPE } from "@/shared/toast";
 import { t } from "@/lang";
 
 import AudioPreview from "../AudioPreview";
+import PreviewControls from "../PreviewControls/PreviewControls";
 import { useContextMenu } from "../../hooks/useContextMenu";
 
 import { ZoomableImage } from "./ZoomableImage";
+import ImagePreviewSkeleton from "./ImagePreviewSkeleton";
 import { useImageZoom } from "./useImageZoom";
 import { usePanelGeometry } from "./usePanelGeometry";
 import { useMarkdownPreview } from "./useMarkdownPreview";
@@ -48,17 +45,18 @@ import {
   IMAGE_ZOOM_MIN,
   IMAGE_ZOOM_MAX,
   IMAGE_ZOOM_BUTTON_STEP,
+  IMAGE_ROTATION_ACTIONS,
+  IMAGE_COPY_ACTIONS,
 } from "./constants";
 
 import {
-  faChevronLeft,
-  faChevronRight,
   faCopy,
-  faTrash,
   faPen,
   faEye,
   faFloppyDisk,
   faMagnifyingGlass,
+  faRotateLeft,
+  faRotateRight,
 } from "@fortawesome/free-solid-svg-icons";
 
 import "@/styles/components/Preview.css";
@@ -75,9 +73,11 @@ const Preview = ({
   hasPrev,
   hasNext,
   onDelete,
+  windowed = false,
 }: PreviewProps) => {
   const { fs } = useStateContext();
   const { keymap } = useKeymap();
+  const fileTypes = useFileTypeExtensions();
   const {
     ref: imageMenuRef,
     visible: imageMenuVisible,
@@ -117,13 +117,18 @@ const Preview = ({
   }, [filePath, previewVisible, fs]);
 
   const mac = isMacPlatform();
-  const isImage = IMAGE_FORMATS.includes(fileType);
-  const isMarkdown = fileType === MARKDOWN_FORMAT;
+  // Everything the preview branches on is the extension's category, so an extension the user
+  // mapped onto Image/Video/Audio renders with that surface.
+  const category = categoryOf(fileTypes, fileType);
+  const isImage = category === FILE_CATEGORY.IMAGE;
+  const isVideo = category === FILE_CATEGORY.VIDEO;
+  const isPdf = category === FILE_CATEGORY.PDF;
+  const isAudio = category === FILE_CATEGORY.AUDIO;
+  const isMarkdown = category === FILE_CATEGORY.MARKDOWN;
   // Basename (name.ext) for the header title, e.g. "Preview - notes.md".
   const fileName = filePath.split("/").pop() ?? "";
   // Big media (image/video/pdf) opens near-fullscreen; everything else takes the ~45% side
-  const isBig =
-    isImage || VIDEO_FORMATS.includes(fileType) || fileType === PDF_FORMAT;
+  const isBig = isImage || isVideo || isPdf;
 
   // Panel position/size (drag, resize, maximize) and markdown doc/find state live in dedicated
   // hooks; this component wires them to the shared chrome (header, controls, hotkeys).
@@ -171,11 +176,13 @@ const Preview = ({
   const {
     zoom,
     pan,
+    rotation,
+    rotate,
     setPan,
     zoomTo,
     stepZoom,
     reset: resetZoom,
-  } = useImageZoom();
+  } = useImageZoom(filePath, previewVisible);
 
   // Navigation resets the zoom (so the next file opens at 1x) — done here rather than in an
   // effect to avoid a synchronous reset-on-prop-change.
@@ -188,17 +195,17 @@ const Preview = ({
     onNext();
   }, [resetZoom, onNext]);
 
-  // Right-click an image → custom menu to copy it to the clipboard. (The webview's native menu
+  // Right-click an image → copy the original or its current orientation. (The webview's native menu
   // is blocked app-wide and would only show "Inspect Element" in dev anyway.)
   const handleImageContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
     openImageMenu(e.clientX, e.clientY, filePath, ENTRY_KIND.FILE);
   };
 
-  const handleCopyImage = async () => {
+  const handleCopyImage = async (currentState: boolean) => {
     setImageMenuVisible(false);
     try {
-      await fs.copyImage(filePath);
+      await fs.copyImage(localPath, currentState ? rotation : undefined);
       notify(t.common.copied, TOAST_TYPE.SUCCESS);
     } catch (err) {
       notify(t.errors.copyImage(String(err)), TOAST_TYPE.ERROR);
@@ -291,6 +298,16 @@ const Preview = ({
     () => stepZoom(-IMAGE_ZOOM_BUTTON_STEP),
     { scope: HOTKEY_SCOPE.PREVIEW, when: previewVisible && isImage },
   );
+  const rotationHotkeys: HotkeySpec[] = IMAGE_ROTATION_ACTIONS.map(
+    ({ action, direction }) => ({
+      binding: action,
+      handler: () => rotate(direction),
+      scope: HOTKEY_SCOPE.PREVIEW,
+      when: previewVisible && isImage && isReady,
+    }),
+  );
+  useHotkeys(rotationHotkeys);
+
   // Trash the previewed file (same binding as the directory's trash, which is disabled while a
   // preview is open). usePreview advances to the next file after the list shrinks.
   useHotkey(KEYMAP_ACTION.TRASH, onDelete, {
@@ -300,42 +317,64 @@ const Preview = ({
 
   return (
     <>
-      <div
-        className={classNames("preview_backdrop", previewVisible && "visible")}
-        onClick={requestClose}
-      ></div>
-      {AUDIO_FORMATS.includes(fileType) ? (
+      {/* In-app overlay dims the app behind it; a dedicated window has nothing behind to dim. */}
+      {!windowed && (
+        <div
+          className={classNames(
+            "preview_backdrop",
+            previewVisible && "visible",
+          )}
+          onClick={requestClose}
+        ></div>
+      )}
+      {isAudio ? (
         <AudioPreview
           key={`${filePath}:${previewVisible}`}
           isVisible={previewVisible}
-          filePath={filePath}
+          filePath={localPath}
+          onPrev={navPrev}
+          onNext={navNext}
+          hasPrev={hasPrev}
+          hasNext={hasNext}
+          onDelete={onDelete}
         />
       ) : (
         <div
           className={classNames(
             "preview_container",
-            "shadow",
+            !windowed && "shadow",
             isBig && "image",
-            previewVisible && "visible",
+            (previewVisible || windowed) && "visible",
             interacting && "interacting",
             maximized && "maximized",
+            windowed && "windowed",
           )}
-          style={panelStyle}
+          // Windowed mode fills the native window (positioned by CSS); only the in-app panel is
+          // free-floating and driven by the geometry hook.
+          style={windowed ? undefined : panelStyle}
         >
-          <div
-            className={classNames("preview_header", "draggable", mac && "mac")}
-            onDoubleClick={toggleMaximize}
-            {...dragBind()}
-          >
-            {mac && <CloseButton onClose={requestClose} />}
-            <h4>
-              {dirty && <span className="preview_dirty_dot" aria-hidden />}
-              {editMode
-                ? t.common.editTitle(fileName)
-                : t.common.previewTitle(fileName)}
-            </h4>
-            {!mac && <CloseButton onClose={requestClose} />}
-          </div>
+          {/* The native window titlebar is the header in windowed mode (title + close); the custom
+              draggable header is only for the in-app floating panel. */}
+          {!windowed && (
+            <div
+              className={classNames(
+                "preview_header",
+                "draggable",
+                mac && "mac",
+              )}
+              onDoubleClick={toggleMaximize}
+              {...dragBind()}
+            >
+              {mac && <CloseButton onClose={requestClose} />}
+              <h4>
+                {dirty && <span className="preview_dirty_dot" aria-hidden />}
+                {editMode
+                  ? t.common.editTitle(fileName)
+                  : t.common.previewTitle(fileName)}
+              </h4>
+              {!mac && <CloseButton onClose={requestClose} />}
+            </div>
+          )}
 
           {isMarkdown && docReady && findOpen && (
             <PreviewFindBar
@@ -356,15 +395,15 @@ const Preview = ({
               "preview_content",
               !isReady && "loading",
               isMarkdown && "markdown",
-              IMAGE_FORMATS.includes(fileType) && "image",
-              VIDEO_FORMATS.includes(fileType) && "video",
-              fileType === PDF_FORMAT && "pdf",
+              isImage && "image",
+              isVideo && "video",
+              isPdf && "pdf",
             )}
           >
             {isReady ? (
               isMarkdown ? (
                 editMode ? (
-                  <textarea
+                  <TextArea
                     ref={editorRef}
                     className="preview_md_editor"
                     value={doc?.draft ?? ""}
@@ -378,25 +417,26 @@ const Preview = ({
                     dangerouslySetInnerHTML={{ __html: doc?.html ?? "" }}
                   ></div>
                 )
-              ) : IMAGE_FORMATS.includes(fileType) ? (
+              ) : isImage ? (
                 <ZoomableImage
                   key={filePath}
-                  src={convertFileSrc(localPath)}
+                  path={localPath}
                   alt={filePath}
                   onContextMenu={handleImageContextMenu}
                   zoom={zoom}
+                  rotation={rotation}
                   pan={pan}
                   onZoomTo={zoomTo}
                   onPanChange={setPan}
                 />
-              ) : VIDEO_FORMATS.includes(fileType) ? (
+              ) : isVideo ? (
                 <video
                   ref={videoRef}
                   src={convertFileSrc(localPath)}
                   controls
                   autoPlay
                 />
-              ) : fileType === PDF_FORMAT ? (
+              ) : isPdf ? (
                 <iframe
                   src={convertFileSrc(localPath)}
                   title={t.common.preview}
@@ -406,21 +446,21 @@ const Preview = ({
                   <h3>{t.directory.fileTypeNotSupported}</h3>
                 </div>
               )
+            ) : isImage ? (
+              <ImagePreviewSkeleton />
             ) : (
               <Spinner />
             )}
           </div>
 
           {/* Floating controls, centred over the content: prev · (md/zoom tools) · next · trash. */}
-          <div className="preview_controls">
-            <IconButton
-              icon={faChevronLeft}
-              onClick={navPrev}
-              disabled={!hasPrev}
-              tooltip={t.common.previous}
-              hotkey={formatBinding(keymap[KEYMAP_ACTION.PREVIEW_PREV])}
-              aria-label={t.common.previous}
-            />
+          <PreviewControls
+            onPrev={navPrev}
+            onNext={navNext}
+            hasPrev={hasPrev}
+            hasNext={hasNext}
+            onDelete={onDelete}
+          >
             {isMarkdown && docReady && (
               <>
                 <IconButton
@@ -447,49 +487,52 @@ const Preview = ({
               </>
             )}
             {isImage && (
-              <ZoomControl
-                value={zoom}
-                min={IMAGE_ZOOM_MIN}
-                max={IMAGE_ZOOM_MAX}
-                onZoomIn={() => stepZoom(IMAGE_ZOOM_BUTTON_STEP)}
-                onZoomOut={() => stepZoom(-IMAGE_ZOOM_BUTTON_STEP)}
-                onZoomTo={zoomTo}
-                zoomInHotkey={formatBinding(
-                  keymap[KEYMAP_ACTION.PREVIEW_ZOOM_IN],
-                )}
-                zoomOutHotkey={formatBinding(
-                  keymap[KEYMAP_ACTION.PREVIEW_ZOOM_OUT],
-                )}
-              />
+              <>
+                {IMAGE_ROTATION_ACTIONS.map(({ direction, label, action }) => (
+                  <IconButton
+                    key={label}
+                    icon={direction < 0 ? faRotateLeft : faRotateRight}
+                    onClick={() => rotate(direction)}
+                    disabled={!isReady}
+                    tooltip={t.imagePreview[label]}
+                    hotkey={formatBinding(keymap[action])}
+                    aria-label={t.imagePreview[label]}
+                  />
+                ))}
+                <ZoomControl
+                  value={zoom}
+                  min={IMAGE_ZOOM_MIN}
+                  max={IMAGE_ZOOM_MAX}
+                  onZoomIn={() => stepZoom(IMAGE_ZOOM_BUTTON_STEP)}
+                  onZoomOut={() => stepZoom(-IMAGE_ZOOM_BUTTON_STEP)}
+                  onZoomTo={zoomTo}
+                  zoomInHotkey={formatBinding(
+                    keymap[KEYMAP_ACTION.PREVIEW_ZOOM_IN],
+                  )}
+                  zoomOutHotkey={formatBinding(
+                    keymap[KEYMAP_ACTION.PREVIEW_ZOOM_OUT],
+                  )}
+                />
+              </>
             )}
-            <IconButton
-              icon={faChevronRight}
-              onClick={navNext}
-              disabled={!hasNext}
-              tooltip={t.common.next}
-              hotkey={formatBinding(keymap[KEYMAP_ACTION.PREVIEW_NEXT])}
-              aria-label={t.common.next}
-            />
-            <IconButton
-              icon={faTrash}
-              variant={ICON_BUTTON_VARIANT.DANGER}
-              onClick={onDelete}
-              tooltip={t.contextMenu.delete}
-              hotkey={formatBinding(keymap[KEYMAP_ACTION.TRASH])}
-              aria-label={t.contextMenu.delete}
-            />
-          </div>
+          </PreviewControls>
 
-          <PreviewResizeHandles bind={resizeBind} />
+          {!windowed && <PreviewResizeHandles bind={resizeBind} />}
         </div>
       )}
 
       <ContextMenu contextMenuVisible={imageMenuVisible} ref={imageMenuRef}>
-        <ContextMenuItem
-          text={t.contextMenu.copyImage}
-          icon={<Icon icon={faCopy} />}
-          onClick={handleCopyImage}
-        />
+        {IMAGE_COPY_ACTIONS.filter(
+          ({ currentState }) => !currentState || rotation !== 0,
+        ).map(({ label, currentState }) => (
+          <ContextMenuItem
+            key={label}
+            text={t.contextMenu[label]}
+            icon={<Icon icon={faCopy} />}
+            disabled={!localPath}
+            onClick={() => handleCopyImage(currentState)}
+          />
+        ))}
       </ContextMenu>
     </>
   );

@@ -1,7 +1,12 @@
 import { useEffect, useRef } from "react";
 
 import { KEY, VIEW_MODE } from "@/shared/constants";
-import { TYPEAHEAD_RESET_MS } from "./constants";
+import {
+  useTypeahead,
+  findTypeaheadMatch,
+  typeaheadStartIndex,
+} from "@/shared/hooks/useTypeahead";
+
 import type { UseKeyboardNavArgs } from "./types";
 
 // Keyboard navigation over the visible entries: arrows move a cursor (and select it), Enter opens,
@@ -15,8 +20,13 @@ export const useKeyboardNav = ({
   onOpen,
   onTypeaheadChange,
 }: UseKeyboardNavArgs) => {
-  const searchBufferRef = useRef("");
-  const searchTimerRef = useRef<number | null>(null);
+  // Type-to-find buffer/timer; this hook only maps its queries onto the entry selection.
+  const {
+    push: pushTypeahead,
+    backspace: popTypeahead,
+    clear: clearTypeahead,
+    isActive: typeaheadActive,
+  } = useTypeahead({ onChange: onTypeaheadChange });
 
   // Latest selection, read inside the keydown handler without re-subscribing on every change.
   const selectedRef = useRef(selectedIDs);
@@ -30,14 +40,15 @@ export const useKeyboardNav = ({
   }, [selectedIDs]);
 
   useEffect(() => {
-    // Skip when typing in the path bar or any other text field.
-    const isTypingTarget = (el: EventTarget | null) => {
+    // Text fields and overlays own their keyboard events; directory navigation must stay behind.
+    const shouldIgnoreTarget = (el: EventTarget | null) => {
       const t = el as HTMLElement | null;
       return (
         !!t &&
         (t.tagName === "INPUT" ||
           t.tagName === "TEXTAREA" ||
-          t.isContentEditable)
+          t.isContentEditable ||
+          t.closest('[role="menu"]') !== null)
       );
     };
 
@@ -110,69 +121,38 @@ export const useKeyboardNav = ({
         return prev;
       });
 
-    const clearTypeahead = () => {
-      if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
-      searchTimerRef.current = null;
-      searchBufferRef.current = "";
-      onTypeaheadChange("");
-    };
-
-    const scheduleTypeaheadReset = () => {
-      if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
-      searchTimerRef.current = window.setTimeout(
-        clearTypeahead,
-        TYPEAHEAD_RESET_MS,
-      );
-    };
-
-    // Select the first entry whose name starts with `buf` (searching the whole list from the top).
-    const selectFirstMatch = (buf: string) =>
-      setSelectedIDs((prev) => {
-        if (!items.length || !buf) return prev;
-        const match = items.find((e) => e.name.toLowerCase().startsWith(buf));
-        return match ? [match.path] : prev;
-      });
-
-    // Type-to-find: accumulate typed chars; a single-char buffer starts after the current entry so
-    // repeated presses cycle through matches.
+    // Type-to-find: a single-char query starts after the current entry so repeated presses cycle
+    // through matches; longer queries match from the top.
     const typeahead = (char: string) => {
-      searchBufferRef.current += char;
-      onTypeaheadChange(searchBufferRef.current);
-      scheduleTypeaheadReset();
-
-      const buf = searchBufferRef.current.toLowerCase();
+      const query = pushTypeahead(char);
       setSelectedIDs((prev) => {
         if (!items.length) return prev;
-        const current = prev.length
-          ? items.findIndex((e) => e.path === prev[prev.length - 1])
-          : -1;
-        const start = buf.length === 1 ? current + 1 : 0;
-        for (let i = 0; i < items.length; i++) {
-          const entry = items[(start + i) % items.length];
-          if (entry.name.toLowerCase().startsWith(buf)) return [entry.path];
-        }
-        return prev;
+        const current = prev.length ? indexOf(prev[prev.length - 1]) : -1;
+        const match = findTypeaheadMatch(
+          items,
+          query,
+          typeaheadStartIndex(query, current),
+        );
+        return match ? [match.path] : prev;
       });
     };
 
     // Backspace while type-to-find is active edits the search (instead of navigating back).
     // Returns whether it consumed the key, so the caller can stop the PathBar's back shortcut.
+    // The shortened query re-selects the first entry matching it, searching from the top.
     const backspaceTypeahead = () => {
-      if (!searchBufferRef.current) return false;
-      const next = searchBufferRef.current.slice(0, -1);
-      searchBufferRef.current = next;
-      onTypeaheadChange(next);
-      if (!next) {
-        clearTypeahead();
-      } else {
-        scheduleTypeaheadReset();
-        selectFirstMatch(next.toLowerCase());
-      }
+      const query = popTypeahead();
+      if (query === null) return false;
+      if (query)
+        setSelectedIDs((prev) => {
+          const match = findTypeaheadMatch(items, query, 0);
+          return match ? [match.path] : prev;
+        });
       return true;
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (isTypingTarget(e.target)) return;
+      if (shouldIgnoreTarget(e.target)) return;
       if (!enabled) return;
 
       // Printable single characters drive the type-to-find search.
@@ -203,7 +183,7 @@ export const useKeyboardNav = ({
           // Deselect first: only consume Escape (and clear) when there's a selection or an
           // active type-to-find. With nothing to clear, let it fall through (e.g. exit
           // fullscreen) — so the first Escape deselects, the next exits fullscreen.
-          if (searchBufferRef.current || selectedRef.current.length) {
+          if (typeaheadActive() || selectedRef.current.length) {
             e.preventDefault();
             clearTypeahead();
             setSelectedIDs([]);
@@ -239,5 +219,15 @@ export const useKeyboardNav = ({
       document.removeEventListener("keydown", handleKeyDown, true);
       clearTypeahead();
     };
-  }, [items, view, enabled, setSelectedIDs, onOpen, onTypeaheadChange]);
+  }, [
+    items,
+    view,
+    enabled,
+    setSelectedIDs,
+    onOpen,
+    pushTypeahead,
+    popTypeahead,
+    clearTypeahead,
+    typeaheadActive,
+  ]);
 };
